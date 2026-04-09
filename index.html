@@ -278,6 +278,29 @@
 
   #calc-modal, #add-modal, #tuto-modal, #settings-modal, #admin-login-modal, #admin-panel-modal, #confirm-clear-modal, #congrats-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
   #confirm-clear-modal, #congrats-modal { z-index: 600; }
+
+  /* AUTH */
+  #auth-modal, #auth-change-pin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+  #auth-change-pin-modal { display: none; }
+  .auth-box { background: var(--surface); border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 340px; border: 1px solid var(--border); }
+  .auth-logo { font-size: 1.6rem; font-weight: 900; text-align: center; margin-bottom: 4px; color: var(--text); }
+  .auth-logo span { color: var(--brand-blue); }
+  .auth-sub { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 22px; font-weight: 600; }
+  .auth-input { width: 100%; box-sizing: border-box; padding: 11px 14px; background: var(--surface-sec); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; font-family: var(--font); margin-bottom: 10px; }
+  .auth-input:focus { outline: none; border-color: var(--brand-blue); }
+  .auth-select { appearance: none; }
+  .auth-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; cursor: pointer; border: none; margin-bottom: 8px; font-family: var(--font); transition: opacity 0.2s; }
+  .auth-btn:hover { opacity: 0.88; }
+  .auth-btn-primary { background: var(--brand-gradient); color: #fff; }
+  .auth-btn-outline { background: transparent; border: 1px solid var(--border) !important; color: var(--text); }
+  .auth-btn-ghost { background: transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; border: none; text-decoration: underline; cursor: pointer; width: 100%; padding: 6px; }
+  .auth-role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+  .auth-role-btn { padding: 10px 4px; border-radius: 8px; border: 2px solid var(--border); background: var(--surface-sec); color: var(--text-muted); font-weight: 800; font-size: 0.78rem; cursor: pointer; text-align: center; transition: all 0.2s; font-family: var(--font); }
+  .auth-role-btn.selected { border-color: var(--brand-blue); background: rgba(59,130,246,0.12); color: var(--brand-blue); }
+  .auth-pin-input { letter-spacing: 0.4em; text-align: center; font-size: 1.3rem; font-weight: 800; }
+  .auth-reset-badge { background: var(--crit); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; font-weight: 900; display: none; align-items: center; justify-content: center; margin-left: 6px; }
+  .admin-reset-row { background: var(--surface-sec); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  [data-theme="light"] .auth-box { background: #ffffff; }
   
   .calc-modal-content { background: var(--surface); border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
   .calc-modal-header { background: var(--pill-bg); padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: 1.1rem; color: var(--text); }
@@ -766,7 +789,8 @@
         <button class="menu-btn" onclick="openSideMenu()">☰</button>
         <h1>Pulse<span>Unit</span></h1>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" style="display:flex; align-items:center; gap:6px;">
+        <div id="header-user-info" style="display:flex; align-items:center; gap:6px;"></div>
         <button class="header-btn tuto" onclick="document.getElementById('tuto-modal').style.display='flex'">Guide</button>
       </div>
     </div>
@@ -858,8 +882,17 @@
   </div>
 
   <div id="admin-panel-modal">
-    <div class="modal-content">
-      <h3 style="margin-bottom:15px; color:var(--crit);">⚠️ Zone Admin</h3>
+    <div class="modal-content" style="max-height:90vh; overflow-y:auto;">
+      <h3 style="margin-bottom:15px; color:var(--crit); display:flex; align-items:center; gap:8px;">
+        ⚠️ Zone Admin
+        <span id="admin-reset-badge" class="auth-reset-badge">0</span>
+      </h3>
+      <!-- Demandes de réinitialisation -->
+      <div style="margin-bottom:15px;">
+        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Demandes de code oublié</div>
+        <div id="admin-resets-container"></div>
+      </div>
+      <hr style="border-color:var(--border); margin-bottom:15px;">
       <button class="btn-primary" id="admin-usip-btn" style="background:var(--crit); margin-bottom:10px; transition:all 0.2s;" onclick="toggleAdminUsipLock()">🔒 Verrouiller USIP</button>
       <button class="btn-primary" style="background:var(--text-muted); margin-bottom:10px; color:#fff;" onclick="document.getElementById('admin-panel-modal').style.display='none'; confirmClearShift();">🗑️ Vider garde</button>
       <button class="btn-primary" style="background:transparent; border:1px solid var(--crit); color:var(--crit); margin-bottom:15px;" onclick="hardResetApp()">⚠️ Réparer l'App</button>
@@ -2415,8 +2448,22 @@
    * et lance le rendu pour la garde en cours.
    */
   function openTasks() {
-      document.getElementById('tasks-view').style.display = 'flex';
-      renderTasks();
+    const h = shiftHistory[currentShiftKey];
+    if (h && h.techIdeId) {
+      if (!currentUser) {
+        alert('Connectez-vous pour accéder à vos tâches.');
+        showAuthModal();
+        return;
+      }
+      if (currentUser.id !== h.techIdeId) {
+        const techP = roster.find(r => r.id === h.techIdeId);
+        const nom = techP ? `${techP.firstName} ${techP.lastName}` : 'l\'IDE Technique';
+        alert(`Ces tâches sont réservées à ${nom} pour cette garde.`);
+        return;
+      }
+    }
+    document.getElementById('tasks-view').style.display = 'flex';
+    renderTasks();
   }
   /**
    * Ferme la vue plein écran des tâches et retourne à l'interface principale.
@@ -5600,43 +5647,267 @@
     return a[p] ? a[p](cur) : `${p} = ${cur}`;
   }
 
-  initDates();
+  // ── AUTHENTIFICATION ─────────────────────────────────────────────────────
+  let currentUser = JSON.parse(sessionStorage.getItem('pulseunit_current_user')) || null;
+  let authUsers = {};
+  let resetRequests = [];
+  const AUTH_DOC   = db ? db.collection('pulseunit').doc('auth')   : null;
+  const RESETS_DOC = db ? db.collection('pulseunit').doc('resets') : null;
+  let selectedRole = '';
 
-  // ── SYNCHRONISATION TEMPS RÉEL FIREBASE ──────────────────────────────────
-  // Quand un collègue modifie les données, tous les appareils se mettent
-  // automatiquement à jour sans rechargement de page.
-  if (PULSEUNIT_DOC) {
-    // Chargement initial depuis Firebase (remplace les données localStorage)
-    PULSEUNIT_DOC.get().then(doc => {
-      if (doc.exists) {
-        const data = doc.data();
-        if (Array.isArray(data.roster)) roster = data.roster;
-        if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
-        initDates(); // Re-render avec les données partagées
-      } else {
-        // Aucune donnée Firebase — premier lancement, données locales conservées
-        initDates();
-      }
-    }).catch(err => {
-      console.warn("PulseUnit: chargement Firebase échoué, mode localStorage", err);
-      initDates();
-    });
-
-    // Écoute continue : mise à jour automatique quand un collègue sauvegarde
-    PULSEUNIT_DOC.onSnapshot(doc => {
-      if (doc.metadata.hasPendingWrites) return; // Ignorer nos propres écritures en cours
-      if (doc.exists) {
-        const data = doc.data();
-        if (Array.isArray(data.roster)) roster = data.roster;
-        if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
-        renderApp();
-      }
-    }, err => {
-      console.warn("PulseUnit: Firebase hors ligne — mode localStorage", err);
-    });
-  } else {
-    initDates();
+  async function hashPin(pin) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
   }
+
+  function showAuthView(view) {
+    ['login','register','forgot'].forEach(v =>
+      document.getElementById('auth-'+v+'-view').style.display = v === view ? 'block' : 'none'
+    );
+    if (view === 'login' || view === 'forgot') populateUserSelects();
+  }
+
+  function selectRole(role) {
+    selectedRole = role;
+    document.querySelectorAll('.auth-role-btn').forEach(b =>
+      b.classList.toggle('selected', b.dataset.role === role)
+    );
+  }
+
+  function populateUserSelects() {
+    const entries = Object.entries(authUsers);
+    const opts = entries.length === 0
+      ? '<option value="">Aucun compte créé — inscrivez-vous</option>'
+      : '<option value="">— Sélectionnez votre nom —</option>' +
+        entries.map(([id, u]) => `<option value="${id}">${u.firstName} ${u.lastName.toUpperCase()} · ${u.role.toUpperCase()}</option>`).join('');
+    document.getElementById('auth-select-user').innerHTML = opts;
+    document.getElementById('forgot-select-user').innerHTML = opts;
+  }
+
+  function showAuthModal() {
+    populateUserSelects();
+    showAuthView('login');
+    document.getElementById('auth-modal').style.display = 'flex';
+  }
+
+  async function registerUser() {
+    const fn   = document.getElementById('reg-firstname').value.trim();
+    const ln   = document.getElementById('reg-lastname').value.trim();
+    const pin  = document.getElementById('reg-pin').value;
+    const pin2 = document.getElementById('reg-pin2').value;
+    if (!fn || !ln) return alert('Veuillez entrer votre prénom et nom.');
+    if (!selectedRole) return alert('Veuillez choisir votre rôle.');
+    if (!/^\d{6}$/.test(pin)) return alert('Le code doit contenir exactement 6 chiffres.');
+    if (pin !== pin2) return alert('Les codes ne correspondent pas.');
+    const already = Object.values(authUsers).find(u =>
+      u.firstName.toLowerCase() === fn.toLowerCase() && u.lastName.toLowerCase() === ln.toLowerCase()
+    );
+    if (already) return alert('Un compte avec ce nom existe déjà. Connectez-vous.');
+    // Lier au roster existant si même nom, sinon créer
+    let rosterId = null;
+    const rosterMatch = roster.find(r =>
+      r.firstName.toLowerCase() === fn.toLowerCase() && r.lastName.toLowerCase() === ln.toLowerCase()
+    );
+    if (rosterMatch) {
+      rosterId = rosterMatch.id;
+    } else {
+      rosterId = 'u_' + Date.now();
+      roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
+      saveData();
+    }
+    const pinHash = await hashPin(pin);
+    authUsers[rosterId] = { firstName: fn, lastName: ln, role: selectedRole, pinHash, tempPin: null };
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    currentUser = { id: rosterId, firstName: fn, lastName: ln, role: selectedRole };
+    sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    document.getElementById('auth-modal').style.display = 'none';
+    updateHeaderUser();
+    renderApp();
+  }
+
+  async function loginUser() {
+    const userId = document.getElementById('auth-select-user').value;
+    const pin    = document.getElementById('auth-pin').value;
+    if (!userId) return alert('Sélectionnez votre nom.');
+    if (!pin)    return alert('Entrez votre code.');
+    const user = authUsers[userId];
+    if (!user) return alert('Utilisateur introuvable.');
+    // Code provisoire ?
+    if (user.tempPin && pin === user.tempPin) {
+      currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
+      sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+      document.getElementById('auth-modal').style.display = 'none';
+      document.getElementById('auth-change-pin-modal').style.display = 'flex';
+      return;
+    }
+    const pinHash = await hashPin(pin);
+    if (pinHash !== user.pinHash) {
+      document.getElementById('auth-pin').value = '';
+      return alert('Code incorrect.');
+    }
+    currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
+    sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    document.getElementById('auth-modal').style.display = 'none';
+    updateHeaderUser();
+    renderApp();
+  }
+
+  async function changeTempPin() {
+    const newPin = document.getElementById('change-pin-new').value;
+    const conf   = document.getElementById('change-pin-confirm').value;
+    if (!/^\d{6}$/.test(newPin)) return alert('Le code doit contenir 6 chiffres.');
+    if (newPin !== conf) return alert('Les codes ne correspondent pas.');
+    const pinHash = await hashPin(newPin);
+    authUsers[currentUser.id].pinHash = pinHash;
+    authUsers[currentUser.id].tempPin = null;
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    resetRequests = resetRequests.map(r =>
+      r.userId === currentUser.id ? { ...r, status: 'resolved' } : r
+    );
+    if (RESETS_DOC) await RESETS_DOC.set({ requests: resetRequests });
+    document.getElementById('auth-change-pin-modal').style.display = 'none';
+    updateHeaderUser();
+    renderApp();
+    alert('Nouveau code enregistré !');
+  }
+
+  function logoutUser() {
+    if (!confirm('Se déconnecter ?')) return;
+    currentUser = null;
+    sessionStorage.removeItem('pulseunit_current_user');
+    updateHeaderUser();
+    showAuthModal();
+  }
+
+  function updateHeaderUser() {
+    const el = document.getElementById('header-user-info');
+    if (!el) return;
+    if (currentUser) {
+      el.innerHTML = `
+        <span style="font-size:0.68rem; color:var(--text-muted); font-weight:700; white-space:nowrap;">${currentUser.firstName} · ${currentUser.role.toUpperCase()}</span>
+        <button class="header-btn outline" onclick="logoutUser()" style="font-size:0.65rem; padding:0 8px; height:26px;">Quitter</button>
+      `;
+    } else {
+      el.innerHTML = `<button class="header-btn outline" onclick="showAuthModal()" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
+    }
+  }
+
+  async function sendResetRequest() {
+    const userId = document.getElementById('forgot-select-user').value;
+    if (!userId) return alert('Sélectionnez votre nom.');
+    const user = authUsers[userId];
+    if (!user) return alert('Utilisateur introuvable.');
+    const already = resetRequests.find(r => r.userId === userId && r.status === 'pending');
+    if (already) return alert('Une demande est déjà en attente.\nContactez directement l\'administrateur.');
+    resetRequests.push({
+      userId, firstName: user.firstName, lastName: user.lastName, role: user.role,
+      requestedAt: new Date().toISOString(), status: 'pending'
+    });
+    if (RESETS_DOC) await RESETS_DOC.set({ requests: resetRequests });
+    showAuthView('login');
+    alert('Demande envoyée.\nL\'administrateur va vous fournir un code provisoire.');
+  }
+
+  async function adminSetTempPin(userId) {
+    const tempPin = prompt('Code provisoire à 6 chiffres :');
+    if (!tempPin) return;
+    if (!/^\d{6}$/.test(tempPin)) return alert('6 chiffres requis.');
+    authUsers[userId].tempPin = tempPin;
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    resetRequests = resetRequests.map(r =>
+      r.userId === userId ? { ...r, status: 'resolved' } : r
+    );
+    if (RESETS_DOC) await RESETS_DOC.set({ requests: resetRequests });
+    renderAdminResets();
+    const u = authUsers[userId];
+    alert(`Code provisoire "${tempPin}" défini pour ${u.firstName} ${u.lastName}.\nDemandez-lui de se connecter avec ce code.`);
+  }
+
+  function renderAdminResets() {
+    const pending = resetRequests.filter(r => r.status === 'pending');
+    const badge = document.getElementById('admin-reset-badge');
+    if (badge) { badge.textContent = pending.length; badge.style.display = pending.length > 0 ? 'flex' : 'none'; }
+    const container = document.getElementById('admin-resets-container');
+    if (!container) return;
+    if (pending.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:8px 0;">Aucune demande en attente</p>';
+      return;
+    }
+    container.innerHTML = pending.map(r => `
+      <div class="admin-reset-row">
+        <div>
+          <div style="font-weight:800; font-size:0.85rem;">${r.firstName} ${r.lastName}</div>
+          <div style="font-size:0.72rem; color:var(--text-muted);">${r.role.toUpperCase()} · ${new Date(r.requestedAt).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <button onclick="adminSetTempPin('${r.userId}')" style="background:var(--crit); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+          Code provisoire
+        </button>
+      </div>
+    `).join('');
+  }
+
+  async function loadAuth() {
+    if (!AUTH_DOC) return;
+    try {
+      const doc = await AUTH_DOC.get();
+      if (doc.exists && doc.data().users) authUsers = doc.data().users;
+      const resDoc = await RESETS_DOC.get();
+      if (resDoc.exists && resDoc.data().requests) resetRequests = resDoc.data().requests;
+    } catch(e) { console.warn('Auth load error:', e); }
+  }
+
+  // Écoute temps réel des demandes de réinitialisation (badge admin)
+  if (RESETS_DOC) {
+    RESETS_DOC.onSnapshot(doc => {
+      if (doc.exists && doc.data().requests) {
+        resetRequests = doc.data().requests;
+        renderAdminResets();
+      }
+    });
+  }
+
+  // ── INITIALISATION COMPLÈTE ───────────────────────────────────────────────
+  async function appInit() {
+    // 1. Charger données Firebase (roster + shiftHistory)
+    if (PULSEUNIT_DOC) {
+      try {
+        const doc = await PULSEUNIT_DOC.get();
+        if (doc.exists) {
+          const data = doc.data();
+          if (Array.isArray(data.roster)) roster = data.roster;
+          if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
+        }
+      } catch(e) { console.warn("Firebase data load failed:", e); }
+
+      // Écoute continue : mise à jour automatique quand un collègue sauvegarde
+      PULSEUNIT_DOC.onSnapshot(doc => {
+        if (doc.metadata.hasPendingWrites) return;
+        if (doc.exists) {
+          const data = doc.data();
+          if (Array.isArray(data.roster)) roster = data.roster;
+          if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
+          renderApp();
+        }
+      }, err => { console.warn("PulseUnit: Firebase hors ligne — mode localStorage", err); });
+    }
+
+    // 2. Charger les comptes utilisateurs
+    await loadAuth();
+
+    // 3. Afficher l'interface principale
+    initDates();
+    updateHeaderUser();
+    renderAdminResets();
+
+    // 4. Afficher la modale de connexion si pas de session active
+    if (!currentUser || !authUsers[currentUser.id]) {
+      currentUser = null;
+      sessionStorage.removeItem('pulseunit_current_user');
+      showAuthModal();
+    }
+  }
+
+  appInit();
 </script>
 
   <!-- ===== PROTOCOLES — Vue liste ===== -->
@@ -6146,6 +6417,63 @@
       <button class="rv-modal-close" onclick="closeRvModal()">VALIDER</button>
     </div>
   </div>
+
+<!-- ===== MODALE AUTH ===== -->
+<div id="auth-modal">
+  <div class="auth-box">
+    <!-- VUE CONNEXION -->
+    <div id="auth-login-view">
+      <div class="auth-logo">Pulse<span>Unit</span></div>
+      <div class="auth-sub">Connectez-vous pour accéder à l'application</div>
+      <select class="auth-input auth-select" id="auth-select-user">
+        <option value="">— Sélectionnez votre nom —</option>
+      </select>
+      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="••••••" autocomplete="off">
+      <button class="auth-btn auth-btn-primary" onclick="loginUser()">Se connecter</button>
+      <button class="auth-btn auth-btn-outline" onclick="showAuthView('register')">Créer mon accès</button>
+      <button class="auth-btn-ghost" onclick="showAuthView('forgot')">Code oublié ?</button>
+    </div>
+    <!-- VUE INSCRIPTION -->
+    <div id="auth-register-view" style="display:none;">
+      <div class="auth-logo" style="font-size:1.2rem;">Créer mon accès</div>
+      <div class="auth-sub">Première connexion sur PulseUnit</div>
+      <input class="auth-input" type="text" id="reg-firstname" placeholder="Prénom" autocomplete="off">
+      <input class="auth-input" type="text" id="reg-lastname" placeholder="Nom" autocomplete="off">
+      <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">Votre rôle</div>
+      <div class="auth-role-grid">
+        <button class="auth-role-btn" data-role="ide" onclick="selectRole('ide')">💉 IDE</button>
+        <button class="auth-role-btn" data-role="as" onclick="selectRole('as')">🩺 AS</button>
+        <button class="auth-role-btn" data-role="med" onclick="selectRole('med')">👨‍⚕️ Médecin</button>
+      </div>
+      <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">Code à 6 chiffres</div>
+      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin" placeholder="••••••" autocomplete="new-password">
+      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin2" placeholder="Confirmer le code" autocomplete="new-password">
+      <button class="auth-btn auth-btn-primary" onclick="registerUser()">Créer mon accès</button>
+      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
+    </div>
+    <!-- VUE MOT DE PASSE OUBLIÉ -->
+    <div id="auth-forgot-view" style="display:none;">
+      <div class="auth-logo" style="font-size:1.2rem;">Code oublié</div>
+      <div class="auth-sub">Une demande sera envoyée à l'administrateur</div>
+      <select class="auth-input auth-select" id="forgot-select-user">
+        <option value="">— Sélectionnez votre nom —</option>
+      </select>
+      <button class="auth-btn auth-btn-primary" onclick="sendResetRequest()">Envoyer la demande</button>
+      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODALE CHANGEMENT CODE PROVISOIRE ===== -->
+<div id="auth-change-pin-modal">
+  <div class="auth-box">
+    <div class="auth-logo" style="font-size:1.2rem;">Code provisoire détecté</div>
+    <div class="auth-sub">Définissez votre nouveau code à 6 chiffres</div>
+    <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="change-pin-new" placeholder="Nouveau code" autocomplete="new-password">
+    <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="change-pin-confirm" placeholder="Confirmer" autocomplete="new-password">
+    <button class="auth-btn auth-btn-primary" onclick="changeTempPin()">Valider mon nouveau code</button>
+  </div>
+</div>
 
 <script>
 if ('serviceWorker' in navigator) {
