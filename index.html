@@ -150,6 +150,7 @@
   .bed-card > *:not(.b-actions):not(.search-box):not(input):not(.med-beds-selector):not(.mini-list):not(.counters-box):not(.cl-bar-row) { pointer-events: none; }
   .cl-bar-row { pointer-events: auto; }
   .special-card > * { pointer-events: auto; }
+  .b-actions, .b-actions * { pointer-events: auto; }
   
   .bed-bg-num { position: absolute; bottom: -10px; right: -5px; font-size: 4.5rem; font-weight: 900; color: var(--text); opacity: 0.03; line-height: 1; z-index: 0; }
   .bed-status-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: transparent; z-index: 1; }
@@ -5813,7 +5814,8 @@
     try {
       const { userId, firstName, lastName, role, expiry } = JSON.parse(stored);
       if (Date.now() > expiry) { localStorage.removeItem('pulseunit_autologin'); return false; }
-      const u = authUsers[userId] || (firstName ? { firstName, lastName, role } : null);
+      const rosterUser = roster.find(r => r.id === userId);
+      const u = authUsers[userId] || (firstName ? { firstName, lastName, role } : null) || (rosterUser ? { firstName: rosterUser.firstName, lastName: rosterUser.lastName, role: rosterUser.role } : null);
       if (u) {
         currentUser = { id: userId, firstName: u.firstName, lastName: u.lastName, role: u.role };
         sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
@@ -6106,6 +6108,7 @@
       }
     } else {
       updateHeaderUser();
+      renderApp();
     }
   }
 
