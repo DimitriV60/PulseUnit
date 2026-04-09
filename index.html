@@ -2963,7 +2963,7 @@
   function initDates() {
     const nav = document.getElementById('shift-nav'); nav.innerHTML = '';
     const today = new Date(); const daysArr = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-    for (let i = 7; i >= 0; i--) {
+    for (let i = 0; i <= 7; i++) {
       const d = new Date(today); d.setDate(d.getDate() - i);
       const ds = d.toISOString().split('T')[0];
       const lbl = i === 0 ? "AUJ." : i === 1 ? "HIER" : `${daysArr[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`;
@@ -5997,6 +5997,7 @@
     <!-- HEADER COMPACT -->
     <div class="rv-header">
       <div class="rv-header-top">
+        <button class="fs-back" onclick="closeNormesRespi()" style="margin-right:10px;">←</button>
         <span class="rv-title">🫁 Simulateur Respirateur
           <span class="rv-alarm" id="rv-alarm-status" style="margin-left:10px;">● OK</span>
         </span>
