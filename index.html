@@ -722,6 +722,41 @@
   [data-theme="light"] input.rv-modal-slider { background:#cbd5e1; }
   [data-theme="light"] .rv-modal-minmax { color:#94a3b8; }
 </style>
+
+<!-- Firebase SDK (sync temps réel entre collègues) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  // ── CONFIGURATION FIREBASE ────────────────────────────────────────────────
+  // Pour activer la synchronisation : remplacez les valeurs ci-dessous
+  // par celles de votre projet Firebase (voir instructions dans README).
+  const FIREBASE_CONFIG = {
+    apiKey:            "VOTRE_API_KEY",
+    authDomain:        "VOTRE_PROJECT_ID.firebaseapp.com",
+    projectId:         "VOTRE_PROJECT_ID",
+    storageBucket:     "VOTRE_PROJECT_ID.appspot.com",
+    messagingSenderId: "VOTRE_SENDER_ID",
+    appId:             "VOTRE_APP_ID"
+  };
+
+  let db = null;
+  let PULSEUNIT_DOC = null;
+
+  // N'initialiser Firebase que si la config a été remplie
+  if (FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY") {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      PULSEUNIT_DOC = db.collection('pulseunit').doc('shared');
+      console.log("PulseUnit: Firebase connecté ✓");
+    } catch(e) {
+      console.error("PulseUnit: erreur init Firebase", e);
+    }
+  } else {
+    console.warn("PulseUnit: Firebase non configuré — mode localStorage uniquement");
+  }
+</script>
+
 </head>
 <body>
 
@@ -2818,18 +2853,36 @@
    * pour que le soignant sache que ses données ne sont PAS enregistrées.
    */
   function saveData() {
+    if (PULSEUNIT_DOC) {
+      // ── Sauvegarde Firestore (synchronisation temps réel entre collègues) ──
+      PULSEUNIT_DOC.set({
+        roster:       roster,
+        shiftHistory: shiftHistory
+      }).catch(e => {
+        console.error("Erreur Firestore :", e);
+        // Fallback localStorage si hors ligne
+        try {
+          localStorage.setItem('reapro_roster',   JSON.stringify(roster));
+          localStorage.setItem('reapro_history',  JSON.stringify(shiftHistory));
+        } catch (le) {
+          alert("⚠️ ERREUR DE SAUVEGARDE\n\nLes données n'ont pas pu être enregistrées.\nVérifiez votre connexion Internet.");
+        }
+      });
+    } else {
+      // ── Mode hors ligne : localStorage uniquement ──
       try {
-          localStorage.setItem('reapro_roster', JSON.stringify(roster));
-          localStorage.setItem('reapro_history', JSON.stringify(shiftHistory));
+        localStorage.setItem('reapro_roster',  JSON.stringify(roster));
+        localStorage.setItem('reapro_history', JSON.stringify(shiftHistory));
       } catch (e) {
-          console.error("Erreur de sauvegarde localStorage :", e);
-          alert(
-            "⚠️ ERREUR DE SAUVEGARDE\n\n" +
-            "Les données n'ont pas pu être enregistrées.\n" +
-            "Cause possible : stockage du navigateur plein.\n\n" +
-            "Action : contactez l'administrateur ou utilisez 'Réparer l'App'."
-          );
+        console.error("Erreur de sauvegarde localStorage :", e);
+        alert(
+          "⚠️ ERREUR DE SAUVEGARDE\n\n" +
+          "Les données n'ont pas pu être enregistrées.\n" +
+          "Cause possible : stockage du navigateur plein.\n\n" +
+          "Action : contactez l'administrateur ou utilisez 'Réparer l'App'."
+        );
       }
+    }
   }
   
   /**
@@ -2838,8 +2891,12 @@
    * sans toucher aux données des autres applications web du navigateur.
    */
   function hardResetApp() {
-    if (confirm("Réinitialiser l'App ? Toutes les données seront perdues.")) {
-      // Liste exhaustive des clés PulseUnit — ne jamais utiliser localStorage.clear()
+    if (confirm("Réinitialiser l'App ?\n\n⚠️ Toutes les données seront perdues pour TOUS les collègues.")) {
+      // Supprimer les données Firestore (partagées entre collègues)
+      if (PULSEUNIT_DOC) {
+        PULSEUNIT_DOC.delete().catch(e => console.error("Erreur suppression Firestore:", e));
+      }
+      // Supprimer les données localStorage (locales à cet appareil)
       const CLS_PULSEUNIT = [
         'reapro_roster', 'reapro_history',
         'pulseunit_theme', 'pulseunit_settings', 'pulseunit_cal'
@@ -5525,7 +5582,41 @@
 
   initDates();
 
-  initDates();
+  // ── SYNCHRONISATION TEMPS RÉEL FIREBASE ──────────────────────────────────
+  // Quand un collègue modifie les données, tous les appareils se mettent
+  // automatiquement à jour sans rechargement de page.
+  if (PULSEUNIT_DOC) {
+    // Chargement initial depuis Firebase (remplace les données localStorage)
+    PULSEUNIT_DOC.get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (Array.isArray(data.roster)) roster = data.roster;
+        if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
+        initDates(); // Re-render avec les données partagées
+      } else {
+        // Aucune donnée Firebase — premier lancement, données locales conservées
+        initDates();
+      }
+    }).catch(err => {
+      console.warn("PulseUnit: chargement Firebase échoué, mode localStorage", err);
+      initDates();
+    });
+
+    // Écoute continue : mise à jour automatique quand un collègue sauvegarde
+    PULSEUNIT_DOC.onSnapshot(doc => {
+      if (doc.metadata.hasPendingWrites) return; // Ignorer nos propres écritures en cours
+      if (doc.exists) {
+        const data = doc.data();
+        if (Array.isArray(data.roster)) roster = data.roster;
+        if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
+        renderApp();
+      }
+    }, err => {
+      console.warn("PulseUnit: Firebase hors ligne — mode localStorage", err);
+    });
+  } else {
+    initDates();
+  }
 </script>
 
   <!-- ===== PROTOCOLES — Vue liste ===== -->
