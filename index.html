@@ -786,7 +786,6 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();">📋 Protocoles</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes & Alertes</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();">🫁 Simulateur Respirateur</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openTasks();">📝 Tâches & Traçabilité</a>
       <div style="flex: 1; min-height: 20px;"></div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openLexiqueProjet();">🔤 Lexique de l'app</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openSecurite();">🔐 Sécurité & Données</a>
@@ -3344,6 +3343,16 @@
     boardHTML += `</div><div class="special-grid">`;
 
     const techP = roster.find(r=>r.id===h.techIdeId);
+
+    // Calcul progression tâches pour la carte IDE tech
+    const _sp = currentShiftKey.split('-');
+    const _dow = _sp.length >= 4 ? new Date(_sp[0], _sp[1]-1, _sp[2]).getDay() : 0;
+    const _st = _sp[3] === 'jour' ? 'J' : 'N';
+    const _todayTasks = TECH_TASKS.filter(t => t.shifts.some(s => s==='ALL' || s==='ALL-'+_st || s===_dow+'-'+_st));
+    const _done = (h.techTasks||[]).filter(id => _todayTasks.some(t=>t.id===id)).length;
+    const _total = _todayTasks.length;
+    const _pct = _total > 0 ? Math.round((_done/_total)*100) : 0;
+
     boardHTML += `<div class="bed-card special-card tech-card">
       <div class="bed-header" style="color:var(--tech); margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;">
         <span class="b-num" style="font-size:1.1rem; font-weight:900; line-height:1.2;">IDE<br>TECH</span>
@@ -3356,7 +3365,18 @@
             </span>
         </div>
       </div>
-      ${techP ? `<div class="staff-pill tech-pill" style="margin-top:auto;">${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0])||''}. ${locked?'':`<span class="remove-btn" onclick="clearShift(null,'tech')">×</span>`}</div>` : `<div class="search-box" style="margin-top:auto;">${locked?'---':`<input type="text" id="search-tech" class="special-input" placeholder="🔍 Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off"><div class="suggestions" id="sugg-tech"></div>`}</div>`}
+      ${techP ? `
+        <div class="staff-pill tech-pill">${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0])||''}. ${locked?'':`<span class="remove-btn" onclick="clearShift(null,'tech')">×</span>`}</div>
+        <div style="margin-top:10px; font-size:0.72rem; color:var(--tech); font-weight:700; display:flex; justify-content:space-between;">
+          <span>📝 Tâches</span><span>${_done}/${_total}</span>
+        </div>
+        <div style="height:5px; background:var(--border); border-radius:3px; margin:4px 0 8px;">
+          <div style="height:100%; width:${_pct}%; background:var(--tech); border-radius:3px; transition:width 0.3s;"></div>
+        </div>
+        <button onclick="openTasks()" style="width:100%; padding:7px; background:var(--tech-glow); border:1px solid rgba(168,85,247,0.4); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.75rem; cursor:pointer; transition:opacity 0.2s;">
+          ${_pct === 100 ? '✅ Toutes validées' : 'Ouvrir mes tâches →'}
+        </button>
+      ` : `<div class="search-box" style="margin-top:auto;">${locked?'---':`<input type="text" id="search-tech" class="special-input" placeholder="🔍 Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off"><div class="suggestions" id="sugg-tech"></div>`}</div>`}
     </div>`;
     
     const m2 = roster.find(r=>r.id===ms[2]);
