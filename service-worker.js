@@ -1,7 +1,5 @@
-const CACHE_NAME = 'pulseunit-v1';
+const CACHE_NAME = 'pulseunit-v2';
 const FILES_TO_CACHE = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
@@ -24,6 +22,15 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // index.html : toujours récupérer la dernière version depuis le réseau
+  // → mise à jour automatique sans vider le cache
+  if (e.request.destination === 'document') {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+  // Autres fichiers (icônes, manifest) : cache en priorité
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
