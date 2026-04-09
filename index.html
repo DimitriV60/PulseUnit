@@ -3042,11 +3042,6 @@
     return !isShiftLocked(currentShiftKey) && isOnCurrentShift();
   }
 
-  /** Vrai si l'utilisateur peut modifier les cases médecins. */
-  function canEditMed() {
-    if (!currentUser) return false;
-    return currentUser.role === 'med' || isAdmin();
-  }
 
   /**
    * Initialise la barre de navigation des gardes (8 derniers jours + aujourd'hui).
@@ -3093,13 +3088,6 @@
    * @param {string} val  - Texte saisi par l'utilisateur
    */
   function doSearch(type, val) {
-    // Cases médecins : réservées aux médecins
-    if (type.startsWith('med') && !canEditMed()) {
-      alert('Réservé aux médecins.');
-      const input = document.getElementById(type === 'main' ? 'search-main' : `search-${type}`);
-      if (input) input.value = '';
-      return;
-    }
     initShiftData(currentShiftKey);
     let q = val.toLowerCase().trim();
     let boxId = (type === 'main') ? 'sugg-main' : (type === 'sidebar' ? 'sugg-sidebar' : `sugg-${type}`);
@@ -3195,7 +3183,6 @@
   function toggleMedBed(bedKey, docIndex) {
     initShiftData(currentShiftKey);
     if(isShiftLocked(currentShiftKey)) return;
-    if(!canEditMed()) return alert('Réservé aux médecins.');
     const dO = currentShiftKey.split('-').slice(0,3).join('-');
     
     if (docIndex === 2 && !bedKey.startsWith('usip-')) return;
@@ -3250,7 +3237,6 @@
   function clearShift(id, type) {
     initShiftData(currentShiftKey);
     if(isShiftLocked(currentShiftKey)) return;
-    if(type==='med' && !canEditMed()) return alert('Réservé aux médecins.');
     if(type==='tech') shiftHistory[currentShiftKey].techIdeId = null;
     else if(type==='med') { const dO = currentShiftKey.split('-').slice(0,3).join('-'); shiftHistory[dO+'-meds'][id]=null; }
     else { shiftHistory[currentShiftKey].activeStaffIds = shiftHistory[currentShiftKey].activeStaffIds.filter(x=>x!==id); }
