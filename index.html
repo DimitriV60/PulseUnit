@@ -6086,16 +6086,22 @@
 
     // 3. Afficher l'interface principale
     initDates();
-    updateHeaderUser();
     renderAdminResets();
 
     // 4. Connexion automatique (3 mois) ou vérifier session active
     if (!currentUser || !authUsers[currentUser.id]) {
       currentUser = null;
       sessionStorage.removeItem('pulseunit_current_user');
-      if (!checkAutoLogin()) {
+      if (checkAutoLogin()) {
+        // Auto-login réussi : rafraîchir header et app
+        updateHeaderUser();
+        renderApp();
+      } else {
+        updateHeaderUser();
         showAuthModal();
       }
+    } else {
+      updateHeaderUser();
     }
   }
 
