@@ -811,9 +811,8 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes & Alertes</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();">🫁 Simulateur Respirateur</a>
       <div style="flex: 1; min-height: 20px;"></div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openLexiqueProjet();">🔤 Lexique de l'app</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openSecurite();">🔐 Sécurité & Données</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();">⚙️ Paramètres</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); logoutUser();">🚪 Déconnexion</a>
       <a href="#" class="side-link" style="color: var(--crit); border-bottom:none;" onclick="closeSideMenu(); openAdmin();">🔒 Admin</a>
     </div>
   </nav>
@@ -1101,10 +1100,22 @@
         </details>
 
         <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🔒 5. Lits fermés & USIP</summary>
+            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🔑 5. Connexion & Comptes</summary>
+            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
+                <strong style="color:var(--text);">Première connexion —</strong> Créez votre accès : prénom, nom, rôle (IDE / AS / Médecin) et un code à 6 chiffres.<br><br>
+                <strong style="color:var(--text);">Connexions suivantes —</strong> Tapez votre nom ou prénom dans la barre de recherche, sélectionnez-vous dans la liste, entrez votre code.<br><br>
+                <strong style="color:var(--text);">Se souvenir de moi —</strong> Cochez la case pour rester connecté automatiquement pendant 3 mois.<br><br>
+                <strong style="color:var(--text);">Code oublié —</strong> Cliquez "Code oublié ?" → sélectionnez votre nom → envoyez la demande. L'admin reçoit une notification et vous fournit un code provisoire.<br><br>
+                <strong style="color:var(--text);">Changer de code —</strong> Menu ☰ → Paramètres → section "Changer mon code" (ancien code requis).<br><br>
+                <strong style="color:var(--text);">Accès en lecture seule —</strong> Si vous n'êtes pas affecté à la garde en cours, vous pouvez consulter l'historique et les outils mais pas modifier les lits.
+            </div>
+        </details>
+
+        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
+            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🔒 6. Lits fermés, USIP & Admin</summary>
             <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
                 Appuyez sur l'icône 🔒 d'une carte pour fermer un lit. Il passe en rayures et libère le ratio.<br><br>
-                <strong style="color:var(--crit);">Admin :</strong> Permet de verrouiller toute l'USIP ou de réinitialiser la garde. Accès protégé par identifiants.
+                <strong style="color:var(--crit);">Admin (Dimitri Valentin) —</strong> Accès direct au panneau admin via Menu ☰ → Admin. Permet de verrouiller l'USIP, vider une garde, gérer les demandes de réinitialisation de code.
             </div>
         </details>
 
@@ -5720,20 +5731,96 @@
     );
   }
 
-  function populateUserSelects() {
-    const entries = Object.entries(authUsers);
-    const opts = entries.length === 0
-      ? '<option value="">Aucun compte créé — inscrivez-vous</option>'
-      : '<option value="">— Sélectionnez votre nom —</option>' +
-        entries.map(([id, u]) => `<option value="${id}">${u.firstName} ${u.lastName.toUpperCase()} · ${u.role.toUpperCase()}</option>`).join('');
-    document.getElementById('auth-select-user').innerHTML = opts;
-    document.getElementById('forgot-select-user').innerHTML = opts;
+  function _renderUserList(containerId, hiddenId, selectedId, entries, onSelect) {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    if (entries.length === 0) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = entries.map(([id, u]) => `
+      <div onclick="${onSelect}('${id}')" style="padding:10px 14px; cursor:pointer; font-size:0.85rem; font-weight:700;
+        border-bottom:1px solid var(--border); background:${id===selectedId?'rgba(59,130,246,0.12)':'var(--surface-sec)'};
+        color:${id===selectedId?'var(--brand-blue)':'var(--text)'};">
+        ${u.firstName} ${u.lastName.toUpperCase()}
+        <span style="font-size:0.7rem; color:var(--text-muted); margin-left:6px;">${u.role.toUpperCase()}</span>
+      </div>`).join('');
   }
 
+  function filterAuthUsers(val) {
+    const q = val.toLowerCase().trim();
+    document.getElementById('auth-select-user').value = '';
+    document.getElementById('auth-selected-user').style.display = 'none';
+    const entries = Object.entries(authUsers).filter(([_, u]) =>
+      !q || u.firstName.toLowerCase().includes(q) || u.lastName.toLowerCase().includes(q)
+    );
+    _renderUserList('auth-user-list', 'auth-select-user', '', entries, 'selectAuthUser');
+  }
+
+  function selectAuthUser(id) {
+    const u = authUsers[id];
+    if (!u) return;
+    document.getElementById('auth-select-user').value = id;
+    document.getElementById('auth-search-user').value = '';
+    document.getElementById('auth-user-list').style.display = 'none';
+    const sel = document.getElementById('auth-selected-user');
+    sel.style.display = 'block';
+    sel.textContent = `${u.firstName} ${u.lastName.toUpperCase()} · ${u.role.toUpperCase()}`;
+    document.getElementById('auth-pin').focus();
+  }
+
+  function filterForgotUsers(val) {
+    const q = val.toLowerCase().trim();
+    document.getElementById('forgot-select-user').value = '';
+    document.getElementById('forgot-selected-user').style.display = 'none';
+    const entries = Object.entries(authUsers).filter(([_, u]) =>
+      !q || u.firstName.toLowerCase().includes(q) || u.lastName.toLowerCase().includes(q)
+    );
+    _renderUserList('forgot-user-list', 'forgot-select-user', '', entries, 'selectForgotUser');
+  }
+
+  function selectForgotUser(id) {
+    const u = authUsers[id];
+    if (!u) return;
+    document.getElementById('forgot-select-user').value = id;
+    document.getElementById('forgot-search-user').value = '';
+    document.getElementById('forgot-user-list').style.display = 'none';
+    const sel = document.getElementById('forgot-selected-user');
+    sel.style.display = 'block';
+    sel.textContent = `${u.firstName} ${u.lastName.toUpperCase()} · ${u.role.toUpperCase()}`;
+  }
+
+  function populateUserSelects() { /* search-based, no dropdown needed */ }
+
   function showAuthModal() {
-    populateUserSelects();
+    // Réinitialiser les champs
+    ['auth-search-user','auth-pin','forgot-search-user','reg-firstname','reg-lastname','reg-pin','reg-pin2'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['auth-user-list','auth-selected-user','forgot-user-list','forgot-selected-user'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    const hiddenLogin = document.getElementById('auth-select-user');
+    const hiddenForgot = document.getElementById('forgot-select-user');
+    if (hiddenLogin) hiddenLogin.value = '';
+    if (hiddenForgot) hiddenForgot.value = '';
     showAuthView('login');
     document.getElementById('auth-modal').style.display = 'flex';
+  }
+
+  // Vérification auto-login au démarrage (session de 3 mois)
+  function checkAutoLogin() {
+    const stored = localStorage.getItem('pulseunit_autologin');
+    if (!stored) return false;
+    try {
+      const { userId, expiry } = JSON.parse(stored);
+      if (Date.now() > expiry) { localStorage.removeItem('pulseunit_autologin'); return false; }
+      if (authUsers[userId]) {
+        const u = authUsers[userId];
+        currentUser = { id: userId, firstName: u.firstName, lastName: u.lastName, role: u.role };
+        sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+        return true;
+      }
+    } catch(e) {}
+    return false;
   }
 
   async function registerUser() {
@@ -5769,13 +5856,15 @@
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     renderApp();
+    // Toast de confirmation
+    showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
   }
 
   async function loginUser() {
     const userId = document.getElementById('auth-select-user').value;
     const pin    = document.getElementById('auth-pin').value;
-    if (!userId) return alert('Sélectionnez votre nom.');
-    if (!pin)    return alert('Entrez votre code.');
+    if (!userId) return alert('Recherchez et sélectionnez votre nom dans la liste.');
+    if (!pin)    return alert('Entrez votre code à 6 chiffres.');
     const user = authUsers[userId];
     if (!user) return alert('Utilisateur introuvable.');
     // Code provisoire ?
@@ -5793,6 +5882,12 @@
     }
     currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    // Auto-login 3 mois si case cochée
+    if (document.getElementById('auth-remember')?.checked) {
+      localStorage.setItem('pulseunit_autologin', JSON.stringify({
+        userId, expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
+      }));
+    }
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     renderApp();
@@ -5821,21 +5916,48 @@
     if (!confirm('Se déconnecter ?')) return;
     currentUser = null;
     sessionStorage.removeItem('pulseunit_current_user');
+    localStorage.removeItem('pulseunit_autologin');
     updateHeaderUser();
     showAuthModal();
   }
+
+  const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
 
   function updateHeaderUser() {
     const el = document.getElementById('header-user-info');
     if (!el) return;
     if (currentUser) {
+      const col = ROLE_COLORS[currentUser.role] || 'var(--brand-blue)';
+      const initial = currentUser.firstName.charAt(0).toUpperCase();
       el.innerHTML = `
-        <span style="font-size:0.68rem; color:var(--text-muted); font-weight:700; white-space:nowrap;">${currentUser.firstName} · ${currentUser.role.toUpperCase()}</span>
-        <button class="header-btn outline" onclick="logoutUser()" style="font-size:0.65rem; padding:0 8px; height:26px;">Quitter</button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <div style="width:28px; height:28px; border-radius:50%; background:${col}22; border:2px solid ${col};
+            display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:${col}; flex-shrink:0;">
+            ${initial}
+          </div>
+          <div style="display:flex; flex-direction:column; line-height:1.1;">
+            <span style="font-size:0.72rem; font-weight:900; color:var(--text); white-space:nowrap;">${currentUser.firstName}</span>
+            <span style="font-size:0.6rem; font-weight:700; color:${col}; text-transform:uppercase;">${currentUser.role}</span>
+          </div>
+        </div>
       `;
     } else {
       el.innerHTML = `<button class="header-btn outline" onclick="showAuthModal()" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
     }
+  }
+
+  function showToast(msg) {
+    let t = document.getElementById('app-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'app-toast';
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:0.85rem;font-weight:700;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:opacity 0.4s;pointer-events:none;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
   }
 
   async function sendResetRequest() {
@@ -5967,11 +6089,13 @@
     updateHeaderUser();
     renderAdminResets();
 
-    // 4. Afficher la modale de connexion si pas de session active
+    // 4. Connexion automatique (3 mois) ou vérifier session active
     if (!currentUser || !authUsers[currentUser.id]) {
       currentUser = null;
       sessionStorage.removeItem('pulseunit_current_user');
-      showAuthModal();
+      if (!checkAutoLogin()) {
+        showAuthModal();
+      }
     }
   }
 
@@ -6493,10 +6617,15 @@
     <div id="auth-login-view">
       <div class="auth-logo">Pulse<span>Unit</span></div>
       <div class="auth-sub">Connectez-vous pour accéder à l'application</div>
-      <select class="auth-input auth-select" id="auth-select-user">
-        <option value="">— Sélectionnez votre nom —</option>
-      </select>
-      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="••••••" autocomplete="off">
+      <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterAuthUsers(this.value)" autocomplete="off">
+      <input type="hidden" id="auth-select-user" value="">
+      <div id="auth-user-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
+      <div id="auth-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
+      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="off">
+      <label style="display:flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:12px; cursor:pointer;">
+        <input type="checkbox" id="auth-remember" style="width:16px; height:16px; cursor:pointer;">
+        Se souvenir de moi <span style="color:var(--text-muted); font-weight:600;">(connexion automatique 3 mois)</span>
+      </label>
       <button class="auth-btn auth-btn-primary" onclick="loginUser()">Se connecter</button>
       <button class="auth-btn auth-btn-outline" onclick="showAuthView('register')">Créer mon accès</button>
       <button class="auth-btn-ghost" onclick="showAuthView('forgot')">Code oublié ?</button>
@@ -6523,9 +6652,10 @@
     <div id="auth-forgot-view" style="display:none;">
       <div class="auth-logo" style="font-size:1.2rem;">Code oublié</div>
       <div class="auth-sub">Une demande sera envoyée à l'administrateur</div>
-      <select class="auth-input auth-select" id="forgot-select-user">
-        <option value="">— Sélectionnez votre nom —</option>
-      </select>
+      <input class="auth-input" type="text" id="forgot-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterForgotUsers(this.value)" autocomplete="off">
+      <input type="hidden" id="forgot-select-user" value="">
+      <div id="forgot-user-list" style="max-height:130px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
+      <div id="forgot-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
       <button class="auth-btn auth-btn-primary" onclick="sendResetRequest()">Envoyer la demande</button>
       <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
     </div>
