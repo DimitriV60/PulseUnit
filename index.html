@@ -5811,10 +5811,10 @@
     const stored = localStorage.getItem('pulseunit_autologin');
     if (!stored) return false;
     try {
-      const { userId, expiry } = JSON.parse(stored);
+      const { userId, firstName, lastName, role, expiry } = JSON.parse(stored);
       if (Date.now() > expiry) { localStorage.removeItem('pulseunit_autologin'); return false; }
-      if (authUsers[userId]) {
-        const u = authUsers[userId];
+      const u = authUsers[userId] || (firstName ? { firstName, lastName, role } : null);
+      if (u) {
         currentUser = { id: userId, firstName: u.firstName, lastName: u.lastName, role: u.role };
         sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
         return true;
@@ -5885,7 +5885,11 @@
     // Auto-login 3 mois si case cochée
     if (document.getElementById('auth-remember')?.checked) {
       localStorage.setItem('pulseunit_autologin', JSON.stringify({
-        userId, expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
+        userId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
       }));
     }
     document.getElementById('auth-modal').style.display = 'none';
