@@ -5916,10 +5916,11 @@
   async function loadAuth() {
     if (!AUTH_DOC) return;
     try {
-      const doc = await AUTH_DOC.get();
-      if (doc.exists && doc.data().users) authUsers = doc.data().users;
-      const resDoc = await RESETS_DOC.get();
-      if (resDoc.exists && resDoc.data().requests) resetRequests = resDoc.data().requests;
+      // { source: 'server' } : ignore le cache local, lit toujours depuis Firebase
+      const doc = await AUTH_DOC.get({ source: 'server' });
+      authUsers = (doc.exists && doc.data().users) ? doc.data().users : {};
+      const resDoc = await RESETS_DOC.get({ source: 'server' });
+      resetRequests = (resDoc.exists && resDoc.data().requests) ? resDoc.data().requests : [];
     } catch(e) { console.warn('Auth load error:', e); }
   }
 
