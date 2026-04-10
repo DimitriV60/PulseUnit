@@ -107,20 +107,15 @@
 
   #locked-banner { display: none; background: #ef4444; color: white; text-align: center; font-weight: 900; padding: 5px; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; }
 
-  .layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; padding: 20px; max-width: 1600px; margin: 0 auto; }
+  .layout { display: flex; flex-direction: column; padding: 20px; max-width: 1600px; margin: 0 auto; gap: 16px; }
 
-  .pool-panel { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border); display: flex; flex-direction: column; align-self: start; position: sticky; top: 120px; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-  .mobile-toggle { display: none; background: var(--pill-bg); padding: 15px; text-align: center; font-weight: 900; cursor: pointer; color: var(--brand-blue); border-bottom: 1px solid var(--border); border-radius: var(--r) var(--r) 0 0; }
-  
-  .search-area { padding: 15px; border-bottom: 1px solid var(--border); position: relative; }
-  .search-input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; font-family: var(--font); font-size: 0.9rem; font-weight: 700; outline: none; transition: all 0.2s; }
-  .search-input:focus { border-color: var(--brand-aqua); box-shadow: 0 0 0 3px var(--ide-glow); }
+  .pool-panel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 4px 0; }
   
   .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--brand-aqua); border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; margin-top: 5px; }
   .sugg-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; font-weight: 700; display: flex; justify-content: space-between; color: var(--text); }
   .sugg-item:hover { background: var(--ide-glow); color: var(--brand-blue); }
 
-  .pool-content { padding: 15px; max-height: 40vh; overflow-y: auto; display: block; }
+  .pool-content { display: flex; flex-wrap: wrap; gap: 8px; }
   .pool-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 900; margin: 15px 0 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
   .staff-card { background: var(--surface); border: 1px solid var(--border); padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; }
   .staff-card:hover { border-color: var(--brand-aqua); }
@@ -329,17 +324,9 @@
 
   .modal-content { background: var(--surface); padding: 25px; border-radius: 12px; width: 320px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
 
-  @media (min-width: 901px) {
-    .pool-content { display: none; }
-  }
-
   @media (max-width: 900px) {
-    .layout { display: flex; flex-direction: column; padding: 10px; gap: 10px; }
-    .pool-panel { position: relative; top: 0; border-radius: var(--r); margin-bottom: 10px; width: 100%; }
-    .mobile-toggle { display: block; }
-    .pool-content { display: none; } 
-    .pool-panel.open .pool-content { display: block; }
-    .special-grid { grid-template-columns: repeat(2, 1fr); } 
+    .layout { padding: 10px; gap: 10px; }
+    .special-grid { grid-template-columns: repeat(2, 1fr); }
     .beds-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   }
   
@@ -800,6 +787,7 @@
       </div>
     </div>
     <div id="locked-banner">🔒 GARDE TERMINÉE - LECTURE SEULE</div>
+    <div id="app-mode-tag" style="display:none; font-size:0.7rem; font-weight:800; text-align:center; padding:3px 10px; border-radius:4px; margin:2px 8px 0;"></div>
     <div class="shift-nav" id="shift-nav"></div>
   </header>
 
@@ -1029,14 +1017,9 @@
   </div>
 
   <div class="layout">
-    <aside class="pool-panel" id="pool-panel" style="background:transparent; border:none; box-shadow:none; backdrop-filter:none;">
-      <div class="mobile-toggle" onclick="togglePool()">👥 Assigner Soignants ▼</div>
-      <div class="search-area">
-        <input type="text" id="search-sidebar" class="search-input" placeholder="🔍 Rechercher / Ajouter un soignant..." autocomplete="off" oninput="doSearch('sidebar', this.value)">
-        <div class="suggestions" id="sugg-sidebar"></div>
-      </div>
+    <div class="pool-panel" id="pool-panel">
       <div class="pool-content" id="pool-list"></div>
-    </aside>
+    </div>
 
     <main class="sectors-area" id="board"></main>
   </div>
@@ -2985,8 +2968,6 @@
       location.reload();
     }
   }
-  /** Affiche ou masque le panneau de soignants sur mobile (toggle). */
-  function togglePool() { document.getElementById('pool-panel').classList.toggle('open'); }
   /**
    * Annule la sélection d'un soignant et masque le bandeau d'assignation orange.
    * Appelé au tap sur "✔ VALIDER" ou lors d'un changement de garde.
@@ -3059,7 +3040,9 @@
 
   /** Vrai si l'utilisateur peut modifier les lits (affecté + garde non verrouillée). */
   function canEditBeds() {
-    return !isShiftLocked(currentShiftKey) && isOnCurrentShift();
+    if (isShiftLocked(currentShiftKey)) return false;
+    const h = shiftHistory[currentShiftKey] || {};
+    return (h.activeStaffIds || []).includes(currentUser?.id) || h.techIdeId === currentUser?.id;
   }
 
 
@@ -3161,11 +3144,10 @@
           assignSpecDirect(type, id); 
       }
       
-      if(type === 'sidebar') document.getElementById('search-sidebar').value = '';
-      else if(document.getElementById(`search-${type}`)) document.getElementById(`search-${type}`).value = '';
-      
-      saveData(); 
-      renderApp(); 
+      if(document.getElementById(`search-${type}`)) document.getElementById(`search-${type}`).value = '';
+
+      saveData();
+      renderApp();
       document.querySelectorAll('.suggestions').forEach(el=>el.style.display='none');
   };
 
@@ -3177,9 +3159,8 @@
    */
   window.triggerCreateNew = function(val, type, e) {
       e.stopPropagation(); 
-      if(type === 'sidebar') document.getElementById('search-sidebar').value = '';
-      else if(document.getElementById(`search-${type}`)) document.getElementById(`search-${type}`).value = '';
-      openModalSpec(val, type); 
+      if(document.getElementById(`search-${type}`)) document.getElementById(`search-${type}`).value = '';
+      openModalSpec(val, type);
   };
 
   /**
@@ -3405,7 +3386,6 @@
       </div>
     `;
 
-    document.querySelectorAll('.search-area').forEach(el => el.style.display = locked ? 'none' : 'block');
 
     const container = document.getElementById('pool-list'); container.innerHTML = '';
     const aIde = h.activeStaffIds.map(id => roster.find(r => r.id === id)).filter(p => p && p.role === 'ide' && p.id !== h.techIdeId);
@@ -3417,11 +3397,9 @@
       list.forEach(p => {
         let load = 0; for (let b in h.assignments) { if (!h.assignments[b].closed && (h.assignments[b].ide === p.id || h.assignments[b].as === p.id)) load++; }
         const card = document.createElement('div'); card.className = `staff-card ${selectedStaffForTap === p.id ? 'selected' : ''}`;
-        card.onclick = () => { 
-            if(locked) return; 
-            toggleSelection(p.id); 
-            document.getElementById('pool-panel').classList.remove('open'); 
-            document.getElementById('search-sidebar').value = '';
+        card.onclick = () => {
+            if(locked) return;
+            toggleSelection(p.id);
         };
         card.innerHTML = `<div class="staff-info" style="color:${color}"><span>${escapeHTML(p.firstName)} ${escapeHTML(p.lastName.charAt(0))}.</span><span class="s-load ${load>maxLoad ? 'overload' : ''}">${load}/${maxLoad}</span>${locked ? '' : `<span class="remove-btn" onclick="clearShift('${p.id}', 'global')">×</span>`}</div>
         <div class="load-bar"><div class="load-fill" style="width:${Math.min((load/maxLoad)*100, 100)}%; background:${load>maxLoad ? 'var(--crit)' : color}"></div></div>`;
@@ -3568,15 +3546,20 @@
    * @param {string} id - Identifiant du lit (ex: "rea-3", "usip-2")
    */
   function assignLit(id) {
-      if(!canEditBeds() || !selectedStaffForTap) return; 
-      const p = roster.find(r=>r.id===selectedStaffForTap); 
-      if(!p) return;
-      const d = shiftHistory[currentShiftKey].assignments[id]; 
-      if(!d) return;
-      d[p.role] = (d[p.role] === p.id) ? null : p.id; 
-      saveData(); renderApp(); 
+    if(!canEditBeds() || !selectedStaffForTap) {
+      if (!selectedStaffForTap && canEditBeds()) showToast("Sélectionnez-vous d'abord dans l'effectif");
+      return;
+    }
+    const p = roster.find(r=>r.id===selectedStaffForTap);
+    if(!p) return;
+    initShiftData(currentShiftKey);
+    const d = shiftHistory[currentShiftKey].assignments[id];
+    if(!d) return;
+    d[p.role] = (d[p.role] === p.id) ? null : p.id;
+    renderApp();
+    saveData();
   }
-  
+
   /**
    * Bascule l'état d'un booléen sur un lit (fermé, BMR, dialyse, critique).
    * La fermeture d'un lit efface ses assignations IDE et AS.
@@ -3596,8 +3579,8 @@
     let d = h.assignments[id];
     d[p] = !d[p];
     if(p==='closed' && d.closed){ d.ide=null; d.as=null; }
-    saveData();
     renderApp();
+    saveData();
   }
 
   document.addEventListener('click', (e) => { 
@@ -6081,7 +6064,10 @@
 
   // ── INITIALISATION COMPLÈTE ───────────────────────────────────────────────
   async function appInit() {
-    // 1. Charger données Firebase (roster + shiftHistory)
+    // 1. Charger les comptes EN PREMIER (nécessaire avant checkAutoLogin)
+    await loadAuth();
+
+    // 2. Charger données Firebase (roster + shiftHistory)
     if (PULSEUNIT_DOC) {
       try {
         const doc = await PULSEUNIT_DOC.get();
@@ -6094,45 +6080,34 @@
 
       // Écoute continue : mise à jour automatique quand un collègue sauvegarde
       PULSEUNIT_DOC.onSnapshot(doc => {
-        // Ignorer si un écrit LOCAL est en cours (évite l'écrasement du state local)
-        if (_savePending || doc.metadata.hasPendingWrites) return;
-        if (doc.exists) {
-          const data = doc.data();
-          if (Array.isArray(data.roster)) roster = data.roster;
-          if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
-          renderApp();
-        }
-      }, err => { console.warn("PulseUnit: Firebase hors ligne — mode localStorage", err); });
+        if (_savePending || doc.metadata.hasPendingWrites || !doc.exists) return;
+        const data = doc.data();
+        if (Array.isArray(data.roster)) roster = data.roster;
+        if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
+        renderApp();
+      }, err => { console.warn("PulseUnit: Firebase hors ligne", err); });
     }
 
-    // 2. Charger les comptes utilisateurs
-    await loadAuth();
-
-    // 3. Afficher l'interface principale
+    // 3. Interface principale
     initDates();
     renderAdminResets();
 
-    // 4. Connexion automatique (3 mois) ou vérifier session active
-    if (!currentUser || !authUsers[currentUser.id]) {
-      currentUser = null;
-      sessionStorage.removeItem('pulseunit_current_user');
-      if (checkAutoLogin()) {
-        // Auto-login réussi : cacher la modale auth, rafraîchir header et app
-        document.getElementById('auth-modal').style.display = 'none';
-        updateHeaderUser();
-        renderApp();
-        // setTimeout 0 : garantit que le DOM (work-status-modal) est prêt avant d'accéder
-        setTimeout(checkWorkStatus, 0);
-      } else {
-        updateHeaderUser();
-        showAuthModal();
-      }
-    } else {
-      // Session sessionStorage valide : cacher la modale auth
+    // 4. Connexion auto ou modale
+    if (checkAutoLogin()) {
       document.getElementById('auth-modal').style.display = 'none';
       updateHeaderUser();
       renderApp();
       setTimeout(checkWorkStatus, 0);
+    } else if (currentUser && authUsers[currentUser.id]) {
+      document.getElementById('auth-modal').style.display = 'none';
+      updateHeaderUser();
+      renderApp();
+      setTimeout(checkWorkStatus, 0);
+    } else {
+      currentUser = null;
+      sessionStorage.removeItem('pulseunit_current_user');
+      updateHeaderUser();
+      showAuthModal();
     }
   }
 
@@ -6215,15 +6190,19 @@
         }
       }
       saveData();
-      renderApp();
+      // Badge mode édition
+      const tag = document.getElementById('app-mode-tag');
+      if (tag) { tag.textContent = '✏️ Mode Édition'; tag.style.background = 'var(--as-glow)'; tag.style.color = 'var(--as)'; tag.style.display = 'block'; }
       showToast('✅ Ajouté à la garde — cliquez sur un lit pour vous y assigner');
-      // Pré-sélection : le prochain clic sur un lit assigne directement
+      // Auto-sélection immédiate (bandeau orange + clic direct sur lit)
       if (currentUser.role !== 'med') {
-        selectedStaffForTap = currentUser.id;
-        updateStickyBanner();
+        toggleSelection(currentUser.id);
+      } else {
         renderApp();
       }
     } else {
+      const tag = document.getElementById('app-mode-tag');
+      if (tag) { tag.textContent = '👁 Lecture seule'; tag.style.background = 'rgba(255,255,255,0.08)'; tag.style.color = 'var(--text-muted)'; tag.style.display = 'block'; }
       showToast('👁 Mode consultation (lecture seule)');
       renderApp();
     }
