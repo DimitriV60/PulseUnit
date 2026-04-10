@@ -482,6 +482,39 @@
   /* ── Chip RCV dans la stats bar ── */
   .cal-stat-chip.rcv-chip .cal-stat-val { color: var(--med); }
 
+  /* ── Planning CA ── */
+  #planning-ca-view { z-index: 445; }
+  .plan-regime-bar { display:flex; gap:6px; padding:8px 16px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .plan-regime-btn { flex:1; padding:8px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--pill-bg); color:var(--text-muted); font-size:0.73rem; font-weight:900; cursor:pointer; text-align:center; line-height:1.35; transition:all 0.2s; font-family:var(--font); }
+  .plan-regime-btn.active-jour { background:var(--as-glow); border-color:var(--as); color:var(--as); }
+  .plan-regime-btn.active-nuit { background:var(--ide-glow); border-color:var(--ide); color:var(--ide); }
+  .plan-conformite-banner { display:flex; align-items:center; justify-content:space-between; padding:9px 16px; font-size:0.82rem; font-weight:800; flex-shrink:0; border-bottom:1px solid var(--border); gap:8px; }
+  .plan-conformite-banner.ok   { background:var(--as-glow);   color:var(--as); }
+  .plan-conformite-banner.warn { background:var(--med-glow);  color:var(--med); }
+  .plan-conformite-banner.fail { background:var(--crit-glow); color:var(--crit); }
+  .plan-conformite-banner.empty { background:var(--surface);  color:var(--text-muted); }
+  .plan-legend { display:flex; flex-wrap:wrap; gap:5px 12px; padding:6px 16px; font-size:0.71rem; font-weight:700; flex-shrink:0; color:var(--text-muted); align-items:center; }
+  .plan-legend-dot { width:11px; height:11px; border-radius:3px; display:inline-block; margin-right:3px; vertical-align:middle; }
+  .plan-day { aspect-ratio:1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.12s; -webkit-user-select:none; user-select:none; }
+  .plan-day.empty { opacity:0; cursor:default; pointer-events:none; }
+  .plan-day.p-travail { background:transparent; border:1px solid var(--border); color:var(--text-muted); }
+  .plan-day.p-ca  { background:var(--as-glow);  border:1.5px solid var(--as);  color:var(--as);  font-weight:900; }
+  .plan-day.p-rcn { background:var(--ide-glow); border:1.5px solid var(--ide); color:var(--ide); font-weight:900; }
+  .plan-day.p-repos { background:var(--pill-bg); border:1px dashed var(--border); color:var(--text-muted); opacity:0.45; }
+  .plan-day:active { transform:scale(0.88); }
+  .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
+  .plan-stats-bar::-webkit-scrollbar { display:none; }
+  .plan-stat-chip { display:flex; flex-direction:column; align-items:center; min-width:54px; }
+  .plan-stat-val { font-size:1.15rem; font-weight:900; color:var(--text); }
+  .plan-stat-lbl { font-size:0.64rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; text-align:center; line-height:1.2; }
+  .plan-stat-chip.ca-chip  .plan-stat-val { color:var(--as); }
+  .plan-stat-chip.rcn-chip .plan-stat-val { color:var(--ide); }
+  .plan-stat-chip.ok-chip   { background:var(--as-glow);   border-radius:10px; padding:4px 8px; }
+  .plan-stat-chip.ok-chip   .plan-stat-val { color:var(--as); }
+  .plan-stat-chip.warn-chip { background:var(--med-glow);  border-radius:10px; padding:4px 8px; }
+  .plan-stat-chip.warn-chip .plan-stat-val { color:var(--med); }
+  .plan-stat-chip.fail-chip { background:var(--crit-glow); border-radius:10px; padding:4px 8px; }
+  .plan-stat-chip.fail-chip .plan-stat-val { color:var(--crit); }
 
   /* ═══════════════════════════════════════════════
      MODULE NORMES & ALERTES — Styles v2
@@ -807,6 +840,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();">📋 Protocoles</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes & Alertes</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();">🫁 Simulateur Respirateur</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
       <div style="flex: 1; min-height: 20px;"></div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Version Alpha — Signaler un bug</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();">⚙️ Paramètres</a>
@@ -4321,6 +4355,219 @@
   }
 
   /* toggleProtoStep supprimé — mode lecture seule */
+  /* ═══════════════════════════════════════════════════════════════════
+     MODULE PLANNING CA — Validation jours consécutifs FPH
+     Règles : 21 j consécutifs (agents de jour)
+              22 j consécutifs CA + RCN (fixes de nuit)
+     Planning : tous les jours sont cliquables (cycles d'états)
+     État par défaut : TRAVAIL (lun-ven), REPOS (sam-dim, fériés)
+  ═══════════════════════════════════════════════════════════════════ */
+
+  let planYear   = new Date().getFullYear();
+  let planRegime = localStorage.getItem('pulseunit_plan_regime') || 'jour';
+  let planStates = JSON.parse(localStorage.getItem('pulseunit_plan_states') || '{}');
+
+  function savePlanData() {
+    localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
+    localStorage.setItem('pulseunit_plan_regime', planRegime);
+  }
+
+  function getPlanDefaultState(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) return 'repos';
+    if (getJoursFeries(d.getFullYear()).has(dateStr)) return 'repos';
+    return 'travail';
+  }
+
+  function getPlanDayState(dateStr) {
+    return planStates[dateStr] !== undefined ? planStates[dateStr] : getPlanDefaultState(dateStr);
+  }
+
+  window.cyclePlanDay = function(dateStr) {
+    const cur   = getPlanDayState(dateStr);
+    const cycle = planRegime === 'nuit'
+      ? ['travail', 'ca', 'rcn', 'repos']
+      : ['travail', 'ca', 'repos'];
+    const next  = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+
+    if (next === getPlanDefaultState(dateStr)) {
+      delete planStates[dateStr];
+    } else {
+      planStates[dateStr] = next;
+    }
+    savePlanData();
+
+    const cell = document.getElementById('plan-d-' + dateStr);
+    if (cell) cell.className = 'plan-day p-' + next;
+
+    const mKey = dateStr.slice(0, 7);
+    const mEl  = document.getElementById('plan-mc-' + mKey);
+    if (mEl) {
+      const y = parseInt(mKey.slice(0,4)), mo = parseInt(mKey.slice(5,7)) - 1;
+      let caC = 0, rcnC = 0;
+      const nb = new Date(y, mo+1, 0).getDate();
+      for (let dd = 1; dd <= nb; dd++) {
+        const s = `${y}-${String(mo+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        const st = getPlanDayState(s);
+        if (st === 'ca')  caC++;
+        if (st === 'rcn') rcnC++;
+      }
+      let badge = '';
+      if (caC  > 0) badge += caC + ' CA';
+      if (rcnC > 0) badge += (badge ? ' · ' : '') + rcnC + ' RCN';
+      mEl.textContent = badge;
+    }
+    updatePlanStats();
+  };
+
+  function calcPlanStats() {
+    const caSet  = new Set();
+    const rcnSet = new Set();
+    const start  = new Date(planYear, 0, 1);
+    const end    = new Date(planYear, 11, 31);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const s  = d.toISOString().split('T')[0];
+      const st = getPlanDayState(s);
+      if (st === 'ca')  caSet.add(s);
+      if (st === 'rcn') rcnSet.add(s);
+    }
+    const caCount  = caSet.size;
+    const rcnCount = rcnSet.size;
+    const leaveSet = new Set([...caSet]);
+    if (planRegime === 'nuit') rcnSet.forEach(d => leaveSet.add(d));
+    if (leaveSet.size === 0) return { caCount, rcnCount, maxSpan: 0, periods: [] };
+
+    const sorted = [...leaveSet].sort();
+    const periods = [];
+    let pStart = sorted[0], pEnd = sorted[0];
+    for (let i = 1; i < sorted.length; i++) {
+      const prevDate = new Date(pEnd + 'T12:00:00');
+      const currDate = new Date(sorted[i] + 'T12:00:00');
+      const diffDays = Math.round((currDate - prevDate) / 86400000);
+      let hasTravail = false;
+      for (let g = 1; g < diffDays; g++) {
+        const gd = new Date(prevDate);
+        gd.setDate(prevDate.getDate() + g);
+        if (getPlanDayState(gd.toISOString().split('T')[0]) === 'travail') { hasTravail = true; break; }
+      }
+      if (hasTravail) { periods.push({ start: pStart, end: pEnd }); pStart = sorted[i]; }
+      pEnd = sorted[i];
+    }
+    periods.push({ start: pStart, end: pEnd });
+    const periodsSpan = periods.map(p => {
+      const s = new Date(p.start + 'T12:00:00');
+      const e = new Date(p.end   + 'T12:00:00');
+      return Math.round((e - s) / 86400000) + 1;
+    });
+    const maxSpan = Math.max(...periodsSpan);
+    return { caCount, rcnCount, maxSpan, periods: periods.map((p,i) => ({...p, span: periodsSpan[i]})) };
+  }
+
+  function updatePlanStats() {
+    const limit  = planRegime === 'nuit' ? 22 : 21;
+    const stats  = calcPlanStats();
+    const { caCount, rcnCount, maxSpan } = stats;
+    document.getElementById('pstat-ca').textContent      = caCount;
+    document.getElementById('pstat-rcn').textContent     = rcnCount;
+    document.getElementById('pstat-consec').textContent  = maxSpan || 0;
+    document.getElementById('pstat-limite').textContent  = limit;
+    const rcnChip = document.getElementById('pstat-rcn-chip');
+    if (rcnChip) rcnChip.style.display = planRegime === 'nuit' ? 'flex' : 'none';
+    const banner  = document.getElementById('plan-conformite-banner');
+    const text    = document.getElementById('plan-conformite-text');
+    const chip    = document.getElementById('pstat-conform-chip');
+    const chipVal = document.getElementById('pstat-conform-val');
+    if (!banner) return;
+    if (caCount === 0) {
+      banner.className = 'plan-conformite-banner empty';
+      text.textContent = '— Aucun CA posé';
+      chip.className   = 'plan-stat-chip';
+      chipVal.textContent = '—';
+    } else if (maxSpan <= limit) {
+      banner.className = 'plan-conformite-banner ok';
+      text.textContent = `✅ Conforme — max ${maxSpan} j consécutifs sur ${limit} autorisés`;
+      chip.className   = 'plan-stat-chip ok-chip';
+      chipVal.textContent = '✅';
+    } else if (maxSpan <= limit + 2) {
+      banner.className = 'plan-conformite-banner warn';
+      text.textContent = `⚠️ Attention — ${maxSpan} j consécutifs (limite : ${limit} j)`;
+      chip.className   = 'plan-stat-chip warn-chip';
+      chipVal.textContent = '⚠️';
+    } else {
+      banner.className = 'plan-conformite-banner fail';
+      text.textContent = `❌ Dépassement — ${maxSpan} j consécutifs (+${maxSpan - limit} j au-delà de la limite)`;
+      chip.className   = 'plan-stat-chip fail-chip';
+      chipVal.textContent = '❌';
+    }
+  }
+
+  function renderPlanMonth(year, month) {
+    const MOIS  = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                   'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const JOURS = ['L','M','M','J','V','S','D'];
+    const mKey  = `${year}-${String(month+1).padStart(2,'0')}`;
+    const nbJ   = new Date(year, month+1, 0).getDate();
+    let firstDow = new Date(year, month, 1).getDay();
+    firstDow = firstDow === 0 ? 6 : firstDow - 1;
+    let caC = 0, rcnC = 0;
+    for (let d = 1; d <= nbJ; d++) {
+      const s  = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const st = getPlanDayState(s);
+      if (st === 'ca')  caC++;
+      if (st === 'rcn') rcnC++;
+    }
+    let badge = '';
+    if (caC  > 0) badge += caC + ' CA';
+    if (rcnC > 0) badge += (badge ? ' · ' : '') + rcnC + ' RCN';
+    let html = `<div class="cal-month"><div class="cal-month-header"><span>${MOIS[month]} ${year}</span><span class="cal-month-count" id="plan-mc-${mKey}">${badge}</span></div><div class="cal-grid">`;
+    JOURS.forEach((j, i) => { html += `<div class="cal-day-label${i >= 5 ? ' we' : ''}">${j}</div>`; });
+    for (let e = 0; e < firstDow; e++) html += '<div class="plan-day empty"></div>';
+    for (let d = 1; d <= nbJ; d++) {
+      const str = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const st  = getPlanDayState(str);
+      html += `<div class="plan-day p-${st}" id="plan-d-${str}" onclick="cyclePlanDay('${str}')">${d}</div>`;
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderPlanCalendrier() {
+    const limit = planRegime === 'nuit' ? 22 : 21;
+    document.getElementById('pbtn-jour').className = 'plan-regime-btn' + (planRegime === 'jour' ? ' active-jour' : '');
+    document.getElementById('pbtn-nuit').className = 'plan-regime-btn' + (planRegime === 'nuit' ? ' active-nuit' : '');
+    const sub = document.getElementById('plan-subtitle');
+    if (sub) sub.textContent = planRegime === 'nuit'
+      ? 'Nuit fixes — limite 22 j consécutifs (CA + RCN)'
+      : 'Jour — limite 21 j consécutifs';
+    document.getElementById('plan-year-label').textContent = planYear;
+    const rcnLeg = document.getElementById('plan-legend-rcn');
+    if (rcnLeg) rcnLeg.style.display = planRegime === 'nuit' ? 'inline' : 'none';
+    document.getElementById('pstat-limite').textContent = limit;
+    let html = '';
+    for (let m = 0; m < 12; m++) html += renderPlanMonth(planYear, m);
+    document.getElementById('plan-scroll').innerHTML = html;
+    updatePlanStats();
+  }
+
+  window.setPlanRegime  = function(r) { planRegime = r; savePlanData(); renderPlanCalendrier(); };
+  window.changePlanYear = function(d) { planYear += d; renderPlanCalendrier(); };
+
+  function resetPlanningCA() {
+    if (!confirm('Effacer tout le planning pour ' + planYear + ' ?')) return;
+    const y = String(planYear);
+    Object.keys(planStates).forEach(k => { if (k.startsWith(y)) delete planStates[k]; });
+    savePlanData();
+    renderPlanCalendrier();
+  }
+
+  function openPlanningCA() {
+    document.getElementById('planning-ca-view').style.display = 'flex';
+    setTimeout(renderPlanCalendrier, 30);
+  }
+  function closePlanningCA() {
+    document.getElementById('planning-ca-view').style.display = 'none';
+  }
 
 
 
@@ -6660,6 +6907,7 @@
       if (isVisible('protocole-detail-view'))     { closeProtocoleDetail(); return; }
       if (isVisible('protocoles-view'))           { closeProtocoles(); return; }
       if (isVisible('calendrier-conges-view'))    { closeCalendrierConges(); return; }
+      if (isVisible('planning-ca-view'))          { closePlanningCA(); return; }
       if (isVisible('tasks-view'))                { closeTasks(); return; }
       if (isVisible('calculateurs-view'))         { closeCalculateurs(); return; }
       if (isVisible('lexique-projet-view'))       { document.getElementById('lexique-projet-view').style.display='none'; return; }
@@ -6781,6 +7029,76 @@
     </div>
   </div>
 
+
+  <!-- ═══ PLANNING CA — Validation jours consécutifs ═══ -->
+  <div class="fs-view" id="planning-ca-view" style="z-index:445; display:none;">
+    <div class="fs-header">
+      <div class="fs-topbar">
+        <div class="fs-title-group">
+          <button class="fs-back" onclick="closePlanningCA()">←</button>
+          <div>
+            <h2 style="font-size:1rem; font-weight:900; color:var(--text); margin:0;">📅 Planning & Validation CA</h2>
+            <div class="fs-subtitle" id="plan-subtitle">Jour — limite 21 j consécutifs</div>
+          </div>
+        </div>
+        <button class="cal-reset-btn" onclick="resetPlanningCA()">↺ Effacer</button>
+      </div>
+    </div>
+
+    <!-- Régime -->
+    <div class="plan-regime-bar">
+      <button class="plan-regime-btn active-jour" id="pbtn-jour" onclick="setPlanRegime('jour')">🌞 Agents de jour<br><span style="font-weight:600;">Max 21 j consécutifs</span></button>
+      <button class="plan-regime-btn" id="pbtn-nuit" onclick="setPlanRegime('nuit')">🌙 Fixes de nuit<br><span style="font-weight:600;">Max 22 j (CA + RCN)</span></button>
+    </div>
+
+    <!-- Bannière de conformité -->
+    <div class="plan-conformite-banner empty" id="plan-conformite-banner">
+      <span id="plan-conformite-text">— Aucun CA posé</span>
+    </div>
+
+    <!-- Navigation année -->
+    <div class="cal-year-nav">
+      <button class="cal-year-btn" onclick="changePlanYear(-1)">‹</button>
+      <span class="cal-year-label" id="plan-year-label">2026</span>
+      <button class="cal-year-btn" onclick="changePlanYear(+1)">›</button>
+    </div>
+
+    <!-- Légende + aide -->
+    <div class="plan-legend">
+      <span><span class="plan-legend-dot" style="background:transparent; border:1px solid var(--border);"></span>Travail</span>
+      <span><span class="plan-legend-dot" style="background:var(--as-glow); border:1.5px solid var(--as);"></span>CA</span>
+      <span id="plan-legend-rcn" style="display:none;"><span class="plan-legend-dot" style="background:var(--ide-glow); border:1.5px solid var(--ide);"></span>RCN</span>
+      <span><span class="plan-legend-dot" style="background:var(--pill-bg); border:1px dashed var(--border); opacity:0.5;"></span>Repos</span>
+      <span style="font-size:0.68rem; opacity:0.6;">· Tap pour changer l'état</span>
+    </div>
+
+    <!-- Grille des mois -->
+    <div class="cal-scroll" id="plan-scroll"></div>
+
+    <!-- Barre de stats -->
+    <div class="plan-stats-bar">
+      <div class="plan-stat-chip ca-chip">
+        <div class="plan-stat-val" id="pstat-ca">0</div>
+        <div class="plan-stat-lbl">CA posés</div>
+      </div>
+      <div class="plan-stat-chip rcn-chip" id="pstat-rcn-chip" style="display:none;">
+        <div class="plan-stat-val" id="pstat-rcn">0</div>
+        <div class="plan-stat-lbl">RCN posés</div>
+      </div>
+      <div class="plan-stat-chip">
+        <div class="plan-stat-val" id="pstat-consec">0</div>
+        <div class="plan-stat-lbl">Max consécutifs</div>
+      </div>
+      <div class="plan-stat-chip">
+        <div class="plan-stat-val" id="pstat-limite">21</div>
+        <div class="plan-stat-lbl">Limite légale</div>
+      </div>
+      <div class="plan-stat-chip" id="pstat-conform-chip">
+        <div class="plan-stat-val" id="pstat-conform-val">—</div>
+        <div class="plan-stat-lbl">Conformité</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══ NORMES & ALERTES — Vue principale ═══ -->
   <div id="normes-view" class="fs-view" style="z-index:420;">
