@@ -281,8 +281,12 @@
   #confirm-clear-modal, #congrats-modal { z-index: 600; }
 
   /* AUTH */
-  #auth-modal, #auth-change-pin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-  #auth-change-pin-modal { display: none; }
+  #auth-modal, #auth-change-pin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+  #work-status-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1900; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+  .work-box { background: var(--surface); padding: 30px 24px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+  .work-box h2 { font-weight: 900; margin-bottom: 10px; color: var(--brand-blue); font-size: 1.3rem; }
+  .work-box p { margin-bottom: 22px; font-weight: 600; line-height: 1.4; color: var(--text-muted); font-size: 0.88rem; }
+  .work-btns { display: flex; flex-direction: column; gap: 10px; }
   .auth-box { background: var(--surface); border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 340px; border: 1px solid var(--border); }
   .auth-logo { font-size: 1.6rem; font-weight: 900; text-align: center; margin-bottom: 4px; color: var(--text); }
   .auth-logo span { color: var(--brand-blue); }
@@ -3073,7 +3077,7 @@
           btn.className = `shift-tab ${key === currentShiftKey ? 'active' : ''}`;
           btn.textContent = `${lbl} ${p[0].toUpperCase()}`;
           btn.setAttribute('data-key', key);
-          btn.onclick = () => { currentShiftKey = key; clearSelection(); renderApp(); };
+          btn.onclick = () => { currentShiftKey = key; clearSelection(); renderApp(); checkWorkStatus(); };
           nav.appendChild(btn);
           // Garde jour : 8h-20h → aujourd'hui
           if (i === 0 && today.getHours() >= 8 && today.getHours() < 20 && p === 'jour') {
@@ -5860,6 +5864,7 @@
     renderApp();
     // Toast de confirmation
     showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
+    checkWorkStatus();
   }
 
   async function loginUser() {
@@ -5897,6 +5902,7 @@
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     renderApp();
+    checkWorkStatus();
   }
 
   async function changeTempPin() {
@@ -6099,15 +6105,80 @@
       currentUser = null;
       sessionStorage.removeItem('pulseunit_current_user');
       if (checkAutoLogin()) {
-        // Auto-login réussi : rafraîchir header et app
+        // Auto-login réussi : cacher la modale auth, rafraîchir header et app
+        document.getElementById('auth-modal').style.display = 'none';
         updateHeaderUser();
         renderApp();
+        checkWorkStatus();
       } else {
         updateHeaderUser();
         showAuthModal();
       }
     } else {
+      // Session sessionStorage valide : cacher la modale auth
+      document.getElementById('auth-modal').style.display = 'none';
       updateHeaderUser();
+      renderApp();
+      checkWorkStatus();
+    }
+  }
+
+  /**
+   * Demande à l'utilisateur s'il travaille sur la garde actuelle.
+   * Affiche la modale uniquement s'il n'est pas déjà dans l'effectif
+   * et que la garde n'est pas verrouillée.
+   */
+  function checkWorkStatus() {
+    if (!currentUser) return;
+    initShiftData(currentShiftKey);
+    const h = shiftHistory[currentShiftKey];
+    const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
+    const meds = shiftHistory[dateOnly+'-meds'] || [];
+    const isAlreadyActive = (h.activeStaffIds||[]).includes(currentUser.id)
+                         || h.techIdeId === currentUser.id
+                         || meds.includes(currentUser.id);
+    if (isAlreadyActive || isShiftLocked(currentShiftKey) || isAdmin()) return;
+    const isNight = currentShiftKey.includes('-nuit');
+    document.getElementById('work-title').textContent = `Bonjour ${currentUser.firstName} !`;
+    document.getElementById('work-desc').textContent = `Travaillez-vous sur la garde de ${isNight ? 'NUIT' : 'JOUR'} actuelle ?`;
+    document.getElementById('work-status-modal').style.display = 'flex';
+  }
+
+  /**
+   * Traite la réponse : ajoute l'utilisateur aux effectifs ou passe en lecture seule.
+   * @param {boolean} isWorking - true si l'utilisateur travaille sur la garde
+   */
+  window.handleWorkChoice = function(isWorking) {
+    document.getElementById('work-status-modal').style.display = 'none';
+    if (!currentUser) return;
+    if (isWorking) {
+      initShiftData(currentShiftKey);
+      const h = shiftHistory[currentShiftKey];
+      // Ajout automatique selon le rôle
+      if (currentUser.role === 'med') {
+        const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
+        if (!shiftHistory[dateOnly+'-meds']) shiftHistory[dateOnly+'-meds'] = [null,null,null];
+        const slot = shiftHistory[dateOnly+'-meds'].indexOf(currentUser.id);
+        if (slot === -1) {
+          const empty = shiftHistory[dateOnly+'-meds'].indexOf(null);
+          if (empty !== -1) shiftHistory[dateOnly+'-meds'][empty] = currentUser.id;
+        }
+      } else {
+        if (!h.activeStaffIds.includes(currentUser.id)) {
+          h.activeStaffIds.push(currentUser.id);
+        }
+      }
+      saveData();
+      renderApp();
+      showToast(`✅ Ajouté à la garde — cliquez sur un lit pour vous y assigner`);
+      // Pré-sélection automatique (sauf pour les médecins qui utilisent un autre système)
+      if (currentUser.role !== 'med') {
+        selectedStaffForTap = currentUser.id;
+        updateStickyBanner();
+        renderApp();
+      }
+    } else {
+      showToast("👁 Mode consultation (lecture seule)");
       renderApp();
     }
   }
@@ -6622,6 +6693,18 @@
       <button class="rv-modal-close" onclick="closeRvModal()">VALIDER</button>
     </div>
   </div>
+
+<!-- ===== MODALE STATUT TRAVAIL ===== -->
+<div id="work-status-modal">
+  <div class="work-box">
+    <h2 id="work-title">Bonjour !</h2>
+    <p id="work-desc">Travaillez-vous sur la garde actuelle ?</p>
+    <div class="work-btns">
+      <button class="btn-primary" onclick="handleWorkChoice(true)">✓ Oui, je travaille</button>
+      <button class="header-btn outline" style="width:100%; padding:12px; height:auto;" onclick="handleWorkChoice(false)">👁 Non, consultation</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== MODALE AUTH ===== -->
 <div id="auth-modal">
