@@ -511,17 +511,37 @@
   .plan-day:active { transform:scale(0.88); }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
+  .plan-bonus-bar { display:flex; gap:6px; padding:7px 14px; background:var(--bg); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
+  .plan-bonus-bar::-webkit-scrollbar { display:none; }
   .plan-stat-chip { display:flex; flex-direction:column; align-items:center; min-width:54px; }
   .plan-stat-val { font-size:1.15rem; font-weight:900; color:var(--text); }
   .plan-stat-lbl { font-size:0.64rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; text-align:center; line-height:1.2; }
-  .plan-stat-chip.ca-chip  .plan-stat-val { color:var(--as); }
-  .plan-stat-chip.rcn-chip .plan-stat-val { color:var(--ide); }
+  .plan-stat-chip.ca-chip   .plan-stat-val { color:var(--as); }
+  .plan-stat-chip.rcn-chip  .plan-stat-val { color:var(--ide); }
+  .plan-stat-chip.hs-chip   .plan-stat-val { color:var(--ide); }
+  .plan-stat-chip.rcv-chip2 .plan-stat-val { color:var(--med); }
+  .plan-stat-chip.total-chip2 { background:var(--as-glow); border-radius:10px; padding:4px 8px; }
+  .plan-stat-chip.total-chip2 .plan-stat-val { color:var(--as); }
   .plan-stat-chip.ok-chip   { background:var(--as-glow);   border-radius:10px; padding:4px 8px; }
   .plan-stat-chip.ok-chip   .plan-stat-val { color:var(--as); }
   .plan-stat-chip.warn-chip { background:var(--med-glow);  border-radius:10px; padding:4px 8px; }
   .plan-stat-chip.warn-chip .plan-stat-val { color:var(--med); }
   .plan-stat-chip.fail-chip { background:var(--crit-glow); border-radius:10px; padding:4px 8px; }
   .plan-stat-chip.fail-chip .plan-stat-val { color:var(--crit); }
+  /* Section soldes (CA N-1, HP, RCV) */
+  .plan-soldes { background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .plan-soldes-title { display:flex; justify-content:space-between; align-items:center; padding:9px 16px; font-size:0.8rem; font-weight:900; color:var(--text-muted); cursor:pointer; -webkit-user-select:none; user-select:none; }
+  .plan-solde-row { display:flex; align-items:center; gap:8px; padding:6px 14px; border-top:1px solid var(--border); }
+  .plan-solde-lbl { font-size:0.78rem; font-weight:900; color:var(--text); min-width:56px; }
+  .plan-solde-inputs { display:flex; align-items:center; gap:6px; flex:1; flex-wrap:wrap; }
+  .plan-solde-inputs input[type=number] { width:52px; padding:5px 6px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-size:0.9rem; font-weight:700; text-align:center; font-family:var(--font); }
+  .plan-solde-inputs input[type=date]   { padding:5px 6px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-size:0.8rem; font-family:var(--font); flex:1; min-width:0; }
+  .plan-solde-unit { font-size:0.78rem; font-weight:700; color:var(--text-muted); }
+  .plan-solde-explbl { font-size:0.72rem; color:var(--text-muted); flex-shrink:0; }
+  .plan-solde-warn { color:var(--med) !important; }
+  .plan-solde-total-bar { padding:7px 14px; font-size:0.82rem; font-weight:900; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  /* Bouton effacer mois */
+  .plan-month-clear { padding:2px 8px; border-radius:6px; font-size:0.68rem; font-weight:900; color:var(--text-muted); background:transparent; border:1px solid var(--border); cursor:pointer; flex-shrink:0; font-family:var(--font); }
 
   /* ═══════════════════════════════════════════════
      MODULE NORMES & ALERTES — Styles v2
@@ -4497,20 +4517,43 @@
   function calcPlanStats() {
     const caSet  = new Set();
     const rcnSet = new Set();
-    // Utilise T12:00:00 pour éviter le décalage UTC/local
+    const fer    = getJoursFeries(planYear);
+    let djfCount = 0, hsCA = 0;
+    const caPeriodsWD = []; let curPer = []; // périodes CA jours ouvrés (pour fractionnement)
+    // T12:00:00 → midi local = pas de décalage UTC
     const start  = new Date(`${planYear}-01-01T12:00:00`);
     const end    = new Date(`${planYear}-12-31T12:00:00`);
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const s  = d.toISOString().split('T')[0];
-      const st = getPlanDayState(s);
-      if (st === 'ca')  caSet.add(s);
-      if (st === 'rcn') rcnSet.add(s);
+      const s   = d.toISOString().split('T')[0];
+      const st  = getPlanDayState(s);
+      const dow = d.getDay();
+      const isHol = fer.has(s);
+      const isWE  = (dow===0 || dow===6);
+      if (st === 'ca') {
+        caSet.add(s);
+        const mo = d.getMonth()+1; if(mo<=4||mo>=11) hsCA++; // Hors Saison
+        if (!isWE && !isHol) curPer.push(s); // jour ouvré CA → période frac
+      } else {
+        if (st === 'rcn') rcnSet.add(s);
+        if (!isWE && !isHol && curPer.length>0) { caPeriodsWD.push([...curPer]); curPer=[]; } // jour ouvré non-CA coupe la période
+        if ((dow===0||isHol) && ['travail','jour','nuit','hs','formation'].includes(st)) djfCount++; // DJF travaillé
+      }
     }
+    if (curPer.length>0) caPeriodsWD.push(curPer);
+
     const caCount  = caSet.size;
     const rcnCount = rcnSet.size;
+    // Bonus Hors Saison (Décret 2002-8, Art. 1)
+    const hsBonus  = hsCA>=6 ? 2 : hsCA>=3 ? 1 : 0;
+    // Bonus Fractionnement (Décret 2002-8, Art. 1) : ≥3 périodes ≥5j ouvrés
+    const fracBonus = caPeriodsWD.filter(p=>p.length>=5).length>=3 ? 1 : 0;
+    // Bonus RCV (Décret 2002-9, Art. 3) : variable ≥20 DJF — nuit = 0 (Art. 4)
+    const rcvBonus  = (planRegime!=='nuit' && djfCount>=20) ? 2 : 0;
+    const grandTotal = 25 + hsBonus + fracBonus + rcvBonus;
+
     const leaveSet = new Set([...caSet]);
     if (planRegime === 'nuit') rcnSet.forEach(d => leaveSet.add(d));
-    if (leaveSet.size === 0) return { caCount, rcnCount, maxSpan: 0, periods: [] };
+    if (leaveSet.size === 0) return { caCount, rcnCount, maxSpan: 0, periods: [], djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal };
 
     const sorted = [...leaveSet].sort();
     const periods = [];
@@ -4550,19 +4593,51 @@
       return Math.round((e - s) / 86400000) + 1;
     });
     const maxSpan = Math.max(...periodsSpan);
-    return { caCount, rcnCount, maxSpan, periods: periods.map((p,i) => ({...p, span: periodsSpan[i]})) };
+    return { caCount, rcnCount, maxSpan, periods: periods.map((p,i) => ({...p, span: periodsSpan[i]})), djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal };
   }
 
   function updatePlanStats() {
     const limit  = planRegime === 'nuit' ? 22 : 21;
     const stats  = calcPlanStats();
-    const { caCount, rcnCount, maxSpan } = stats;
+    const { caCount, rcnCount, maxSpan, djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal } = stats;
     document.getElementById('pstat-ca').textContent      = caCount;
     document.getElementById('pstat-rcn').textContent     = rcnCount;
     document.getElementById('pstat-consec').textContent  = maxSpan || 0;
     document.getElementById('pstat-limite').textContent  = limit;
     const rcnChip = document.getElementById('pstat-rcn-chip');
     if (rcnChip) rcnChip.style.display = planRegime === 'nuit' ? 'flex' : 'none';
+    // Bonus HP/RCV
+    const el = id => document.getElementById(id);
+    if (el('pstat-hs-ca'))     el('pstat-hs-ca').textContent     = hsCA;
+    if (el('pstat-hs-bonus'))  el('pstat-hs-bonus').textContent  = '+' + hsBonus;
+    if (el('pstat-frac'))      el('pstat-frac').textContent      = '+' + fracBonus;
+    if (el('pstat-djf'))       el('pstat-djf').textContent       = planRegime !== 'nuit' ? djfCount : '—';
+    if (el('pstat-rcv2'))      el('pstat-rcv2').textContent      = planRegime !== 'nuit' ? '+' + rcvBonus : '—';
+    if (el('pstat-total2'))    el('pstat-total2').textContent    = grandTotal;
+    const djfChip = el('pstat-djf-chip');
+    const rcvChip = el('pstat-rcv-chip2');
+    if (djfChip) djfChip.style.opacity = planRegime === 'nuit' ? '0.35' : '1';
+    if (rcvChip) rcvChip.style.opacity = planRegime === 'nuit' ? '0.35' : '1';
+    // Solde total disponible
+    const today = new Date();
+    const fmt = s => s ? new Date(s+'T12:00:00') : null;
+    const warnOrNot = (exp, n) => {
+      if (!n) return '0';
+      const dt = fmt(exp);
+      if (dt && dt < today) return `<s style="opacity:.5">${n}</s>`;
+      if (dt && (dt-today)<30*86400000) return `<span class="plan-solde-warn">${n}</span>`;
+      return String(n);
+    };
+    const solde = planSoldes;
+    const soldeTotal = el('plan-solde-total-val');
+    if (soldeTotal) {
+      const parts = [
+        solde.caN1 > 0 ? warnOrNot(solde.caN1Exp, solde.caN1) + ' CA N-1' : '',
+        solde.hp   > 0 ? warnOrNot(solde.hpExp,   solde.hp)   + ' HP'     : '',
+        solde.rcv  > 0 ? warnOrNot(solde.rcvExp,  solde.rcv)  + ' RCV'    : '',
+      ].filter(Boolean);
+      soldeTotal.innerHTML = parts.length ? parts.join(' · ') : '—';
+    }
     const banner  = document.getElementById('plan-conformite-banner');
     const text    = document.getElementById('plan-conformite-text');
     const chip    = document.getElementById('pstat-conform-chip');
@@ -4609,7 +4684,7 @@
     let badge = '';
     if (caC  > 0) badge += caC + ' CA';
     if (rcnC > 0) badge += (badge ? ' · ' : '') + rcnC + ' RCN';
-    let html = `<div class="cal-month"><div class="cal-month-header"><span>${MOIS[month]} ${year}</span><span class="cal-month-count" id="plan-mc-${mKey}">${badge}</span></div><div class="cal-grid">`;
+    let html = `<div class="cal-month"><div class="cal-month-header"><span>${MOIS[month]} ${year}</span><span style="display:flex;align-items:center;gap:6px;"><span class="cal-month-count" id="plan-mc-${mKey}">${badge}</span><button class="plan-month-clear" onclick="resetPlanMonth('${mKey}')">↺</button></span></div><div class="cal-grid">`;
     JOURS.forEach((j, i) => { html += `<div class="cal-day-label${i >= 5 ? ' we' : ''}">${j}</div>`; });
     for (let e = 0; e < firstDow; e++) html += '<div class="plan-day empty"></div>';
     for (let d = 1; d <= nbJ; d++) {
@@ -4650,9 +4725,45 @@
     renderPlanCalendrier();
   }
 
+  // ── Soldes (CA N-1, HP, RCV avec dates limites) ──────────────────────
+  let planSoldes = JSON.parse(localStorage.getItem('pulseunit_plan_soldes') || 'null') ||
+    { caN1: 0, caN1Exp: '', hp: 0, hpExp: '', rcv: 0, rcvExp: '' };
+  function savePlanSoldes() { try { localStorage.setItem('pulseunit_plan_soldes', JSON.stringify(planSoldes)); } catch(e){} }
+
+  window.updatePlanSolde = function(field, val) {
+    planSoldes[field] = val; savePlanSoldes(); updatePlanStats();
+  };
+
+  let planSoldesOpen = false;
+  window.togglePlanSoldes = function() {
+    planSoldesOpen = !planSoldesOpen;
+    const body   = document.getElementById('plan-soldes-body');
+    const toggle = document.getElementById('plan-soldes-toggle');
+    if (body)   body.style.display   = planSoldesOpen ? 'block' : 'none';
+    if (toggle) toggle.textContent   = planSoldesOpen ? '▴' : '▾';
+  };
+
+  function initPlanSoldesUI() {
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+    set('solde-ca-n1',     planSoldes.caN1 || '');
+    set('solde-ca-n1-exp', planSoldes.caN1Exp);
+    set('solde-hp',        planSoldes.hp || '');
+    set('solde-hp-exp',    planSoldes.hpExp);
+    set('solde-rcv',       planSoldes.rcv || '');
+    set('solde-rcv-exp',   planSoldes.rcvExp);
+  }
+
+  // ── Effacer un mois ────────────────────────────────────────────────────
+  window.resetPlanMonth = function(mKey) {
+    if (!confirm('Effacer le mois ' + mKey + ' ?')) return;
+    Object.keys(planStates).forEach(k => { if (k.startsWith(mKey)) delete planStates[k]; });
+    savePlanData();
+    renderPlanCalendrier();
+  };
+
   function openPlanningCA() {
     document.getElementById('planning-ca-view').style.display = 'flex';
-    setTimeout(renderPlanCalendrier, 30);
+    setTimeout(() => { renderPlanCalendrier(); initPlanSoldesUI(); }, 30);
   }
   function closePlanningCA() {
     document.getElementById('planning-ca-view').style.display = 'none';
@@ -7217,19 +7328,59 @@
       <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18); border:1.5px solid #60ceea;"></span>J — Jour</span>
       <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13); border:1.5px solid #ef4444;"></span>N — Nuit</span>
       <span><span class="plan-legend-dot" style="background:var(--as-glow); border:1.5px solid var(--as);"></span>CA</span>
-      <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32); border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto après nuit)</em></span>
+      <span id="plan-legend-rcn"><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32); border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto après nuit)</em></span>
       <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13); border:1px solid #64748b;"></span>RH</span>
       <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14); border:1.5px solid #a855f7;"></span>HS — H.Sup</span>
       <span><span class="plan-legend-dot" style="background:rgba(249,115,22,0.14); border:1.5px solid #f97316;"></span>FO — Formation</span>
       <span><span class="plan-legend-dot" style="background:rgba(245,158,11,0.18); border:1.5px solid #f59e0b;"></span>JF — Jour Férié</span>
       <span><span class="plan-legend-dot" style="background:rgba(159,18,57,0.18); border:1.5px solid #9f1239;"></span>AM — Arrêt Maladie</span>
-      <span><span class="plan-legend-dot" style="background:var(--pill-bg); border:1px dashed var(--border);"></span>Repos</span>
+    </div>
+
+    <!-- Soldes (CA N-1, HP, RCV) -->
+    <div class="plan-soldes">
+      <div class="plan-soldes-title" onclick="togglePlanSoldes()">
+        <span>💼 Soldes & Reports</span>
+        <span id="plan-soldes-toggle">▾</span>
+      </div>
+      <div id="plan-soldes-body" style="display:none;">
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl">CA N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="25" id="solde-ca-n1" placeholder="0" onchange="updatePlanSolde('caN1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-ca-n1-exp" onchange="updatePlanSolde('caN1Exp',this.value)">
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl">HP</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-hp" placeholder="0" onchange="updatePlanSolde('hp',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-hp-exp" onchange="updatePlanSolde('hpExp',this.value)">
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl">RCV</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-rcv" placeholder="0" onchange="updatePlanSolde('rcv',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-rcv-exp" onchange="updatePlanSolde('rcvExp',this.value)">
+          </div>
+        </div>
+        <div class="plan-solde-total-bar">
+          <span style="color:var(--text-muted);font-size:0.76rem;">Soldes disponibles</span>
+          <span id="plan-solde-total-val" style="color:var(--as);">—</span>
+        </div>
+      </div>
     </div>
 
     <!-- Grille des mois -->
     <div class="cal-scroll" id="plan-scroll"></div>
 
-    <!-- Barre de stats -->
+    <!-- Barre de validation (consécutifs) -->
     <div class="plan-stats-bar">
       <div class="plan-stat-chip ca-chip">
         <div class="plan-stat-val" id="pstat-ca">0</div>
@@ -7250,6 +7401,34 @@
       <div class="plan-stat-chip" id="pstat-conform-chip">
         <div class="plan-stat-val" id="pstat-conform-val">—</div>
         <div class="plan-stat-lbl">Conformité</div>
+      </div>
+    </div>
+
+    <!-- Barre de bonus HP/RCV -->
+    <div class="plan-bonus-bar">
+      <div class="plan-stat-chip">
+        <div class="plan-stat-val" id="pstat-hs-ca">0</div>
+        <div class="plan-stat-lbl">j Hs</div>
+      </div>
+      <div class="plan-stat-chip hs-chip">
+        <div class="plan-stat-val" id="pstat-hs-bonus">+0</div>
+        <div class="plan-stat-lbl">Bonus HS</div>
+      </div>
+      <div class="plan-stat-chip">
+        <div class="plan-stat-val" id="pstat-frac">+0</div>
+        <div class="plan-stat-lbl">Frac.</div>
+      </div>
+      <div class="plan-stat-chip" id="pstat-djf-chip">
+        <div class="plan-stat-val" id="pstat-djf">0</div>
+        <div class="plan-stat-lbl">DJF trav.</div>
+      </div>
+      <div class="plan-stat-chip rcv-chip2" id="pstat-rcv-chip2">
+        <div class="plan-stat-val" id="pstat-rcv2">+0</div>
+        <div class="plan-stat-lbl">Bonus RCV</div>
+      </div>
+      <div class="plan-stat-chip total-chip2">
+        <div class="plan-stat-val" id="pstat-total2">25</div>
+        <div class="plan-stat-lbl">Total CA</div>
       </div>
     </div>
   </div>
