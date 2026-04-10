@@ -6097,13 +6097,40 @@
     }
   }
 
-  async function copyAlphaLink() {
+  function copyAlphaLink() {
+    const btn = document.getElementById('alpha-copy-btn');
+    // Méthode 1 : API Clipboard moderne
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ALPHA_URL).then(() => {
+        btn.textContent = '✅ Copié !';
+        setTimeout(() => { btn.textContent = 'Copier'; }, 2500);
+      }).catch(() => _copyFallback(btn));
+    } else {
+      _copyFallback(btn);
+    }
+  }
+
+  function _copyFallback(btn) {
+    // Méthode 2 : élément textarea temporaire (fonctionne partout)
     try {
-      await navigator.clipboard.writeText(ALPHA_URL);
-      const btn = document.getElementById('alpha-copy-btn');
-      btn.textContent = '✅ Copié !';
-      setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
-    } catch(e) { alert('Copiez manuellement : ' + ALPHA_URL); }
+      const ta = document.createElement('textarea');
+      ta.value = ALPHA_URL;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px;';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, 9999);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (ok && btn) {
+        btn.textContent = '✅ Copié !';
+        setTimeout(() => { btn.textContent = 'Copier'; }, 2500);
+      } else {
+        prompt('Copie ce lien :', ALPHA_URL);
+      }
+    } catch(e) {
+      prompt('Copie ce lien :', ALPHA_URL);
+    }
   }
 
   function sendWhatsAppBug() {
