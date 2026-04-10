@@ -4452,11 +4452,46 @@
     updatePlanStats();
   };
 
+  // ── Drag-to-paint : glisser pour appliquer un état sur plusieurs cases ──
+  let planDrag = { active: false, state: null, lastDate: null, moved: false };
+
+  function applyPlanStateDrag(dateStr, targetState) {
+    if (targetState === null) { delete planStates[dateStr]; }
+    else { planStates[dateStr] = targetState; }
+    const dayNum   = parseInt(dateStr.split('-')[2]);
+    const actualSt = getPlanDayState(dateStr);
+    const cell     = document.getElementById('plan-d-' + dateStr);
+    if (cell) { cell.className = 'plan-day p-' + actualSt; cell.innerHTML = planDayHTML(dayNum, actualSt); }
+  }
+
+  window.planCellTouchStart = function(dateStr, e) {
+    e.preventDefault(); // empêche scroll + click synthétique
+    const cur      = getPlanDayState(dateStr);
+    const defState = getPlanDefaultState(dateStr);
+    const cycle    = ['travail','jour','nuit','ca','maladie','rh','hs','formation','repos'];
+    const idx      = cycle.indexOf(cur);
+    let next;
+    if (idx === -1) {
+      next = cycle[0];
+    } else {
+      const cand       = cycle[(idx + 1) % cycle.length];
+      const shouldRev  = (cand === defState) ||
+        (idx === cycle.length - 1 && defState !== 'travail' && defState !== 'repos');
+      next = shouldRev ? null : cand;
+    }
+    planDrag.active   = true;
+    planDrag.moved    = false;
+    planDrag.state    = next;
+    planDrag.lastDate = dateStr;
+    applyPlanStateDrag(dateStr, next);
+  };
+
   function calcPlanStats() {
     const caSet  = new Set();
     const rcnSet = new Set();
-    const start  = new Date(planYear, 0, 1);
-    const end    = new Date(planYear, 11, 31);
+    // Utilise T12:00:00 pour éviter le décalage UTC/local
+    const start  = new Date(`${planYear}-01-01T12:00:00`);
+    const end    = new Date(`${planYear}-12-31T12:00:00`);
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const s  = d.toISOString().split('T')[0];
       const st = getPlanDayState(s);
@@ -4486,8 +4521,23 @@
       pEnd = sorted[i];
     }
     periods.push({ start: pStart, end: pEnd });
+
+    // Remonte le début de chaque bloc : vacances commencent sur le premier RH
+    // + RCN qui précède ce RH (s'il est présent)
+    const dayBefore = ds => {
+      const dt = new Date(ds + 'T12:00:00');
+      dt.setDate(dt.getDate() - 1);
+      return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    };
     const periodsSpan = periods.map(p => {
-      const s = new Date(p.start + 'T12:00:00');
+      let extStart = p.start;
+      const d1 = dayBefore(extStart);
+      if (getPlanDayState(d1) === 'rh') {
+        extStart = d1;
+        const d2 = dayBefore(extStart);
+        if (getPlanDayState(d2) === 'rcn') extStart = d2;
+      }
+      const s = new Date(extStart + 'T12:00:00');
       const e = new Date(p.end   + 'T12:00:00');
       return Math.round((e - s) / 86400000) + 1;
     });
@@ -4557,7 +4607,7 @@
     for (let d = 1; d <= nbJ; d++) {
       const str = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const st  = getPlanDayState(str);
-      html += `<div class="plan-day p-${st}" id="plan-d-${str}" onclick="cyclePlanDay('${str}')">${planDayHTML(d, st)}</div>`;
+      html += `<div class="plan-day p-${st}" id="plan-d-${str}" onclick="cyclePlanDay('${str}')" ontouchstart="planCellTouchStart('${str}',event)">${planDayHTML(d, st)}</div>`;
     }
     html += '</div></div>';
     return html;
@@ -6913,6 +6963,47 @@
 
   appInit();
 
+  // ── Drag-to-paint : touchmove + touchend globaux ───────────────────────
+  document.addEventListener('touchmove', function(e) {
+    if (!planDrag.active) return;
+    e.preventDefault();
+    planDrag.moved = true;
+    const touch = e.touches[0];
+    const el    = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return;
+    const cell  = el.closest ? el.closest('[id^="plan-d-"]') : null;
+    if (!cell) return;
+    const dateStr = cell.id.slice(7); // retire 'plan-d-'
+    if (dateStr === planDrag.lastDate) return;
+    planDrag.lastDate = dateStr;
+    applyPlanStateDrag(dateStr, planDrag.state);
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    if (!planDrag.active) return;
+    planDrag.active = false;
+    savePlanData();
+    // Mise à jour de tous les badges mensuels
+    for (let m = 1; m <= 12; m++) {
+      const mKey = `${planYear}-${String(m).padStart(2,'0')}`;
+      const mEl  = document.getElementById('plan-mc-' + mKey);
+      if (!mEl) continue;
+      const nb = new Date(planYear, m, 0).getDate();
+      let caC = 0, rcnC = 0;
+      for (let dd = 1; dd <= nb; dd++) {
+        const s  = `${planYear}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        const st = getPlanDayState(s);
+        if (st === 'ca')  caC++;
+        if (st === 'rcn') rcnC++;
+      }
+      let badge = '';
+      if (caC  > 0) badge += caC + ' CA';
+      if (rcnC > 0) badge += (badge ? ' · ' : '') + rcnC + ' RCN';
+      mEl.textContent = badge;
+    }
+    updatePlanStats();
+  }, { passive: true });
+
   // ── Swipe gauche = retour / fermeture ──────────────────────────────────
   (function() {
     let startX = 0, startY = 0;
@@ -6925,6 +7016,7 @@
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
       if (dx > -60 || Math.abs(dy) > Math.abs(dx)) return; // pas un swipe gauche net
+      if (planDrag.moved) return; // glissement sur planning : ignorer
 
       // Priorité : du plus spécifique au plus général
       const isVisible = id => {
