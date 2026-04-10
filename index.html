@@ -82,7 +82,8 @@
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; padding-bottom: 90px; transition: background-color 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; padding-bottom: 90px; transition: background-color 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+  html { overscroll-behavior: none; }
   input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
   
   .header, .bed-card, .pool-panel, .staff-card, .mini-item, .a-btn, .pill-container > div, .fs-view, .fs-header, .calc-tile { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.2s ease; }
@@ -2347,6 +2348,64 @@
         📅 Ouvrir le simulateur calendrier
       </button>
     `
+  },
+  {
+    id: 'conges_ete', icon: '☀️', title: 'Congés Été FPH',
+    html: `
+      <div style="background:var(--med-glow); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.78rem; color:var(--med); font-weight:700; line-height:1.7;">
+        ☀️ <strong>Décret 2002-8 — FPH Art. 1</strong><br>
+        Période estivale : <strong>1er mai → 31 octobre</strong><br>
+        Fraction principale : min <strong>10 j consécutifs</strong> · max <strong>20 j consécutifs</strong><br>
+        Report possible jusqu'au <strong>31 mars N+1</strong>
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Quotité de travail</span>
+        <select id="ete_quotite" class="calc-select" onchange="execCalcLive('conges_ete')">
+          <option value="100">100 % — Temps plein (25 j)</option>
+          <option value="90">90 % (22,5 → 23 j)</option>
+          <option value="80">80 % (20 j)</option>
+          <option value="70">70 % (17,5 → 18 j)</option>
+          <option value="60">60 % (15 j)</option>
+          <option value="50">50 % (12,5 → 13 j)</option>
+        </select>
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Mois travaillés sur la période de référence</span>
+        <select id="ete_mois" class="calc-select" onchange="execCalcLive('conges_ete')">
+          <option value="12">12 mois — Année complète</option>
+          <option value="11">11 mois</option>
+          <option value="10">10 mois</option>
+          <option value="9">9 mois</option>
+          <option value="8">8 mois</option>
+          <option value="7">7 mois</option>
+          <option value="6">6 mois</option>
+          <option value="5">5 mois</option>
+          <option value="4">4 mois</option>
+          <option value="3">3 mois</option>
+          <option value="2">2 mois</option>
+          <option value="1">1 mois</option>
+        </select>
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Jours CA déjà posés / pris (hors été)</span>
+        <input type="number" id="ete_deja" class="calc-input" placeholder="0" min="0" oninput="execCalcLive('conges_ete')">
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Jours souhaités en été (1 mai – 31 oct)</span>
+        <input type="number" id="ete_ete" class="calc-input" placeholder="ex : 15" min="0" oninput="execCalcLive('conges_ete')">
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Dont consécutifs (fraction principale)</span>
+        <input type="number" id="ete_consec" class="calc-input" placeholder="ex : 15" min="0" oninput="execCalcLive('conges_ete')">
+      </div>
+      <div class="calc-result-box" id="res_ete_box" style="display:none; flex-direction:column; gap:8px;">
+        <div class="calc-result-title">DROITS &amp; SOLDE</div>
+        <div class="calc-result-val" id="res_ete_droits">--</div>
+        <div class="calc-result-sub" id="res_ete_solde"></div>
+        <div id="res_ete_rules" style="margin-top:6px; font-size:0.8rem; line-height:1.8;"></div>
+        <div id="res_ete_bonus" style="font-size:0.78rem; color:var(--as); font-weight:700; margin-top:4px;"></div>
+      </div>
+    `
   }
   ];
 
@@ -2511,7 +2570,7 @@
     {label:"VENTILATION", ids:["ibw", "pf", "dp"], color:"var(--ide)"},
     {label:"HÉMODYNAMIQUE", ids:["pam", "pse"], color:"var(--med)"},
     {label:"MÉDICAMENTS", ids:["dosekg", "convmgml", "diurese", "imc"], color:"var(--as)"},
-    {label:"RH / ADMIN", ids:["pct", "transmission", "conges"], color:"var(--text-muted)"},
+    {label:"RH / ADMIN", ids:["pct", "transmission", "conges", "conges_ete"], color:"var(--text-muted)"},
   ];
 
       CALC_GROUPS.forEach(group => {
@@ -2961,6 +3020,62 @@
 
       const box = document.getElementById('res_conges_box');
       box.style.display = 'flex';
+    }
+    else if(id === 'conges_ete') {
+      /* ============================================================
+         Calculateur Congés Été — Fonction Publique Hospitalière
+         Source : Décret n° 2002-8 du 4 janvier 2002, art. 1
+         25 j ouvrés par an (temps plein). Période estivale : mai–oct.
+         Fraction principale : ≥10 j consécutifs, ≤20 j consécutifs.
+         Report jusqu'au 31 mars N+1. Prorata si < 12 mois.
+         Bonus HS : +1j (3-5j hors saison), +2j (≥6j hors saison).
+         Bonus Frac : +1j (≥3 périodes de ≥5 j ouvrés).
+      ============================================================ */
+      const quotite  = parseInt(document.getElementById('ete_quotite')?.value) || 100;
+      const mois     = parseInt(document.getElementById('ete_mois')?.value) || 12;
+      const deja     = parseInt(document.getElementById('ete_deja')?.value)  || 0;
+      const joursEte = parseInt(document.getElementById('ete_ete')?.value)   || 0;
+      const consec   = parseInt(document.getElementById('ete_consec')?.value)|| 0;
+
+      // — Droits CA proratisés —
+      const droitsBase = Math.ceil(25 * (quotite / 100) * (mois / 12));
+      const soldeAvantEte = droitsBase - deja;
+      const soldeApresEte = soldeAvantEte - joursEte;
+
+      // — Règles légales —
+      let rules = '';
+      if (joursEte > 0) {
+        if (consec >= 10 && consec <= 20)
+          rules += '<span style="color:var(--as)">✅ Fraction principale : ' + consec + ' j consécutifs (règle 10–20 j respectée)</span><br>';
+        else if (consec < 10 && consec > 0)
+          rules += '<span style="color:var(--crit)">⚠️ Fraction principale : ' + consec + ' j consécutifs — minimum légal : 10 j (Décret 2002-8)</span><br>';
+        else if (consec > 20)
+          rules += '<span style="color:var(--crit)">❌ ' + consec + ' j consécutifs dépassent le maximum légal de 20 j — accord chef de service requis</span><br>';
+        else
+          rules += '<span style="color:var(--text-muted)">ℹ️ Renseignez le nombre de jours consécutifs pour vérifier la fraction principale.</span><br>';
+      }
+      if (soldeApresEte < 0)
+        rules += '<span style="color:var(--crit)">❌ Solde insuffisant : il manque ' + Math.abs(soldeApresEte) + ' j</span><br>';
+      else if (soldeApresEte > 0)
+        rules += '<span style="color:var(--ide)">📅 Report possible : jusqu\'à ' + soldeApresEte + ' j avant le 31 mars N+1</span><br>';
+
+      // — Bonus potentiel sur jours hors saison restants —
+      const joursHS = Math.max(0, soldeApresEte);
+      let bonusTxt = '';
+      if (joursHS >= 6)       bonusTxt = '🌿 Bonus hors saison potentiel : <strong>+2 j</strong> (≥ 6 j hors saison restants)';
+      else if (joursHS >= 3)  bonusTxt = '🌿 Bonus hors saison potentiel : <strong>+1 j</strong> (3–5 j hors saison restants)';
+      else if (joursHS > 0)   bonusTxt = '🌿 Hors saison : ' + joursHS + ' j restants — min 3 j ouvrés pour bonus';
+      else                    bonusTxt = '';
+
+      // — Affichage —
+      const j = n => n <= 1 ? n + ' jour' : n + ' jours';
+      document.getElementById('res_ete_droits').textContent = 'Droits CA : ' + j(droitsBase) + (mois < 12 ? ' (proratisés sur ' + mois + ' mois)' : '');
+      document.getElementById('res_ete_droits').style.color = 'var(--text)';
+      document.getElementById('res_ete_solde').textContent  =
+        'Posés hors été : ' + j(deja) + ' · Prévus en été : ' + j(joursEte) + ' · Solde : ' + j(Math.max(0, soldeApresEte));
+      document.getElementById('res_ete_rules').innerHTML  = rules;
+      document.getElementById('res_ete_bonus').innerHTML  = bonusTxt;
+      document.getElementById('res_ete_box').style.display = 'flex';
     }
     else if(id === 'transmission') {
       const jours = parseFloat(document.getElementById('calc_tr_jours').value);
@@ -6534,14 +6649,23 @@
         return m && m.style.transform === 'translateX(0)';
       };
 
-      if (isVisible('normes-respi-view'))   { closeNormesRespi(); return; }
-      if (isVisible('normes-detail-view'))  { closeNormesDetail(); return; }
-      if (isVisible('normes-view'))         { closeNormes(); return; }
-      if (isVisible('protocoles-view'))     { closeProtocoles(); return; }
-      if (isVisible('tasks-view'))          { closeTasks(); return; }
-      if (isVisible('calculateurs-view'))   { closeCalculateurs(); return; }
-      if (isVisible('lexique-view'))        { closeLexique(); return; }
-      if (menuOpen())                       { closeSideMenu(); return; }
+      // Modals (priorité max)
+      const calcModal = document.getElementById('calc-modal');
+      if (calcModal && calcModal.style.display !== 'none' && calcModal.style.display !== '') { closeCalcModal(); return; }
+
+      // Vues plein écran — ordre du plus profond au plus superficiel
+      if (isVisible('normes-respi-view'))        { closeNormesRespi(); return; }
+      if (isVisible('normes-detail-view'))        { closeNormesDetail(); return; }
+      if (isVisible('normes-view'))               { closeNormes(); return; }
+      if (isVisible('protocole-detail-view'))     { closeProtocoleDetail(); return; }
+      if (isVisible('protocoles-view'))           { closeProtocoles(); return; }
+      if (isVisible('calendrier-conges-view'))    { closeCalendrierConges(); return; }
+      if (isVisible('tasks-view'))                { closeTasks(); return; }
+      if (isVisible('calculateurs-view'))         { closeCalculateurs(); return; }
+      if (isVisible('lexique-projet-view'))       { document.getElementById('lexique-projet-view').style.display='none'; return; }
+      if (isVisible('securite-view'))             { document.getElementById('securite-view').style.display='none'; return; }
+      if (isVisible('lexique-view'))              { closeLexique(); return; }
+      if (menuOpen())                             { closeSideMenu(); return; }
     }, { passive: true });
   })();
 </script>
