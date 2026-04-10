@@ -3061,9 +3061,7 @@
   /** Vrai si l'utilisateur peut modifier les lits (affecté + garde non verrouillée). */
   function canEditBeds() {
     if (isShiftLocked(currentShiftKey)) return false;
-    if (isAdmin()) return true;
-    initShiftData(currentShiftKey);
-    const h = shiftHistory[currentShiftKey];
+    const h = shiftHistory[currentShiftKey] || {};
     return (h.activeStaffIds || []).includes(currentUser?.id) || h.techIdeId === currentUser?.id;
   }
 
@@ -3583,10 +3581,10 @@
     const d = shiftHistory[currentShiftKey].assignments[id];
     if(!d) return;
     d[p.role] = (d[p.role] === p.id) ? null : p.id;
-    saveData();
     renderApp();
+    saveData();
   }
-  
+
   /**
    * Bascule l'état d'un booléen sur un lit (fermé, BMR, dialyse, critique).
    * La fermeture d'un lit efface ses assignations IDE et AS.
@@ -3606,8 +3604,8 @@
     let d = h.assignments[id];
     d[p] = !d[p];
     if(p==='closed' && d.closed){ d.ide=null; d.as=null; }
-    saveData();
     renderApp();
+    saveData();
   }
 
   document.addEventListener('click', (e) => { 
@@ -6145,7 +6143,7 @@
    * - Si garde verrouillée, ne s'affiche pas
    */
   function checkWorkStatus() {
-    if (!currentUser || isShiftLocked(currentShiftKey) || isAdmin()) return;
+    if (!currentUser || isShiftLocked(currentShiftKey)) return;
     initShiftData(currentShiftKey);
     const h = shiftHistory[currentShiftKey];
     const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
