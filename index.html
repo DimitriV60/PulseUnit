@@ -537,6 +537,12 @@
   .plan-day.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
   .plan-day.p-maladie   { background:rgba(159,18,57,0.18);   border:1.5px solid #9f1239; color:#9f1239; font-weight:900; }
   .plan-day.p-can1      { background:rgba(20,184,166,0.16);  border:1.5px solid #14b8a6; color:#14b8a6; font-weight:900; }
+  .plan-day.p-hp        { background:rgba(99,102,241,0.16);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
+  .plan-day.p-hpn1      { background:rgba(165,180,252,0.16); border:1.5px solid #a5b4fc; color:#a5b4fc; font-weight:900; }
+  .plan-day.p-rcv       { background:rgba(16,185,129,0.16);  border:1.5px solid #10b981; color:#10b981; font-weight:900; }
+  .plan-day.p-rcvn1     { background:rgba(110,231,183,0.18); border:1.5px solid #6ee7b7; color:#6ee7b7; font-weight:900; }
+  .plan-day.p-frac      { background:rgba(236,72,153,0.16);  border:1.5px solid #ec4899; color:#ec4899; font-weight:900; }
+  .plan-day.p-fracn1    { background:rgba(249,168,212,0.16); border:1.5px solid #f9a8d4; color:#f9a8d4; font-weight:900; }
   .plan-day:active { transform:scale(0.88); }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
@@ -4456,7 +4462,7 @@
   // États qui constituent un TRAVAIL (brisent un bloc CA)
   const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'formation']);
   // Libellés courts affichés dans les cases
-  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'N-1', rcn:'RCN', rh:'RH', hs:'HS', formation:'FO', ferie:'JF', maladie:'AM' };
+  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'CA-1', rcn:'RCN', rh:'RH', hs:'HS', formation:'FO', ferie:'JF', maladie:'AM', hp:'HP', hpn1:'HP-1', rcv:'RCV', rcvn1:'RCV-1', frac:'FR', fracn1:'FR-1' };
   function planDayHTML(dayNum, state) {
     const lbl = PLAN_LABELS[state];
     if (!lbl) return String(dayNum);
@@ -4481,7 +4487,7 @@
     const cur      = getPlanDayState(dateStr);
     const defState = getPlanDefaultState(dateStr);
     // Cycle manuel — RCN/RH auto, ferie auto, repos → rh (weekend)
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'maladie', 'rh', 'hs', 'formation'];
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'formation'];
     const idx   = cycle.indexOf(cur);
     let next;
 
@@ -4588,9 +4594,15 @@
     const fracBonus = caPeriodsWD.filter(p=>p.length>=5).length>=3 ? 1 : 0;
     // Bonus RCV (Décret 2002-9, Art. 3) : variable ≥20 DJF — nuit = 0 (Art. 4)
     const rcvBonus  = (planRegime!=='nuit' && djfCount>=20) ? 2 : 0;
-    // N-1 : ajout du report de l'année précédente
-    const caN1Solde = (planSoldes && planSoldes.caN1) || 0;
-    const grandTotal = 25 + caN1Solde + hsBonus + fracBonus + rcvBonus;
+    // N-1 et reports : ajout de tous les crédits au total
+    const caN1Solde  = (planSoldes && planSoldes.caN1)  || 0;
+    const hpSolde    = (planSoldes && planSoldes.hp)    || 0;
+    const hpn1Solde  = (planSoldes && planSoldes.hpn1)  || 0;
+    const rcvSolde   = (planSoldes && planSoldes.rcv)   || 0;
+    const rcvn1Solde = (planSoldes && planSoldes.rcvn1) || 0;
+    const fracSolde  = (planSoldes && planSoldes.frac)  || 0;
+    const fracn1Solde = (planSoldes && planSoldes.fracn1) || 0;
+    const grandTotal = 25 + caN1Solde + hpSolde + hpn1Solde + rcvSolde + rcvn1Solde + fracSolde + fracn1Solde + hsBonus + fracBonus + rcvBonus;
 
     const leaveSet = new Set([...caSet]);
     if (planRegime === 'nuit') rcnSet.forEach(d => leaveSet.add(d));
@@ -4685,21 +4697,24 @@
       }
     }
 
-    // N-1 : compter les jours 'can1' posés vs le crédit
-    const can1Placed = (() => {
+    // Compter les jours posés par état vs le crédit
+    const countPlaced = (state) => {
       let n = 0;
       const s = new Date(`${planYear}-01-01T12:00:00`), e = new Date(`${planYear}-12-31T12:00:00`);
       for (let d = new Date(s); d <= e; d.setDate(d.getDate()+1)) {
-        if (planStates[d.toISOString().split('T')[0]] === 'can1') n++;
+        if (planStates[d.toISOString().split('T')[0]] === state) n++;
       }
       return n;
-    })();
-    const can1El = document.getElementById('solde-can1-used');
-    if (can1El) can1El.textContent = `${can1Placed}/${planSoldes.caN1||0} posés`;
-    const can1Warn = document.getElementById('solde-can1-warn');
-    if (can1Warn) {
-      can1Warn.style.display = can1Placed > (planSoldes.caN1||0) ? 'inline' : 'none';
-    }
+    };
+    const soldeMap = { can1:'caN1', hp:'hp', hpn1:'hpn1', rcv:'rcv', rcvn1:'rcvn1', frac:'frac', fracn1:'fracn1' };
+    Object.entries(soldeMap).forEach(([state, key]) => {
+      const placed = countPlaced(state);
+      const credit = planSoldes[key] || 0;
+      const usedEl = document.getElementById(`solde-${state}-used`);
+      if (usedEl) usedEl.textContent = `${placed}/${credit} posés`;
+      const warnEl = document.getElementById(`solde-${state}-warn`);
+      if (warnEl) warnEl.style.display = placed > credit ? 'inline' : 'none';
+    });
 
     // Soldes disponibles
     const today = new Date();
@@ -4714,9 +4729,13 @@
     const soldeTotal = el('plan-solde-total-val');
     if (soldeTotal) {
       const parts = [
-        warnOrNot(solde.caN1Exp, solde.caN1) ? warnOrNot(solde.caN1Exp, solde.caN1) + ' CA N-1' : '',
-        warnOrNot(solde.hpExp,   solde.hp)   ? warnOrNot(solde.hpExp,   solde.hp)   + ' HP'     : '',
-        warnOrNot(solde.rcvExp,  solde.rcv)  ? warnOrNot(solde.rcvExp,  solde.rcv)  + ' RCV'    : '',
+        warnOrNot(solde.caN1Exp,  solde.caN1)  ? warnOrNot(solde.caN1Exp,  solde.caN1)  + ' CA-1'   : '',
+        warnOrNot(solde.hpn1Exp,  solde.hpn1)  ? warnOrNot(solde.hpn1Exp,  solde.hpn1)  + ' HP-1'   : '',
+        warnOrNot(solde.hpExp,    solde.hp)     ? warnOrNot(solde.hpExp,    solde.hp)     + ' HP'     : '',
+        warnOrNot(solde.rcvn1Exp, solde.rcvn1) ? warnOrNot(solde.rcvn1Exp, solde.rcvn1) + ' RCV-1'  : '',
+        warnOrNot(solde.rcvExp,   solde.rcv)   ? warnOrNot(solde.rcvExp,   solde.rcv)   + ' RCV'    : '',
+        warnOrNot(solde.fracn1Exp,solde.fracn1)? warnOrNot(solde.fracn1Exp,solde.fracn1)+ ' FR-1'   : '',
+        warnOrNot(solde.fracExp,  solde.frac)  ? warnOrNot(solde.fracExp,  solde.frac)  + ' FR'     : '',
       ].filter(Boolean);
       soldeTotal.innerHTML = parts.length ? parts.join(' · ') : '—';
     }
@@ -4777,8 +4796,11 @@
   }
 
   // ── Soldes (CA N-1, HP, RCV avec dates limites) ──────────────────────
-  let planSoldes = JSON.parse(localStorage.getItem('pulseunit_plan_soldes') || 'null') ||
-    { caN1: 0, caN1Exp: '', hp: 0, hpExp: '', rcv: 0, rcvExp: '' };
+  let planSoldes = (() => {
+    const defaults = { caN1: 0, caN1Exp: '', hp: 0, hpExp: '', hpn1: 0, hpn1Exp: '', rcv: 0, rcvExp: '', rcvn1: 0, rcvn1Exp: '', frac: 0, fracExp: '', fracn1: 0, fracn1Exp: '' };
+    const stored = JSON.parse(localStorage.getItem('pulseunit_plan_soldes') || 'null');
+    return stored ? { ...defaults, ...stored } : defaults;
+  })();
   function savePlanSoldes() { try { localStorage.setItem('pulseunit_plan_soldes', JSON.stringify(planSoldes)); } catch(e){} }
 
   window.updatePlanSolde = function(field, val) {
@@ -4804,17 +4826,29 @@
   };
 
   function initPlanSoldesUI() {
-    // Dates d'expiration par défaut : CA N-1 → 31 jan, HP/RCV → 31 mars
-    if (!planSoldes.caN1Exp) { planSoldes.caN1Exp = `${planYear}-01-31`; savePlanSoldes(); }
-    if (!planSoldes.hpExp)   { planSoldes.hpExp   = `${planYear}-03-31`; savePlanSoldes(); }
-    if (!planSoldes.rcvExp)  { planSoldes.rcvExp  = `${planYear}-03-31`; savePlanSoldes(); }
+    // Dates d'expiration par défaut : N-1 → 31 jan, courant → 31 mars
+    if (!planSoldes.caN1Exp)  { planSoldes.caN1Exp  = `${planYear}-01-31`; savePlanSoldes(); }
+    if (!planSoldes.hpn1Exp)  { planSoldes.hpn1Exp  = `${planYear}-01-31`; savePlanSoldes(); }
+    if (!planSoldes.hpExp)    { planSoldes.hpExp     = `${planYear}-03-31`; savePlanSoldes(); }
+    if (!planSoldes.rcvn1Exp) { planSoldes.rcvn1Exp = `${planYear}-01-31`;  savePlanSoldes(); }
+    if (!planSoldes.rcvExp)   { planSoldes.rcvExp    = `${planYear}-03-31`; savePlanSoldes(); }
+    if (!planSoldes.fracn1Exp){ planSoldes.fracn1Exp = `${planYear}-01-31`; savePlanSoldes(); }
+    if (!planSoldes.fracExp)  { planSoldes.fracExp   = `${planYear}-03-31`; savePlanSoldes(); }
     const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
-    set('solde-ca-n1',     planSoldes.caN1 || '');
-    set('solde-ca-n1-exp', planSoldes.caN1Exp);
-    set('solde-hp',        planSoldes.hp || '');
-    set('solde-hp-exp',    planSoldes.hpExp);
-    set('solde-rcv',       planSoldes.rcv || '');
-    set('solde-rcv-exp',   planSoldes.rcvExp);
+    set('solde-ca-n1',      planSoldes.caN1   || '');
+    set('solde-ca-n1-exp',  planSoldes.caN1Exp);
+    set('solde-hpn1',       planSoldes.hpn1   || '');
+    set('solde-hpn1-exp',   planSoldes.hpn1Exp);
+    set('solde-hp',         planSoldes.hp     || '');
+    set('solde-hp-exp',     planSoldes.hpExp);
+    set('solde-rcvn1',      planSoldes.rcvn1  || '');
+    set('solde-rcvn1-exp',  planSoldes.rcvn1Exp);
+    set('solde-rcv',        planSoldes.rcv    || '');
+    set('solde-rcv-exp',    planSoldes.rcvExp);
+    set('solde-fracn1',     planSoldes.fracn1 || '');
+    set('solde-fracn1-exp', planSoldes.fracn1Exp);
+    set('solde-frac',       planSoldes.frac   || '');
+    set('solde-frac-exp',   planSoldes.fracExp);
   }
 
   // ── Effacer un mois ────────────────────────────────────────────────────
@@ -7389,7 +7423,13 @@
       <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18);border:1.5px solid #60ceea;"></span>J Jour</span>
       <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13);border:1.5px solid #ef4444;"></span>N Nuit</span>
       <span><span class="plan-legend-dot" style="background:var(--as-glow);border:1.5px solid var(--as);"></span>CA</span>
-      <span><span class="plan-legend-dot" style="background:rgba(20,184,166,0.16);border:1.5px solid #14b8a6;"></span>N-1 CA reporté</span>
+      <span><span class="plan-legend-dot" style="background:rgba(20,184,166,0.16);border:1.5px solid #14b8a6;"></span>CA-1 reporté</span>
+      <span><span class="plan-legend-dot" style="background:rgba(99,102,241,0.16);border:1.5px solid #6366f1;"></span>HP</span>
+      <span><span class="plan-legend-dot" style="background:rgba(165,180,252,0.16);border:1.5px solid #a5b4fc;"></span>HP-1</span>
+      <span><span class="plan-legend-dot" style="background:rgba(16,185,129,0.16);border:1.5px solid #10b981;"></span>RCV</span>
+      <span><span class="plan-legend-dot" style="background:rgba(110,231,183,0.18);border:1.5px solid #6ee7b7;"></span>RCV-1</span>
+      <span><span class="plan-legend-dot" style="background:rgba(236,72,153,0.16);border:1.5px solid #ec4899;"></span>FR Frac</span>
+      <span><span class="plan-legend-dot" style="background:rgba(249,168,212,0.16);border:1.5px solid #f9a8d4;"></span>FR-1 Frac N-1</span>
       <span id="plan-legend-rcn"><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32);border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto)</em></span>
       <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13);border:1px solid #64748b;"></span>RH</span>
       <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14);border:1.5px solid #a855f7;"></span>HS</span>
@@ -7406,7 +7446,7 @@
       </div>
       <div id="plan-soldes-body" style="display:none;">
         <div class="plan-solde-row">
-          <span class="plan-solde-lbl">CA N-1</span>
+          <span class="plan-solde-lbl" style="color:#14b8a6;">CA N-1</span>
           <div class="plan-solde-inputs">
             <input type="number" min="0" max="25" id="solde-ca-n1" placeholder="0" onchange="updatePlanSolde('caN1',+this.value)">
             <span class="plan-solde-unit">j</span>
@@ -7417,21 +7457,69 @@
           </div>
         </div>
         <div class="plan-solde-row">
-          <span class="plan-solde-lbl">HP</span>
+          <span class="plan-solde-lbl" style="color:#a5b4fc;">HP N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-hpn1" placeholder="0" onchange="updatePlanSolde('hpn1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-hpn1-exp" onchange="updatePlanSolde('hpn1Exp',this.value)">
+            <span id="solde-hpn1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-hpn1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#6366f1;">HP</span>
           <div class="plan-solde-inputs">
             <input type="number" min="0" max="99" id="solde-hp" placeholder="0" onchange="updatePlanSolde('hp',+this.value)">
             <span class="plan-solde-unit">j</span>
             <span class="plan-solde-explbl">expire</span>
             <input type="date" id="solde-hp-exp" onchange="updatePlanSolde('hpExp',this.value)">
+            <span id="solde-hp-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-hp-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
           </div>
         </div>
         <div class="plan-solde-row">
-          <span class="plan-solde-lbl">RCV</span>
+          <span class="plan-solde-lbl" style="color:#6ee7b7;">RCV N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-rcvn1" placeholder="0" onchange="updatePlanSolde('rcvn1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-rcvn1-exp" onchange="updatePlanSolde('rcvn1Exp',this.value)">
+            <span id="solde-rcvn1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-rcvn1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#10b981;">RCV</span>
           <div class="plan-solde-inputs">
             <input type="number" min="0" max="99" id="solde-rcv" placeholder="0" onchange="updatePlanSolde('rcv',+this.value)">
             <span class="plan-solde-unit">j</span>
             <span class="plan-solde-explbl">expire</span>
             <input type="date" id="solde-rcv-exp" onchange="updatePlanSolde('rcvExp',this.value)">
+            <span id="solde-rcv-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-rcv-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#f9a8d4;">Frac N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-fracn1" placeholder="0" onchange="updatePlanSolde('fracn1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-fracn1-exp" onchange="updatePlanSolde('fracn1Exp',this.value)">
+            <span id="solde-fracn1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-fracn1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#ec4899;">Frac</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-frac" placeholder="0" onchange="updatePlanSolde('frac',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span class="plan-solde-explbl">expire</span>
+            <input type="date" id="solde-frac-exp" onchange="updatePlanSolde('fracExp',this.value)">
+            <span id="solde-frac-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-frac-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
           </div>
         </div>
         <div class="plan-solde-total-bar">
