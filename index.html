@@ -920,6 +920,7 @@
             <input id="admin-new-lastname" type="text" placeholder="NOM" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button onclick="adminSelectNewRole('ide')" id="admin-role-ide" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
             <button onclick="adminSelectNewRole('as')"  id="admin-role-as"  class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--as);  opacity:0.4; transition:opacity 0.15s;">AS</button>
             <button onclick="adminSelectNewRole('med')" id="admin-role-med" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--med); opacity:0.4; transition:opacity 0.15s;">MED</button>
           </div>
@@ -6107,7 +6108,7 @@
 
   function adminSelectNewRole(role) {
     _adminNewRole = role;
-    ['as','med'].forEach(r => {
+    ['ide','as','med'].forEach(r => {
       const btn = document.getElementById('admin-role-' + r);
       if (btn) btn.style.opacity = r === role ? '1' : '0.35';
     });
