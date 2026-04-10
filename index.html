@@ -484,17 +484,45 @@
 
   /* ── Planning CA ── */
   #planning-ca-view { z-index: 445; }
-  .plan-regime-bar { display:flex; gap:6px; padding:8px 16px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; }
-  .plan-regime-btn { flex:1; padding:8px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--pill-bg); color:var(--text-muted); font-size:0.73rem; font-weight:900; cursor:pointer; text-align:center; line-height:1.35; transition:all 0.2s; font-family:var(--font); }
-  .plan-regime-btn.active-jour { background:var(--as-glow); border-color:var(--as); color:var(--as); }
-  .plan-regime-btn.active-nuit { background:var(--ide-glow); border-color:var(--ide); color:var(--ide); }
-  .plan-conformite-banner { display:flex; align-items:center; justify-content:space-between; padding:9px 16px; font-size:0.82rem; font-weight:800; flex-shrink:0; border-bottom:1px solid var(--border); gap:8px; }
-  .plan-conformite-banner.ok   { background:var(--as-glow);   color:var(--as); }
-  .plan-conformite-banner.warn { background:var(--med-glow);  color:var(--med); }
-  .plan-conformite-banner.fail { background:var(--crit-glow); color:var(--crit); }
-  .plan-conformite-banner.empty { background:var(--surface);  color:var(--text-muted); }
-  .plan-legend { display:flex; flex-wrap:wrap; gap:5px 12px; padding:6px 16px; font-size:0.71rem; font-weight:700; flex-shrink:0; color:var(--text-muted); align-items:center; }
-  .plan-legend-dot { width:11px; height:11px; border-radius:3px; display:inline-block; margin-right:3px; vertical-align:middle; }
+  /* Planning CA — design épuré */
+  .plan-topbar { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .plan-title  { font-size:1rem; font-weight:900; color:var(--text); flex:1; white-space:nowrap; }
+  .plan-year-inline { display:flex; align-items:center; gap:1px; }
+  .plan-yr-btn { width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:var(--pill-bg); color:var(--text); font-size:1.1rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:var(--font); }
+  .plan-yr-lbl { font-size:0.9rem; font-weight:900; color:var(--text); padding:0 6px; }
+  .plan-reset-btn { width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  /* Régime pills */
+  .plan-regime-pills { display:flex; gap:6px; padding:7px 14px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .plan-regime-pill { flex:1; padding:7px 6px; border-radius:20px; font-size:0.78rem; font-weight:900; text-align:center; cursor:pointer; border:1.5px solid var(--border); background:transparent; color:var(--text-muted); transition:all 0.2s; font-family:var(--font); }
+  .plan-regime-pill.active-jour { background:rgba(96,206,234,0.12); border-color:#60ceea; color:#60ceea; }
+  .plan-regime-pill.active-nuit { background:rgba(239,68,68,0.10); border-color:#ef4444; color:#ef4444; }
+  /* Strip de statut (remplace la bannière) */
+  .plan-status-strip { padding:7px 14px; font-size:0.8rem; font-weight:800; flex-shrink:0; transition:background 0.3s,color 0.3s; }
+  .plan-status-strip.ok    { background:var(--as-glow);   color:var(--as); }
+  .plan-status-strip.warn  { background:var(--med-glow);  color:var(--med); }
+  .plan-status-strip.fail  { background:var(--crit-glow); color:var(--crit); }
+  .plan-status-strip.empty { background:var(--surface);   color:var(--text-muted); font-weight:700; }
+  /* Légende compacte collapsible */
+  .plan-legend-toggle { display:flex; justify-content:space-between; align-items:center; padding:6px 14px; font-size:0.72rem; font-weight:700; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); background:var(--bg); -webkit-user-select:none; user-select:none; flex-shrink:0; }
+  .plan-legend-compact { display:flex; flex-wrap:wrap; gap:5px 14px; padding:7px 14px 9px; font-size:0.7rem; font-weight:700; color:var(--text-muted); border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+  .plan-legend-dot { width:10px; height:10px; border-radius:3px; display:inline-block; margin-right:3px; vertical-align:middle; }
+  /* Barre stats unifiée */
+  .plan-stats-unified { display:flex; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
+  .plan-stats-unified::-webkit-scrollbar { display:none; }
+  .psu { display:flex; flex-direction:column; align-items:center; padding:8px 10px; min-width:52px; border-right:1px solid var(--border); flex-shrink:0; }
+  .psu:last-child { border-right:none; }
+  .psu-val { font-size:1.05rem; font-weight:900; color:var(--text); line-height:1; }
+  .psu-lbl { font-size:0.58rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; text-align:center; margin-top:2px; }
+  .psu.ca   .psu-val { color:var(--as); }
+  .psu.rcnc .psu-val { color:var(--ide); }
+  .psu.hs   .psu-val { color:var(--ide); }
+  .psu.rcv  .psu-val { color:var(--med); }
+  .psu.tot      { background:var(--as-glow); }
+  .psu.tot      .psu-val { color:var(--as); font-size:1.15rem; }
+  .psu.warn-u   { background:var(--med-glow); }
+  .psu.warn-u   .psu-val { color:var(--med); }
+  .psu.fail-u   { background:var(--crit-glow); }
+  .psu.fail-u   .psu-val { color:var(--crit); }
   .plan-day { aspect-ratio:1; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.12s; -webkit-user-select:none; user-select:none; }
   .plan-day.empty { opacity:0; cursor:default; pointer-events:none; }
   .plan-day.p-travail   { background:transparent; border:1px solid var(--border); color:var(--text-muted); opacity:0.6; }
@@ -4597,72 +4625,71 @@
   }
 
   function updatePlanStats() {
-    const limit  = planRegime === 'nuit' ? 22 : 21;
-    const stats  = calcPlanStats();
-    const { caCount, rcnCount, maxSpan, djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal } = stats;
-    document.getElementById('pstat-ca').textContent      = caCount;
-    document.getElementById('pstat-rcn').textContent     = rcnCount;
-    document.getElementById('pstat-consec').textContent  = maxSpan || 0;
-    document.getElementById('pstat-limite').textContent  = limit;
-    const rcnChip = document.getElementById('pstat-rcn-chip');
-    if (rcnChip) rcnChip.style.display = planRegime === 'nuit' ? 'flex' : 'none';
-    // Bonus HP/RCV
+    const limit = planRegime === 'nuit' ? 22 : 21;
+    const stats = calcPlanStats();
+    const { caCount, rcnCount, maxSpan, djfCount, hsBonus, fracBonus, rcvBonus, grandTotal } = stats;
     const el = id => document.getElementById(id);
-    if (el('pstat-hs-ca'))     el('pstat-hs-ca').textContent     = hsCA;
-    if (el('pstat-hs-bonus'))  el('pstat-hs-bonus').textContent  = '+' + hsBonus;
-    if (el('pstat-frac'))      el('pstat-frac').textContent      = '+' + fracBonus;
-    if (el('pstat-djf'))       el('pstat-djf').textContent       = planRegime !== 'nuit' ? djfCount : '—';
-    if (el('pstat-rcv2'))      el('pstat-rcv2').textContent      = planRegime !== 'nuit' ? '+' + rcvBonus : '—';
-    if (el('pstat-total2'))    el('pstat-total2').textContent    = grandTotal;
+    const set = (id, v) => { const e = el(id); if(e) e.textContent = v; };
+
+    set('pstat-ca',    caCount);
+    set('pstat-rcn',   rcnCount);
+    set('pstat-ratio', (maxSpan||0) + '/' + limit);
+    set('pstat-hs',    hsBonus ? '+' + hsBonus : '+0');
+    set('pstat-frac',  fracBonus ? '+' + fracBonus : '+0');
+    set('pstat-djf',   planRegime !== 'nuit' ? djfCount : '—');
+    set('pstat-rcv',   planRegime !== 'nuit' ? (rcvBonus ? '+' + rcvBonus : '+0') : '—');
+    set('pstat-tot',   grandTotal);
+
+    const rcnChip = el('pstat-rcn-chip');
+    if (rcnChip) rcnChip.style.display = planRegime === 'nuit' ? 'flex' : 'none';
     const djfChip = el('pstat-djf-chip');
-    const rcvChip = el('pstat-rcv-chip2');
-    if (djfChip) djfChip.style.opacity = planRegime === 'nuit' ? '0.35' : '1';
-    if (rcvChip) rcvChip.style.opacity = planRegime === 'nuit' ? '0.35' : '1';
-    // Solde total disponible
+    const rcvChip = el('pstat-rcv-chip');
+    if (djfChip) djfChip.style.opacity = planRegime === 'nuit' ? '0.3' : '1';
+    if (rcvChip) rcvChip.style.opacity = planRegime === 'nuit' ? '0.3' : '1';
+
+    // Chip consécutifs : coloration selon conformité
+    const ratioChip = el('pstat-ratio-chip');
+    if (ratioChip) {
+      ratioChip.className = 'psu' + (maxSpan > limit ? ' fail-u' : maxSpan > limit - 3 ? ' warn-u' : '');
+    }
+
+    // Strip de statut
+    const strip = el('plan-status-strip');
+    const stxt  = el('plan-status-text');
+    if (strip && stxt) {
+      if (caCount === 0) {
+        strip.className = 'plan-status-strip empty';
+        stxt.textContent = 'Aucun CA posé';
+      } else if (maxSpan <= limit) {
+        strip.className = 'plan-status-strip ok';
+        stxt.textContent = `Conforme — ${maxSpan} j / ${limit} autorisés`;
+      } else if (maxSpan <= limit + 2) {
+        strip.className = 'plan-status-strip warn';
+        stxt.textContent = `Attention — ${maxSpan} j consécutifs (limite ${limit} j)`;
+      } else {
+        strip.className = 'plan-status-strip fail';
+        stxt.textContent = `Dépassement — ${maxSpan} j (+${maxSpan - limit} j)`;
+      }
+    }
+
+    // Soldes disponibles
     const today = new Date();
-    const fmt = s => s ? new Date(s+'T12:00:00') : null;
     const warnOrNot = (exp, n) => {
-      if (!n) return '0';
-      const dt = fmt(exp);
-      if (dt && dt < today) return `<s style="opacity:.5">${n}</s>`;
-      if (dt && (dt-today)<30*86400000) return `<span class="plan-solde-warn">${n}</span>`;
+      if (!n) return null;
+      const dt = exp ? new Date(exp+'T12:00:00') : null;
+      if (dt && dt < today) return `<s style="opacity:.45">${n}</s>`;
+      if (dt && (dt-today) < 30*86400000) return `<span class="plan-solde-warn">${n}</span>`;
       return String(n);
     };
     const solde = planSoldes;
     const soldeTotal = el('plan-solde-total-val');
     if (soldeTotal) {
       const parts = [
-        solde.caN1 > 0 ? warnOrNot(solde.caN1Exp, solde.caN1) + ' CA N-1' : '',
-        solde.hp   > 0 ? warnOrNot(solde.hpExp,   solde.hp)   + ' HP'     : '',
-        solde.rcv  > 0 ? warnOrNot(solde.rcvExp,  solde.rcv)  + ' RCV'    : '',
+        warnOrNot(solde.caN1Exp, solde.caN1) ? warnOrNot(solde.caN1Exp, solde.caN1) + ' CA N-1' : '',
+        warnOrNot(solde.hpExp,   solde.hp)   ? warnOrNot(solde.hpExp,   solde.hp)   + ' HP'     : '',
+        warnOrNot(solde.rcvExp,  solde.rcv)  ? warnOrNot(solde.rcvExp,  solde.rcv)  + ' RCV'    : '',
       ].filter(Boolean);
       soldeTotal.innerHTML = parts.length ? parts.join(' · ') : '—';
-    }
-    const banner  = document.getElementById('plan-conformite-banner');
-    const text    = document.getElementById('plan-conformite-text');
-    const chip    = document.getElementById('pstat-conform-chip');
-    const chipVal = document.getElementById('pstat-conform-val');
-    if (!banner) return;
-    if (caCount === 0) {
-      banner.className = 'plan-conformite-banner empty';
-      text.textContent = '— Aucun CA posé';
-      chip.className   = 'plan-stat-chip';
-      chipVal.textContent = '—';
-    } else if (maxSpan <= limit) {
-      banner.className = 'plan-conformite-banner ok';
-      text.textContent = `✅ Conforme — max ${maxSpan} j consécutifs sur ${limit} autorisés`;
-      chip.className   = 'plan-stat-chip ok-chip';
-      chipVal.textContent = '✅';
-    } else if (maxSpan <= limit + 2) {
-      banner.className = 'plan-conformite-banner warn';
-      text.textContent = `⚠️ Attention — ${maxSpan} j consécutifs (limite : ${limit} j)`;
-      chip.className   = 'plan-stat-chip warn-chip';
-      chipVal.textContent = '⚠️';
-    } else {
-      banner.className = 'plan-conformite-banner fail';
-      text.textContent = `❌ Dépassement — ${maxSpan} j consécutifs (+${maxSpan - limit} j au-delà de la limite)`;
-      chip.className   = 'plan-stat-chip fail-chip';
-      chipVal.textContent = '❌';
     }
   }
 
@@ -4698,16 +4725,11 @@
 
   function renderPlanCalendrier() {
     const limit = planRegime === 'nuit' ? 22 : 21;
-    document.getElementById('pbtn-jour').className = 'plan-regime-btn' + (planRegime === 'jour' ? ' active-jour' : '');
-    document.getElementById('pbtn-nuit').className = 'plan-regime-btn' + (planRegime === 'nuit' ? ' active-nuit' : '');
-    const sub = document.getElementById('plan-subtitle');
-    if (sub) sub.textContent = planRegime === 'nuit'
-      ? 'Nuit fixes — limite 22 j consécutifs (CA + RCN)'
-      : 'Jour — limite 21 j consécutifs';
+    document.getElementById('pbtn-jour').className = 'plan-regime-pill' + (planRegime === 'jour' ? ' active-jour' : '');
+    document.getElementById('pbtn-nuit').className = 'plan-regime-pill' + (planRegime === 'nuit' ? ' active-nuit' : '');
     document.getElementById('plan-year-label').textContent = planYear;
     const rcnLeg = document.getElementById('plan-legend-rcn');
     if (rcnLeg) rcnLeg.style.display = planRegime === 'nuit' ? 'inline' : 'none';
-    document.getElementById('pstat-limite').textContent = limit;
     let html = '';
     for (let m = 0; m < 12; m++) html += renderPlanMonth(planYear, m);
     document.getElementById('plan-scroll').innerHTML = html;
@@ -4732,6 +4754,15 @@
 
   window.updatePlanSolde = function(field, val) {
     planSoldes[field] = val; savePlanSoldes(); updatePlanStats();
+  };
+
+  let planLegendOpen = false;
+  window.togglePlanLegend = function() {
+    planLegendOpen = !planLegendOpen;
+    const body   = document.getElementById('plan-legend-body');
+    const arrow  = document.getElementById('plan-legend-arrow');
+    if (body)  body.style.display  = planLegendOpen ? 'flex' : 'none';
+    if (arrow) arrow.textContent   = planLegendOpen ? '▴' : '▾';
   };
 
   let planSoldesOpen = false;
@@ -7290,56 +7321,53 @@
   </div>
 
 
-  <!-- ═══ PLANNING CA — Validation jours consécutifs ═══ -->
+  <!-- ═══ PLANNING CA ═══ -->
   <div class="fs-view" id="planning-ca-view" style="z-index:445; display:none;">
-    <div class="fs-header">
-      <div class="fs-topbar">
-        <div class="fs-title-group">
-          <button class="fs-back" onclick="closePlanningCA()">←</button>
-          <div>
-            <h2 style="font-size:1rem; font-weight:900; color:var(--text); margin:0;">📅 Planning & Validation CA</h2>
-            <div class="fs-subtitle" id="plan-subtitle">Jour — limite 21 j consécutifs</div>
-          </div>
-        </div>
-        <button class="cal-reset-btn" onclick="resetPlanningCA()">↺ Effacer</button>
+
+    <!-- En-tête compact -->
+    <div class="plan-topbar">
+      <button class="fs-back" onclick="closePlanningCA()">←</button>
+      <span class="plan-title">Planning CA</span>
+      <div class="plan-year-inline">
+        <button class="plan-yr-btn" onclick="changePlanYear(-1)">‹</button>
+        <span class="plan-yr-lbl" id="plan-year-label">2026</span>
+        <button class="plan-yr-btn" onclick="changePlanYear(+1)">›</button>
       </div>
+      <button class="plan-reset-btn" onclick="resetPlanningCA()" title="Effacer l'année">↺</button>
     </div>
 
-    <!-- Régime -->
-    <div class="plan-regime-bar">
-      <button class="plan-regime-btn active-jour" id="pbtn-jour" onclick="setPlanRegime('jour')">🌞 Agents de jour<br><span style="font-weight:600;">Max 21 j consécutifs</span></button>
-      <button class="plan-regime-btn" id="pbtn-nuit" onclick="setPlanRegime('nuit')">🌙 Fixes de nuit<br><span style="font-weight:600;">Max 22 j (CA + RCN)</span></button>
+    <!-- Régime pills -->
+    <div class="plan-regime-pills">
+      <button class="plan-regime-pill active-jour" id="pbtn-jour" onclick="setPlanRegime('jour')">☀ Jour · max 21 j consécutifs</button>
+      <button class="plan-regime-pill" id="pbtn-nuit" onclick="setPlanRegime('nuit')">☾ Nuit · max 22 j (CA + RCN)</button>
     </div>
 
-    <!-- Bannière de conformité -->
-    <div class="plan-conformite-banner empty" id="plan-conformite-banner">
-      <span id="plan-conformite-text">— Aucun CA posé</span>
+    <!-- Strip de statut -->
+    <div class="plan-status-strip empty" id="plan-status-strip">
+      <span id="plan-status-text">Aucun CA posé</span>
     </div>
 
-    <!-- Navigation année -->
-    <div class="cal-year-nav">
-      <button class="cal-year-btn" onclick="changePlanYear(-1)">‹</button>
-      <span class="cal-year-label" id="plan-year-label">2026</span>
-      <button class="cal-year-btn" onclick="changePlanYear(+1)">›</button>
+    <!-- Légende collapsible -->
+    <div class="plan-legend-toggle" onclick="togglePlanLegend()">
+      <span>Légende couleurs</span>
+      <span id="plan-legend-arrow">▾</span>
+    </div>
+    <div id="plan-legend-body" class="plan-legend-compact" style="display:none;">
+      <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18);border:1.5px solid #60ceea;"></span>J Jour</span>
+      <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13);border:1.5px solid #ef4444;"></span>N Nuit</span>
+      <span><span class="plan-legend-dot" style="background:var(--as-glow);border:1.5px solid var(--as);"></span>CA</span>
+      <span id="plan-legend-rcn"><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32);border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto)</em></span>
+      <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13);border:1px solid #64748b;"></span>RH</span>
+      <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14);border:1.5px solid #a855f7;"></span>HS</span>
+      <span><span class="plan-legend-dot" style="background:rgba(249,115,22,0.14);border:1.5px solid #f97316;"></span>FO Form.</span>
+      <span><span class="plan-legend-dot" style="background:rgba(245,158,11,0.18);border:1.5px solid #f59e0b;"></span>JF Férié</span>
+      <span><span class="plan-legend-dot" style="background:rgba(159,18,57,0.18);border:1.5px solid #9f1239;"></span>AM Maladie</span>
     </div>
 
-    <!-- Légende -->
-    <div class="plan-legend">
-      <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18); border:1.5px solid #60ceea;"></span>J — Jour</span>
-      <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13); border:1.5px solid #ef4444;"></span>N — Nuit</span>
-      <span><span class="plan-legend-dot" style="background:var(--as-glow); border:1.5px solid var(--as);"></span>CA</span>
-      <span id="plan-legend-rcn"><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32); border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto après nuit)</em></span>
-      <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13); border:1px solid #64748b;"></span>RH</span>
-      <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14); border:1.5px solid #a855f7;"></span>HS — H.Sup</span>
-      <span><span class="plan-legend-dot" style="background:rgba(249,115,22,0.14); border:1.5px solid #f97316;"></span>FO — Formation</span>
-      <span><span class="plan-legend-dot" style="background:rgba(245,158,11,0.18); border:1.5px solid #f59e0b;"></span>JF — Jour Férié</span>
-      <span><span class="plan-legend-dot" style="background:rgba(159,18,57,0.18); border:1.5px solid #9f1239;"></span>AM — Arrêt Maladie</span>
-    </div>
-
-    <!-- Soldes (CA N-1, HP, RCV) -->
+    <!-- Soldes & Reports -->
     <div class="plan-soldes">
       <div class="plan-soldes-title" onclick="togglePlanSoldes()">
-        <span>💼 Soldes & Reports</span>
+        <span>Soldes & Reports</span>
         <span id="plan-soldes-toggle">▾</span>
       </div>
       <div id="plan-soldes-body" style="display:none;">
@@ -7371,64 +7399,48 @@
           </div>
         </div>
         <div class="plan-solde-total-bar">
-          <span style="color:var(--text-muted);font-size:0.76rem;">Soldes disponibles</span>
-          <span id="plan-solde-total-val" style="color:var(--as);">—</span>
+          <span style="color:var(--text-muted);font-size:0.75rem;">Soldes disponibles</span>
+          <span id="plan-solde-total-val" style="color:var(--as);font-weight:900;">—</span>
         </div>
       </div>
     </div>
 
-    <!-- Grille des mois -->
+    <!-- Calendrier -->
     <div class="cal-scroll" id="plan-scroll"></div>
 
-    <!-- Barre de validation (consécutifs) -->
-    <div class="plan-stats-bar">
-      <div class="plan-stat-chip ca-chip">
-        <div class="plan-stat-val" id="pstat-ca">0</div>
-        <div class="plan-stat-lbl">CA posés</div>
+    <!-- Barre de stats unifiée -->
+    <div class="plan-stats-unified">
+      <div class="psu ca">
+        <div class="psu-val" id="pstat-ca">0</div>
+        <div class="psu-lbl">CA</div>
       </div>
-      <div class="plan-stat-chip rcn-chip" id="pstat-rcn-chip" style="display:none;">
-        <div class="plan-stat-val" id="pstat-rcn">0</div>
-        <div class="plan-stat-lbl">RCN posés</div>
+      <div class="psu rcnc" id="pstat-rcn-chip" style="display:none;">
+        <div class="psu-val" id="pstat-rcn">0</div>
+        <div class="psu-lbl">RCN</div>
       </div>
-      <div class="plan-stat-chip">
-        <div class="plan-stat-val" id="pstat-consec">0</div>
-        <div class="plan-stat-lbl">Max consécutifs</div>
+      <div class="psu" id="pstat-ratio-chip">
+        <div class="psu-val" id="pstat-ratio">0/21</div>
+        <div class="psu-lbl">Consécutifs</div>
       </div>
-      <div class="plan-stat-chip">
-        <div class="plan-stat-val" id="pstat-limite">21</div>
-        <div class="plan-stat-lbl">Limite légale</div>
+      <div class="psu hs">
+        <div class="psu-val" id="pstat-hs">+0</div>
+        <div class="psu-lbl">Bonus HS</div>
       </div>
-      <div class="plan-stat-chip" id="pstat-conform-chip">
-        <div class="plan-stat-val" id="pstat-conform-val">—</div>
-        <div class="plan-stat-lbl">Conformité</div>
+      <div class="psu">
+        <div class="psu-val" id="pstat-frac">+0</div>
+        <div class="psu-lbl">Frac.</div>
       </div>
-    </div>
-
-    <!-- Barre de bonus HP/RCV -->
-    <div class="plan-bonus-bar">
-      <div class="plan-stat-chip">
-        <div class="plan-stat-val" id="pstat-hs-ca">0</div>
-        <div class="plan-stat-lbl">j Hs</div>
+      <div class="psu" id="pstat-djf-chip">
+        <div class="psu-val" id="pstat-djf">0</div>
+        <div class="psu-lbl">DJF</div>
       </div>
-      <div class="plan-stat-chip hs-chip">
-        <div class="plan-stat-val" id="pstat-hs-bonus">+0</div>
-        <div class="plan-stat-lbl">Bonus HS</div>
+      <div class="psu rcv" id="pstat-rcv-chip">
+        <div class="psu-val" id="pstat-rcv">+0</div>
+        <div class="psu-lbl">RCV</div>
       </div>
-      <div class="plan-stat-chip">
-        <div class="plan-stat-val" id="pstat-frac">+0</div>
-        <div class="plan-stat-lbl">Frac.</div>
-      </div>
-      <div class="plan-stat-chip" id="pstat-djf-chip">
-        <div class="plan-stat-val" id="pstat-djf">0</div>
-        <div class="plan-stat-lbl">DJF trav.</div>
-      </div>
-      <div class="plan-stat-chip rcv-chip2" id="pstat-rcv-chip2">
-        <div class="plan-stat-val" id="pstat-rcv2">+0</div>
-        <div class="plan-stat-lbl">Bonus RCV</div>
-      </div>
-      <div class="plan-stat-chip total-chip2">
-        <div class="plan-stat-val" id="pstat-total2">25</div>
-        <div class="plan-stat-lbl">Total CA</div>
+      <div class="psu tot">
+        <div class="psu-val" id="pstat-tot">25</div>
+        <div class="psu-lbl">Total CA</div>
       </div>
     </div>
   </div>
