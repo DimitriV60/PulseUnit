@@ -495,17 +495,18 @@
   .plan-conformite-banner.empty { background:var(--surface);  color:var(--text-muted); }
   .plan-legend { display:flex; flex-wrap:wrap; gap:5px 12px; padding:6px 16px; font-size:0.71rem; font-weight:700; flex-shrink:0; color:var(--text-muted); align-items:center; }
   .plan-legend-dot { width:11px; height:11px; border-radius:3px; display:inline-block; margin-right:3px; vertical-align:middle; }
-  .plan-day { aspect-ratio:1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.12s; -webkit-user-select:none; user-select:none; }
+  .plan-day { aspect-ratio:1; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.12s; -webkit-user-select:none; user-select:none; }
   .plan-day.empty { opacity:0; cursor:default; pointer-events:none; }
   .plan-day.p-travail   { background:transparent; border:1px solid var(--border); color:var(--text-muted); opacity:0.6; }
   .plan-day.p-jour      { background:rgba(96,206,234,0.18);  border:1.5px solid #60ceea; color:#60ceea; font-weight:900; }
   .plan-day.p-nuit      { background:rgba(239,68,68,0.13);   border:1.5px solid #ef4444; color:#ef4444; font-weight:900; }
   .plan-day.p-ca        { background:var(--as-glow);          border:1.5px solid var(--as); color:var(--as); font-weight:900; }
-  .plan-day.p-rcn       { background:rgba(148,163,184,0.18); border:1px solid #94a3b8;  color:#94a3b8; }
-  .plan-day.p-rh        { background:rgba(100,116,139,0.13); border:1px solid #64748b;  color:#64748b; }
+  .plan-day.p-rcn       { background:rgba(100,116,139,0.32); border:1.5px solid #64748b;  color:var(--text); font-weight:800; }
+  .plan-day.p-rh        { background:rgba(100,116,139,0.13); border:1px solid #64748b;    color:#64748b; }
   .plan-day.p-hs        { background:rgba(168,85,247,0.14);  border:1.5px solid #a855f7; color:#a855f7; font-weight:900; }
   .plan-day.p-formation { background:rgba(249,115,22,0.14);  border:1.5px solid #f97316; color:#f97316; font-weight:900; }
   .plan-day.p-repos     { background:var(--pill-bg); border:1px dashed var(--border); color:var(--text-muted); opacity:0.4; }
+  .plan-day.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
   .plan-day:active { transform:scale(0.88); }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
@@ -4380,33 +4381,55 @@
   function getPlanDefaultState(dateStr) {
     const d = new Date(dateStr + 'T12:00:00');
     const dow = d.getDay();
+    if (getJoursFeries(d.getFullYear()).has(dateStr)) return 'ferie';
     if (dow === 0 || dow === 6) return 'repos';
-    if (getJoursFeries(d.getFullYear()).has(dateStr)) return 'repos';
     return 'travail';
   }
 
   function getPlanDayState(dateStr) {
-    return planStates[dateStr] !== undefined ? planStates[dateStr] : getPlanDefaultState(dateStr);
+    if (planStates[dateStr] !== undefined) return planStates[dateStr];
+    // RCN automatique : le jour qui suit une nuit travaillée
+    const prev = new Date(dateStr + 'T12:00:00');
+    prev.setDate(prev.getDate() - 1);
+    if (planStates[prev.toISOString().split('T')[0]] === 'nuit') return 'rcn';
+    return getPlanDefaultState(dateStr);
   }
 
   // États qui constituent un TRAVAIL (brisent un bloc CA)
   const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'formation']);
+  // Libellés courts affichés dans les cases
+  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', rcn:'RCN', rh:'RH', hs:'HS', formation:'FO', ferie:'JF' };
+  function planDayHTML(dayNum, state) {
+    const lbl = PLAN_LABELS[state];
+    if (!lbl) return String(dayNum);
+    return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
+  }
 
   window.cyclePlanDay = function(dateStr) {
-    const cur   = getPlanDayState(dateStr);
-    // Cycle universel — même pour jour et nuit (RCN visible seulement en nuit mais toujours cyclable)
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'rcn', 'rh', 'hs', 'formation', 'repos'];
-    const next  = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+    const cur      = getPlanDayState(dateStr);
+    const defState = getPlanDefaultState(dateStr);
+    // Cycle manuel sans RCN (automatique) ni ferie (fixe)
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'rh', 'hs', 'formation', 'repos'];
+    const idx   = cycle.indexOf(cur);
+    let next;
 
-    if (next === getPlanDefaultState(dateStr)) {
-      delete planStates[dateStr];
-    } else {
+    if (idx === -1) {
+      // État auto (rcn, ferie) : premier tap → 'travail' (override)
+      next = cycle[0];
       planStates[dateStr] = next;
+    } else {
+      next = cycle[(idx + 1) % cycle.length];
+      // Revert au défaut : (a) next === défaut, ou (b) fin de cycle sur un défaut non-standard
+      const shouldRevert = (next === defState) ||
+        (idx === cycle.length - 1 && defState !== 'travail' && defState !== 'repos');
+      if (shouldRevert) { delete planStates[dateStr]; next = getPlanDayState(dateStr); }
+      else planStates[dateStr] = next;
     }
     savePlanData();
 
-    const cell = document.getElementById('plan-d-' + dateStr);
-    if (cell) cell.className = 'plan-day p-' + next;
+    const dayNum = parseInt(dateStr.split('-')[2]);
+    const cell   = document.getElementById('plan-d-' + dateStr);
+    if (cell) { cell.className = 'plan-day p-' + next; cell.innerHTML = planDayHTML(dayNum, next); }
 
     const mKey = dateStr.slice(0, 7);
     const mEl  = document.getElementById('plan-mc-' + mKey);
@@ -4533,7 +4556,7 @@
     for (let d = 1; d <= nbJ; d++) {
       const str = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const st  = getPlanDayState(str);
-      html += `<div class="plan-day p-${st}" id="plan-d-${str}" onclick="cyclePlanDay('${str}')">${d}</div>`;
+      html += `<div class="plan-day p-${st}" id="plan-d-${str}" onclick="cyclePlanDay('${str}')">${planDayHTML(d, st)}</div>`;
     }
     html += '</div></div>';
     return html;
@@ -7070,15 +7093,16 @@
       <button class="cal-year-btn" onclick="changePlanYear(+1)">›</button>
     </div>
 
-    <!-- Légende + aide -->
+    <!-- Légende -->
     <div class="plan-legend">
-      <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18); border:1.5px solid #60ceea;"></span>Jour</span>
-      <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13); border:1.5px solid #ef4444;"></span>Nuit</span>
+      <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18); border:1.5px solid #60ceea;"></span>J — Jour</span>
+      <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13); border:1.5px solid #ef4444;"></span>N — Nuit</span>
       <span><span class="plan-legend-dot" style="background:var(--as-glow); border:1.5px solid var(--as);"></span>CA</span>
-      <span><span class="plan-legend-dot" style="background:rgba(148,163,184,0.18); border:1px solid #94a3b8;"></span>RCN</span>
+      <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32); border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto après nuit)</em></span>
       <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13); border:1px solid #64748b;"></span>RH</span>
-      <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14); border:1.5px solid #a855f7;"></span>H.Sup</span>
-      <span><span class="plan-legend-dot" style="background:rgba(249,115,22,0.14); border:1.5px solid #f97316;"></span>Formation</span>
+      <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14); border:1.5px solid #a855f7;"></span>HS — H.Sup</span>
+      <span><span class="plan-legend-dot" style="background:rgba(249,115,22,0.14); border:1.5px solid #f97316;"></span>FO — Formation</span>
+      <span><span class="plan-legend-dot" style="background:rgba(245,158,11,0.18); border:1.5px solid #f59e0b;"></span>JF — Jour Férié</span>
       <span><span class="plan-legend-dot" style="background:var(--pill-bg); border:1px dashed var(--border);"></span>Repos</span>
     </div>
 
