@@ -915,9 +915,9 @@
         <!-- Créer un utilisateur -->
         <div style="background:var(--surface-sec); border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid var(--border);">
           <div style="font-size:0.78rem; font-weight:800; color:var(--text); margin-bottom:10px;">➕ Créer un compte</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <input id="admin-new-firstname" type="text" placeholder="Prénom" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
-            <input id="admin-new-lastname" type="text" placeholder="NOM" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+            <input id="admin-new-firstname" type="text" placeholder="Prénom" style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box;">
+            <input id="admin-new-lastname" type="text" placeholder="NOM" style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box;">
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <button onclick="adminSelectNewRole('ide')" id="admin-role-ide" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
