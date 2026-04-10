@@ -8,6 +8,15 @@
 
 Ne jamais laisser un changement sur une seule branche. Après chaque commit sur la branche de développement, faire immédiatement un `git push` sur `main` également.
 
+## Déploiement automatique Firebase
+
+**Chaque push sur `main` déclenche automatiquement un déploiement** via GitHub Actions (`.github/workflows/deploy.yml`).
+
+- URL de production : `https://pulseunit-c9c5c.web.app`
+- Le déploiement prend ~1 minute après le push
+- Token CI stocké dans le secret GitHub `FIREBASE_TOKEN` (compte julia.tablette60@gmail.com)
+- **Aucune action manuelle requise** — ne jamais demander à l'utilisateur de faire `firebase deploy`
+
 ## Langue & Style de réponse
 
 - **Toujours répondre en français**, sans exception.
