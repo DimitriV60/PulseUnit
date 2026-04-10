@@ -883,7 +883,7 @@
   </div>
 
   <div id="admin-panel-modal">
-    <div class="modal-content" style="max-height:90vh; overflow-y:auto; width:min(460px,95vw);">
+    <div class="modal-content" style="max-height:90vh; overflow-y:auto; width:min(440px,92vw); padding:20px;">
       <h3 style="margin-bottom:15px; color:var(--crit); display:flex; align-items:center; gap:8px;">
         ⚠️ Zone Admin
         <span id="admin-reset-badge" class="auth-reset-badge">0</span>
@@ -913,23 +913,25 @@
         <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Gestion des comptes</div>
 
         <!-- Créer un utilisateur -->
-        <div style="background:var(--surface-sec); border-radius:10px; padding:12px; margin-bottom:12px; border:1px solid var(--border);">
+        <div style="background:var(--surface-sec); border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid var(--border);">
           <div style="font-size:0.78rem; font-weight:800; color:var(--text); margin-bottom:10px;">➕ Créer un compte</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
             <input id="admin-new-firstname" type="text" placeholder="Prénom" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
             <input id="admin-new-lastname" type="text" placeholder="NOM" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
           </div>
-          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-            <button onclick="adminSelectNewRole('ide')" id="admin-role-ide" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
-            <button onclick="adminSelectNewRole('as')"  id="admin-role-as"  class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--as);  opacity:0.4; transition:opacity 0.15s;">AS</button>
-            <button onclick="adminSelectNewRole('med')" id="admin-role-med" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--med); opacity:0.4; transition:opacity 0.15s;">MED</button>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button onclick="adminSelectNewRole('ide')" id="admin-role-ide" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
+            <button onclick="adminSelectNewRole('as')"  id="admin-role-as"  class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--as);  opacity:0.4; transition:opacity 0.15s;">AS</button>
+            <button onclick="adminSelectNewRole('med')" id="admin-role-med" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--med); opacity:0.4; transition:opacity 0.15s;">MED</button>
           </div>
           <input id="admin-new-pin" type="text" inputmode="numeric" maxlength="6" placeholder="Code PIN à 6 chiffres" style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
           <button onclick="adminCreateUser()" class="btn-primary" style="width:100%; padding:9px; font-size:0.82rem;">Créer le compte</button>
         </div>
 
-        <!-- Liste des utilisateurs -->
-        <div id="admin-users-container"></div>
+        <!-- Bouton ouvrir la liste des comptes -->
+        <button onclick="openAdminUsersList()" class="btn-primary" style="width:100%; padding:10px; font-size:0.82rem; background:var(--brand-blue);">
+          👥 Voir tous les comptes
+        </button>
       </div>
 
       <hr style="border-color:var(--border); margin-bottom:15px;">
@@ -937,6 +939,21 @@
       <button class="btn-primary" style="background:var(--text-muted); margin-bottom:10px; color:#fff;" onclick="document.getElementById('admin-panel-modal').style.display='none'; confirmClearShift();">🗑️ Vider garde</button>
       <button class="btn-primary" style="background:transparent; border:1px solid var(--crit); color:var(--crit); margin-bottom:15px;" onclick="hardResetApp()">⚠️ Réparer l'App</button>
       <button class="header-btn outline" style="width:100%; padding:10px; height:auto;" onclick="document.getElementById('admin-panel-modal').style.display='none'">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Modale liste des comptes -->
+  <div id="admin-users-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:600; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+    <div class="modal-content" style="max-height:85vh; overflow-y:auto; width:min(440px,92vw); padding:20px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <div>
+          <div style="font-size:1rem; font-weight:900; color:var(--text);">👥 Tous les comptes</div>
+          <div id="admin-users-count" style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;"></div>
+        </div>
+        <button onclick="document.getElementById('admin-users-modal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+      </div>
+      <input type="text" id="admin-users-search" placeholder="🔍 Rechercher un nom…" oninput="renderAdminUsers()" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:12px;">
+      <div id="admin-users-container"></div>
     </div>
   </div>
 
@@ -6167,8 +6184,15 @@
     showToast(`🗑️ Compte de ${name} supprimé.`);
   }
 
+  function openAdminUsersList() {
+    const searchEl = document.getElementById('admin-users-search');
+    if (searchEl) searchEl.value = '';
+    renderAdminUsers();
+    document.getElementById('admin-users-modal').style.display = 'flex';
+  }
+
   function renderAdminUsers() {
-    // Section "connectés en temps réel"
+    // Section "connectés en temps réel" (panel principal)
     const onlineEl = document.getElementById('admin-online-container');
     if (onlineEl) {
       const ids = Object.keys(onlineUsers);
@@ -6189,30 +6213,39 @@
       }
     }
 
-    // Liste de tous les comptes
+    // Liste dans la modale dédiée
     const container = document.getElementById('admin-users-container');
     if (!container) return;
-    const entries = Object.entries(authUsers).sort((a, b) =>
+
+    const q = (document.getElementById('admin-users-search')?.value || '').toLowerCase().trim();
+    let entries = Object.entries(authUsers).sort((a, b) =>
       (a[1].lastName || '').localeCompare(b[1].lastName || '')
     );
+    if (q) entries = entries.filter(([, u]) =>
+      u.firstName.toLowerCase().includes(q) || (u.lastName||'').toLowerCase().includes(q)
+    );
+
+    const countEl = document.getElementById('admin-users-count');
+    if (countEl) countEl.textContent = `${Object.keys(authUsers).length} compte(s) au total`;
+
     if (entries.length === 0) {
-      container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:8px 0;">Aucun compte enregistré</p>';
+      container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:16px 0;">Aucun résultat</p>';
       return;
     }
     container.innerHTML = entries.map(([id, u]) => {
-      const col   = ROLE_COLORS[u.role] || 'var(--brand-blue)';
+      const col = ROLE_COLORS[u.role] || 'var(--brand-blue)';
       const isOnline = !!onlineUsers[id];
       const created = u.createdAt
         ? new Date(u.createdAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'})
         : '—';
-      return `<div style="display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px; background:var(--surface-sec); margin-bottom:6px; border:1px solid var(--border);">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isOnline ? '#22c55e' : 'var(--border)'}; flex-shrink:0;" title="${isOnline ? 'Connecté' : 'Hors ligne'}"></span>
+      return `<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; background:var(--surface-sec); margin-bottom:7px; border:1px solid var(--border);">
+        <span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${isOnline ? '#22c55e' : 'var(--border)'}; flex-shrink:0;" title="${isOnline ? 'Connecté' : 'Hors ligne'}"></span>
         <div style="flex:1; min-width:0;">
-          <div style="font-weight:800; font-size:0.83rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(u.firstName)} ${escapeHTML((u.lastName||'').toUpperCase())}</div>
+          <div style="font-weight:800; font-size:0.85rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(u.firstName)} ${escapeHTML((u.lastName||'').toUpperCase())}</div>
           <div style="font-size:0.68rem; color:var(--text-muted);">Créé le ${created}</div>
         </div>
-        <span style="font-size:0.7rem; font-weight:700; color:${col}; background:${col}22; padding:2px 6px; border-radius:4px; flex-shrink:0;">${u.role.toUpperCase()}</span>
-        <button onclick="adminDeleteUser('${id}')" style="background:none; border:none; color:var(--crit); font-size:1.1rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Supprimer">🗑️</button>
+        <span style="font-size:0.7rem; font-weight:700; color:${col}; background:${col}22; padding:2px 7px; border-radius:4px; flex-shrink:0;">${u.role.toUpperCase()}</span>
+        <button onclick="adminDeleteUser('${id}')" style="background:none; border:none; color:var(--crit); font-size:1.15rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Supprimer">🗑️</button>
       </div>`;
     }).join('');
   }
