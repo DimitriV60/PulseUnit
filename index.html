@@ -3186,13 +3186,12 @@
     if(!currentUser) return;
     initShiftData(currentShiftKey);
     if(isShiftLocked(currentShiftKey)) return;
-    const dO = currentShiftKey.split('-').slice(0,3).join('-');
-    const ms = shiftHistory[dO+'-meds'] || [null, null, null];
-    // Seul le médecin assigné à ce slot (ou admin) peut modifier ses lits
-    if (!isAdmin() && ms[docIndex] !== currentUser.id) {
-      showToast('⛔ Seul le médecin assigné à ce secteur peut modifier ses lits');
+    // Seuls les IDE/AS peuvent modifier les secteurs médecins
+    if(currentUser.role === 'med') {
+      showToast('⛔ Les IDE/AS gèrent les secteurs médecins');
       return;
     }
+    const dO = currentShiftKey.split('-').slice(0,3).join('-');
     if(!shiftHistory[dO+'-medsBeds']) shiftHistory[dO+'-medsBeds'] = {};
     if(docIndex === 2 && !bedKey.startsWith('usip-')) return;
     if(shiftHistory[dO+'-medsBeds'][bedKey] === docIndex) shiftHistory[dO+'-medsBeds'][bedKey] = null;
@@ -3534,6 +3533,10 @@
    * @param {string} id - Identifiant du lit (ex: "rea-3", "usip-2")
    */
   function assignLit(id) {
+    if(currentUser?.role === 'med') {
+      showToast('⛔ Les médecins ne peuvent pas modifier les lits IDE/AS');
+      return;
+    }
     if(!canEditBeds() || !selectedStaffForTap) {
       if (!selectedStaffForTap && canEditBeds()) showToast("Sélectionnez-vous d'abord dans l'effectif");
       return;
