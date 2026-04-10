@@ -1018,7 +1018,7 @@
         <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Partager l'accès</div>
         <div id="alpha-qrcode" style="display:inline-block; background:#fff; padding:10px; border-radius:8px; margin-bottom:10px;"></div>
         <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
-          <div id="alpha-link-text" style="font-size:0.75rem; font-weight:700; color:var(--brand-blue); word-break:break-all; flex:1; -webkit-user-select:text; user-select:text; text-align:left;">https://pulseunit-c9c5c.web.app</div>
+          <div id="alpha-link-text" style="font-size:0.75rem; font-weight:700; color:var(--brand-blue); word-break:break-all; flex:1; -webkit-user-select:text; user-select:text; text-align:left;">https://pulseunit.app</div>
           <button onclick="copyAlphaLink()" id="alpha-copy-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; flex-shrink:0;">Copier</button>
         </div>
       </div>
@@ -1146,160 +1146,141 @@
   </div>
 
   <div id="tuto-modal">
-      <div class="modal-content" style="max-height:88vh; overflow-y:auto; width: 340px; padding: 20px;">
-        <h3 style="margin-bottom:6px; color:var(--brand-aqua); font-weight:900; font-size:1.1rem;">📖 Guide PulseUnit</h3>
-        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:16px; font-weight:600;">Réanimation & Soins Critiques</p>
+    <div class="modal-content" style="max-height:88vh; overflow-y:auto; width:min(400px,93vw); padding:20px;">
 
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;" open>
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">👥 1. Rejoindre la garde</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                À la connexion, une fenêtre vous demande : <strong style="color:var(--text);">"Es-tu de service sur cette garde ?"</strong><br><br>
-                → <strong style="color:var(--as);">OUI</strong> : vous êtes ajouté à l'effectif et sélectionné automatiquement pour assigner des lits.<br>
-                → <strong style="color:var(--text-muted);">NON</strong> : mode lecture seule — vous pouvez consulter mais pas modifier.<br><br>
-                Les compteurs <strong style="color:var(--ide);">IDE</strong> / <strong style="color:var(--as);">AS</strong> dans la section GESTION ÉQUIPE se mettent à jour automatiquement. Votre présence est également enregistrée pour la garde complémentaire (jour ↔ nuit) du même jour.
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🛏️ 2. Assigner les lits</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                <strong style="color:var(--text);">Étape 1 —</strong> Appuyez sur votre nom dans la colonne <strong style="color:var(--text);">EFFECTIF</strong>. Un bandeau orange apparaît en bas avec votre prénom.<br><br>
-                <strong style="color:var(--text);">Étape 2 —</strong> Touchez les lits à vous attribuer. Ils s'affichent immédiatement avec votre nom.<br><br>
-                <strong style="color:var(--text);">Étape 3 —</strong> Appuyez sur <strong style="color:var(--text);">✔ VALIDER</strong> ou re-touchez votre nom pour désélectionner.<br><br>
-                Les boutons <span style="color:var(--bmr); font-weight:800;">B</span> (BMR), <span style="color:var(--dialyse); font-weight:800;">D</span> (Dialyse) et <span style="color:var(--crit); font-weight:800;">!</span> (Critique) sur chaque lit s'activent instantanément au tap.
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">⚕️ 3. Médecins & IDE Tech</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                <strong style="color:var(--text);">Médecins —</strong> Les cartes <span style="color:var(--med); font-weight:800;">RÉA 1 (☎ 1862)</span> et <span style="color:var(--med); font-weight:800;">RÉA 2 (☎ 1822)</span> permettent d'assigner un médecin à son secteur. Recherchez directement dans la carte.<br><br>
-                Chaque médecin sélectionne <strong style="color:var(--text);">ses numéros de chambre</strong> dans sa propre carte — seul lui peut modifier son secteur.<br><br>
-                <strong style="color:var(--text);">IDE Tech —</strong> Assigné via la carte IDE TECH. Une fois affecté, l'IDE Tech a accès à la liste de tâches techniques du jour.
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">✅ 4. Vérification Chambre</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Chaque carte de lit affiche une <strong style="color:var(--text);">mini barre de progression</strong> et un score <strong style="color:var(--text);">0/10</strong> sous son numéro.<br><br>
-                <strong style="color:var(--text);">Appuyez sur cette zone</strong> (numéro + barre) pour ouvrir la checklist de la chambre :<br>
-                Tiroir ventilation · BAVU · Alarmes scope · Câbles · Aspiration · O2 · Zéro KT artériel · Pression ballonnet · Humidificateur · Alarme respirateur<br><br>
-                La barre passe <span style="color:var(--med); font-weight:800;">orange</span> en cours, <span style="color:var(--as); font-weight:800;">verte</span> quand tout est validé.<br>
-                Les vérifications sont <strong style="color:var(--text);">sauvegardées par garde</strong> et remises à zéro avec "Vider la garde".
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🔑 5. Connexion & Comptes</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                <strong style="color:var(--text);">Première connexion —</strong> Créez votre accès : prénom, nom, rôle (IDE / AS / Médecin) et un code à 6 chiffres.<br><br>
-                <strong style="color:var(--text);">Connexions suivantes —</strong> Tapez votre nom ou prénom dans la barre de recherche, sélectionnez-vous dans la liste, entrez votre code.<br><br>
-                <strong style="color:var(--text);">Se souvenir de moi —</strong> Cochez la case pour rester connecté automatiquement pendant 3 mois.<br><br>
-                <strong style="color:var(--text);">Code oublié —</strong> Cliquez "Code oublié ?" → sélectionnez votre nom → envoyez la demande. L'admin reçoit une notification et vous fournit un code provisoire.<br><br>
-                <strong style="color:var(--text);">Changer de code —</strong> Menu ☰ → Paramètres → section "Changer mon code" (ancien code requis).<br><br>
-                <strong style="color:var(--text);">Accès en lecture seule —</strong> Si vous n'êtes pas affecté à la garde en cours, vous pouvez consulter l'historique et les outils mais pas modifier les lits.
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🔒 6. Lits fermés, USIP & Admin</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Appuyez sur l'icône 🔒 d'une carte pour fermer un lit. Il passe en rayures et libère le ratio.<br><br>
-                <strong style="color:var(--crit);">Admin (Dimitri Valentin) —</strong> Accès direct au panneau admin via Menu ☰ → Admin. Permet de verrouiller l'USIP, vider une garde, gérer les demandes de réinitialisation de code.
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">📖 6. Lexique & Calculateurs</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                <strong style="color:var(--text);">Lexique —</strong> 260+ termes répartis en 13 catégories : Personnel, Monitorage, Neuro, Scores, Ventilation, Voies, Matériel, Hémodynamique, Biologie, Sepsis, Médicaments, Élimination, Abréviations du service. Explication experte au tap. Filtre par catégorie + recherche libre.<br><br>
-                <strong style="color:var(--text);">Calculateurs (15) — 5 groupes</strong><br>
-                <span style="color:var(--crit); font-weight:900;">Scores cliniques —</span> Glasgow (GCS), RASS, Waterlow, Score de sevrage alcoolique<br>
-                <span style="color:var(--ide); font-weight:900;">Ventilation —</span> IBW / Volume courant, P/F (SDRA), Driving Pressure<br>
-                <span style="color:var(--med); font-weight:900;">Hémodynamique —</span> PAM, Débit PSE<br>
-                <span style="color:var(--as); font-weight:900;">Médicaments —</span> Dose/kg → Totale, Conversion mg ↔ mL, Diurèse, IMC<br>
-                <span style="color:var(--text-muted); font-weight:900;">RH —</span> Pourcentages, Heures de transmission<br><br>
-                Aucune donnée sauvegardée entre les sessions.
-            </div>
-        </details>
-
-        <details style="margin-bottom:12px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🎨 7. Code couleurs & Icônes</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
-                    <span><span style="color:var(--ide); font-weight:900;">■ IDE</span> — Infirmier</span>
-                    <span><span style="color:var(--as); font-weight:900;">■ AS</span> — Aide-Soignant</span>
-                    <span><span style="color:var(--tech); font-weight:900;">■ TECH</span> — IDE Technique</span>
-                    <span><span style="color:var(--med); font-weight:900;">■ MED</span> — Médecin Réanimateur</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                    <span style="display:flex;justify-content:center;align-items:center;width:22px;height:22px;background:var(--bmr-glow);border-radius:4px;color:var(--bmr);flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
-                    <span>BMR / Isolement contact</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                    <span style="display:flex;justify-content:center;align-items:center;width:22px;height:22px;background:var(--dialyse-glow);border-radius:4px;color:var(--dialyse);flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg></span>
-                    <span>Patient dialysé (CVVH)</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="display:flex;justify-content:center;align-items:center;width:22px;height:22px;background:var(--crit-glow);border-radius:4px;color:var(--crit);flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span>
-                    <span>Patient critique (alerte)</span>
-                </div>
-            </div>
-        </details>
-
-        <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">📊 7. Normes & Alertes</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Accessible depuis le menu ☰ → Normes & Alertes.<br><br>
-                <strong style="color:var(--text);">7 paramètres interactifs</strong> avec zones cliniques colorées :<br>
-                <span style="color:var(--crit); font-weight:800;">■</span> TA & PAM — PAS, PAD, PAM calculée<br>
-                <span style="color:var(--ide); font-weight:800;">■</span> Pouls/FC · Fréquence respiratoire · SpO₂<br>
-                <span style="color:var(--med); font-weight:800;">■</span> Glycémie · Cétonémie · Diurèse<br><br>
-                Pour chaque paramètre : <strong style="color:var(--text);">barre de zones horizontale</strong>, tableau de référence avec tous les seuils, analyse clinique "Que faire ?" et courbe de tendance.<br><br>
-                <strong style="color:var(--text);">8 scénarios de simulation</strong> : Normal, Choc septique, Choc hémorragique, Détresse respiratoire, Acidocétose, Hypoglycémie, IRA oligurique, HTA maligne.
-            </div>
-        </details>
-
-        <details style="margin-bottom:12px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">📋 8. Protocoles</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Accessible depuis le menu ☰ → Protocoles.<br><br>
-                <strong style="color:var(--text);">Protocoles intégrés</strong> (lecture seule) :<br>
-                • 🩸 Cathéter Artériel (RD:PRO/SOIN/5-2/17)<br>
-                • 🌡️ Thermogard (RD:PRO/SOIN/5-2/18)<br><br>
-                Chaque protocole est divisé en sections repliables (accordéon). Mode <strong style="color:var(--text);">lecture seule</strong> — aucune case à cocher.
-            </div>
-        </details>
-
-        <details style="margin-bottom:12px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🫁 8. Simulateur Respirateur</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Accessible depuis le menu ☰ → Simulateur Respirateur.<br><br>
-                <strong style="color:var(--text);">6 paramètres interactifs</strong> du respirateur :<br>
-                VT (mL/kg PP) · PEEP · FiO₂ · FR réglée · Pplat · P Crête<br><br>
-                <strong style="color:var(--text);">2 paramètres calculés</strong> automatiquement :<br>
-                Driving Pressure ΔP = Pplat − PEEP · Volume Minute<br><br>
-                <strong style="color:var(--text);">8 scénarios cliniques</strong> : Ventilation standard, SDRA sévère/modéré, BPCO, Asthme aigu, OAP, Décubitus ventral, Sevrage VS-AI.
-            </div>
-        </details>
-
-        <details style="margin-bottom:12px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">⚙️ 9. Paramètres</summary>
-            <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Accessible depuis le menu ☰ → Paramètres.<br><br>
-                <strong style="color:var(--text);">Thème —</strong> 3 modes :<br>
-                🌗 <strong>Auto</strong> : sombre entre 20h et 8h, clair le reste (suit le rythme garde/jour)<br>
-                ☀️ <strong>Clair</strong> : permanent<br>
-                🌙 <strong>Sombre</strong> : permanent<br><br>
-                <strong style="color:var(--text);">Sons —</strong> Active/désactive les notifications sonores (félicitations tâches).<br><br>
-                <strong style="color:var(--text);">Retour haptique —</strong> Vibration au toucher (Android uniquement).<br><br>
-                <strong style="color:var(--crit);">🗑️ Vider la garde —</strong> Réinitialise intégralement la garde en cours (équipe, lits, tâches, vérifications chambre). Action irréversible.
-            </div>
-        </details>
-
-        <button class="btn-primary" onclick="document.getElementById('tuto-modal').style.display='none'">OK, j'ai compris !</button>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+        <div style="font-size:1.05rem; font-weight:900; color:var(--brand-aqua);">📖 Guide PulseUnit</div>
+        <button onclick="document.getElementById('tuto-modal').style.display='none'" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);line-height:1;">×</button>
       </div>
+      <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600; margin-bottom:16px;">Réanimation & Soins Critiques — v Alpha</div>
+
+      <!-- CONNEXION -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;" open>
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">🔑</span> Connexion & Compte
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text);">1ère fois</strong> — Créer un compte : prénom, nom, rôle, code à 6 chiffres.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text);">Ensuite</strong> — Recherche ton nom → sélectionne → entre ton code. Coche <em>"Se souvenir"</em> pour 3 mois d'auto-connexion.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--crit);">Code oublié ?</strong> — Clique "Code oublié ?" → envoie la demande → l'admin te fournit un code provisoire.
+          </div>
+        </div>
+      </details>
+
+      <!-- REJOINDRE LA GARDE -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">👥</span> Rejoindre la garde
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            À la connexion : <strong style="color:var(--as);">OUI je suis de service</strong> → tu rejoins l'effectif de la garde.<br>
+            <strong style="color:var(--text-muted);">NON</strong> → mode lecture seule.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            Les compteurs <span style="color:var(--ide); font-weight:800;">IDE</span> / <span style="color:var(--as); font-weight:800;">AS</span> se mettent à jour en temps réel. Présence partagée jour ↔ nuit.
+          </div>
+        </div>
+      </details>
+
+      <!-- LITS -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">🛏️</span> Assigner les lits
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text);">① Tape ton nom</strong> dans EFFECTIF → bandeau orange s'affiche.<br>
+            <strong style="color:var(--text);">② Touche les lits</strong> à attribuer → ils affichent ton nom.<br>
+            <strong style="color:var(--text);">③ ✔ VALIDER</strong> pour confirmer.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; line-height:1.5;">
+            <span style="color:var(--bmr); font-weight:800;">B</span> BMR &nbsp;·&nbsp; <span style="color:var(--dialyse); font-weight:800;">D</span> Dialyse &nbsp;·&nbsp; <span style="color:var(--crit); font-weight:800;">!</span> Critique &nbsp;·&nbsp; 🔒 Fermer le lit
+          </div>
+        </div>
+      </details>
+
+      <!-- MÉDECINS & TECH -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">⚕️</span> Médecins & IDE Tech
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <span style="color:var(--med); font-weight:800;">RÉA 1 ☎ 1862</span> / <span style="color:var(--med); font-weight:800;">RÉA 2 ☎ 1822</span> — Assigne le médecin à son secteur. Seul lui peut modifier ses chambres.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <span style="color:var(--tech); font-weight:800;">IDE TECH</span> — Affecté via sa carte. Accès à la liste de tâches techniques du jour.
+          </div>
+        </div>
+      </details>
+
+      <!-- CHECKLIST -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">✅</span> Vérification Chambre
+        </summary>
+        <div style="margin-top:10px; background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
+          Tape sur le <strong style="color:var(--text);">numéro + barre de progression</strong> sous un lit pour ouvrir la checklist (10 points).<br>
+          Barre <span style="color:var(--med); font-weight:800;">orange</span> = en cours · <span style="color:var(--as); font-weight:800;">verte</span> = complet.<br>
+          Sauvegardé par garde.
+        </div>
+      </details>
+
+      <!-- COULEURS -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">🎨</span> Code couleurs
+        </summary>
+        <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--ide);">■ IDE — Infirmier</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--as);">■ AS — Aide-Soignant</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--tech);">■ TECH — IDE Technique</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--med);">■ MED — Médecin Réa</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--bmr);">⚠ BMR / Isolement</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--dialyse);">💧 Dialyse / CVVH</div>
+          <div style="grid-column:1/-1; background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--crit);">⚡ Patient Critique</div>
+        </div>
+      </details>
+
+      <!-- OUTILS -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">🧰</span> Outils (menu ☰)
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📖 <strong style="color:var(--text);">Lexique</strong> — 260+ termes, 13 catégories, recherche libre</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🧮 <strong style="color:var(--text);">Calculateurs</strong> — GCS, RASS, PAM, VT, P/F, Driving Pressure, Diurèse…</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📊 <strong style="color:var(--text);">Normes & Alertes</strong> — Paramètres vitaux + 8 scénarios de simulation</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🫁 <strong style="color:var(--text);">Simulateur Respirateur</strong> — 6 paramètres, 8 scénarios cliniques</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📋 <strong style="color:var(--text);">Protocoles</strong> — Cathéter artériel, Thermogard (lecture seule)</div>
+        </div>
+      </details>
+
+      <!-- ADMIN -->
+      <details style="margin-bottom:14px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--crit); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">🔒</span> Zone Admin
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            Accès réservé à <strong style="color:var(--text);">Dimitri Valentin</strong> — Menu ☰ → Admin.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            👁 Voir qui est <strong style="color:#22c55e;">connecté en temps réel</strong><br>
+            ➕ Créer / 🗑️ Supprimer n'importe quel compte<br>
+            🔒 Verrouiller l'USIP · 🗑️ Vider la garde
+          </div>
+        </div>
+      </details>
+
+      <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('tuto-modal').style.display='none'">Compris !</button>
+    </div>
   </div>
 
 <script>
@@ -1566,6 +1547,9 @@
 
   const LEXIQUE_DATA = [
 /* ===== PERSONNEL ===== */
+{ term:"Présence temps réel", fullName:"Suivi de connexion en direct", def:"Fonctionnalité PulseUnit affichant dans le panel admin la liste des utilisateurs actuellement connectés à l’application, avec leur rôle et l’heure de dernière activité.", expert:"Mise à jour automatique via Firebase onSnapshot. Chaque connexion/déconnexion/fermeture de page met à jour le statut. Utile pour l’admin afin de savoir qui est actif sur l’app en cours de garde.", cat:"PERSONNEL"},
+{ term:"PIN Code", fullName:"Code d’accès à 6 chiffres", def:"Code numérique personnel permettant l’authentification sécurisée dans PulseUnit. Hashé en SHA-256 côté client, jamais stocké en clair.", expert:"En cas d’oubli : utiliser ‘Code oublié ?’ → l’admin reçoit la demande et génère un code provisoire. À remplacer immédiatement lors de la 1ère connexion avec le code provisoire.", cat:"PERSONNEL"},
+{ term:"Mode lecture seule", fullName:"Accès consultation sans modification", def:"Mode d’accès activé automatiquement si l’utilisateur n’est pas affecté à la garde en cours. Consultation possible, aucune modification permise.", expert:"Utile pour consulter l’historique des gardes passées ou vérifier les affectations sans risque de modification accidentelle. Les outils (lexique, calculateurs, protocoles) restent accessibles.", cat:"PERSONNEL"},
 { term:"IDE", fullName:"Infirmier Diplômé d’État", def:"Professionnel responsable de la réalisation des soins prescrits, de la surveillance continue des paramètres vitaux et de l’administration des thérapeutiques.", expert:"En réanimation, l’IDE doit anticiper les défaillances d’organes, interpréter les monitorages complexes (scope, respirateur, PiCCO) et agir rapidement sur prescription ou en rôle propre.", cat:"PERSONNEL"},
 { term:"AS", fullName:"Aide-Soignant", def:"Professionnel assurant les soins d’hygiène, de confort et participant à la surveillance clinique du patient sous la responsabilité de l’IDE.", expert:"Rôle clé en réa : prévention des escarres (mobilisation, matelas), kinésithérapie de confort, aide aux transferts lourds, surveillance des signes d’alerte à remonter à l’IDE.", cat:"PERSONNEL"},
 { term:"MED", fullName:"Médecin Réanimateur", def:"Responsable de la stratégie diagnostique et thérapeutique des patients critiques. Prescrit et supervise l’ensemble des soins.", expert:"Décide des gestes invasifs (intubation, pose CVC, drainage), ajuste les supports d’organes (ventilation, catécholamines, épuration) et coordonne l’équipe pluridisciplinaire.", cat:"PERSONNEL"},
@@ -6097,7 +6081,7 @@
     }
   }
 
-  const ALPHA_URL      = 'https://pulseunit-c9c5c.web.app';
+  const ALPHA_URL      = 'https://pulseunit.app';
   const WHATSAPP_NUM   = '33666077493'; // Dimitri
   let   _qrGenerated   = false;
 
