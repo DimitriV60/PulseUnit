@@ -536,6 +536,7 @@
   .plan-day.p-repos     { background:rgba(100,116,139,0.13); border:1px solid #64748b; color:#64748b; }
   .plan-day.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
   .plan-day.p-maladie   { background:rgba(159,18,57,0.18);   border:1.5px solid #9f1239; color:#9f1239; font-weight:900; }
+  .plan-day.p-can1      { background:rgba(20,184,166,0.16);  border:1.5px solid #14b8a6; color:#14b8a6; font-weight:900; }
   .plan-day:active { transform:scale(0.88); }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
@@ -4435,19 +4436,27 @@
     return 'travail';
   }
 
+  function prevDay(ds) {
+    const dt = new Date(ds + 'T12:00:00');
+    dt.setDate(dt.getDate() - 1);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+
   function getPlanDayState(dateStr) {
     if (planStates[dateStr] !== undefined) return planStates[dateStr];
-    // RCN automatique : le jour qui suit une nuit travaillée
-    const prev = new Date(dateStr + 'T12:00:00');
-    prev.setDate(prev.getDate() - 1);
-    if (planStates[prev.toISOString().split('T')[0]] === 'nuit') return 'rcn';
+    const p1 = prevDay(dateStr);
+    const p2 = prevDay(p1);
+    // Auto-RCN : lendemain d'une nuit
+    if (planStates[p1] === 'nuit') return 'rcn';
+    // Auto-RH : surlendemain d'une nuit (RCN automatique non overridé en J+1)
+    if (planStates[p2] === 'nuit' && planStates[p1] === undefined) return 'rh';
     return getPlanDefaultState(dateStr);
   }
 
   // États qui constituent un TRAVAIL (brisent un bloc CA)
   const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'formation']);
   // Libellés courts affichés dans les cases
-  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', rcn:'RCN', rh:'RH', hs:'HS', formation:'FO', ferie:'JF', maladie:'AM' };
+  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'N-1', rcn:'RCN', rh:'RH', hs:'HS', formation:'FO', ferie:'JF', maladie:'AM' };
   function planDayHTML(dayNum, state) {
     const lbl = PLAN_LABELS[state];
     if (!lbl) return String(dayNum);
@@ -4471,8 +4480,8 @@
   window.cyclePlanDay = function(dateStr) {
     const cur      = getPlanDayState(dateStr);
     const defState = getPlanDefaultState(dateStr);
-    // Cycle manuel — RCN auto, ferie auto, repos → rh (weekend)
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'maladie', 'rh', 'hs', 'formation'];
+    // Cycle manuel — RCN/RH auto, ferie auto, repos → rh (weekend)
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'maladie', 'rh', 'hs', 'formation'];
     const idx   = cycle.indexOf(cur);
     let next;
 
@@ -4491,7 +4500,8 @@
     savePlanData();
 
     refreshPlanCell(dateStr);
-    refreshPlanCell(nextDay(dateStr)); // RCN auto : rafraîchir le lendemain
+    refreshPlanCell(nextDay(dateStr));          // RCN auto : rafraîchir J+1
+    refreshPlanCell(nextDay(nextDay(dateStr))); // RH  auto : rafraîchir J+2
 
     const mKey = dateStr.slice(0, 7);
     const mEl  = document.getElementById('plan-mc-' + mKey);
@@ -4502,7 +4512,7 @@
       for (let dd = 1; dd <= nb; dd++) {
         const s = `${y}-${String(mo+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
         const st = getPlanDayState(s);
-        if (st === 'ca')  caC++;
+        if (st === 'ca' || st === 'can1') caC++;
         if (st === 'rcn') rcnC++;
       }
       let badge = '';
@@ -4527,7 +4537,8 @@
       else planStates[dateStr] = targetState;
     }
     refreshPlanCell(dateStr);
-    refreshPlanCell(nextDay(dateStr)); // RCN auto : rafraîchir le lendemain
+    refreshPlanCell(nextDay(dateStr));          // RCN auto
+    refreshPlanCell(nextDay(nextDay(dateStr))); // RH  auto
   }
 
   window.planCellTouchStart = function(dateStr, e) {
@@ -4557,7 +4568,7 @@
       const dow = d.getDay();
       const isHol = fer.has(s);
       const isWE  = (dow===0 || dow===6);
-      if (st === 'ca') {
+      if (st === 'ca' || st === 'can1') {
         caSet.add(s);
         const mo = d.getMonth()+1; if(mo<=4||mo>=11) hsCA++; // Hors Saison
         if (!isWE && !isHol) curPer.push(s); // jour ouvré CA → période frac
@@ -4577,7 +4588,9 @@
     const fracBonus = caPeriodsWD.filter(p=>p.length>=5).length>=3 ? 1 : 0;
     // Bonus RCV (Décret 2002-9, Art. 3) : variable ≥20 DJF — nuit = 0 (Art. 4)
     const rcvBonus  = (planRegime!=='nuit' && djfCount>=20) ? 2 : 0;
-    const grandTotal = 25 + hsBonus + fracBonus + rcvBonus;
+    // N-1 : ajout du report de l'année précédente
+    const caN1Solde = (planSoldes && planSoldes.caN1) || 0;
+    const grandTotal = 25 + caN1Solde + hsBonus + fracBonus + rcvBonus;
 
     const leaveSet = new Set([...caSet]);
     if (planRegime === 'nuit') rcnSet.forEach(d => leaveSet.add(d));
@@ -4670,6 +4683,22 @@
         strip.className = 'plan-status-strip fail';
         stxt.textContent = `Dépassement — ${maxSpan} j (+${maxSpan - limit} j)`;
       }
+    }
+
+    // N-1 : compter les jours 'can1' posés vs le crédit
+    const can1Placed = (() => {
+      let n = 0;
+      const s = new Date(`${planYear}-01-01T12:00:00`), e = new Date(`${planYear}-12-31T12:00:00`);
+      for (let d = new Date(s); d <= e; d.setDate(d.getDate()+1)) {
+        if (planStates[d.toISOString().split('T')[0]] === 'can1') n++;
+      }
+      return n;
+    })();
+    const can1El = document.getElementById('solde-can1-used');
+    if (can1El) can1El.textContent = `${can1Placed}/${planSoldes.caN1||0} posés`;
+    const can1Warn = document.getElementById('solde-can1-warn');
+    if (can1Warn) {
+      can1Warn.style.display = can1Placed > (planSoldes.caN1||0) ? 'inline' : 'none';
     }
 
     // Soldes disponibles
@@ -4775,6 +4804,10 @@
   };
 
   function initPlanSoldesUI() {
+    // Dates d'expiration par défaut : CA N-1 → 31 jan, HP/RCV → 31 mars
+    if (!planSoldes.caN1Exp) { planSoldes.caN1Exp = `${planYear}-01-31`; savePlanSoldes(); }
+    if (!planSoldes.hpExp)   { planSoldes.hpExp   = `${planYear}-03-31`; savePlanSoldes(); }
+    if (!planSoldes.rcvExp)  { planSoldes.rcvExp  = `${planYear}-03-31`; savePlanSoldes(); }
     const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
     set('solde-ca-n1',     planSoldes.caN1 || '');
     set('solde-ca-n1-exp', planSoldes.caN1Exp);
@@ -7152,7 +7185,7 @@
       for (let dd = 1; dd <= nb; dd++) {
         const s  = `${planYear}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
         const st = getPlanDayState(s);
-        if (st === 'ca')  caC++;
+        if (st === 'ca' || st === 'can1') caC++;
         if (st === 'rcn') rcnC++;
       }
       let badge = '';
@@ -7356,6 +7389,7 @@
       <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18);border:1.5px solid #60ceea;"></span>J Jour</span>
       <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13);border:1.5px solid #ef4444;"></span>N Nuit</span>
       <span><span class="plan-legend-dot" style="background:var(--as-glow);border:1.5px solid var(--as);"></span>CA</span>
+      <span><span class="plan-legend-dot" style="background:rgba(20,184,166,0.16);border:1.5px solid #14b8a6;"></span>N-1 CA reporté</span>
       <span id="plan-legend-rcn"><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32);border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto)</em></span>
       <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13);border:1px solid #64748b;"></span>RH</span>
       <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14);border:1.5px solid #a855f7;"></span>HS</span>
@@ -7378,6 +7412,8 @@
             <span class="plan-solde-unit">j</span>
             <span class="plan-solde-explbl">expire</span>
             <input type="date" id="solde-ca-n1-exp" onchange="updatePlanSolde('caN1Exp',this.value)">
+            <span id="solde-can1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-can1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
           </div>
         </div>
         <div class="plan-solde-row">
