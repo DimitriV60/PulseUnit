@@ -82,7 +82,8 @@
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; padding-bottom: 90px; transition: background-color 0.3s ease, color 0.3s ease; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; padding-bottom: 90px; transition: background-color 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
   
   .header, .bed-card, .pool-panel, .staff-card, .mini-item, .a-btn, .pill-container > div, .fs-view, .fs-header, .calc-tile { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.2s ease; }
 
@@ -804,6 +805,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes & Alertes</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();">🫁 Simulateur Respirateur</a>
       <div style="flex: 1; min-height: 20px;"></div>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Version Alpha — Signaler un bug</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();">⚙️ Paramètres</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); logoutUser();">🚪 Déconnexion</a>
       <a href="#" class="side-link" style="color: var(--crit); border-bottom:none;" onclick="closeSideMenu(); openAdmin();">🔒 Admin</a>
@@ -978,6 +980,38 @@
       <h3 style="margin-bottom:15px; color:var(--as); font-weight: 900;">SUPER TRAVAIL !</h3>
       <p id="congrats-msg" style="color:var(--text); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; font-weight: 700;"></p>
       <button class="btn-primary" style="background:var(--as); width:100%; padding:12px;" onclick="document.getElementById('congrats-modal').style.display='none'">Génial !</button>
+    </div>
+  </div>
+
+  <!-- Modale Alpha -->
+  <div id="alpha-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:500; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+    <div class="modal-content" style="width:min(420px,92vw); padding:22px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <div style="font-size:2.2rem; margin-bottom:6px;">🧪</div>
+        <div style="font-size:1.05rem; font-weight:900; color:var(--brand-aqua);">PulseUnit — Version Alpha</div>
+        <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-top:3px; letter-spacing:0.05em;">TEST INTERNE — NE PAS DIFFUSER</div>
+      </div>
+
+      <div style="background:var(--surface-sec); border-radius:10px; padding:14px; border:1px solid var(--border); margin-bottom:14px; font-size:0.83rem; line-height:1.65; color:var(--text); font-weight:600;">
+        Merci de tester PulseUnit !<br><br>
+        Cette version est en cours de développement actif. Elle peut contenir des bugs, des incohérences ou des comportements inattendus.<br><br>
+        <strong style="color:var(--crit);">Si tu rencontres un problème :</strong>
+        <ul style="margin:8px 0 0 16px; padding:0; color:var(--text);">
+          <li>Fais une <strong>capture d'écran</strong></li>
+          <li>Note <strong>ce que tu faisais</strong> au moment du bug</li>
+          <li>Envoie le tout à Dimitri par message</li>
+        </ul>
+      </div>
+
+      <div style="background:var(--surface-sec); border-radius:10px; padding:12px; border:1px solid var(--border); margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase;">Lien d'accès</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div id="alpha-link-text" style="font-size:0.78rem; font-weight:700; color:var(--brand-blue); word-break:break-all; flex:1; -webkit-user-select:text; user-select:text;">https://pulseunit-c9c5c.web.app</div>
+          <button onclick="copyAlphaLink()" id="alpha-copy-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; flex-shrink:0;">Copier</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('alpha-modal').style.display='none'">Fermer</button>
     </div>
   </div>
 
@@ -6049,6 +6083,20 @@
     } else {
       el.innerHTML = `<button class="header-btn outline" onclick="showAuthModal()" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
     }
+  }
+
+  function openAlphaModal() {
+    document.getElementById('alpha-modal').style.display = 'flex';
+  }
+
+  async function copyAlphaLink() {
+    const link = document.getElementById('alpha-link-text').textContent;
+    try {
+      await navigator.clipboard.writeText(link);
+      const btn = document.getElementById('alpha-copy-btn');
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = 'Copier'; }, 2000);
+    } catch(e) { alert('Copiez manuellement : ' + link); }
   }
 
   function showToast(msg) {
