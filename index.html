@@ -2931,10 +2931,14 @@
   function saveData() {
     if (PULSEUNIT_DOC) {
       // ── Sauvegarde Firestore (synchronisation temps réel entre collègues) ──
+      _savePending = true;
       PULSEUNIT_DOC.set({
         roster:       roster,
         shiftHistory: shiftHistory
+      }).then(() => {
+        _savePending = false;
       }).catch(e => {
+        _savePending = false;
         console.error("Erreur Firestore :", e);
         // Fallback localStorage si hors ligne
         try {
@@ -5713,6 +5717,7 @@
   let currentUser = JSON.parse(sessionStorage.getItem('pulseunit_current_user')) || null;
   let authUsers = {};
   let resetRequests = [];
+  let _savePending = false; // Bloque onSnapshot pendant un écrit local en cours
   const AUTH_DOC   = db ? db.collection('pulseunit').doc('auth')   : null;
   const RESETS_DOC = db ? db.collection('pulseunit').doc('resets') : null;
   let selectedRole = '';
@@ -6083,7 +6088,8 @@
 
       // Écoute continue : mise à jour automatique quand un collègue sauvegarde
       PULSEUNIT_DOC.onSnapshot(doc => {
-        if (doc.metadata.hasPendingWrites) return;
+        // Ignorer si un écrit LOCAL est en cours (évite l'écrasement du state local)
+        if (_savePending || doc.metadata.hasPendingWrites) return;
         if (doc.exists) {
           const data = doc.data();
           if (Array.isArray(data.roster)) roster = data.roster;
