@@ -6109,7 +6109,8 @@
         document.getElementById('auth-modal').style.display = 'none';
         updateHeaderUser();
         renderApp();
-        checkWorkStatus();
+        // setTimeout 0 : garantit que le DOM (work-status-modal) est prêt avant d'accéder
+        setTimeout(checkWorkStatus, 0);
       } else {
         updateHeaderUser();
         showAuthModal();
@@ -6119,69 +6120,102 @@
       document.getElementById('auth-modal').style.display = 'none';
       updateHeaderUser();
       renderApp();
-      checkWorkStatus();
+      setTimeout(checkWorkStatus, 0);
     }
   }
 
   /**
    * Demande à l'utilisateur s'il travaille sur la garde actuelle.
-   * Affiche la modale uniquement s'il n'est pas déjà dans l'effectif
-   * et que la garde n'est pas verrouillée.
+   * - Ne s'affiche pas si déjà dans l'effectif de cette garde
+   * - Si déjà dans la garde SOEUR (même jour, autre période), auto-ajoute sans demander
+   * - Si garde verrouillée, ne s'affiche pas
    */
   function checkWorkStatus() {
-    if (!currentUser) return;
+    if (!currentUser || isShiftLocked(currentShiftKey)) return;
     initShiftData(currentShiftKey);
     const h = shiftHistory[currentShiftKey];
     const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
     const meds = shiftHistory[dateOnly+'-meds'] || [];
+
     const isAlreadyActive = (h.activeStaffIds||[]).includes(currentUser.id)
                          || h.techIdeId === currentUser.id
                          || meds.includes(currentUser.id);
-    if (isAlreadyActive || isShiftLocked(currentShiftKey) || isAdmin()) return;
+    if (isAlreadyActive) return;
+
+    // Garde sœur (même date, l'autre période) → auto-ajoute sans demander
     const isNight = currentShiftKey.includes('-nuit');
+    const siblingKey = dateOnly + (isNight ? '-jour' : '-nuit');
+    initShiftData(siblingKey);
+    const hSibling = shiftHistory[siblingKey] || {};
+    const wasInSibling = (hSibling.activeStaffIds||[]).includes(currentUser.id)
+                      || hSibling.techIdeId === currentUser.id;
+    if (wasInSibling && currentUser.role !== 'med') {
+      if (!h.activeStaffIds.includes(currentUser.id)) {
+        h.activeStaffIds.push(currentUser.id);
+        saveData();
+      }
+      renderApp();
+      return;
+    }
+
+    // Afficher la modale (avec sécurité null si DOM pas encore prêt)
+    const modal = document.getElementById('work-status-modal');
+    if (!modal) return;
     document.getElementById('work-title').textContent = `Bonjour ${currentUser.firstName} !`;
     document.getElementById('work-desc').textContent = `Travaillez-vous sur la garde de ${isNight ? 'NUIT' : 'JOUR'} actuelle ?`;
-    document.getElementById('work-status-modal').style.display = 'flex';
+    modal.style.display = 'flex';
   }
 
   /**
-   * Traite la réponse : ajoute l'utilisateur aux effectifs ou passe en lecture seule.
-   * @param {boolean} isWorking - true si l'utilisateur travaille sur la garde
+   * Traite le choix de présence : ajoute l'utilisateur aux effectifs pour
+   * la garde courante ET la garde sœur (même date), ou passe en lecture seule.
+   * @param {boolean} isWorking
    */
   window.handleWorkChoice = function(isWorking) {
-    document.getElementById('work-status-modal').style.display = 'none';
+    const modal = document.getElementById('work-status-modal');
+    if (modal) modal.style.display = 'none';
     if (!currentUser) return;
+
     if (isWorking) {
-      initShiftData(currentShiftKey);
-      const h = shiftHistory[currentShiftKey];
-      // Ajout automatique selon le rôle
+      const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
+      const isNight = currentShiftKey.includes('-nuit');
+      const siblingKey = dateOnly + (isNight ? '-jour' : '-nuit');
+
       if (currentUser.role === 'med') {
-        const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
+        // Médecin : ajouter au slot médecin partagé pour la journée
         if (!shiftHistory[dateOnly+'-meds']) shiftHistory[dateOnly+'-meds'] = [null,null,null];
-        const slot = shiftHistory[dateOnly+'-meds'].indexOf(currentUser.id);
-        if (slot === -1) {
+        if (!shiftHistory[dateOnly+'-meds'].includes(currentUser.id)) {
           const empty = shiftHistory[dateOnly+'-meds'].indexOf(null);
           if (empty !== -1) shiftHistory[dateOnly+'-meds'][empty] = currentUser.id;
         }
       } else {
-        if (!h.activeStaffIds.includes(currentUser.id)) {
-          h.activeStaffIds.push(currentUser.id);
+        // IDE/AS/Tech : ajouter à la garde courante
+        initShiftData(currentShiftKey);
+        const h = shiftHistory[currentShiftKey];
+        if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
+
+        // Ajouter aussi à la garde sœur (même journée) → persistance jour↔nuit
+        initShiftData(siblingKey);
+        const hS = shiftHistory[siblingKey];
+        if (!(hS.activeStaffIds||[]).includes(currentUser.id)) {
+          if (!hS.activeStaffIds) hS.activeStaffIds = [];
+          hS.activeStaffIds.push(currentUser.id);
         }
       }
       saveData();
       renderApp();
-      showToast(`✅ Ajouté à la garde — cliquez sur un lit pour vous y assigner`);
-      // Pré-sélection automatique (sauf pour les médecins qui utilisent un autre système)
+      showToast('✅ Ajouté à la garde — cliquez sur un lit pour vous y assigner');
+      // Pré-sélection : le prochain clic sur un lit assigne directement
       if (currentUser.role !== 'med') {
         selectedStaffForTap = currentUser.id;
         updateStickyBanner();
         renderApp();
       }
     } else {
-      showToast("👁 Mode consultation (lecture seule)");
+      showToast('👁 Mode consultation (lecture seule)');
       renderApp();
     }
-  }
+  };
 
   appInit();
 </script>
