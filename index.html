@@ -6459,22 +6459,6 @@
                          || meds.includes(currentUser.id);
     if (isAlreadyActive) return;
 
-    // Garde sœur (même date, l'autre période) → auto-ajoute sans demander
-    const isNight = currentShiftKey.includes('-nuit');
-    const siblingKey = dateOnly + (isNight ? '-jour' : '-nuit');
-    initShiftData(siblingKey);
-    const hSibling = shiftHistory[siblingKey] || {};
-    const wasInSibling = (hSibling.activeStaffIds||[]).includes(currentUser.id)
-                      || hSibling.techIdeId === currentUser.id;
-    if (wasInSibling && currentUser.role !== 'med') {
-      if (!h.activeStaffIds.includes(currentUser.id)) {
-        h.activeStaffIds.push(currentUser.id);
-        saveData();
-      }
-      renderApp();
-      return;
-    }
-
     // Afficher la modale (avec sécurité null si DOM pas encore prêt)
     const modal = document.getElementById('work-status-modal');
     if (!modal) return;
@@ -6495,8 +6479,6 @@
 
     if (isWorking) {
       const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
-      const isNight = currentShiftKey.includes('-nuit');
-      const siblingKey = dateOnly + (isNight ? '-jour' : '-nuit');
 
       if (currentUser.role === 'med') {
         // Médecin : ajouter au slot médecin partagé pour la journée
@@ -6511,13 +6493,6 @@
         const h = shiftHistory[currentShiftKey];
         if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
 
-        // Ajouter aussi à la garde sœur (même journée) → persistance jour↔nuit
-        initShiftData(siblingKey);
-        const hS = shiftHistory[siblingKey];
-        if (!(hS.activeStaffIds||[]).includes(currentUser.id)) {
-          if (!hS.activeStaffIds) hS.activeStaffIds = [];
-          hS.activeStaffIds.push(currentUser.id);
-        }
       }
       saveData();
       showToast('✅ Ajouté à la garde — cliquez sur un lit pour vous y assigner');
@@ -6535,6 +6510,40 @@
   };
 
   appInit();
+
+  // ── Swipe gauche = retour / fermeture ──────────────────────────────────
+  (function() {
+    let startX = 0, startY = 0;
+    document.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (dx > -60 || Math.abs(dy) > Math.abs(dx)) return; // pas un swipe gauche net
+
+      // Priorité : du plus spécifique au plus général
+      const isVisible = id => {
+        const el = document.getElementById(id);
+        return el && el.style.display !== 'none' && el.style.display !== '';
+      };
+      const menuOpen = () => {
+        const m = document.getElementById('side-menu');
+        return m && m.style.transform === 'translateX(0)';
+      };
+
+      if (isVisible('normes-respi-view'))   { closeNormesRespi(); return; }
+      if (isVisible('normes-detail-view'))  { closeNormesDetail(); return; }
+      if (isVisible('normes-view'))         { closeNormes(); return; }
+      if (isVisible('protocoles-view'))     { closeProtocoles(); return; }
+      if (isVisible('tasks-view'))          { closeTasks(); return; }
+      if (isVisible('calculateurs-view'))   { closeCalculateurs(); return; }
+      if (isVisible('lexique-view'))        { closeLexique(); return; }
+      if (menuOpen())                       { closeSideMenu(); return; }
+    }, { passive: true });
+  })();
 </script>
 
   <!-- ===== PROTOCOLES — Vue liste ===== -->
