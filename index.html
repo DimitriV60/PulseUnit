@@ -883,16 +883,56 @@
   </div>
 
   <div id="admin-panel-modal">
-    <div class="modal-content" style="max-height:90vh; overflow-y:auto;">
+    <div class="modal-content" style="max-height:90vh; overflow-y:auto; width:min(460px,95vw);">
       <h3 style="margin-bottom:15px; color:var(--crit); display:flex; align-items:center; gap:8px;">
         ⚠️ Zone Admin
         <span id="admin-reset-badge" class="auth-reset-badge">0</span>
       </h3>
+
+      <!-- Utilisateurs connectés en temps réel -->
+      <div style="margin-bottom:15px;">
+        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 5px #22c55e;"></span>
+          Connectés en temps réel
+        </div>
+        <div id="admin-online-container" style="font-size:0.82rem; color:var(--text-muted); text-align:center; padding:6px 0;">Chargement…</div>
+      </div>
+
+      <hr style="border-color:var(--border); margin-bottom:15px;">
+
       <!-- Demandes de réinitialisation -->
       <div style="margin-bottom:15px;">
         <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Demandes de code oublié</div>
         <div id="admin-resets-container"></div>
       </div>
+
+      <hr style="border-color:var(--border); margin-bottom:15px;">
+
+      <!-- Gestion des utilisateurs -->
+      <div style="margin-bottom:15px;">
+        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Gestion des comptes</div>
+
+        <!-- Créer un utilisateur -->
+        <div style="background:var(--surface-sec); border-radius:10px; padding:12px; margin-bottom:12px; border:1px solid var(--border);">
+          <div style="font-size:0.78rem; font-weight:800; color:var(--text); margin-bottom:10px;">➕ Créer un compte</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <input id="admin-new-firstname" type="text" placeholder="Prénom" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
+            <input id="admin-new-lastname" type="text" placeholder="NOM" style="padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700;">
+          </div>
+          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button onclick="adminSelectNewRole('ide')" id="admin-role-ide" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
+            <button onclick="adminSelectNewRole('as')"  id="admin-role-as"  class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--as);  opacity:0.4; transition:opacity 0.15s;">AS</button>
+            <button onclick="adminSelectNewRole('med')" id="admin-role-med" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--med); opacity:0.4; transition:opacity 0.15s;">MED</button>
+            <button onclick="adminSelectNewRole('tech')" id="admin-role-tech" class="btn-primary" style="flex:1; min-width:60px; padding:6px 4px; font-size:0.72rem; background:var(--tech); opacity:0.4; transition:opacity 0.15s;">TECH</button>
+          </div>
+          <input id="admin-new-pin" type="text" inputmode="numeric" maxlength="6" placeholder="Code PIN à 6 chiffres" style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
+          <button onclick="adminCreateUser()" class="btn-primary" style="width:100%; padding:9px; font-size:0.82rem;">Créer le compte</button>
+        </div>
+
+        <!-- Liste des utilisateurs -->
+        <div id="admin-users-container"></div>
+      </div>
+
       <hr style="border-color:var(--border); margin-bottom:15px;">
       <button class="btn-primary" id="admin-usip-btn" style="background:var(--crit); margin-bottom:10px; transition:all 0.2s;" onclick="toggleAdminUsipLock()">🔒 Verrouiller USIP</button>
       <button class="btn-primary" style="background:var(--text-muted); margin-bottom:10px; color:#fff;" onclick="document.getElementById('admin-panel-modal').style.display='none'; confirmClearShift();">🗑️ Vider garde</button>
@@ -1301,6 +1341,7 @@
     if (isAdmin()) {
       updateAdminPanelBtn();
       renderAdminResets();
+      renderAdminUsers();
       document.getElementById('admin-panel-modal').style.display = 'flex';
       return;
     }
@@ -5698,9 +5739,55 @@
   let authUsers = {};
   let resetRequests = [];
   let _savePending = false; // Bloque onSnapshot pendant un écrit local en cours
-  const AUTH_DOC   = db ? db.collection('pulseunit').doc('auth')   : null;
-  const RESETS_DOC = db ? db.collection('pulseunit').doc('resets') : null;
+  const AUTH_DOC    = db ? db.collection('pulseunit').doc('auth')     : null;
+  const RESETS_DOC  = db ? db.collection('pulseunit').doc('resets')   : null;
+  const PRESENCE_DOC = db ? db.collection('pulseunit').doc('presence') : null;
+  let onlineUsers = {}; // { userId: { firstName, lastName, role, lastSeen } }
   let selectedRole = '';
+
+  // ── PRÉSENCE TEMPS RÉEL ───────────────────────────────────────────────────
+  async function setPresence(online) {
+    if (!PRESENCE_DOC || !currentUser) return;
+    try {
+      if (online) {
+        await PRESENCE_DOC.set({
+          [currentUser.id]: {
+            firstName: currentUser.firstName,
+            lastName:  currentUser.lastName,
+            role:      currentUser.role,
+            lastSeen:  Date.now()
+          }
+        }, { merge: true });
+      } else {
+        await PRESENCE_DOC.set(
+          { [currentUser.id]: firebase.firestore.FieldValue.delete() },
+          { merge: true }
+        );
+      }
+    } catch(e) { console.warn('Presence error:', e); }
+  }
+
+  // Mise à jour de présence toutes les 60s pour garder le statut actif
+  let _presenceInterval = null;
+  function startPresenceHeartbeat() {
+    stopPresenceHeartbeat();
+    setPresence(true);
+    _presenceInterval = setInterval(() => setPresence(true), 60000);
+  }
+  function stopPresenceHeartbeat() {
+    if (_presenceInterval) { clearInterval(_presenceInterval); _presenceInterval = null; }
+  }
+
+  // Écoute temps réel des utilisateurs connectés
+  if (PRESENCE_DOC) {
+    PRESENCE_DOC.onSnapshot(doc => {
+      onlineUsers = (doc.exists && doc.data()) ? doc.data() : {};
+      renderAdminUsers();
+    });
+  }
+
+  // Nettoyage à la fermeture de page
+  window.addEventListener('beforeunload', () => setPresence(false));
 
   async function hashPin(pin) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
@@ -5808,6 +5895,7 @@
       if (u) {
         currentUser = { id: userId, firstName: u.firstName, lastName: u.lastName, role: u.role };
         sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+        startPresenceHeartbeat();
         return true;
       }
     } catch(e) {}
@@ -5840,10 +5928,11 @@
       saveData();
     }
     const pinHash = await hashPin(pin);
-    authUsers[rosterId] = { firstName: fn, lastName: ln, role: selectedRole, pinHash, tempPin: null };
+    authUsers[rosterId] = { firstName: fn, lastName: ln, role: selectedRole, pinHash, tempPin: null, createdAt: Date.now() };
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     currentUser = { id: rosterId, firstName: fn, lastName: ln, role: selectedRole };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    startPresenceHeartbeat();
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     renderApp();
@@ -5884,6 +5973,7 @@
         expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
       }));
     }
+    startPresenceHeartbeat();
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     renderApp();
@@ -5909,8 +5999,10 @@
     alert('Nouveau code enregistré !');
   }
 
-  function logoutUser() {
+  async function logoutUser() {
     if (!confirm('Se déconnecter ?')) return;
+    await setPresence(false);
+    stopPresenceHeartbeat();
     currentUser = null;
     sessionStorage.removeItem('pulseunit_current_user');
     localStorage.removeItem('pulseunit_autologin');
@@ -6011,6 +6103,121 @@
     `).join('');
   }
 
+  // ── GESTION ADMIN DES UTILISATEURS ───────────────────────────────────────
+
+  let _adminNewRole = '';
+
+  function adminSelectNewRole(role) {
+    _adminNewRole = role;
+    ['ide','as','med','tech'].forEach(r => {
+      const btn = document.getElementById('admin-role-' + r);
+      if (btn) btn.style.opacity = r === role ? '1' : '0.35';
+    });
+  }
+
+  async function adminCreateUser() {
+    const fn   = document.getElementById('admin-new-firstname').value.trim();
+    const ln   = document.getElementById('admin-new-lastname').value.trim();
+    const pin  = document.getElementById('admin-new-pin').value.trim();
+    if (!fn || !ln)      return alert('Veuillez saisir le prénom et le nom.');
+    if (!_adminNewRole)  return alert('Veuillez choisir un rôle.');
+    if (!/^\d{6}$/.test(pin)) return alert('Le code PIN doit contenir exactement 6 chiffres.');
+    const already = Object.values(authUsers).find(u =>
+      u.firstName.toLowerCase() === fn.toLowerCase() && u.lastName.toLowerCase() === ln.toLowerCase()
+    );
+    if (already) return alert('Un compte avec ce nom existe déjà.');
+    let rosterId = null;
+    const rosterMatch = roster.find(r =>
+      r.firstName.toLowerCase() === fn.toLowerCase() && r.lastName.toLowerCase() === ln.toLowerCase()
+    );
+    if (rosterMatch) {
+      rosterId = rosterMatch.id;
+    } else {
+      rosterId = 'u_' + Date.now();
+      roster.push({ id: rosterId, firstName: fn, lastName: ln, role: _adminNewRole });
+      saveData();
+    }
+    const pinHash = await hashPin(pin);
+    authUsers[rosterId] = { firstName: fn, lastName: ln, role: _adminNewRole, pinHash, tempPin: null, createdAt: Date.now() };
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    // Reset form
+    document.getElementById('admin-new-firstname').value = '';
+    document.getElementById('admin-new-lastname').value  = '';
+    document.getElementById('admin-new-pin').value       = '';
+    adminSelectNewRole('');
+    _adminNewRole = '';
+    renderAdminUsers();
+    showToast(`✅ Compte créé pour ${fn} ${ln.toUpperCase()}`);
+  }
+
+  async function adminDeleteUser(userId) {
+    const u = authUsers[userId];
+    if (!u) return;
+    const name = `${u.firstName} ${u.lastName.toUpperCase()}`;
+    if (!confirm(`Supprimer le compte de ${name} ?\n\nCette action est irréversible.`)) return;
+    delete authUsers[userId];
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    // Retirer du roster
+    roster = roster.filter(r => r.id !== userId);
+    saveData();
+    // Retirer de la présence si connecté
+    if (PRESENCE_DOC) {
+      try { await PRESENCE_DOC.set({ [userId]: firebase.firestore.FieldValue.delete() }, { merge: true }); } catch(e) {}
+    }
+    renderAdminUsers();
+    showToast(`🗑️ Compte de ${name} supprimé.`);
+  }
+
+  function renderAdminUsers() {
+    // Section "connectés en temps réel"
+    const onlineEl = document.getElementById('admin-online-container');
+    if (onlineEl) {
+      const ids = Object.keys(onlineUsers);
+      if (ids.length === 0) {
+        onlineEl.innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted);">Aucun utilisateur connecté</span>';
+      } else {
+        onlineEl.innerHTML = ids.map(id => {
+          const u = onlineUsers[id];
+          const col = ROLE_COLORS[u.role] || 'var(--brand-blue)';
+          const since = u.lastSeen ? new Date(u.lastSeen).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) : '';
+          return `<div style="display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; background:var(--surface-sec); margin-bottom:5px; border:1px solid var(--border);">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0;"></span>
+            <span style="font-weight:800; font-size:0.83rem; color:var(--text); flex:1;">${escapeHTML(u.firstName)} ${escapeHTML(u.lastName.toUpperCase())}</span>
+            <span style="font-size:0.7rem; font-weight:700; color:${col}; background:${col}22; padding:2px 6px; border-radius:4px;">${u.role.toUpperCase()}</span>
+            ${since ? `<span style="font-size:0.68rem; color:var(--text-muted);">${since}</span>` : ''}
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // Liste de tous les comptes
+    const container = document.getElementById('admin-users-container');
+    if (!container) return;
+    const entries = Object.entries(authUsers).sort((a, b) =>
+      (a[1].lastName || '').localeCompare(b[1].lastName || '')
+    );
+    if (entries.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:8px 0;">Aucun compte enregistré</p>';
+      return;
+    }
+    container.innerHTML = entries.map(([id, u]) => {
+      const col   = ROLE_COLORS[u.role] || 'var(--brand-blue)';
+      const isOnline = !!onlineUsers[id];
+      const created = u.createdAt
+        ? new Date(u.createdAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'})
+        : '—';
+      return `<div style="display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px; background:var(--surface-sec); margin-bottom:6px; border:1px solid var(--border);">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isOnline ? '#22c55e' : 'var(--border)'}; flex-shrink:0;" title="${isOnline ? 'Connecté' : 'Hors ligne'}"></span>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:800; font-size:0.83rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(u.firstName)} ${escapeHTML((u.lastName||'').toUpperCase())}</div>
+          <div style="font-size:0.68rem; color:var(--text-muted);">Créé le ${created}</div>
+        </div>
+        <span style="font-size:0.7rem; font-weight:700; color:${col}; background:${col}22; padding:2px 6px; border-radius:4px; flex-shrink:0;">${u.role.toUpperCase()}</span>
+        <button onclick="adminDeleteUser('${id}')" style="background:none; border:none; color:var(--crit); font-size:1.1rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Supprimer">🗑️</button>
+      </div>`;
+    }).join('');
+  }
+
   async function changeMyPin() {
     if (!currentUser) return alert('Vous devez être connecté.');
     const oldPin  = document.getElementById('chg-old').value;
@@ -6040,6 +6247,10 @@
       authUsers = (doc.exists && doc.data().users) ? doc.data().users : {};
       const resDoc = await RESETS_DOC.get({ source: 'server' });
       resetRequests = (resDoc.exists && resDoc.data().requests) ? resDoc.data().requests : [];
+      if (PRESENCE_DOC) {
+        const presDoc = await PRESENCE_DOC.get({ source: 'server' });
+        onlineUsers = (presDoc.exists && presDoc.data()) ? presDoc.data() : {};
+      }
     } catch(e) { console.warn('Auth load error:', e); }
   }
 
@@ -6082,6 +6293,7 @@
     // 3. Interface principale
     initDates();
     renderAdminResets();
+    renderAdminUsers();
 
     // 4. Connexion auto ou modale
     if (checkAutoLogin()) {
