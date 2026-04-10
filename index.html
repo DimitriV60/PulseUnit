@@ -3204,12 +3204,12 @@
     initShiftData(currentShiftKey);
     if(isShiftLocked(currentShiftKey)) return;
     const dO = currentShiftKey.split('-').slice(0,3).join('-');
-    
-    if (docIndex === 2 && !bedKey.startsWith('usip-')) return;
-    
-    if (shiftHistory[dO+'-medsBeds'][bedKey] === docIndex) shiftHistory[dO+'-medsBeds'][bedKey] = null;
-    else shiftHistory[dO+'-medsBeds'][bedKey] = docIndex; 
-    saveData(); renderApp();
+    if(!shiftHistory[dO+'-medsBeds']) shiftHistory[dO+'-medsBeds'] = {};
+    if(docIndex === 2 && !bedKey.startsWith('usip-')) return;
+    if(shiftHistory[dO+'-medsBeds'][bedKey] === docIndex) shiftHistory[dO+'-medsBeds'][bedKey] = null;
+    else shiftHistory[dO+'-medsBeds'][bedKey] = docIndex;
+    saveData();
+    renderApp();
   }
 
   /**
@@ -3585,13 +3585,19 @@
    * @param {Event}  e  - Événement click (stopPropagation pour éviter assignLit)
    */
   function toggleLit(id, p, e) {
-      if(!canEditBeds()) return; 
-      e.stopPropagation(); 
-      let d = shiftHistory[currentShiftKey].assignments[id]; 
-      if(!d) return;
-      d[p] = !d[p]; 
-      if(p==='closed'&&d.closed){d.ide=null;d.as=null;} 
-      saveData(); renderApp(); 
+    if(!canEditBeds()) {
+      showToast("Édition interdite : vous n'êtes pas affecté à cette garde.");
+      return;
+    }
+    if(e) e.stopPropagation();
+    initShiftData(currentShiftKey);
+    let h = shiftHistory[currentShiftKey];
+    if(!h.assignments[id]) h.assignments[id] = {ide:null,as:null,bmr:false,dialyse:false,crit:false,closed:false};
+    let d = h.assignments[id];
+    d[p] = !d[p];
+    if(p==='closed' && d.closed){ d.ide=null; d.as=null; }
+    saveData();
+    renderApp();
   }
 
   document.addEventListener('click', (e) => { 
