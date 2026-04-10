@@ -1017,10 +1017,7 @@
   </div>
 
   <div class="layout">
-    <div class="pool-panel" id="pool-panel">
-      <div class="pool-content" id="pool-list"></div>
-    </div>
-
+    <div id="pool-list" style="display:none;"></div>
     <main class="sectors-area" id="board"></main>
   </div>
 
@@ -1052,27 +1049,31 @@
         <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:16px; font-weight:600;">Réanimation & Soins Critiques</p>
 
         <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;" open>
-            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">👥 1. Ajouter l'équipe</summary>
+            <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">👥 1. Rejoindre la garde</summary>
             <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Utilisez la barre de recherche <strong style="color:var(--text);">(colonne gauche)</strong> pour ajouter IDE et AS à la garde.<br><br>
-                Les compteurs <strong style="color:var(--ide);">IDE</strong> / <strong style="color:var(--as);">AS</strong> et les ratios se mettent à jour automatiquement. Un soignant peut être créé directement s'il n'existe pas encore.
+                À la connexion, une fenêtre vous demande : <strong style="color:var(--text);">"Es-tu de service sur cette garde ?"</strong><br><br>
+                → <strong style="color:var(--as);">OUI</strong> : vous êtes ajouté à l'effectif et sélectionné automatiquement pour assigner des lits.<br>
+                → <strong style="color:var(--text-muted);">NON</strong> : mode lecture seule — vous pouvez consulter mais pas modifier.<br><br>
+                Les compteurs <strong style="color:var(--ide);">IDE</strong> / <strong style="color:var(--as);">AS</strong> dans la section GESTION ÉQUIPE se mettent à jour automatiquement. Votre présence est également enregistrée pour la garde complémentaire (jour ↔ nuit) du même jour.
             </div>
         </details>
 
         <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
             <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">🛏️ 2. Assigner les lits</summary>
             <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                <strong style="color:var(--text);">Étape 1 —</strong> Appuyez sur un <span style="color:var(--ide); font-weight:800;">IDE</span> ou <span style="color:var(--as); font-weight:800;">AS</span> dans la liste EFFECTIF ou dans le panneau gauche. Un bandeau orange apparaît en bas.<br><br>
-                <strong style="color:var(--text);">Étape 2 —</strong> Touchez les lits à lui attribuer. Ils se surlignent.<br><br>
-                <strong style="color:var(--text);">Étape 3 —</strong> Appuyez sur <strong style="color:var(--text);">✔ VALIDER</strong>.
+                <strong style="color:var(--text);">Étape 1 —</strong> Appuyez sur votre nom dans la colonne <strong style="color:var(--text);">EFFECTIF</strong>. Un bandeau orange apparaît en bas avec votre prénom.<br><br>
+                <strong style="color:var(--text);">Étape 2 —</strong> Touchez les lits à vous attribuer. Ils s'affichent immédiatement avec votre nom.<br><br>
+                <strong style="color:var(--text);">Étape 3 —</strong> Appuyez sur <strong style="color:var(--text);">✔ VALIDER</strong> ou re-touchez votre nom pour désélectionner.<br><br>
+                Les boutons <span style="color:var(--bmr); font-weight:800;">B</span> (BMR), <span style="color:var(--dialyse); font-weight:800;">D</span> (Dialyse) et <span style="color:var(--crit); font-weight:800;">!</span> (Critique) sur chaque lit s'activent instantanément au tap.
             </div>
         </details>
 
         <details style="margin-bottom:8px; background:var(--pill-bg); border:1px solid var(--border); border-radius:8px; padding:10px;">
             <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem;">⚕️ 3. Médecins & IDE Tech</summary>
             <div style="font-size:0.82rem; margin-top:10px; color:var(--text-muted); line-height:1.5;">
-                Recherchez directement dans les cartes <span style="color:var(--med); font-weight:800;">RÉA 1</span>, <span style="color:var(--med); font-weight:800;">RÉA 2</span> et <span style="color:var(--med); font-weight:800;">RÉA USIP</span>.<br><br>
-                Les <strong style="color:var(--text);">numéros de chambre</strong> dans ces cartes définissent le secteur médical attribué (RÉA 1 : ☎ 1862 / RÉA 2 : ☎ 1822).
+                <strong style="color:var(--text);">Médecins —</strong> Les cartes <span style="color:var(--med); font-weight:800;">RÉA 1 (☎ 1862)</span> et <span style="color:var(--med); font-weight:800;">RÉA 2 (☎ 1822)</span> permettent d'assigner un médecin à son secteur. Recherchez directement dans la carte.<br><br>
+                Chaque médecin sélectionne <strong style="color:var(--text);">ses numéros de chambre</strong> dans sa propre carte — seul lui peut modifier son secteur.<br><br>
+                <strong style="color:var(--text);">IDE Tech —</strong> Assigné via la carte IDE TECH. Une fois affecté, l'IDE Tech a accès à la liste de tâches techniques du jour.
             </div>
         </details>
 
@@ -3182,15 +3183,22 @@
    * @param {number} docIndex - Index du médecin (0, 1 ou 2)
    */
   function toggleMedBed(bedKey, docIndex) {
+    if(!currentUser) return;
     initShiftData(currentShiftKey);
     if(isShiftLocked(currentShiftKey)) return;
     const dO = currentShiftKey.split('-').slice(0,3).join('-');
+    const ms = shiftHistory[dO+'-meds'] || [null, null, null];
+    // Seul le médecin assigné à ce slot (ou admin) peut modifier ses lits
+    if (!isAdmin() && ms[docIndex] !== currentUser.id) {
+      showToast('⛔ Seul le médecin assigné à ce secteur peut modifier ses lits');
+      return;
+    }
     if(!shiftHistory[dO+'-medsBeds']) shiftHistory[dO+'-medsBeds'] = {};
     if(docIndex === 2 && !bedKey.startsWith('usip-')) return;
     if(shiftHistory[dO+'-medsBeds'][bedKey] === docIndex) shiftHistory[dO+'-medsBeds'][bedKey] = null;
     else shiftHistory[dO+'-medsBeds'][bedKey] = docIndex;
-    saveData();
     renderApp();
+    saveData();
   }
 
   /**
@@ -3388,26 +3396,6 @@
 
 
     const container = document.getElementById('pool-list'); container.innerHTML = '';
-    const aIde = h.activeStaffIds.map(id => roster.find(r => r.id === id)).filter(p => p && p.role === 'ide' && p.id !== h.techIdeId);
-    const aAs = h.activeStaffIds.map(id => roster.find(r => r.id === id)).filter(p => p && p.role === 'as');
-
-    const renderGroup = (title, list, maxLoad, color) => {
-      if(list.length === 0) return;
-      const tEl = document.createElement('div'); tEl.className = 'pool-title'; tEl.textContent = title; container.appendChild(tEl);
-      list.forEach(p => {
-        let load = 0; for (let b in h.assignments) { if (!h.assignments[b].closed && (h.assignments[b].ide === p.id || h.assignments[b].as === p.id)) load++; }
-        const card = document.createElement('div'); card.className = `staff-card ${selectedStaffForTap === p.id ? 'selected' : ''}`;
-        card.onclick = () => {
-            if(locked) return;
-            toggleSelection(p.id);
-        };
-        card.innerHTML = `<div class="staff-info" style="color:${color}"><span>${escapeHTML(p.firstName)} ${escapeHTML(p.lastName.charAt(0))}.</span><span class="s-load ${load>maxLoad ? 'overload' : ''}">${load}/${maxLoad}</span>${locked ? '' : `<span class="remove-btn" onclick="clearShift('${p.id}', 'global')">×</span>`}</div>
-        <div class="load-bar"><div class="load-fill" style="width:${Math.min((load/maxLoad)*100, 100)}%; background:${load>maxLoad ? 'var(--crit)' : color}"></div></div>`;
-        container.appendChild(card);
-      });
-    };
-    renderGroup('Infirmiers (IDE)', aIde, 3, 'var(--ide)');
-    renderGroup('Aides-Soignants (AS)', aAs, currentShiftKey.includes('nuit')?6:4, 'var(--as)');
 
     boardHTML += `<div class="special-grid">`;
     const ms = shiftHistory[dateOnly+'-meds'];
@@ -6190,11 +6178,7 @@
         }
       }
       saveData();
-      // Badge mode édition
-      const tag = document.getElementById('app-mode-tag');
-      if (tag) { tag.textContent = '✏️ Mode Édition'; tag.style.background = 'var(--as-glow)'; tag.style.color = 'var(--as)'; tag.style.display = 'block'; }
       showToast('✅ Ajouté à la garde — cliquez sur un lit pour vous y assigner');
-      // Auto-sélection immédiate (bandeau orange + clic direct sur lit)
       if (currentUser.role !== 'med') {
         toggleSelection(currentUser.id);
       } else {
@@ -6202,8 +6186,8 @@
       }
     } else {
       const tag = document.getElementById('app-mode-tag');
-      if (tag) { tag.textContent = '👁 Lecture seule'; tag.style.background = 'rgba(255,255,255,0.08)'; tag.style.color = 'var(--text-muted)'; tag.style.display = 'block'; }
-      showToast('👁 Mode consultation (lecture seule)');
+      if (tag) { tag.textContent = '👁 Mode Lecture'; tag.style.background = 'rgba(255,255,255,0.08)'; tag.style.color = 'var(--text-muted)'; tag.style.display = 'block'; }
+      showToast('👁 Mode consultation — lecture seule');
       renderApp();
     }
   };
