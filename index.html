@@ -505,7 +505,7 @@
   .plan-day.p-rh        { background:rgba(100,116,139,0.13); border:1px solid #64748b;    color:#64748b; }
   .plan-day.p-hs        { background:rgba(168,85,247,0.14);  border:1.5px solid #a855f7; color:#a855f7; font-weight:900; }
   .plan-day.p-formation { background:rgba(249,115,22,0.14);  border:1.5px solid #f97316; color:#f97316; font-weight:900; }
-  .plan-day.p-repos     { background:var(--pill-bg); border:1px dashed var(--border); color:var(--text-muted); opacity:0.4; }
+  .plan-day.p-repos     { background:rgba(100,116,139,0.13); border:1px solid #64748b; color:#64748b; }
   .plan-day.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
   .plan-day.p-maladie   { background:rgba(159,18,57,0.18);   border:1.5px solid #9f1239; color:#9f1239; font-weight:900; }
   .plan-day:active { transform:scale(0.88); }
@@ -4383,7 +4383,7 @@
     const d = new Date(dateStr + 'T12:00:00');
     const dow = d.getDay();
     if (getJoursFeries(d.getFullYear()).has(dateStr)) return 'ferie';
-    if (dow === 0 || dow === 6) return 'repos';
+    if (dow === 0 || dow === 6) return 'rh';
     return 'travail';
   }
 
@@ -4406,31 +4406,44 @@
     return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
   }
 
+  // ── Helpers cases planning ─────────────────────────────────────────────
+  function nextDay(ds) {
+    const dt = new Date(ds + 'T12:00:00');
+    dt.setDate(dt.getDate() + 1);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+  function refreshPlanCell(dateStr) {
+    const cell = document.getElementById('plan-d-' + dateStr);
+    if (!cell) return;
+    const st = getPlanDayState(dateStr);
+    cell.className = 'plan-day p-' + st;
+    cell.innerHTML  = planDayHTML(parseInt(dateStr.split('-')[2]), st);
+  }
+
   window.cyclePlanDay = function(dateStr) {
     const cur      = getPlanDayState(dateStr);
     const defState = getPlanDefaultState(dateStr);
-    // Cycle manuel sans RCN (automatique) ni ferie (fixe)
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'maladie', 'rh', 'hs', 'formation', 'repos'];
+    // Cycle manuel — RCN auto, ferie auto, repos → rh (weekend)
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'maladie', 'rh', 'hs', 'formation'];
     const idx   = cycle.indexOf(cur);
     let next;
 
     if (idx === -1) {
-      // État auto (rcn, ferie) : premier tap → 'travail' (override)
+      // État auto (rcn, ferie) : premier tap → 'travail'
       next = cycle[0];
       planStates[dateStr] = next;
     } else {
       next = cycle[(idx + 1) % cycle.length];
       // Revert au défaut : (a) next === défaut, ou (b) fin de cycle sur un défaut non-standard
       const shouldRevert = (next === defState) ||
-        (idx === cycle.length - 1 && defState !== 'travail' && defState !== 'repos');
+        (idx === cycle.length - 1 && defState !== 'travail' && defState !== 'rh');
       if (shouldRevert) { delete planStates[dateStr]; next = getPlanDayState(dateStr); }
       else planStates[dateStr] = next;
     }
     savePlanData();
 
-    const dayNum = parseInt(dateStr.split('-')[2]);
-    const cell   = document.getElementById('plan-d-' + dateStr);
-    if (cell) { cell.className = 'plan-day p-' + next; cell.innerHTML = planDayHTML(dayNum, next); }
+    refreshPlanCell(dateStr);
+    refreshPlanCell(nextDay(dateStr)); // RCN auto : rafraîchir le lendemain
 
     const mKey = dateStr.slice(0, 7);
     const mEl  = document.getElementById('plan-mc-' + mKey);
@@ -4453,37 +4466,32 @@
   };
 
   // ── Drag-to-paint : glisser pour appliquer un état sur plusieurs cases ──
-  let planDrag = { active: false, state: null, lastDate: null, moved: false };
+  let planDrag = { active: false, state: null, startDate: null, lastDate: null, moved: false };
 
   function applyPlanStateDrag(dateStr, targetState) {
-    if (targetState === null) { delete planStates[dateStr]; }
-    else { planStates[dateStr] = targetState; }
-    const dayNum   = parseInt(dateStr.split('-')[2]);
-    const actualSt = getPlanDayState(dateStr);
-    const cell     = document.getElementById('plan-d-' + dateStr);
-    if (cell) { cell.className = 'plan-day p-' + actualSt; cell.innerHTML = planDayHTML(dayNum, actualSt); }
+    // États auto (rcn, ferie) → effacer l'override (retour au calcul auto)
+    const autoStates = new Set(['rcn', 'ferie']);
+    if (targetState === null || autoStates.has(targetState)) {
+      delete planStates[dateStr];
+    } else {
+      const defState = getPlanDefaultState(dateStr);
+      if (targetState === defState) delete planStates[dateStr];
+      else planStates[dateStr] = targetState;
+    }
+    refreshPlanCell(dateStr);
+    refreshPlanCell(nextDay(dateStr)); // RCN auto : rafraîchir le lendemain
   }
 
   window.planCellTouchStart = function(dateStr, e) {
-    e.preventDefault(); // empêche scroll + click synthétique
-    const cur      = getPlanDayState(dateStr);
-    const defState = getPlanDefaultState(dateStr);
-    const cycle    = ['travail','jour','nuit','ca','maladie','rh','hs','formation','repos'];
-    const idx      = cycle.indexOf(cur);
-    let next;
-    if (idx === -1) {
-      next = cycle[0];
-    } else {
-      const cand       = cycle[(idx + 1) % cycle.length];
-      const shouldRev  = (cand === defState) ||
-        (idx === cycle.length - 1 && defState !== 'travail' && defState !== 'repos');
-      next = shouldRev ? null : cand;
-    }
-    planDrag.active   = true;
-    planDrag.moved    = false;
-    planDrag.state    = next;
-    planDrag.lastDate = dateStr;
-    applyPlanStateDrag(dateStr, next);
+    e.preventDefault(); // empêche scroll ET click synthétique
+    // Peindre avec la couleur DÉJÀ sur la case
+    const cur = getPlanDayState(dateStr);
+    planDrag.active    = true;
+    planDrag.moved     = false;
+    planDrag.state     = cur;  // couleur actuelle, pas la suivante
+    planDrag.startDate = dateStr;
+    planDrag.lastDate  = dateStr;
+    // Pas d'application immédiate — touchend gèrera tap vs drag
   };
 
   function calcPlanStats() {
@@ -6982,8 +6990,13 @@
   document.addEventListener('touchend', function(e) {
     if (!planDrag.active) return;
     planDrag.active = false;
+    if (!planDrag.moved) {
+      // Simple tap → cycle normal (cyclePlanDay gère save + badge + stats)
+      cyclePlanDay(planDrag.startDate);
+      return;
+    }
+    // Fin de glissement → sauvegarder et actualiser
     savePlanData();
-    // Mise à jour de tous les badges mensuels
     for (let m = 1; m <= 12; m++) {
       const mKey = `${planYear}-${String(m).padStart(2,'0')}`;
       const mEl  = document.getElementById('plan-mc-' + mKey);
