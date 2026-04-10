@@ -6975,14 +6975,18 @@
   document.addEventListener('touchmove', function(e) {
     if (!planDrag.active) return;
     e.preventDefault();
-    planDrag.moved = true;
     const touch = e.touches[0];
     const el    = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!el) return;
     const cell  = el.closest ? el.closest('[id^="plan-d-"]') : null;
     if (!cell) return;
     const dateStr = cell.id.slice(7); // retire 'plan-d-'
-    if (dateStr === planDrag.lastDate) return;
+    if (dateStr === planDrag.lastDate) return; // même case → pas encore un vrai glissement
+    // Première case différente : déclencher le mode peinture
+    if (!planDrag.moved) {
+      planDrag.moved = true;
+      applyPlanStateDrag(planDrag.startDate, planDrag.state); // appliquer sur la case de départ aussi
+    }
     planDrag.lastDate = dateStr;
     applyPlanStateDrag(dateStr, planDrag.state);
   }, { passive: false });
