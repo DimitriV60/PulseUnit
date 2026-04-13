@@ -877,7 +877,7 @@
   <header class="header">
     <div class="header-top">
       <div class="header-left">
-        <button class="menu-btn" onclick="openSideMenu()">☰</button>
+        <button class="menu-btn" onclick="openSideMenu()" aria-label="Ouvrir le menu" aria-expanded="false" id="menu-toggle-btn">☰</button>
         <h1>Pulse<span>Unit</span></h1>
       </div>
       <div class="header-actions" style="display:flex; align-items:center; gap:6px;">
@@ -891,10 +891,10 @@
   </header>
 
   <div id="side-menu-overlay" onclick="closeSideMenu()"></div>
-  <nav id="side-menu">
+  <nav id="side-menu" role="dialog" aria-modal="true" aria-label="Menu de navigation">
     <div class="side-menu-header">
       Menu
-      <button class="close-menu-btn" onclick="closeSideMenu()">×</button>
+      <button class="close-menu-btn" onclick="closeSideMenu()" aria-label="Fermer le menu">×</button>
     </div>
     <div class="side-menu-content">
       <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
@@ -911,7 +911,7 @@
     </div>
   </nav>
 
-  <div id="settings-modal">
+  <div id="settings-modal" role="dialog" aria-modal="true" aria-label="Paramètres">
     <div class="modal-content">
       <h3 style="margin-bottom:16px; color:var(--text); font-weight:900;">⚙️ Paramètres</h3>
 
@@ -966,7 +966,7 @@
     </div>
   </div>
 
-  <div id="admin-login-modal">
+  <div id="admin-login-modal" role="dialog" aria-modal="true" aria-label="Accès Admin">
     <div class="modal-content">
       <h3 style="margin-bottom:15px; color:var(--text);">🔒 Accès Admin</h3>
       <input type="text" id="admin-user" placeholder="Identifiant" style="width:100%; padding:10px; margin-bottom:10px; background:var(--input-bg); border:1px solid var(--border); color:var(--text); border-radius:6px; font-family:var(--font); font-weight:600;" autocomplete="off">
@@ -2570,6 +2570,8 @@
    */
   function openSideMenu() {
       document.getElementById('side-menu-overlay').style.display = 'block';
+      const btn = document.getElementById('menu-toggle-btn');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
       setTimeout(() => {
           document.getElementById('side-menu-overlay').style.opacity = '1';
           document.getElementById('side-menu').style.transform = 'translateX(0)';
@@ -2582,6 +2584,8 @@
   function closeSideMenu() {
       document.getElementById('side-menu').style.transform = 'translateX(-100%)';
       document.getElementById('side-menu-overlay').style.opacity = '0';
+      const btn = document.getElementById('menu-toggle-btn');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
       setTimeout(() => {
           document.getElementById('side-menu-overlay').style.display = 'none';
       }, 300);
@@ -2660,7 +2664,6 @@
    */
   function renderCalculateurs() {
       const grid = document.getElementById('calc-grid');
-      grid.innerHTML = '';
       const CALC_GROUPS = [
     {label:"SCORES CLINIQUES", ids:["glasgow", "rass", "waterlow", "sevrage"], color:"var(--crit)"},
     {label:"VENTILATION", ids:["ibw", "pf", "dp"], color:"var(--ide)"},
@@ -2669,18 +2672,20 @@
     {label:"RH / ADMIN", ids:["pct", "transmission", "conges", "conges_ete"], color:"var(--text-muted)"},
   ];
 
+      const parts = [];
       CALC_GROUPS.forEach(group => {
-          grid.innerHTML += `<div style="grid-column:1/-1; font-size:0.65rem; font-weight:900; color:${group.color}; text-transform:uppercase; letter-spacing:1.5px; padding:4px 0 2px; border-bottom:1px solid var(--border); margin-bottom:2px;">${group.label}</div>`;
+          parts.push(`<div style="grid-column:1/-1; font-size:0.65rem; font-weight:900; color:${group.color}; text-transform:uppercase; letter-spacing:1.5px; padding:4px 0 2px; border-bottom:1px solid var(--border); margin-bottom:2px;">${escapeHTML(group.label)}</div>`);
           group.ids.forEach(id => {
               const calc = CALCULATORS_DATA.find(c => c.id === id);
               if(!calc) return;
-              grid.innerHTML += `
-              <div class="calc-tile" onclick="openCalcModal('${calc.id}')">
+              parts.push(`
+              <div class="calc-tile" onclick="openCalcModal('${escapeHTML(calc.id)}')">
                   <div class="calc-icon">${calc.icon}</div>
-                  <div class="calc-name">${calc.title}</div>
-              </div>`;
+                  <div class="calc-name">${escapeHTML(calc.title)}</div>
+              </div>`);
           });
       });
+      grid.innerHTML = parts.join('');
   }
 
   /**
@@ -6529,11 +6534,11 @@
     if (entries.length === 0) { box.style.display = 'none'; return; }
     box.style.display = 'block';
     box.innerHTML = entries.map(([id, u]) => `
-      <div onclick="${onSelect}('${id}')" style="padding:10px 14px; cursor:pointer; font-size:0.85rem; font-weight:700;
+      <div onclick="${onSelect}('${escapeHTML(id)}')" style="padding:10px 14px; cursor:pointer; font-size:0.85rem; font-weight:700;
         border-bottom:1px solid var(--border); background:${id===selectedId?'rgba(59,130,246,0.12)':'var(--surface-sec)'};
         color:${id===selectedId?'var(--brand-blue)':'var(--text)'};">
-        ${u.firstName} ${u.lastName.toUpperCase()}
-        <span style="font-size:0.7rem; color:var(--text-muted); margin-left:6px;">${u.role.toUpperCase()}</span>
+        ${escapeHTML(u.firstName)} ${escapeHTML((u.lastName||'').toUpperCase())}
+        <span style="font-size:0.7rem; color:var(--text-muted); margin-left:6px;">${escapeHTML((u.role||'').toUpperCase())}</span>
       </div>`).join('');
   }
 
@@ -6623,6 +6628,7 @@
     const pin  = document.getElementById('reg-pin').value;
     const pin2 = document.getElementById('reg-pin2').value;
     if (!fn || !ln) return alert('Veuillez entrer votre prénom et nom.');
+    if (fn.length > 50 || ln.length > 50) return alert('Prénom et nom ne peuvent pas dépasser 50 caractères.');
     if (!selectedRole) return alert('Veuillez choisir votre rôle.');
     if (!/^\d{6}$/.test(pin)) return alert('Le code doit contenir exactement 6 chiffres.');
     if (pin !== pin2) return alert('Les codes ne correspondent pas.');
@@ -6732,7 +6738,7 @@
     if (!el) return;
     if (currentUser) {
       const col = ROLE_COLORS[currentUser.role] || 'var(--brand-blue)';
-      const initial = currentUser.firstName.charAt(0).toUpperCase();
+      const initial = escapeHTML(currentUser.firstName.charAt(0).toUpperCase());
       el.innerHTML = `
         <div style="display:flex; align-items:center; gap:6px;">
           <div style="width:28px; height:28px; border-radius:50%; background:${col}22; border:2px solid ${col};
@@ -6740,8 +6746,8 @@
             ${initial}
           </div>
           <div style="display:flex; flex-direction:column; line-height:1.1;">
-            <span style="font-size:0.72rem; font-weight:900; color:var(--text); white-space:nowrap;">${currentUser.firstName}</span>
-            <span style="font-size:0.6rem; font-weight:700; color:${col}; text-transform:uppercase;">${currentUser.role}</span>
+            <span style="font-size:0.72rem; font-weight:900; color:var(--text); white-space:nowrap;">${escapeHTML(currentUser.firstName)}</span>
+            <span style="font-size:0.6rem; font-weight:700; color:${col}; text-transform:uppercase;">${escapeHTML(currentUser.role)}</span>
           </div>
         </div>
       `;
@@ -6873,10 +6879,10 @@
     container.innerHTML = pending.map(r => `
       <div class="admin-reset-row">
         <div>
-          <div style="font-weight:800; font-size:0.85rem;">${r.firstName} ${r.lastName}</div>
-          <div style="font-size:0.72rem; color:var(--text-muted);">${r.role.toUpperCase()} · ${new Date(r.requestedAt).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+          <div style="font-weight:800; font-size:0.85rem;">${escapeHTML(r.firstName)} ${escapeHTML(r.lastName)}</div>
+          <div style="font-size:0.72rem; color:var(--text-muted);">${escapeHTML((r.role||'').toUpperCase())} · ${new Date(r.requestedAt).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
         </div>
-        <button onclick="adminSetTempPin('${r.userId}')" style="background:var(--crit); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+        <button onclick="adminSetTempPin('${escapeHTML(r.userId)}')" style="background:var(--crit); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
           Code provisoire
         </button>
       </div>
@@ -6900,6 +6906,7 @@
     const ln   = document.getElementById('admin-new-lastname').value.trim();
     const pin  = document.getElementById('admin-new-pin').value.trim();
     if (!fn || !ln)      return alert('Veuillez saisir le prénom et le nom.');
+    if (fn.length > 50 || ln.length > 50) return alert('Prénom et nom ne peuvent pas dépasser 50 caractères.');
     if (!_adminNewRole)  return alert('Veuillez choisir un rôle.');
     if (!/^\d{6}$/.test(pin)) return alert('Le code PIN doit contenir exactement 6 chiffres.');
     const already = Object.values(authUsers).find(u =>
@@ -7978,7 +7985,7 @@
 </div>
 
 <!-- ===== MODALE AUTH ===== -->
-<div id="auth-modal">
+<div id="auth-modal" role="dialog" aria-modal="true" aria-label="Authentification PulseUnit">
   <div class="auth-box">
     <!-- VUE CONNEXION -->
     <div id="auth-login-view">
@@ -7988,7 +7995,8 @@
       <input type="hidden" id="auth-select-user" value="">
       <div id="auth-user-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
       <div id="auth-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
-      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="off">
+      <label for="auth-pin" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Code à 6 chiffres</label>
+      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="off" aria-label="Code PIN à 6 chiffres">
       <label style="display:flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:12px; cursor:pointer;">
         <input type="checkbox" id="auth-remember" style="width:16px; height:16px; cursor:pointer;">
         Se souvenir de moi <span style="color:var(--text-muted); font-weight:600;">(connexion automatique 3 mois)</span>
