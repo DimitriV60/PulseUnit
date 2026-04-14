@@ -900,6 +900,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openCalculateurs();">🧮 Calculateurs</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();">📋 Protocoles</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes & Alertes</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();">🫁 Simulateur Respirateur</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
@@ -4317,6 +4318,117 @@
   /** Ferme la vue plein écran des protocoles. */
   function closeProtocoles() {
     document.getElementById('protocoles-view').style.display = 'none';
+  }
+
+  /**
+   * Données des services — à compléter avec les numéros réels.
+   * Structure : { cat, icon, entries: [{name, num}] }
+   */
+  const SERVICES_DATA = [
+    {
+      cat: "Réanimation",
+      icon: "🏥",
+      entries: [
+        { name: "Réanimation — poste soignant", num: "" },
+        { name: "Réanimation — bureau cadre", num: "" },
+        { name: "Réanimation — salle de soin", num: "" },
+      ]
+    },
+    {
+      cat: "Urgences",
+      icon: "🚨",
+      entries: [
+        { name: "Urgences adultes — accueil", num: "" },
+        { name: "Urgences — SAMU / Régulation", num: "" },
+        { name: "SMUR", num: "" },
+      ]
+    },
+    {
+      cat: "Biologie & Imagerie",
+      icon: "🔬",
+      entries: [
+        { name: "Laboratoire — standard", num: "" },
+        { name: "Laboratoire — urgences biologiques", num: "" },
+        { name: "Radiologie — standard", num: "" },
+        { name: "Scanner (TDM)", num: "" },
+        { name: "IRM", num: "" },
+      ]
+    },
+    {
+      cat: "Pharmacie & Matériovigilance",
+      icon: "💊",
+      entries: [
+        { name: "Pharmacie hospitalière", num: "" },
+        { name: "Pharmacie — urgences / garde", num: "" },
+      ]
+    },
+    {
+      cat: "Spécialités médicales",
+      icon: "⚕️",
+      entries: [
+        { name: "Cardiologie", num: "" },
+        { name: "Neurologie", num: "" },
+        { name: "Pneumologie", num: "" },
+        { name: "Chirurgie vasculaire", num: "" },
+        { name: "Bloc opératoire", num: "" },
+        { name: "Anesthésie — médecin de garde", num: "" },
+      ]
+    },
+    {
+      cat: "Logistique & Supports",
+      icon: "🔧",
+      entries: [
+        { name: "Brancardage", num: "" },
+        { name: "Biomédical", num: "" },
+        { name: "Informatique (DIM / SI)", num: "" },
+        { name: "Standard général", num: "" },
+      ]
+    },
+  ];
+
+  /** Ouvre la vue plein écran des services. */
+  function openServices() {
+    document.getElementById('services-view').style.display = 'flex';
+    renderServices();
+  }
+
+  /** Ferme la vue plein écran des services. */
+  function closeServices() {
+    document.getElementById('services-view').style.display = 'none';
+  }
+
+  /**
+   * Génère le HTML de l'annuaire des services.
+   * Affiche un bandeau info si aucun numéro n'est encore renseigné.
+   */
+  function renderServices() {
+    const container = document.getElementById('services-list');
+    let html = `<div style="background:rgba(96,206,234,0.1); border:1px solid rgba(96,206,234,0.3); border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:0.82rem; color:var(--text-muted); font-weight:700;">
+      ℹ️ Les numéros seront ajoutés prochainement. Les catégories et entrées sont déjà configurées.
+    </div>`;
+
+    SERVICES_DATA.forEach(section => {
+      html += `<div style="margin-bottom:24px;">
+        <div class="pool-title" style="display:flex; align-items:center; gap:8px;">
+          <span>${section.icon}</span> ${section.cat}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">`;
+
+      section.entries.forEach(entry => {
+        const hasNum = entry.num && entry.num.trim() !== '';
+        html += `<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${escapeHTML(entry.name)}</span>
+          ${hasNum
+            ? `<a href="tel:${escapeHTML(entry.num)}" style="font-size:1rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap;">${escapeHTML(entry.num)}</a>`
+            : `<span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); white-space:nowrap; background:var(--surface-sec); border-radius:6px; padding:4px 10px;">À venir</span>`
+          }
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
   }
 
   /**
@@ -7835,6 +7947,24 @@
     </div>
   </div>
 
+
+  <!-- ===== SERVICES — Annuaire des services ===== -->
+  <div id="services-view" class="fs-view" style="z-index:415; display:none;">
+    <div class="fs-header">
+      <div class="fs-topbar">
+        <div class="fs-title-group">
+          <button class="fs-back" onclick="closeServices()">←</button>
+          <div>
+            <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">📞 Les Services</h2>
+            <div class="fs-subtitle">Annuaire interne — numéros des services</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:20px; max-width:700px; margin:0 auto; width:100%; overflow-y:auto; flex:1;">
+      <div id="services-list"></div>
+    </div>
+  </div>
 
   <!-- ═══ SIMULATEUR RESPIRATEUR — Oscilloscope 5 cycles ═══ -->
   <div id="normes-respi-view" class="fs-view" style="z-index:422; display:none;">
