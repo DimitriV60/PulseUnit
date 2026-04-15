@@ -887,6 +887,11 @@
     </div>
     <div id="locked-banner">🔒 GARDE TERMINÉE - LECTURE SEULE</div>
     <div id="app-mode-tag" style="display:none; font-size:0.7rem; font-weight:800; text-align:center; padding:3px 10px; border-radius:4px; margin:2px 8px 0;"></div>
+    <div style="position:relative; padding:6px 12px 4px;">
+      <input type="text" id="global-search" placeholder="🔍 Recherche — service, terme médical, protocole..." oninput="renderGlobalSearch()" onfocus="renderGlobalSearch()" autocomplete="off"
+        style="width:100%; box-sizing:border-box; padding:9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; font-family:var(--font); outline:none;">
+      <div id="global-search-results" style="display:none; position:absolute; left:12px; right:12px; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:500; max-height:60vh; overflow-y:auto;"></div>
+    </div>
     <div class="shift-nav" id="shift-nav"></div>
   </header>
 
@@ -3878,8 +3883,12 @@
     saveData();
   }
 
-  document.addEventListener('click', (e) => { 
+  document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-box') && !e.target.closest('.search-area')) { document.querySelectorAll('.suggestions').forEach(el => el.style.display = 'none'); }
+    if (!e.target.closest('#global-search') && !e.target.closest('#global-search-results')) {
+      const r = document.getElementById('global-search-results');
+      if (r) r.style.display = 'none';
+    }
   });
 
 
@@ -4479,16 +4488,27 @@
    */
   function renderServices() {
     const container = document.getElementById('services-list');
+    const q = (document.getElementById('services-search')?.value || '').toLowerCase().trim();
     let html = '';
+    let totalVisible = 0;
 
     SERVICES_DATA.forEach(section => {
+      const matched = section.entries.filter(e =>
+        !q ||
+        e.name.toLowerCase().includes(q) ||
+        (e.display && e.display.toLowerCase().includes(q)) ||
+        (e.num && e.num.includes(q))
+      );
+      if (!matched.length) return;
+      totalVisible += matched.length;
+
       html += `<div style="margin-bottom:24px;">
         <div class="pool-title" style="display:flex; align-items:center; gap:8px;">
           <span>${section.icon}</span> ${section.cat}
         </div>
         <div style="display:flex; flex-direction:column; gap:8px;">`;
 
-      section.entries.forEach(entry => {
+      matched.forEach(entry => {
         const hasNum = entry.num && entry.num.trim() !== '';
         const label = entry.display && entry.display.trim() !== '' ? entry.display : entry.num;
         html += `<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
@@ -4503,7 +4523,79 @@
       html += `</div></div>`;
     });
 
+    if (q && totalVisible === 0) {
+      html = `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-weight:700; font-size:0.9rem;">Aucun résultat pour "${escapeHTML(q)}"</div>`;
+    }
+
     container.innerHTML = html;
+  }
+
+  /** Recherche globale dashboard — Services + Lexique + Protocoles */
+  function renderGlobalSearch() {
+    const input = document.getElementById('global-search');
+    const results = document.getElementById('global-search-results');
+    const q = (input?.value || '').trim();
+
+    if (!q || q.length < 2) { results.style.display = 'none'; return; }
+    const ql = q.toLowerCase();
+
+    let html = '';
+
+    // Services
+    const srvMatches = [];
+    SERVICES_DATA.forEach(section => {
+      section.entries.forEach(entry => {
+        if (entry.name.toLowerCase().includes(ql) || (entry.display && entry.display.toLowerCase().includes(ql)) || (entry.num && entry.num.includes(ql))) {
+          srvMatches.push({ ...entry, cat: section.cat });
+        }
+      });
+    });
+    if (srvMatches.length) {
+      html += `<div style="padding:8px 14px 4px; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--brand-aqua);">📞 Services</div>`;
+      srvMatches.slice(0, 5).forEach(e => {
+        const hasNum = e.num && e.num.trim() !== '';
+        const label = e.display && e.display.trim() !== '' ? e.display : e.num;
+        html += `<div style="padding:10px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; cursor:pointer;" onclick="document.getElementById('global-search-results').style.display='none'; document.getElementById('global-search').value=''; openServices(); setTimeout(()=>{document.getElementById('services-search').value='${escapeHTML(e.name)}'; renderServices();},120);">
+          <span style="font-size:0.88rem; font-weight:700; color:var(--text);">${escapeHTML(e.name)} <span style="font-size:0.75rem; color:var(--text-muted);">${escapeHTML(e.cat)}</span></span>
+          ${hasNum ? `<span style="font-size:0.95rem; font-weight:900; color:var(--brand-aqua); white-space:nowrap;">${escapeHTML(label)}</span>` : ''}
+        </div>`;
+      });
+    }
+
+    // Lexique
+    const lexMatches = LEXIQUE_DATA.filter(t =>
+      t.term.toLowerCase().includes(ql) || t.fullName.toLowerCase().includes(ql) || t.def.toLowerCase().includes(ql)
+    );
+    if (lexMatches.length) {
+      html += `<div style="padding:8px 14px 4px; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--med);">📖 Lexique</div>`;
+      lexMatches.slice(0, 4).forEach(t => {
+        html += `<div style="padding:10px 14px; border-top:1px solid var(--border); cursor:pointer;" onclick="document.getElementById('global-search-results').style.display='none'; document.getElementById('global-search').value=''; openLexique(); setTimeout(()=>{document.getElementById('lexique-search').value='${escapeHTML(t.term)}'; renderLexique();},120);">
+          <span style="font-size:0.88rem; font-weight:700; color:var(--text);">${escapeHTML(t.term)}</span>
+          <span style="font-size:0.78rem; color:var(--text-muted); margin-left:8px;">${escapeHTML(t.fullName)}</span>
+        </div>`;
+      });
+    }
+
+    // Protocoles
+    const protoMatches = PROTOCOLS_DATA.filter(p =>
+      p.title.toLowerCase().includes(ql) || (p.subtitle && p.subtitle.toLowerCase().includes(ql))
+    );
+    if (protoMatches.length) {
+      html += `<div style="padding:8px 14px 4px; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--ok);">📋 Protocoles</div>`;
+      protoMatches.slice(0, 3).forEach(p => {
+        html += `<div style="padding:10px 14px; border-top:1px solid var(--border); cursor:pointer;" onclick="document.getElementById('global-search-results').style.display='none'; document.getElementById('global-search').value=''; openProtocoles();">
+          <span style="font-size:0.88rem; font-weight:700; color:var(--text);">${escapeHTML(p.title)}</span>
+          ${p.subtitle ? `<span style="font-size:0.78rem; color:var(--text-muted); margin-left:8px;">${escapeHTML(p.subtitle)}</span>` : ''}
+        </div>`;
+      });
+    }
+
+    if (!html) {
+      html = `<div style="padding:16px 14px; font-size:0.88rem; font-weight:700; color:var(--text-muted);">Aucun résultat pour "${escapeHTML(q)}"</div>`;
+    }
+
+    results.innerHTML = html;
+    results.style.display = 'block';
   }
 
   /**
@@ -8035,8 +8127,12 @@
           </div>
         </div>
       </div>
+      <div style="padding:0 16px 12px;">
+        <input type="text" id="services-search" placeholder="🔍 Rechercher un service ou un numéro..." oninput="renderServices()" autocomplete="off"
+          style="width:100%; box-sizing:border-box; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
+      </div>
     </div>
-    <div style="padding:20px; max-width:700px; margin:0 auto; width:100%; overflow-y:auto; flex:1;">
+    <div style="padding:12px 20px 20px; max-width:700px; margin:0 auto; width:100%; overflow-y:auto; flex:1;">
       <div id="services-list"></div>
     </div>
   </div>
