@@ -581,91 +581,23 @@
   .plan-month-clear { padding:2px 8px; border-radius:6px; font-size:0.68rem; font-weight:900; color:var(--text-muted); background:transparent; border:1px solid var(--border); cursor:pointer; flex-shrink:0; font-family:var(--font); }
 
   /* ═══════════════════════════════════════════════
-     MODULE NORMES & ALERTES — Styles v2
+     MODULE NORMES DE RÉFÉRENCE — Styles
   ═══════════════════════════════════════════════ */
-  .normes-params-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px; overflow-y:auto; flex:1; }
-  .normes-tile { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:13px 12px 12px; cursor:pointer; transition:all 0.2s; display:flex; flex-direction:column; gap:6px; }
-  .normes-tile:active { transform:scale(0.97); }
-  .normes-tile.tile-ta { grid-column:1/-1; }
-  .normes-tile-header { display:flex; align-items:center; justify-content:space-between; }
-  .normes-tile-name { font-size:0.72rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
-  .normes-tile-icon { font-size:1.1rem; }
-  .normes-tile-value { font-size:2rem; font-weight:900; line-height:1.05; transition:color 0.3s; }
-  .normes-tile-sub { font-size:0.88rem; font-weight:900; transition:color 0.3s; }
-  .normes-tile-unit { font-size:0.72rem; font-weight:700; color:var(--text-muted); }
-  .normes-zone-lbl { font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.3px; margin-top:1px; }
-  .normes-zone-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:20px; font-weight:900; font-size:0.78rem; text-transform:uppercase; color:#fff; }
-
-  /* Barre scénarios */
-  .normes-scenarios-bar { display:flex; gap:8px; padding:10px 12px; overflow-x:auto; scrollbar-width:none; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
-  .normes-scenarios-bar::-webkit-scrollbar { display:none; }
-  .normes-scenario-btn { flex-shrink:0; padding:6px 13px; border-radius:20px; font-size:0.76rem; font-weight:900; cursor:pointer; border:1.5px solid var(--border); white-space:nowrap; transition:all 0.2s; background:var(--pill-bg); color:var(--text-muted); font-family:var(--font); }
-  .normes-scenario-btn.active { color:#fff!important; border-color:transparent!important; }
-
-  /* Vue détail */
-  .normes-detail-content { padding:0 14px 20px; display:flex; flex-direction:column; gap:12px; }
-
-  /* Carte valeur principale */
-  .normes-val-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 16px 14px; border-top:4px solid var(--border); transition:border-top-color 0.3s; text-align:center; }
-  .normes-val-big { font-size:3.5rem; font-weight:900; line-height:1; transition:color 0.3s; letter-spacing:-2px; }
-  .normes-val-unit { font-size:0.9rem; font-weight:700; color:var(--text-muted); margin-top:2px; }
-  .normes-val-zone { font-size:0.82rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; margin-top:8px; display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:20px; }
-
-  /* Barre de zones horizontale */
-  .normes-bar-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 16px 14px; }
-  .normes-bar-title { font-size:0.72rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
-  .normes-zonebar-outer { position:relative; padding-bottom:38px; }
-  .normes-zonebar { display:flex; height:18px; border-radius:9px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,0.12); }
-  .normes-zonebar-seg { height:100%; }
-  .normes-zonebar-indicator { position:absolute; top:0; transform:translateX(-50%); pointer-events:none; z-index:2; }
-  .normes-zonebar-line { width:3px; height:18px; border-radius:2px; margin:0 auto; }
-  .normes-zonebar-arrow { width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:9px solid var(--text); margin:-1px auto 0; }
-  .normes-zonebar-val { font-size:0.88rem; font-weight:900; text-align:center; white-space:nowrap; margin-top:4px; }
-  .normes-bar-minmax { display:flex; justify-content:space-between; margin-top:4px; font-size:0.72rem; color:var(--text-muted); font-weight:700; }
-
-  /* Tableau de référence des zones */
-  .normes-ref-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; }
-  .normes-ref-title { font-size:0.72rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
-  .normes-ref-row { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:9px; border:1px solid var(--border); background:var(--pill-bg); margin-bottom:5px; transition:all 0.2s; }
-  .normes-ref-row.ref-active { border-width:2px; }
-  .normes-ref-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .normes-ref-name { font-size:0.85rem; font-weight:900; flex:1; }
-  .normes-ref-range { font-size:0.75rem; font-weight:800; color:var(--text-muted); }
-  .normes-ref-badge { font-size:0.68rem; font-weight:900; padding:2px 8px; border-radius:8px; flex-shrink:0; }
-
-  /* Contrôles TA */
-  .normes-ctrl-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; }
-  .normes-ta-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  .normes-ta-label { font-size:0.82rem; font-weight:900; color:var(--text-muted); width:36px; flex-shrink:0; }
-  .normes-ta-btn { width:44px; height:44px; border-radius:10px; border:1px solid var(--border); background:var(--pill-bg); color:var(--text); font-size:1.5rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.1s; font-family:var(--font); -webkit-user-select:none; user-select:none; }
-  .normes-ta-btn:active { transform:scale(0.9); background:var(--surface-sec); }
-  .normes-ta-val { flex:1; font-size:2rem; font-weight:900; text-align:center; transition:color 0.3s; }
-  .normes-ta-pam { text-align:center; margin:10px 0 14px; padding:10px; background:var(--surface-sec); border-radius:10px; }
-  .normes-ta-pam-val { font-size:1.6rem; font-weight:900; transition:color 0.3s; }
-  .normes-ta-pam-lbl { font-size:0.72rem; color:var(--text-muted); font-weight:800; margin-top:2px; }
-
-  /* Contrôles slider simples */
-  .normes-slider-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; }
-  .normes-slider-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-  .normes-slider-lbl { font-size:0.8rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; }
-  .normes-slider-cur { font-size:1.5rem; font-weight:900; transition:color 0.3s; }
-  input[type="range"].normes-slider { -webkit-appearance:none; width:100%; height:8px; border-radius:4px; outline:none; cursor:pointer; background:var(--border); }
-  input[type="range"].normes-slider::-webkit-slider-thumb { -webkit-appearance:none; width:38px; height:38px; border-radius:50%; background:var(--brand-aqua); cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.25); transition:transform 0.1s; }
-  input[type="range"].normes-slider:active::-webkit-slider-thumb { transform:scale(1.15); }
-  input[type="range"].normes-slider::-moz-range-thumb { width:38px; height:38px; border-radius:50%; background:var(--brand-aqua); cursor:pointer; border:none; }
-  .normes-slider-minmax { display:flex; justify-content:space-between; margin-top:5px; font-size:0.72rem; color:var(--text-muted); font-weight:700; }
-
-  /* Analyse clinique */
-  .normes-analysis-card { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--border); border-radius:14px; padding:14px 16px; transition:border-left-color 0.3s; }
-  .normes-analysis-title { font-size:0.72rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
-  .normes-analysis-text { font-size:0.9rem; font-weight:700; color:var(--text); line-height:1.6; }
-
-  /* Extras */
-  .normes-poids-row { display:flex; align-items:center; gap:10px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:10px 14px; }
-  .normes-poids-lbl { font-size:0.85rem; font-weight:900; color:var(--text-muted); flex:1; }
-  .normes-poids-input { width:75px; text-align:right; background:var(--input-bg); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:6px; font-family:var(--font); font-size:1rem; font-weight:900; outline:none; }
-  .normes-mmol-row { display:flex; align-items:center; justify-content:center; gap:8px; }
-  .normes-mmol-val { font-size:0.9rem; font-weight:800; color:var(--text-muted); background:var(--pill-bg); padding:4px 12px; border-radius:8px; border:1px solid var(--border); }
+  .normes-cat-filters { padding: 12px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .normes-cat-filters::-webkit-scrollbar { display: none; }
+  .normes-cat-btn { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; cursor: pointer; white-space: nowrap; text-transform: uppercase; transition: all 0.2s; font-family: var(--font); }
+  .normes-cat-btn.active { background: var(--ide-glow); color: var(--brand-blue); border-color: var(--brand-blue); }
+  .normes-table-wrap { flex: 1; overflow-y: auto; padding: 12px 14px 60px; display: flex; flex-direction: column; gap: 14px; }
+  .normes-group { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .normes-group-title { padding: 10px 14px; font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); background: var(--pill-bg); border-bottom: 1px solid var(--border); }
+  .normes-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .normes-row:last-child { border-bottom: none; }
+  .normes-row-param { font-size: 0.85rem; font-weight: 800; color: var(--text); flex: 1.2; }
+  .normes-row-val { font-size: 0.85rem; font-weight: 900; color: var(--as); flex: 1; }
+  .normes-row-unit { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); flex: 0.8; }
+  .normes-row-alert { font-size: 0.7rem; font-weight: 800; color: var(--crit); background: rgba(239,68,68,0.08); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
+  .normes-row-warn { font-size: 0.7rem; font-weight: 800; color: var(--med); background: rgba(245,158,11,0.1); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
+  .normes-source { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-align: center; padding: 8px 14px; }
 
   /* ── LEXIQUE PROJET & SECURITE — Styles ── */
   .projet-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin:0 12px 10px; overflow:hidden; }
@@ -5578,16 +5510,12 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
-     MODULE NORMES & ALERTES
-     Références : SFAR, SRLF, HAS, ESC 2023, ADA — Réanimation adulte
+     MODULE NORMES DE RÉFÉRENCE
+     Sources : SFAR 2024, SRLF, HAS, ESC/AHA 2023, KDIGO 2012-2024,
+               ARDSnet, ESICM LIVES 2023 — Réanimation adulte
   ═══════════════════════════════════════════════════════════════════ */
 
-  // ── État global ───────────────────────────────────────────────────
-  let normesCurrentValues = { pas:120, pad:80, fc:72, fr:16, spo2:98, glycemie:1.0, cetonemie:0.3, diurese:1.0, poids:70 };
-  let normesCurrentScenario = 'normal';
-  let normesCurrentParam    = null;
-  let normesTrendHistory    = { pas:[], pad:[], fc:[], fr:[], spo2:[], glycemie:[], cetonemie:[], diurese:[] };
-  let _taRepeatTimer        = null;
+  let normesCurrentCat = 'VITAUX';
 
   // ── Zones cliniques ────────────────────────────────────────────────
   const NORMES_ZONES = {
