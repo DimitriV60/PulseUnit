@@ -1513,12 +1513,10 @@
   const ADMIN_USER = 'admin';
   // SHA-256 de "PulseUnit2026!" — à remplacer par votre propre hash
   const ADMIN_PASS_HASH = 'edee7b91aea7969511d6c938138755c628df4202f3ad7a4b7719cf31d2e5fc56';
-  let adminSessionActive = sessionStorage.getItem('pulseunit_admin_session') === '1';
+  let adminSessionActive = false;
 
   function setAdminSession(active) {
     adminSessionActive = !!active;
-    if (adminSessionActive) sessionStorage.setItem('pulseunit_admin_session', '1');
-    else sessionStorage.removeItem('pulseunit_admin_session');
   }
 
   async function checkAdmin() {
