@@ -298,9 +298,6 @@
   .auth-btn-primary { background: var(--brand-gradient); color: #fff; }
   .auth-btn-outline { background: transparent; border: 1px solid var(--border) !important; color: var(--text); }
   .auth-btn-ghost { background: transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; border: none; text-decoration: underline; cursor: pointer; width: 100%; padding: 6px; }
-  .auth-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
-  .auth-tab-btn { background: var(--surface-sec); border: 1px solid var(--border); color: var(--text-muted); border-radius: 7px; padding: 7px 4px; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; cursor: pointer; font-family: var(--font); }
-  .auth-tab-btn.active { background: var(--ide-glow); border-color: var(--brand-blue); color: var(--brand-blue); }
   .auth-role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
   .auth-role-btn { padding: 10px 4px; border-radius: 8px; border: 2px solid var(--border); background: var(--surface-sec); color: var(--text-muted); font-weight: 800; font-size: 0.78rem; cursor: pointer; text-align: center; transition: all 0.2s; font-family: var(--font); }
   .auth-role-btn.selected { border-color: var(--brand-blue); background: rgba(59,130,246,0.12); color: var(--brand-blue); }
@@ -6585,9 +6582,6 @@
     ['login','register','forgot','admin'].forEach(v =>
       document.getElementById('auth-'+v+'-view').style.display = v === view ? 'block' : 'none'
     );
-    document.querySelectorAll('.auth-tab-btn').forEach(btn =>
-      btn.classList.toggle('active', btn.dataset.view === view)
-    );
     if (view === 'login' || view === 'forgot') populateUserSelects();
   }
 
@@ -6616,6 +6610,8 @@
     const q = val.toLowerCase().trim();
     document.getElementById('auth-select-user').value = '';
     document.getElementById('auth-selected-user').style.display = 'none';
+    const searchWrap = document.getElementById('auth-search-user-wrap');
+    if (searchWrap) searchWrap.style.display = 'block';
     const entries = Object.entries(authUsers).filter(([_, u]) =>
       !q || u.firstName.toLowerCase().includes(q) || u.lastName.toLowerCase().includes(q)
     );
@@ -6628,10 +6624,25 @@
     document.getElementById('auth-select-user').value = id;
     document.getElementById('auth-search-user').value = '';
     document.getElementById('auth-user-list').style.display = 'none';
+    const searchWrap = document.getElementById('auth-search-user-wrap');
+    if (searchWrap) searchWrap.style.display = 'none';
     const sel = document.getElementById('auth-selected-user');
-    sel.style.display = 'block';
-    sel.textContent = `${u.firstName} ${u.lastName.toUpperCase()} · ${u.role.toUpperCase()}`;
+    const txt = document.getElementById('auth-selected-user-text');
+    sel.style.display = 'flex';
+    if (txt) txt.textContent = `${u.firstName} ${u.lastName.toUpperCase()} · ${u.role.toUpperCase()}`;
     document.getElementById('auth-pin').focus();
+  }
+
+  function clearSelectedAuthUser() {
+    document.getElementById('auth-select-user').value = '';
+    const sel = document.getElementById('auth-selected-user');
+    if (sel) sel.style.display = 'none';
+    const searchWrap = document.getElementById('auth-search-user-wrap');
+    if (searchWrap) searchWrap.style.display = 'block';
+    const search = document.getElementById('auth-search-user');
+    if (search) { search.value = ''; search.focus(); }
+    const list = document.getElementById('auth-user-list');
+    if (list) list.style.display = 'none';
   }
 
   function filterForgotUsers(val) {
@@ -6665,6 +6676,8 @@
     ['auth-user-list','auth-selected-user','forgot-user-list','forgot-selected-user'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
+    const searchWrap = document.getElementById('auth-search-user-wrap');
+    if (searchWrap) searchWrap.style.display = 'block';
     const hiddenLogin = document.getElementById('auth-select-user');
     const hiddenForgot = document.getElementById('forgot-select-user');
     if (hiddenLogin) hiddenLogin.value = '';
@@ -6845,8 +6858,9 @@
     if (!user.biometricCredentialId) {
       return alert('Biométrie non activée pour ce compte.\nUtilisez "Activer biométrie sur cet appareil".');
     }
+    let assertion = null;
     try {
-      const assertion = await navigator.credentials.get({
+      assertion = await navigator.credentials.get({
         publicKey: {
           challenge: randomChallenge(),
           allowCredentials: [{ type: 'public-key', id: b64urlDecode(user.biometricCredentialId) }],
@@ -6854,31 +6868,32 @@
           timeout: 60000
         }
       });
-      if (!assertion) return alert('Connexion biométrique annulée.');
-      authUsers[userId].failedAttempts = 0;
-      authUsers[userId].blocked = false;
-      authUsers[userId].blockedAt = null;
-      if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
-      currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
-      sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
-      if (document.getElementById('auth-remember')?.checked) {
-        localStorage.setItem('pulseunit_autologin', JSON.stringify({
-          userId,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
-        }));
-      }
-      startPresenceHeartbeat();
-      document.getElementById('auth-modal').style.display = 'none';
-      updateHeaderUser();
-      renderApp();
-      checkWorkStatus();
     } catch (e) {
       console.error('Biometric login error:', e);
       alert('Échec de connexion biométrique.');
+      return;
     }
+    if (!assertion) return alert('Connexion biométrique annulée.');
+    authUsers[userId].failedAttempts = 0;
+    authUsers[userId].blocked = false;
+    authUsers[userId].blockedAt = null;
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
+    sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    if (document.getElementById('auth-remember')?.checked) {
+      localStorage.setItem('pulseunit_autologin', JSON.stringify({
+        userId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
+      }));
+    }
+    startPresenceHeartbeat();
+    document.getElementById('auth-modal').style.display = 'none';
+    updateHeaderUser();
+    renderApp();
+    checkWorkStatus();
   }
 
   async function loginAdminFromAuth() {
@@ -8245,20 +8260,19 @@
 <!-- ===== MODALE AUTH ===== -->
 <div id="auth-modal" role="dialog" aria-modal="true" aria-label="Authentification PulseUnit">
   <div class="auth-box">
-    <div class="auth-tabs">
-      <button class="auth-tab-btn active" data-view="login" onclick="showAuthView('login')">Connexion</button>
-      <button class="auth-tab-btn" data-view="register" onclick="showAuthView('register')">Créer</button>
-      <button class="auth-tab-btn" data-view="forgot" onclick="showAuthView('forgot')">Code</button>
-      <button class="auth-tab-btn" data-view="admin" onclick="showAuthView('admin')">Admin</button>
-    </div>
     <!-- VUE CONNEXION -->
     <div id="auth-login-view">
       <div class="auth-logo">Pulse<span>Unit</span></div>
       <div class="auth-sub">Connectez-vous pour accéder à l'application</div>
-      <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterAuthUsers(this.value)" autocomplete="off">
+      <div id="auth-search-user-wrap">
+        <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterAuthUsers(this.value)" autocomplete="off">
+      </div>
       <input type="hidden" id="auth-select-user" value="">
       <div id="auth-user-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
-      <div id="auth-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
+      <div id="auth-selected-user" style="display:none; align-items:center; justify-content:space-between; gap:10px; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);">
+        <span id="auth-selected-user-text"></span>
+        <button type="button" onclick="clearSelectedAuthUser()" style="background:none; border:none; color:var(--brand-blue); font-size:1.2rem; cursor:pointer; line-height:1;">✕</button>
+      </div>
       <label for="auth-pin" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Code à 6 chiffres</label>
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="off" aria-label="Code PIN à 6 chiffres">
       <label style="display:flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:12px; cursor:pointer;">
@@ -8270,6 +8284,7 @@
       <button class="auth-btn-ghost" onclick="enrollBiometricForUser()">Activer biométrie sur cet appareil</button>
       <button class="auth-btn auth-btn-outline" onclick="showAuthView('register')">Créer mon accès</button>
       <button class="auth-btn-ghost" onclick="showAuthView('forgot')">Code oublié ?</button>
+      <button class="auth-btn" style="background:var(--crit); color:#fff;" onclick="showAuthView('admin')">Accès Admin</button>
     </div>
     <!-- VUE INSCRIPTION -->
     <div id="auth-register-view" style="display:none;">
@@ -8287,6 +8302,7 @@
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin" placeholder="••••••" autocomplete="new-password">
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin2" placeholder="Confirmer le code" autocomplete="new-password">
       <button class="auth-btn auth-btn-primary" onclick="registerUser()">Créer mon accès</button>
+      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
     </div>
     <!-- VUE MOT DE PASSE OUBLIÉ -->
     <div id="auth-forgot-view" style="display:none;">
@@ -8297,6 +8313,7 @@
       <div id="forgot-user-list" style="max-height:130px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
       <div id="forgot-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
       <button class="auth-btn auth-btn-primary" onclick="sendResetRequest()">Envoyer la demande</button>
+      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
     </div>
     <!-- VUE ADMIN -->
     <div id="auth-admin-view" style="display:none;">
@@ -8305,6 +8322,7 @@
       <input class="auth-input" type="text" id="auth-admin-user" placeholder="Identifiant admin" autocomplete="off">
       <input class="auth-input" type="password" id="auth-admin-pass" placeholder="Mot de passe admin" autocomplete="off">
       <button class="auth-btn auth-btn-primary" onclick="loginAdminFromAuth()">Se connecter en admin</button>
+      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
     </div>
   </div>
 </div>
