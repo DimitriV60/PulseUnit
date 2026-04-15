@@ -6555,6 +6555,32 @@
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
   }
 
+  function supportsBiometricAuth() {
+    return !!(window.PublicKeyCredential && navigator.credentials?.create && navigator.credentials?.get);
+  }
+
+  function randomChallenge(len = 32) {
+    const arr = new Uint8Array(len);
+    crypto.getRandomValues(arr);
+    return arr;
+  }
+
+  function b64urlEncode(bytes) {
+    let bin = '';
+    const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    arr.forEach(b => { bin += String.fromCharCode(b); });
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function b64urlDecode(str) {
+    const pad = '='.repeat((4 - (str.length % 4)) % 4);
+    const b64 = str.replace(/-/g, '+').replace(/_/g, '/') + pad;
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
   function showAuthView(view) {
     ['login','register','forgot','admin'].forEach(v =>
       document.getElementById('auth-'+v+'-view').style.display = v === view ? 'block' : 'none'
@@ -6764,6 +6790,95 @@
     updateHeaderUser();
     renderApp();
     checkWorkStatus();
+  }
+
+  async function enrollBiometricForUser() {
+    if (!supportsBiometricAuth()) {
+      return alert('Biométrie non disponible sur cet appareil/navigateur.');
+    }
+    const userId = document.getElementById('auth-select-user').value;
+    const pin = document.getElementById('auth-pin').value;
+    if (!userId) return alert('Sélectionnez votre nom avant d’activer la biométrie.');
+    if (!pin) return alert('Entrez votre code PIN pour confirmer l’activation.');
+    const user = authUsers[userId];
+    if (!user) return alert('Utilisateur introuvable.');
+    if (user.blocked) return alert('Compte bloqué. Contactez l’administrateur.');
+    const pinHash = await hashPin(pin);
+    if (pinHash !== user.pinHash) return alert('Code PIN incorrect.');
+    try {
+      const userBytes = new TextEncoder().encode(userId).slice(0, 64);
+      const cred = await navigator.credentials.create({
+        publicKey: {
+          challenge: randomChallenge(),
+          rp: { name: 'PulseUnit' },
+          user: {
+            id: userBytes,
+            name: `${user.firstName}.${user.lastName}`.toLowerCase(),
+            displayName: `${user.firstName} ${user.lastName}`
+          },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+          timeout: 60000,
+          attestation: 'none'
+        }
+      });
+      if (!cred) return alert('Activation biométrique annulée.');
+      authUsers[userId].biometricCredentialId = b64urlEncode(new Uint8Array(cred.rawId));
+      authUsers[userId].biometricEnabledAt = Date.now();
+      if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+      alert('Biométrie activée ✅\nVous pouvez vous connecter avec visage/empreinte.');
+    } catch (e) {
+      console.error('Biometric enroll error:', e);
+      alert('Activation biométrique impossible sur cet appareil.');
+    }
+  }
+
+  async function loginBiometricUser() {
+    if (!supportsBiometricAuth()) {
+      return alert('Biométrie non disponible sur cet appareil/navigateur.');
+    }
+    const userId = document.getElementById('auth-select-user').value;
+    if (!userId) return alert('Sélectionnez votre nom avant la connexion biométrique.');
+    const user = authUsers[userId];
+    if (!user) return alert('Utilisateur introuvable.');
+    if (user.blocked) return alert('Compte bloqué. Contactez l’administrateur.');
+    if (!user.biometricCredentialId) {
+      return alert('Biométrie non activée pour ce compte.\nUtilisez "Activer biométrie sur cet appareil".');
+    }
+    try {
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: randomChallenge(),
+          allowCredentials: [{ type: 'public-key', id: b64urlDecode(user.biometricCredentialId) }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+      if (!assertion) return alert('Connexion biométrique annulée.');
+      authUsers[userId].failedAttempts = 0;
+      authUsers[userId].blocked = false;
+      authUsers[userId].blockedAt = null;
+      if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+      currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
+      sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+      if (document.getElementById('auth-remember')?.checked) {
+        localStorage.setItem('pulseunit_autologin', JSON.stringify({
+          userId,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
+        }));
+      }
+      startPresenceHeartbeat();
+      document.getElementById('auth-modal').style.display = 'none';
+      updateHeaderUser();
+      renderApp();
+      checkWorkStatus();
+    } catch (e) {
+      console.error('Biometric login error:', e);
+      alert('Échec de connexion biométrique.');
+    }
   }
 
   async function loginAdminFromAuth() {
@@ -8151,6 +8266,8 @@
         Se souvenir de moi <span style="color:var(--text-muted); font-weight:600;">(connexion automatique 3 mois)</span>
       </label>
       <button class="auth-btn auth-btn-primary" onclick="loginUser()">Se connecter</button>
+      <button class="auth-btn auth-btn-outline" onclick="loginBiometricUser()">Connexion biométrique / visage</button>
+      <button class="auth-btn-ghost" onclick="enrollBiometricForUser()">Activer biométrie sur cet appareil</button>
       <button class="auth-btn auth-btn-outline" onclick="showAuthView('register')">Créer mon accès</button>
       <button class="auth-btn-ghost" onclick="showAuthView('forgot')">Code oublié ?</button>
     </div>
