@@ -598,6 +598,16 @@
   .normes-row-alert { font-size: 0.7rem; font-weight: 800; color: var(--crit); background: rgba(239,68,68,0.08); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
   .normes-row-warn { font-size: 0.7rem; font-weight: 800; color: var(--med); background: rgba(245,158,11,0.1); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
   .normes-source { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-align: center; padding: 8px 14px; }
+  .normes-bar-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 4px; }
+  .normes-bar-title { font-size: 0.72rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; }
+  .normes-zonebar-outer { position: relative; padding-bottom: 28px; }
+  .normes-zonebar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; }
+  .normes-zonebar-seg { height: 100%; }
+  .normes-zonebar-indicator { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+  .normes-zonebar-line { width: 2px; height: 10px; }
+  .normes-zonebar-arrow { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text); }
+  .normes-zonebar-val { font-size: 0.72rem; font-weight: 900; margin-top: 2px; white-space: nowrap; }
+  .normes-bar-minmax { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted); font-weight: 700; margin-top: 4px; }
 
   /* ── LEXIQUE PROJET & SECURITE — Styles ── */
   .projet-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin:0 12px 10px; overflow:hidden; }
@@ -5790,7 +5800,7 @@
       ]
     },
     {
-      id: 'O2', icon: '💨', label: 'O₂',
+      id: 'O2', icon: '🫁', label: 'O₂',
       groups: [
         { title: 'Dispositifs O₂ — Débit & FiO₂ estimée', rows: [
           { p: 'Lunettes nasales',             n: '1 – 6',          u: 'L/min',      w: '24–40 % FiO₂ · +4%/L ajouté' },
@@ -5917,7 +5927,7 @@
       html += `<div class="normes-group">`;
       html += `<div class="normes-group-title">${g.title}</div>`;
       g.rows.forEach(r => {
-        const badge = r.a ? `<span class="normes-row-alert">${r.a}</span>` : r.w ? `<span class="normes-row-warn">${r.w}</span>` : '';
+        const badge = r.a ? `<span class="normes-row-alert" role="status" aria-label="Alerte : ${r.a}">${r.a}</span>` : r.w ? `<span class="normes-row-warn" role="status" aria-label="Attention : ${r.w}">${r.w}</span>` : '';
         html += `<div class="normes-row">
           <div class="normes-row-param">${r.p}</div>
           <div class="normes-row-val">${r.n}</div>
@@ -7247,11 +7257,12 @@
 
       // Navigation gauche/droite dans la vue Normes
       if (isVis('normes-view') && isHoriz) {
+        // Long swipe (>= 150px) → fermer la vue et retourner au menu
+        if (Math.abs(dx) >= 150) { closeNormes(); return; }
         const cats = NORMES_REF.map(c => c.id);
         const idx = cats.indexOf(normesCurrentCat);
-        if (dx < 0 && idx < cats.length - 1) { setNormesCat(cats[idx + 1]); return; } // → suivante
-        if (dx > 0 && idx > 0)               { setNormesCat(cats[idx - 1]); return; } // ← précédente
-        if (dx < 0) { closeNormes(); return; } // swipe gauche sur dernière cat → fermer
+        if (dx < 0) { setNormesCat(idx < cats.length - 1 ? cats[idx + 1] : cats[0]); return; } // → suivante (circulaire)
+        if (dx > 0 && idx > 0) { setNormesCat(cats[idx - 1]); return; } // ← précédente
         return;
       }
 
