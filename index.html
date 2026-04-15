@@ -4329,59 +4329,77 @@
       cat: "Réanimation",
       icon: "🏥",
       entries: [
-        { name: "Réanimation — poste soignant", num: "" },
-        { name: "Réanimation — bureau cadre", num: "" },
-        { name: "Réanimation — salle de soin", num: "" },
+        { name: "Réanimation — poste soignant", num: "0344616086", display: "(61) 6086" },
+        { name: "IDE technique", num: "0344617125", display: "(61) 7125" },
+        { name: "Réanimation — bureau cadre", num: "", display: "" },
+        { name: "Réanimation — salle de soin", num: "", display: "" },
       ]
     },
     {
       cat: "Urgences",
       icon: "🚨",
       entries: [
-        { name: "Urgences adultes — accueil", num: "" },
-        { name: "Urgences — SAMU / Régulation", num: "" },
-        { name: "SMUR", num: "" },
+        { name: "Urgences adultes — accueil", num: "0344616063", display: "(61) 6063" },
+        { name: "Urgences — standard", num: "0344616100", display: "(61) 6100" },
+        { name: "Urgences — SAMU / Régulation", num: "", display: "" },
+        { name: "SMUR", num: "", display: "" },
       ]
     },
     {
       cat: "Biologie & Imagerie",
       icon: "🔬",
       entries: [
-        { name: "Laboratoire — standard", num: "" },
-        { name: "Laboratoire — urgences biologiques", num: "" },
-        { name: "Radiologie — standard", num: "" },
-        { name: "Scanner (TDM)", num: "" },
-        { name: "IRM", num: "" },
+        { name: "Laboratoire — standard", num: "0344616530", display: "(61) 6530" },
+        { name: "Laboratoire — urgences biologiques", num: "", display: "" },
+        { name: "Imagerie médicale", num: "0344616121", display: "(61) 6121" },
+        { name: "Scanner (TDM)", num: "", display: "" },
+        { name: "IRM", num: "", display: "" },
       ]
     },
     {
       cat: "Pharmacie & Matériovigilance",
       icon: "💊",
       entries: [
-        { name: "Pharmacie hospitalière", num: "" },
-        { name: "Pharmacie — urgences / garde", num: "" },
+        { name: "Pharmacie hospitalière", num: "0344616883", display: "(61) 6883" },
+        { name: "Pharmacie — urgences / garde", num: "", display: "" },
       ]
     },
     {
       cat: "Spécialités médicales",
       icon: "⚕️",
       entries: [
-        { name: "Cardiologie", num: "" },
-        { name: "Neurologie", num: "" },
-        { name: "Pneumologie", num: "" },
-        { name: "Chirurgie vasculaire", num: "" },
-        { name: "Bloc opératoire", num: "" },
-        { name: "Anesthésie — médecin de garde", num: "" },
+        { name: "Cardiologie", num: "0344616523", display: "(61) 6523" },
+        { name: "Neurologie", num: "0344616433", display: "(61) 6433" },
+        { name: "Pneumologie", num: "0344616500", display: "(61) 6500" },
+        { name: "Chirurgie vasculaire", num: "", display: "" },
+        { name: "Bloc opératoire", num: "0344616153", display: "(61) 6153" },
+        { name: "Anesthésie", num: "0344616153", display: "(61) 6153" },
       ]
     },
     {
       cat: "Logistique & Supports",
       icon: "🔧",
       entries: [
-        { name: "Brancardage", num: "" },
-        { name: "Biomédical", num: "" },
-        { name: "Informatique (DIM / SI)", num: "" },
-        { name: "Standard général", num: "" },
+        { name: "Brancardage", num: "", display: "" },
+        { name: "Biomédical", num: "", display: "" },
+        { name: "Informatique (DIM / SI)", num: "", display: "" },
+        { name: "Standard général Creil", num: "0344616000", display: "(61) 6000" },
+      ]
+    },
+    {
+      cat: "Hygiène & Stérilisation",
+      icon: "🧴",
+      entries: [
+        { name: "Hygiène hospitalière (EOH)", num: "0344616562", display: "(61) 6562" },
+        { name: "Stérilisation", num: "0344616892", display: "(61) 6892" },
+      ]
+    },
+    {
+      cat: "CPOT & Soins Palliatifs",
+      icon: "🕊️",
+      entries: [
+        { name: "CPOT", num: "0344616082", display: "(61) 6082" },
+        { name: "Équipe mobile soins palliatifs", num: "0344616513", display: "(61) 6513" },
       ]
     },
   ];
@@ -4403,9 +4421,7 @@
    */
   function renderServices() {
     const container = document.getElementById('services-list');
-    let html = `<div style="background:rgba(96,206,234,0.1); border:1px solid rgba(96,206,234,0.3); border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:0.82rem; color:var(--text-muted); font-weight:700;">
-      ℹ️ Les numéros seront ajoutés prochainement. Les catégories et entrées sont déjà configurées.
-    </div>`;
+    let html = '';
 
     SERVICES_DATA.forEach(section => {
       html += `<div style="margin-bottom:24px;">
@@ -4416,10 +4432,11 @@
 
       section.entries.forEach(entry => {
         const hasNum = entry.num && entry.num.trim() !== '';
+        const label = entry.display && entry.display.trim() !== '' ? entry.display : entry.num;
         html += `<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
           <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${escapeHTML(entry.name)}</span>
           ${hasNum
-            ? `<a href="tel:${escapeHTML(entry.num)}" style="font-size:1rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap;">${escapeHTML(entry.num)}</a>`
+            ? `<a href="tel:${escapeHTML(entry.num)}" style="font-size:1rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap; letter-spacing:0.03em;">${escapeHTML(label)}</a>`
             : `<span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); white-space:nowrap; background:var(--surface-sec); border-radius:6px; padding:4px 10px;">À venir</span>`
           }
         </div>`;
