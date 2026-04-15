@@ -583,21 +583,26 @@
   /* ═══════════════════════════════════════════════
      MODULE NORMES DE RÉFÉRENCE — Styles
   ═══════════════════════════════════════════════ */
-  .normes-cat-filters { padding: 12px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .normes-cat-filters { padding: 10px 14px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .normes-cat-filters::-webkit-scrollbar { display: none; }
-  .normes-cat-btn { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; cursor: pointer; white-space: nowrap; text-transform: uppercase; transition: all 0.2s; font-family: var(--font); }
+  .normes-cat-btn { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; cursor: pointer; white-space: nowrap; text-transform: uppercase; transition: all 0.2s; font-family: var(--font); }
   .normes-cat-btn.active { background: var(--ide-glow); color: var(--brand-blue); border-color: var(--brand-blue); }
-  .normes-table-wrap { flex: 1; overflow-y: auto; padding: 12px 14px 60px; display: flex; flex-direction: column; gap: 14px; }
+  .normes-table-wrap { flex: 1; overflow-y: auto; padding: 10px 12px 20px; display: flex; flex-direction: column; gap: 12px; }
   .normes-group { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .normes-group-title { padding: 10px 14px; font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); background: var(--pill-bg); border-bottom: 1px solid var(--border); }
+  .normes-group-title { padding: 9px 14px; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1.2px; color: var(--brand-blue); background: var(--pill-bg); border-bottom: 1px solid var(--border); border-left: 3px solid var(--brand-blue); }
   .normes-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
   .normes-row:last-child { border-bottom: none; }
-  .normes-row-param { font-size: 0.85rem; font-weight: 800; color: var(--text); flex: 1.2; }
-  .normes-row-val { font-size: 0.85rem; font-weight: 900; color: var(--as); flex: 1; }
-  .normes-row-unit { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); flex: 0.8; }
-  .normes-row-alert { font-size: 0.7rem; font-weight: 800; color: var(--crit); background: rgba(239,68,68,0.08); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
-  .normes-row-warn { font-size: 0.7rem; font-weight: 800; color: var(--med); background: rgba(245,158,11,0.1); border-radius: 6px; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
-  .normes-source { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-align: center; padding: 8px 14px; }
+  .normes-row-left { flex: 1; min-width: 0; }
+  .normes-row-param { font-size: 0.82rem; font-weight: 800; color: var(--text); line-height: 1.35; }
+  .normes-row-alert { font-size: 0.63rem; font-weight: 800; color: var(--crit); background: rgba(239,68,68,0.1); border-radius: 4px; padding: 1px 5px; margin-top: 3px; display: inline-block; }
+  .normes-row-warn { font-size: 0.63rem; font-weight: 800; color: var(--med); background: rgba(245,158,11,0.1); border-radius: 4px; padding: 1px 5px; margin-top: 3px; display: inline-block; }
+  .normes-row-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 2px; }
+  .normes-row-val { font-size: 0.92rem; font-weight: 900; color: var(--as); white-space: nowrap; }
+  .normes-row-unit { font-size: 0.64rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+  .normes-source { font-size: 0.64rem; font-weight: 700; color: var(--text-muted); text-align: center; padding: 4px 14px 2px; }
+  .normes-pager { display: flex; justify-content: center; align-items: center; gap: 5px; padding: 8px; flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--border); }
+  .normes-pager-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); transition: all 0.25s; flex-shrink: 0; }
+  .normes-pager-dot.active { background: var(--brand-blue); width: 14px; border-radius: 3px; }
   .normes-bar-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 4px; }
   .normes-bar-title { font-size: 0.72rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; }
   .normes-zonebar-outer { position: relative; padding-bottom: 28px; }
@@ -5927,18 +5932,34 @@
       html += `<div class="normes-group">`;
       html += `<div class="normes-group-title">${g.title}</div>`;
       g.rows.forEach(r => {
-        const badge = r.a ? `<span class="normes-row-alert" role="status" aria-label="Alerte : ${r.a}">${r.a}</span>` : r.w ? `<span class="normes-row-warn" role="status" aria-label="Attention : ${r.w}">${r.w}</span>` : '';
+        const badge = r.a
+          ? `<span class="normes-row-alert" role="status" aria-label="Alerte : ${r.a}">${r.a}</span>`
+          : r.w
+          ? `<span class="normes-row-warn" role="status" aria-label="Attention : ${r.w}">${r.w}</span>`
+          : '';
         html += `<div class="normes-row">
-          <div class="normes-row-param">${r.p}</div>
-          <div class="normes-row-val">${r.n}</div>
-          <div class="normes-row-unit">${r.u}</div>
-          ${badge}
+          <div class="normes-row-left">
+            <div class="normes-row-param">${r.p}</div>
+            ${badge}
+          </div>
+          <div class="normes-row-right">
+            <span class="normes-row-val">${r.n}</span>
+            ${r.u ? `<span class="normes-row-unit">${r.u}</span>` : ''}
+          </div>
         </div>`;
       });
       html += `</div>`;
     });
     html += `<div class="normes-source">Sources : SFAR 2024 · SRLF · KDIGO 2024 · ESC/AHA 2023 · ARDSNet · ESICM</div>`;
     wrap.innerHTML = html;
+    // Mise à jour des points de navigation (pager)
+    const pagerEl = document.getElementById('normes-pager');
+    if (pagerEl) {
+      const catIdx = NORMES_REF.findIndex(c => c.id === normesCurrentCat);
+      pagerEl.innerHTML = NORMES_REF.map((_, i) =>
+        `<div class="normes-pager-dot${i === catIdx ? ' active' : ''}"></div>`
+      ).join('');
+    }
   }
 
 
@@ -7257,12 +7278,15 @@
 
       // Navigation gauche/droite dans la vue Normes
       if (isVis('normes-view') && isHoriz) {
-        // Long swipe (>= 150px) → fermer la vue et retourner au menu
-        if (Math.abs(dx) >= 150) { closeNormes(); return; }
         const cats = NORMES_REF.map(c => c.id);
         const idx = cats.indexOf(normesCurrentCat);
+        // Long swipe (>= 250px) → fermer la vue et retourner au menu
+        if (Math.abs(dx) >= 250) { closeNormes(); return; }
         if (dx < 0) { setNormesCat(idx < cats.length - 1 ? cats[idx + 1] : cats[0]); return; } // → suivante (circulaire)
-        if (dx > 0 && idx > 0) { setNormesCat(cats[idx - 1]); return; } // ← précédente
+        if (dx > 0) {
+          if (idx > 0) { setNormesCat(cats[idx - 1]); return; } // ← précédente
+          closeNormes(); return; // swipe droite sur 1ère cat → retour menu
+        }
         return;
       }
 
@@ -7604,6 +7628,7 @@
     </div>
     <div class="normes-cat-filters" id="normes-cat-filters"></div>
     <div class="normes-table-wrap" id="normes-table-wrap"></div>
+    <div class="normes-pager" id="normes-pager"></div>
   </div>
   <!-- Conservé pour le gestionnaire de swipe -->
   <div id="normes-detail-view" class="fs-view" style="z-index:430; display:none;"></div>
