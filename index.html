@@ -7518,10 +7518,11 @@
 
   // ── Swipe gauche = retour / fermeture ──────────────────────────────────
   (function() {
-    let startX = 0, startY = 0;
+    let startX = 0, startY = 0, startTarget = null;
     document.addEventListener('touchstart', function(e) {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
+      startTarget = e.target;
     }, { passive: true });
 
     document.addEventListener('touchend', function(e) {
@@ -7529,6 +7530,8 @@
       const dy = e.changedTouches[0].clientY - startY;
       if (dx > -60 || Math.abs(dy) > Math.abs(dx)) return; // pas un swipe gauche net
       if (planDrag.moved) return; // glissement sur planning : ignorer
+      // Ignorer si le swipe part d'une zone avec scroll horizontal (ex: filtres lexique)
+      if (startTarget && startTarget.closest('[style*="overflow-x"], .lexique-filters, .horaires-scroll, .planning-scroll')) return;
 
       // Priorité : du plus spécifique au plus général
       const isVisible = id => {
