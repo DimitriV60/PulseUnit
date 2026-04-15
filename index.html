@@ -583,12 +583,16 @@
   /* ═══════════════════════════════════════════════
      MODULE NORMES DE RÉFÉRENCE — Styles
   ═══════════════════════════════════════════════ */
+  /* Layout bulletproof : positionnement absolu pour garantir le scroll */
+  #normes-view { height: 100vh; height: 100dvh; }
+  #normes-view > .fs-header { flex-shrink: 0; }
   .normes-cat-filters { padding: 10px 14px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .normes-cat-filters::-webkit-scrollbar { display: none; }
   .normes-cat-btn { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; cursor: pointer; white-space: nowrap; text-transform: uppercase; transition: all 0.2s; font-family: var(--font); }
   .normes-cat-btn.active { background: var(--ide-glow); color: var(--brand-blue); border-color: var(--brand-blue); }
-  .normes-table-wrap { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px 60px; display: flex; flex-direction: column; gap: 12px; }
-  .normes-group { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .normes-table-wrap { flex: 1 1 0%; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 12px 12px 20px; }
+  .normes-group { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+  .normes-group:last-of-type { margin-bottom: 8px; }
   .normes-group-title { padding: 9px 14px; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1.2px; color: var(--brand-blue); background: var(--pill-bg); border-bottom: 1px solid var(--border); border-left: 3px solid var(--brand-blue); }
   .normes-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
   .normes-row:last-child { border-bottom: none; }
