@@ -298,6 +298,9 @@
   .auth-btn-primary { background: var(--brand-gradient); color: #fff; }
   .auth-btn-outline { background: transparent; border: 1px solid var(--border) !important; color: var(--text); }
   .auth-btn-ghost { background: transparent; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; border: none; text-decoration: underline; cursor: pointer; width: 100%; padding: 6px; }
+  .auth-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+  .auth-tab-btn { background: var(--surface-sec); border: 1px solid var(--border); color: var(--text-muted); border-radius: 7px; padding: 7px 4px; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; cursor: pointer; font-family: var(--font); }
+  .auth-tab-btn.active { background: var(--ide-glow); border-color: var(--brand-blue); color: var(--brand-blue); }
   .auth-role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
   .auth-role-btn { padding: 10px 4px; border-radius: 8px; border: 2px solid var(--border); background: var(--surface-sec); color: var(--text-muted); font-weight: 800; font-size: 0.78rem; cursor: pointer; text-align: center; transition: all 0.2s; font-family: var(--font); }
   .auth-role-btn.selected { border-color: var(--brand-blue); background: rgba(59,130,246,0.12); color: var(--brand-blue); }
@@ -1519,18 +1522,21 @@
     adminSessionActive = !!active;
   }
 
+  async function verifyAdminCredentials(user, pass) {
+      if (!user || !pass) return false;
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(pass));
+      const hashHex = Array.from(new Uint8Array(hashBuffer))
+                           .map(b => b.toString(16).padStart(2, '0')).join('');
+      return user === ADMIN_USER && hashHex === ADMIN_PASS_HASH;
+  }
+
   async function checkAdmin() {
       const u = document.getElementById('admin-user').value.trim();
       const p = document.getElementById('admin-pass').value;
       if (!u || !p) { alert('Veuillez remplir tous les champs.'); return; }
       try {
-          // Calcul du hash SHA-256 du mot de passe saisi (API Web Crypto native, aucun serveur)
-          const encoder = new TextEncoder();
-          const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(p));
-          const hashHex = Array.from(new Uint8Array(hashBuffer))
-                               .map(b => b.toString(16).padStart(2, '0')).join('');
-          // Comparaison sécurisée : identifiant + hash uniquement
-          if (u === ADMIN_USER && hashHex === ADMIN_PASS_HASH) {
+          if (await verifyAdminCredentials(u, p)) {
               setAdminSession(true);
               document.getElementById('admin-login-modal').style.display = 'none';
               updateAdminPanelBtn();
@@ -3316,6 +3322,7 @@
   /** Vrai si l'utilisateur peut modifier les lits (affecté + garde non verrouillée). */
   function canEditBeds() {
     if (isShiftLocked(currentShiftKey)) return false;
+    if (isAdmin()) return false;
     const h = shiftHistory[currentShiftKey] || {};
     return (h.activeStaffIds || []).includes(currentUser?.id) || h.techIdeId === currentUser?.id;
   }
@@ -6549,8 +6556,11 @@
   }
 
   function showAuthView(view) {
-    ['login','register','forgot'].forEach(v =>
+    ['login','register','forgot','admin'].forEach(v =>
       document.getElementById('auth-'+v+'-view').style.display = v === view ? 'block' : 'none'
+    );
+    document.querySelectorAll('.auth-tab-btn').forEach(btn =>
+      btn.classList.toggle('active', btn.dataset.view === view)
     );
     if (view === 'login' || view === 'forgot') populateUserSelects();
   }
@@ -6623,7 +6633,7 @@
 
   function showAuthModal() {
     // Réinitialiser les champs
-    ['auth-search-user','auth-pin','forgot-search-user','reg-firstname','reg-lastname','reg-pin','reg-pin2'].forEach(id => {
+    ['auth-search-user','auth-pin','forgot-search-user','reg-firstname','reg-lastname','reg-pin','reg-pin2','auth-admin-user','auth-admin-pass'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
     ['auth-user-list','auth-selected-user','forgot-user-list','forgot-selected-user'].forEach(id => {
@@ -6733,6 +6743,31 @@
     updateHeaderUser();
     renderApp();
     checkWorkStatus();
+  }
+
+  async function loginAdminFromAuth() {
+    const user = document.getElementById('auth-admin-user').value.trim();
+    const pass = document.getElementById('auth-admin-pass').value;
+    if (!user || !pass) return alert('Veuillez remplir les identifiants admin.');
+    try {
+      const ok = await verifyAdminCredentials(user, pass);
+      if (!ok) return alert('Identifiants admin incorrects.');
+      setAdminSession(true);
+      if (!currentUser) {
+        currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'Lecture', role: 'admin' };
+        sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+      }
+      document.getElementById('auth-modal').style.display = 'none';
+      updateHeaderUser();
+      renderApp();
+      updateAdminPanelBtn();
+      renderAdminResets();
+      renderAdminUsers();
+      document.getElementById('admin-panel-modal').style.display = 'flex';
+    } catch (err) {
+      console.error('Erreur login admin:', err);
+      alert('Erreur de vérification. Réessayez.');
+    }
   }
 
   async function changeTempPin() {
@@ -7160,7 +7195,7 @@
    * - Si garde verrouillée, ne s'affiche pas
    */
   function checkWorkStatus() {
-    if (!currentUser || isShiftLocked(currentShiftKey)) return;
+    if (!currentUser || isShiftLocked(currentShiftKey) || isAdmin()) return;
     initShiftData(currentShiftKey);
     const h = shiftHistory[currentShiftKey];
     const dateOnly = currentShiftKey.split('-').slice(0,3).join('-');
@@ -8051,6 +8086,12 @@
 <!-- ===== MODALE AUTH ===== -->
 <div id="auth-modal" role="dialog" aria-modal="true" aria-label="Authentification PulseUnit">
   <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab-btn active" data-view="login" onclick="showAuthView('login')">Connexion</button>
+      <button class="auth-tab-btn" data-view="register" onclick="showAuthView('register')">Créer</button>
+      <button class="auth-tab-btn" data-view="forgot" onclick="showAuthView('forgot')">Code</button>
+      <button class="auth-tab-btn" data-view="admin" onclick="showAuthView('admin')">Admin</button>
+    </div>
     <!-- VUE CONNEXION -->
     <div id="auth-login-view">
       <div class="auth-logo">Pulse<span>Unit</span></div>
@@ -8085,7 +8126,6 @@
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin" placeholder="••••••" autocomplete="new-password">
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin2" placeholder="Confirmer le code" autocomplete="new-password">
       <button class="auth-btn auth-btn-primary" onclick="registerUser()">Créer mon accès</button>
-      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
     </div>
     <!-- VUE MOT DE PASSE OUBLIÉ -->
     <div id="auth-forgot-view" style="display:none;">
@@ -8096,7 +8136,14 @@
       <div id="forgot-user-list" style="max-height:130px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
       <div id="forgot-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
       <button class="auth-btn auth-btn-primary" onclick="sendResetRequest()">Envoyer la demande</button>
-      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
+    </div>
+    <!-- VUE ADMIN -->
+    <div id="auth-admin-view" style="display:none;">
+      <div class="auth-logo" style="font-size:1.2rem;">Accès Admin</div>
+      <div class="auth-sub">Lecture globale + panneau admin (sans modifier les attributions)</div>
+      <input class="auth-input" type="text" id="auth-admin-user" placeholder="Identifiant admin" autocomplete="off">
+      <input class="auth-input" type="password" id="auth-admin-pass" placeholder="Mot de passe admin" autocomplete="off">
+      <button class="auth-btn auth-btn-primary" onclick="loginAdminFromAuth()">Se connecter en admin</button>
     </div>
   </div>
 </div>
