@@ -218,6 +218,7 @@
   .side-menu-content { padding: 10px 0 40px 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
   .side-link { display: flex; align-items: center; gap: 10px; padding: 15px 20px; color: var(--text); text-decoration: none; font-weight: 800; border-bottom: 1px solid var(--border); transition: background 0.2s; }
   .side-link:hover { background: var(--ide-glow); color: var(--brand-blue); }
+  .side-menu-section { padding: 10px 20px 4px; font-size: 0.68rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border); }
   .close-menu-btn { background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: color 0.2s; }
   .close-menu-btn:hover { color: var(--red); }
 
@@ -903,15 +904,17 @@
       <button class="close-menu-btn" onclick="closeSideMenu()" aria-label="Fermer le menu">×</button>
     </div>
     <div class="side-menu-content">
-      <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openCalculateurs();">🧮 Calculateurs</a>
+      <div class="side-menu-section">OUTILS CLINIQUES</div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();">📋 Protocoles</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openCalculateurs();">🧮 Calculateurs</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes & Alertes</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();">🫁 Simulateur Respirateur</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
+      <div class="side-menu-section">ORGANISATION</div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
       <div style="flex: 1; min-height: 20px;"></div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Version Alpha — Signaler un bug</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Signaler un bug</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();">⚙️ Paramètres</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); logoutUser();">🚪 Déconnexion</a>
       <a href="#" class="side-link" style="color: var(--crit); border-bottom:none;" onclick="closeSideMenu(); openAdmin();">🔒 Admin</a>
