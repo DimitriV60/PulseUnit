@@ -5517,197 +5517,171 @@
 
   let normesCurrentCat = 'VITAUX';
 
-  // ── Zones cliniques ────────────────────────────────────────────────
-  const NORMES_ZONES = {
-    pas:[
-      {min:0,  max:70,  label:'Choc / Effondrement',  color:'#dc2626',sev:4},
-      {min:70, max:90,  label:'Hypotension sévère',   color:'#ef4444',sev:3},
-      {min:90, max:110, label:'Hypotension limite',   color:'#f97316',sev:2},
-      {min:110,max:140, label:'Normale',               color:'#40ce5c',sev:0},
-      {min:140,max:160, label:'HTA légère',            color:'#f59e0b',sev:1},
-      {min:160,max:180, label:'HTA modérée',           color:'#f97316',sev:2},
-      {min:180,max:260, label:'HTA sévère / Urgence', color:'#ef4444',sev:3},
-    ],
-    pad:[
-      {min:0,  max:40,  label:'Très basse',           color:'#ef4444',sev:3},
-      {min:40, max:60,  label:'Basse',                color:'#f97316',sev:2},
-      {min:60, max:90,  label:'Normale',              color:'#40ce5c',sev:0},
-      {min:90, max:110, label:'HTA diastolique',      color:'#f59e0b',sev:1},
-      {min:110,max:160, label:'HTA diastolique sévère',color:'#ef4444',sev:3},
-    ],
-    pam:[
-      {min:0,  max:50,  label:'Choc / Ischémie',      color:'#dc2626',sev:4},
-      {min:50, max:65,  label:'Limite critique',       color:'#ef4444',sev:3},
-      {min:65, max:105, label:'Normale (cible réa)',   color:'#40ce5c',sev:0},
-      {min:105,max:130, label:'Élevée',                color:'#f59e0b',sev:1},
-      {min:130,max:200, label:'HTA sévère',            color:'#ef4444',sev:3},
-    ],
-    fc:[
-      {min:0,  max:30,  label:'Bradycardie extrême',  color:'#dc2626',sev:4},
-      {min:30, max:50,  label:'Bradycardie sévère',   color:'#ef4444',sev:3},
-      {min:50, max:60,  label:'Bradycardie',           color:'#f97316',sev:2},
-      {min:60, max:100, label:'Normale',               color:'#40ce5c',sev:0},
-      {min:100,max:130, label:'Tachycardie',           color:'#f59e0b',sev:1},
-      {min:130,max:150, label:'Tachycardie sévère',   color:'#f97316',sev:2},
-      {min:150,max:200, label:'Tachycardie critique', color:'#ef4444',sev:3},
-    ],
-    fr:[
-      {min:0,  max:8,   label:'Bradypnée critique',    color:'#ef4444',sev:3},
-      {min:8,  max:12,  label:'Bradypnée',              color:'#f97316',sev:2},
-      {min:12, max:20,  label:'Normale',                color:'#40ce5c',sev:0},
-      {min:20, max:25,  label:'Tachypnée légère',       color:'#f59e0b',sev:1},
-      {min:25, max:30,  label:'Tachypnée modérée',      color:'#f97316',sev:2},
-      {min:30, max:50,  label:'Détresse respiratoire',  color:'#ef4444',sev:3},
-    ],
-    spo2:[
-      {min:0,  max:85,  label:'Hypoxémie critique',   color:'#dc2626',sev:4},
-      {min:85, max:90,  label:'Hypoxémie sévère',     color:'#ef4444',sev:3},
-      {min:90, max:94,  label:'Hypoxémie modérée',    color:'#f97316',sev:2},
-      {min:94, max:96,  label:'Limite basse',          color:'#f59e0b',sev:1},
-      {min:96, max:101, label:'Normale',               color:'#40ce5c',sev:0},
-    ],
-    glycemie:[
-      {min:0,   max:0.5, label:'Hypoglycémie critique',  color:'#dc2626',sev:4},
-      {min:0.5, max:0.7, label:'Hypoglycémie',            color:'#ef4444',sev:3},
-      {min:0.7, max:1.1, label:'Normale',                 color:'#40ce5c',sev:0},
-      {min:1.1, max:1.8, label:'Cible réa (acceptable)',  color:'#60ceea',sev:1},
-      {min:1.8, max:2.5, label:'Hyperglycémie modérée',   color:'#f59e0b',sev:2},
-      {min:2.5, max:5.1, label:'Hyperglycémie sévère',    color:'#ef4444',sev:3},
-    ],
-    cetonemie:[
-      {min:0,   max:0.6, label:'Normale',                 color:'#40ce5c',sev:0},
-      {min:0.6, max:1.5, label:'Cétose légère',           color:'#f59e0b',sev:1},
-      {min:1.5, max:3.0, label:'Cétose / Début CAD',      color:'#f97316',sev:2},
-      {min:3.0, max:6.0, label:'Acidocétose diabétique',  color:'#ef4444',sev:3},
-      {min:6.0, max:10.1,label:'CAD sévère',              color:'#dc2626',sev:4},
-    ],
-    diurese:[
-      {min:0,   max:0.1, label:'Anurie',               color:'#dc2626',sev:4},
-      {min:0.1, max:0.5, label:'Oligurie',             color:'#ef4444',sev:3},
-      {min:0.5, max:1.5, label:'Normale',              color:'#40ce5c',sev:0},
-      {min:1.5, max:2.5, label:'Diurèse augmentée',   color:'#f59e0b',sev:1},
-      {min:2.5, max:4.1, label:'Polyurie',             color:'#f97316',sev:2},
-    ],
-  };
-
-  // ── Scénarios cliniques ────────────────────────────────────────────
-  const NORMES_SCENARIOS = [
-    {id:'normal',  label:'✅ Normal',          color:'#40ce5c', v:{pas:120,pad:80, fc:72, fr:16,spo2:98, glycemie:1.0, cetonemie:0.3, diurese:1.0}},
-    {id:'sepsis',  label:'🔴 Choc septique',   color:'#ef4444', v:{pas:85, pad:50, fc:128,fr:28,spo2:93, glycemie:1.8, cetonemie:0.5, diurese:0.3}},
-    {id:'hemo',    label:'🩸 Choc hémorra.',   color:'#dc2626', v:{pas:75, pad:40, fc:148,fr:32,spo2:95, glycemie:1.1, cetonemie:0.4, diurese:0.1}},
-    {id:'detresse',label:'💨 Détresse respi.', color:'#f97316', v:{pas:115,pad:75, fc:108,fr:38,spo2:84, glycemie:1.1, cetonemie:0.3, diurese:0.8}},
-    {id:'acd',     label:'🍬 Acidocétose',     color:'#d946ef', v:{pas:100,pad:65, fc:115,fr:26,spo2:97, glycemie:4.2, cetonemie:5.8, diurese:2.5}},
-    {id:'hypo',    label:'🍭 Hypoglycémie',    color:'#f59e0b', v:{pas:110,pad:70, fc:105,fr:20,spo2:97, glycemie:0.4, cetonemie:0.8, diurese:0.9}},
-    {id:'ira',     label:'🫘 IRA oligurique',  color:'#a855f7', v:{pas:165,pad:100,fc:88, fr:22,spo2:95, glycemie:1.3, cetonemie:0.4, diurese:0.08}},
-    {id:'hta',     label:'💢 HTA maligne',     color:'#f97316', v:{pas:225,pad:135,fc:95, fr:20,spo2:96, glycemie:1.1, cetonemie:0.3, diurese:0.7}},
+  const NORMES_REF = [
+    {
+      id: 'VITAUX', icon: '🫀', label: 'Vitaux',
+      groups: [
+        { title: 'Hémodynamique', rows: [
+          { p: 'Fréquence cardiaque',        n: '60 – 100',       u: 'bpm',        a: '< 40 ou > 150' },
+          { p: 'PAS',                         n: '100 – 140',      u: 'mmHg',       a: '< 90 ou > 180' },
+          { p: 'PAD',                         n: '60 – 90',        u: 'mmHg',       w: '< 50 ou > 110' },
+          { p: 'PAM (objectif réa)',           n: '≥ 65',           u: 'mmHg',       a: '< 65 = choc' },
+          { p: 'PAM (sepsis / choc)',          n: '65 – 75',        u: 'mmHg',       a: '< 65 = amines' },
+        ]},
+        { title: 'Respiratoire & Neurologique', rows: [
+          { p: 'Fréquence respiratoire',      n: '12 – 20',        u: '/min',       a: '> 25 ou < 8' },
+          { p: 'SpO₂ (standard)',             n: '≥ 95',           u: '%',          a: '< 90 = urgence' },
+          { p: 'SpO₂ (BPCO / IRC)',           n: '88 – 92',        u: '%',          w: 'Cible restrictive' },
+          { p: 'Température',                 n: '36.5 – 38.0',    u: '°C',         w: '> 38.3 = fièvre' },
+          { p: 'Glasgow',                     n: '15',             u: '/15',        a: '≤ 8 = IOT à discuter' },
+        ]},
+      ]
+    },
+    {
+      id: 'GDS', icon: '🩸', label: 'GDS',
+      groups: [
+        { title: 'Gaz du sang artériels (air ambiant)', rows: [
+          { p: 'pH artériel',                 n: '7.35 – 7.45',    u: '',           a: '< 7.20 ou > 7.55' },
+          { p: 'PaO₂',                        n: '80 – 100',       u: 'mmHg',       a: '< 60 = hypoxémie' },
+          { p: 'PaCO₂',                       n: '35 – 45',        u: 'mmHg',       w: '> 55 = décompensation' },
+          { p: 'HCO₃⁻',                       n: '22 – 26',        u: 'mmol/L',     w: '< 18 ou > 30' },
+          { p: 'BE (excès base)',              n: '−2 à +2',        u: 'mmol/L',     w: '< −5 = acidose signif.' },
+          { p: 'SaO₂',                        n: '95 – 100',       u: '%',          a: '< 90' },
+        ]},
+        { title: 'Lactates & Oxygénation', rows: [
+          { p: 'Lactates',                    n: '0.5 – 1.8',      u: 'mmol/L',     a: '> 4.0 = choc/hypoperf.' },
+          { p: 'Rapport P/F (PaO₂/FiO₂)',    n: '> 400',          u: '',           a: '< 200 = SDRA modéré/sév.' },
+          { p: 'P/F — SDRA léger',            n: '300 – 400',      u: '',           w: 'CPAP/VNI à discuter' },
+          { p: 'P/F — SDRA modéré',           n: '100 – 300',      u: '',           a: 'VM + décubitus si < 150' },
+          { p: 'P/F — SDRA sévère',           n: '< 100',          u: '',           a: 'DV systématique' },
+        ]},
+      ]
+    },
+    {
+      id: 'VENTILATOIRE', icon: '💨', label: 'Ventilation',
+      groups: [
+        { title: 'Paramètres réglés (VM protection)', rows: [
+          { p: 'Volume courant (Vt)',          n: '6 – 8',          u: 'mL/kg IBW',  a: '> 10 = volutrauma' },
+          { p: 'Fréquence réglée',             n: '14 – 20',        u: '/min',       w: 'Selon PaCO₂ cible' },
+          { p: 'FiO₂',                         n: 'Mini requis',    u: '%',          w: 'Réduire dès possible' },
+          { p: 'PEEP (standard)',              n: '5 – 8',          u: 'cmH₂O',     w: 'Titration FiO₂/SpO₂' },
+          { p: 'Rapport I:E',                  n: '1:2',            u: '',           w: 'Adapter selon patho.' },
+        ]},
+        { title: 'Pressions & Mécanique ventilatoire', rows: [
+          { p: 'Pression plateau (Pplat)',     n: '< 30',           u: 'cmH₂O',     a: '> 30 = barotrauma' },
+          { p: 'Driving pressure (ΔP)',        n: '< 15',           u: 'cmH₂O',     a: '> 15 = surmortalité SDRA' },
+          { p: 'Pression de pic',              n: '< 35',           u: 'cmH₂O',     w: '> 40 = alarme' },
+          { p: 'Auto-PEEP (PEEPi)',            n: '0',              u: 'cmH₂O',     w: '> 5 = risque hémodynamique' },
+          { p: 'Compliance statique',          n: '50 – 80',        u: 'mL/cmH₂O',  w: '< 30 = pathologie sévère' },
+          { p: 'Compliance dyn.',              n: '40 – 60',        u: 'mL/cmH₂O',  w: '< 25 = alarme' },
+        ]},
+      ]
+    },
+    {
+      id: 'BIO', icon: '🧪', label: 'Biologie',
+      groups: [
+        { title: 'NFS', rows: [
+          { p: 'Hémoglobine (H)',              n: '130 – 175',      u: 'g/L',        a: '< 70 = transfusion ICU' },
+          { p: 'Hémoglobine (F)',              n: '120 – 160',      u: 'g/L',        a: '< 70 = transfusion ICU' },
+          { p: 'Plaquettes',                   n: '150 – 400',      u: 'G/L',        a: '< 50 = risque hémorragique' },
+          { p: 'Leucocytes',                   n: '4 – 10',         u: 'G/L',        w: '> 12 ou < 2' },
+          { p: 'Neutrophiles',                 n: '1.8 – 7.7',      u: 'G/L',        a: '< 0.5 = aplasie' },
+        ]},
+        { title: 'Ionogramme plasmatique', rows: [
+          { p: 'Sodium',                       n: '136 – 145',      u: 'mmol/L',     a: '< 125 ou > 155' },
+          { p: 'Potassium',                    n: '3.5 – 5.0',      u: 'mmol/L',     a: '< 3.0 ou > 6.0 = urgence' },
+          { p: 'Chlore',                       n: '98 – 107',       u: 'mmol/L',     w: '< 90 ou > 115' },
+          { p: 'Bicarbonates',                 n: '22 – 26',        u: 'mmol/L',     w: '< 18 ou > 32' },
+          { p: 'Calcium ionisé',               n: '1.15 – 1.35',    u: 'mmol/L',     a: '< 0.90 = urgence EER' },
+          { p: 'Calcium total',                n: '2.20 – 2.60',    u: 'mmol/L',     w: '< 1.90 ou > 3.00' },
+          { p: 'Magnésium',                    n: '0.75 – 1.00',    u: 'mmol/L',     a: '< 0.50 = arythmie' },
+          { p: 'Phosphore',                    n: '0.80 – 1.45',    u: 'mmol/L',     a: '< 0.30 = critique' },
+          { p: 'Osmolalité',                   n: '280 – 295',      u: 'mOsm/kg',    w: '> 320 = hyperosmolarité' },
+        ]},
+        { title: 'Rein', rows: [
+          { p: 'Urée',                         n: '2.5 – 7.5',      u: 'mmol/L',     w: '> 20 = IRA/IRC avancée' },
+          { p: 'Créatinine (H)',               n: '62 – 106',       u: 'µmol/L',     w: '> 200 = IRA/IRC' },
+          { p: 'Créatinine (F)',               n: '44 – 80',        u: 'µmol/L',     w: '> 150 = IRA/IRC' },
+          { p: 'DFG (CKD-EPI)',                n: '> 60',           u: 'mL/min/1.73m²', a: '< 30 = IRC sévère' },
+        ]},
+        { title: 'Foie & Pancréas', rows: [
+          { p: 'ASAT',                         n: '< 40',           u: 'UI/L',       w: '> 3× N = cytolyse signif.' },
+          { p: 'ALAT',                         n: '< 40',           u: 'UI/L',       w: '> 3× N = cytolyse signif.' },
+          { p: 'Bilirubine totale',            n: '< 17',           u: 'µmol/L',     w: '> 50 = ictère significatif' },
+          { p: 'PAL',                          n: '40 – 130',       u: 'UI/L',       w: '> 3× N = cholestase' },
+          { p: 'GGT',                          n: 'H < 55 / F < 38', u: 'UI/L',      w: '> 3× N' },
+          { p: 'Lipase',                       n: '< 60',           u: 'UI/L',       a: '> 3× N = pancréatite' },
+          { p: 'LDH',                          n: '135 – 225',      u: 'UI/L',       w: '> 2× N' },
+        ]},
+        { title: 'Coagulation', rows: [
+          { p: 'TP',                           n: '70 – 100',       u: '%',          a: '< 50 = IHC / CIVD' },
+          { p: 'TCA (ratio)',                  n: '< 1.20',         u: 'ratio P/T',  w: '> 1.5 = héparine ou CIVD' },
+          { p: 'INR',                          n: '0.9 – 1.2',      u: '',           a: '> 3.0 = risque hémorra.' },
+          { p: 'Fibrinogène',                  n: '2.0 – 4.0',      u: 'g/L',        a: '< 1.0 = CIVD' },
+          { p: 'D-Dimères',                    n: '< 500',          u: 'µg/L FEU',   w: '> 500 = TVP/EP possible' },
+        ]},
+        { title: 'Inflammation & Métabolisme', rows: [
+          { p: 'CRP',                          n: '< 10',           u: 'mg/L',       w: '> 100 = infection bact.' },
+          { p: 'Procalcitonine (PCT)',          n: '< 0.5',          u: 'ng/mL',      a: '> 2 = sepsis / > 10 = choc' },
+          { p: 'Albumine',                     n: '35 – 50',        u: 'g/L',        w: '< 25 = dénutrition sévère' },
+          { p: 'Glycémie',                     n: '0.70 – 1.10',    u: 'g/L',        a: '< 0.60 ou > 1.80' },
+          { p: 'Glycémie cible ICU',           n: '1.40 – 1.80',    u: 'g/L',        w: 'Selon protocole insulin.' },
+          { p: 'NT-proBNP (< 75 ans)',         n: '< 125',          u: 'pg/mL',      w: '> 900 = IC probable' },
+          { p: 'Troponine Ic Hs (hs-TnI)',     n: 'Selon labo',     u: 'ng/L',       w: '> 99e percentile = SCA' },
+          { p: 'Lactates',                     n: '0.5 – 1.8',      u: 'mmol/L',     a: '> 4.0 = choc / hypoperf.' },
+        ]},
+      ]
+    },
+    {
+      id: 'DIALYSE', icon: '🫘', label: 'Dialyse',
+      groups: [
+        { title: 'Stades AKI — KDIGO 2012', rows: [
+          { p: 'Stade 1',  n: 'Créat × 1.5–1.9 ou ↑ ≥ 26.5 µmol/L / 48 h', u: '', w: 'Ou diurèse < 0.5 mL/kg/h × 6–12h' },
+          { p: 'Stade 2',  n: 'Créat × 2.0–2.9', u: '', w: 'Ou diurèse < 0.5 mL/kg/h × ≥ 12h' },
+          { p: 'Stade 3',  n: 'Créat × 3 ou ≥ 354 µmol/L', u: '', a: 'Ou anurie ≥ 12h / diurèse < 0.3 mL/kg/h × 24h' },
+        ]},
+        { title: 'Paramètres EER (CVVH / CVVHD)', rows: [
+          { p: 'Débit sang',                   n: '150 – 250',      u: 'mL/min',     w: 'Adapter selon accès' },
+          { p: 'Débit effluent cible',         n: '20 – 25',        u: 'mL/kg/h',    w: 'AKIKI recommande 20 mL/kg/h' },
+          { p: 'Bilan horaire',                n: 'Selon objectif', u: '',           w: '0 à négatif (prescription)' },
+          { p: 'Température filtre',           n: '≥ 36',           u: '°C',         w: 'Prévenir hypothermie' },
+        ]},
+        { title: 'Anticoagulation EER', rows: [
+          { p: 'Héparine — Anti-Xa',           n: '0.3 – 0.5',      u: 'UI/mL',      a: '> 0.7 = surdosage' },
+          { p: 'Héparine — TCA circuit',       n: '50 – 70',        u: 's',          w: 'Ratio circuit/patient' },
+          { p: 'Citrate — Ca²⁺ post-filtre',   n: '0.25 – 0.35',    u: 'mmol/L',     a: '> 0.40 = accumulation' },
+          { p: 'Citrate — Ca²⁺ retour',        n: '1.15 – 1.35',    u: 'mmol/L',     a: '< 1.00 = hypocalcémie' },
+        ]},
+      ]
+    },
+    {
+      id: 'URINES', icon: '🚰', label: 'Urines',
+      groups: [
+        { title: 'Diurèse', rows: [
+          { p: 'Diurèse normale',              n: '0.5 – 2.0',      u: 'mL/kg/h',    a: '< 0.5 = oligurie (critère AKI)' },
+          { p: 'Volume/24h',                   n: '800 – 2500',     u: 'mL/j',       w: '< 400 = oligo-anurie' },
+          { p: 'Polyurie',                     n: '> 3',            u: 'mL/kg/h',    w: 'Éliminer DI central/néphro.' },
+          { p: 'Anurie',                       n: '< 100',          u: 'mL/j',       a: 'Indication EER à discuter' },
+        ]},
+        { title: 'Analyse urinaire', rows: [
+          { p: 'Densité urinaire',             n: '1.010 – 1.025',  u: '',           w: '> 1.030 = déshydratation' },
+          { p: 'pH urinaire',                  n: '4.5 – 8.0',      u: '',           w: '' },
+          { p: 'Osmolalité urinaire',          n: '50 – 1200',      u: 'mOsm/kg',    w: '> 500 = concentrées (pré-rénal)' },
+          { p: 'Sodium urinaire',              n: '20 – 220',       u: 'mmol/L',     w: '< 20 = pré-rénal' },
+          { p: 'FEna (fraction excrétée Na)',  n: '< 1 %',          u: '%',          w: '> 2% = atteinte rénale' },
+          { p: 'Protéinurie',                  n: '< 0.15',         u: 'g/24h',      w: '> 0.30 = néphropathie' },
+          { p: 'Rapport Prot/Créat urin.',     n: '< 30',           u: 'mg/mmol',    w: '> 30 = pathologique' },
+        ]},
+      ]
+    },
   ];
 
-  // ── Textes d'analyse clinique ─────────────────────────────────────
-  const NORMES_ANALYSIS = {
-    ta(pas, pad, pam) {
-      const pp = pas - pad;
-      if (pam < 50)  return `🚨 PAM effondrée (${Math.round(pam)} mmHg). Choc circulatoire. Vasopresseurs en urgence (noradrénaline). Appel médical immédiat. Objectif réa : PAM ≥ 65 mmHg.`;
-      if (pam < 65)  return `🔴 PAM critique (${Math.round(pam)} mmHg < 65). Risque d'hypoperfusion rénale, cérébrale et myocardique. Remplissage ± vasopresseurs selon le contexte.`;
-      if (pas < 90)  return `⚠️ Hypotension (PAS < 90). PAM ${Math.round(pam)} mmHg ${pam>=65?'(pour l\'instant acceptable)':'(insuffisante)'}. Rechercher : hypovolémie, sepsis, choc cardiogénique. Bilan en urgence.`;
-      if (pas > 180 || pad > 110) return `🔴 HTA sévère (${pas}/${pad} mmHg). Urgence tensionnelle si atteinte d'organe (AVC, OAP, dissection). Nicardipine IV à envisager. Cible : réduction PA progressive.`;
-      if (pas > 140) return `🟡 HTA modérée (${pas}/${pad} mmHg). Contexte ? Douleur, agitation, stress ? PAM ${Math.round(pam)} mmHg. Surveiller la tendance. PP ${pp} mmHg.`;
-      return `✅ PA dans les cibles. ${pas}/${pad} mmHg — PAM ${Math.round(pam)} mmHg ≥ 65 (objectif réa). Pression pulsée ${pp} mmHg ${pp<40?'(basse, penser insuffisance cardiaque)':pp>60?'(élevée, insuffisance aortique ?)':'(normale)'}.`;
-    },
-    fc(v) {
-      if (v < 30)  return `🚨 Bradycardie extrême (${v} bpm). Risque d'ACR imminent. Atropine 1 mg IV, stimulation transcutanée. Appel médical IMMÉDIAT.`;
-      if (v < 50)  return `🔴 Bradycardie sévère (${v} bpm). ECG urgent (BAV, ESV de l'espace ?). Si PAS chutante : Atropine 0,5 mg IV. Surveiller la PA.`;
-      if (v < 60)  return `⚠️ Bradycardie (${v} bpm). Souvent bien tolérée. ECG si nouvelle. Médicaments bradycardisants ? (β-bloquants, anti-Ca, digoxine).`;
-      if (v <= 100) return `✅ FC normale (${v} bpm). Rythme sinusal. Surveillance standard.`;
-      if (v <= 130) return `🟡 Tachycardie (${v} bpm). Cause ? Douleur, fièvre, hypovolémie, FA, anxiété. Traiter la cause. ECG si persistance > 30 min.`;
-      if (v <= 150) return `🟠 Tachycardie sévère (${v} bpm). Impact hémodynamique probable. ECG URGENT. TV, FA rapide, flutter à exclure. Correction de l'hypovolémie.`;
-      return `🚨 Tachycardie critique (${v} bpm). Risque de décompensation et FV. ECG IMMÉDIAT. Cardioversion à discuter selon le rythme. Appel médical.`;
-    },
-    fr(v) {
-      if (v < 8)  return `🚨 Bradypnée critique (${v}/min). Insuffisance ventilatoire. BAVU + O2. Préparer l'intubation. Urgence absolue.`;
-      if (v < 12) return `🔴 Bradypnée (${v}/min). Dépression du drive : opiacés ? lésion neurologique ? Naloxone si morphiniques. Surveiller la SpO2 et les GDS.`;
-      if (v <= 20) return `✅ FR normale (${v}/min). Mécanique ventilatoire satisfaisante. Surveiller la tendance et la saturation.`;
-      if (v <= 25) return `🟡 Tachypnée légère (${v}/min). Fièvre, douleur, acidose métabolique ? Surveiller l'évolution. GDS si persistance.`;
-      if (v <= 30) return `🟠 Tachypnée modérée (${v}/min). Détresse ventilatoire débutante. Évaluer : muscles accessoires, tirage, SpO2. OHD ou VNI à envisager.`;
-      return `🚨 Détresse respiratoire (${v}/min). Signe de gravité MAJEUR. O2 à haut débit, préparation à l'intubation. Appel médical immédiat.`;
-    },
-    spo2(v) {
-      if (v < 85)  return `🚨 Hypoxémie critique (${v}%). Danger vital immédiat. O2 100%, position demi-assise, BAVU si ACR. Intubation probable. Éliminer pneumothorax.`;
-      if (v < 90)  return `🔴 Hypoxémie sévère (${v}%). Urgence. OHD ou VNI si conscience conservée. GDS artériel urgent. Calculer rapport P/F.`;
-      if (v < 94)  return `🟠 Hypoxémie modérée (${v}%). Augmenter la FiO2 (MHC ou OHD). Rechercher la cause (atélectasie, pneumonie, OAP). Éviter O2 > 96% sans indication.`;
-      if (v < 96)  return `🟡 SpO2 limite basse (${v}%). Acceptable chez le BPCO (cible 88-92%). Chez les autres : objectif ≥ 96%. Vérifier le signal du capteur.`;
-      return `✅ SpO2 normale (${v}%). Attention : SpO2 faussée par vasoconstriction, anémie sévère, vernis à ongles ou intoxication CO.`;
-    },
-    glycemie(v) {
-      const mmol = (v * 5.5556).toFixed(1);
-      if (v < 0.5)  return `🚨 Hypoglycémie sévère (${v} g/L = ${mmol} mmol/L). G30% 50 mL IV ou Glucagon 1 mg IM. Resucrer toutes les 15 min jusqu'à G > 0,8 g/L. Monitorage continu.`;
-      if (v < 0.7)  return `🔴 Hypoglycémie (${v} g/L = ${mmol} mmol/L). Resucrage immédiat : G10% ou G30% IV. Identifier la cause (insuline, sulfamides, jeûne). Contrôle dans 15 min.`;
-      if (v <= 1.1)  return `✅ Glycémie normale (${v} g/L = ${mmol} mmol/L). En réanimation, cible protocole insuline : 1,0-1,8 g/L. Éviter les excursions hypoglycémiques.`;
-      if (v <= 1.8)  return `🔵 Cible réa acceptable (${v} g/L = ${mmol} mmol/L). Dans la plage 1,0-1,8 g/L. Poursuivre le protocole insuline. Contrôle horaire si IVSE.`;
-      if (v <= 2.5)  return `🟠 Hyperglycémie (${v} g/L = ${mmol} mmol/L). Dépasse la cible réa. Adapter le protocole insuline. Cause ? Infection, corticoïdes, nutrition parentérale.`;
-      return `🚨 Hyperglycémie sévère (${v} g/L = ${mmol} mmol/L). Risque CAD ou hyperosmolarité. Insuline IV urgente. Vérifier cétonémie et pH artériel. Hyperhydratation.`;
-    },
-    cetonemie(v) {
-      if (v < 0.6)  return `✅ Cétonémie normale (${v} mmol/L). Absence de cétose.`;
-      if (v < 1.5)  return `🟡 Cétose légère (${v} mmol/L). Jeûne ou régime cétogène ? Surveiller la glycémie et la tendance. Peu préoccupant si contexte connu.`;
-      if (v < 3.0)  return `🟠 Cétose modérée (${v} mmol/L). Début d'acidocétose possible. Contrôler glycémie et pH artériel. Hyperhydratation + insuline à initier si diabète confirmé.`;
-      if (v < 6.0)  return `🔴 Acidocétose diabétique (CAD) probable (${v} mmol/L). Protocole CAD : NaCl 0,9% 1 L/h, insuline IV, surveillance K+ horaire. Scope continu.`;
-      return `🚨 CAD sévère (${v} mmol/L). pH < 7,2 probable. Réanimation intensive : remplissage NaCl 0,9%, insuline IV, K+ iv, scope. Appel médical immédiat.`;
-    },
-    diurese(v, poids) {
-      const mlh = Math.round(v * poids);
-      if (v < 0.1)  return `🚨 Anurie (${v.toFixed(2)} mL/kg/h ≈ ${mlh} mL/h). Vérifier le sondage. IRA anurique ? Echo rénale urgente. Discuter EER (épuration extra-rénale).`;
-      if (v < 0.5)  return `🔴 Oligurie (${v.toFixed(2)} mL/kg/h ≈ ${mlh} mL/h). IRA ? Hypovolémie ? Remplissage test, bilan rénal (créatinine, KDIGO). Stopper les néphrotoxiques.`;
-      if (v <= 1.5)  return `✅ Diurèse normale (${v.toFixed(2)} mL/kg/h ≈ ${mlh} mL/h). Perfusion rénale satisfaisante. Maintenir le bilan entrées/sorties.`;
-      if (v <= 2.5)  return `🟡 Diurèse augmentée (${v.toFixed(2)} mL/kg/h ≈ ${mlh} mL/h). Phase polyurique post-IRA ? Diurétiques ? Compenser les pertes. Surveiller la natrémie.`;
-      return `🟠 Polyurie franche (${v.toFixed(2)} mL/kg/h ≈ ${mlh} mL/h). Risque de déshydratation et de troubles ioniques. Natrémie, kaliémie à contrôler. Bilan E/S strict.`;
-    },
-  };
-
-  // ── Helpers ────────────────────────────────────────────────────────
-  /**
-   * Retourne la zone clinique correspondant à une valeur pour un paramètre donné.
-   * @param {string} param - Clé du paramètre (ex: "fc", "spo2")
-   * @param {number} value - Valeur à évaluer
-   * @returns {object} Zone avec { min, max, label, color, sev }
-   */
-  function getNormesZone(param, value) {
-    const zones = NORMES_ZONES[param] || [];
-    for (const z of zones) { if (value >= z.min && value < z.max) return z; }
-    return zones[zones.length - 1];
-  }
-
-  /**
-   * Génère le SVG d'une jauge semi-circulaire avec zones colorées et aiguille.
-   * @param {number} value  - Valeur courante
-   * @param {number} min    - Valeur minimale du range
-   * @param {number} max    - Valeur maximale du range
-   * @param {Array}  zones  - Tableau de zones ({ min, max, color })
-   * @param {string} unit   - Unité affichée sous la valeur
-   * @param {boolean} compact - Mode compact (true = tuile, false = détail)
-   * @returns {{ svg: string, zone: object, color: string }}
-   */
-  /**
-   * Calcule la zone active pour une valeur et un paramètre donnés.
-   * @param {number} value - Valeur à évaluer
-   * @param {Array}  zones - Tableau de zones
-   * @returns {{zone, color}} Zone active et couleur
-   */
+  // Utilitaires partagés (aussi utilisés par le Simulateur Respiratoire)
   function normesGetActiveZone(value, zones) {
     let az = zones[zones.length-1];
     for (const z of zones) { if (value >= z.min && value < z.max) { az = z; break; } }
     return az;
   }
-
-  /**
-   * Génère la barre de zones horizontale principale avec indicateur de position.
-   * Remplace l'ancienne jauge circulaire — lecture immédiate et intuitive.
-   * @param {number} value - Valeur courante
-   * @param {number} min   - Borne min du range
-   * @param {number} max   - Borne max du range
-   * @param {Array}  zones - Zones cliniques
-   * @param {string} unit  - Unité affichée sous l'indicateur
-   * @returns {string} HTML de la barre
-   */
   function normesZoneBarHTML(value, min, max, zones, unit) {
     const val = Math.min(max, Math.max(min, parseFloat(value)));
     const norm = (val - min) / (max - min);
@@ -5735,424 +5709,45 @@
     </div>`;
   }
 
-  /**
-   * Génère la mini-barre de zones pour les tuiles de la grille.
-   * @param {number} value - Valeur courante
-   * @param {number} min   - Borne min
-   * @param {number} max   - Borne max
-   * @param {Array}  zones - Zones cliniques
-   * @returns {string} HTML de la mini-barre
-   */
-  function normesMiniBarHTML(value, min, max, zones) {
-    const norm = Math.min(1, Math.max(0, (parseFloat(value)-min)/(max-min)));
-    const segs = zones.map(z => {
-      const zMin=Math.max(z.min,min), zMax=Math.min(z.max,max);
-      if (zMin>=zMax) return '';
-      const w = ((zMax-zMin)/(max-min)*100).toFixed(3);
-      return `<div style="flex-basis:${w}%;background:${z.color};opacity:0.75;height:100%;"></div>`;
-    }).join('');
-    const indLeft = Math.min(97, Math.max(3, norm*100)).toFixed(2);
-    return `<div style="position:relative;height:8px;border-radius:4px;margin:4px 0 0;">
-      <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;">${segs}</div>
-      <div style="position:absolute;top:-3px;left:${indLeft}%;transform:translateX(-50%);width:4px;height:14px;background:var(--text);border-radius:2px;box-shadow:0 0 0 2px var(--surface);"></div>
-    </div>`;
-  }
-
-  /**
-   * Génère le tableau de référence des zones cliniques pour l'IDE/AS.
-   * Affiche toutes les zones avec les seuils, la zone active mise en évidence.
-   * @param {number} value - Valeur courante
-   * @param {Array}  zones - Zones cliniques
-   * @param {string} unit  - Unité affichée
-   * @returns {string} HTML du tableau
-   */
-  function normesZoneTableHTML(value, zones, unit) {
-    const az = normesGetActiveZone(value, zones);
-    const EMOJIS = ['🟢','🟡','🟠','🔴','🔴'];
-    return `<div class="normes-ref-card">
-      <div class="normes-ref-title">📋 Tableau de référence — Normes adulte</div>
-      ${zones.map(z => {
-        const isActive = z === az;
-        const em = EMOJIS[Math.min(z.sev, 4)];
-        const isNormal = z.sev === 0;
-        const rMax = z.max > 999 ? '+' : ` — ${z.max}`;
-        return `<div class="normes-ref-row${isActive?' ref-active':''}" style="${isActive?`background:${z.color}15;border-color:${z.color};`:''}">
-          <div class="normes-ref-dot" style="background:${z.color};"></div>
-          <div style="flex:1;">
-            <div class="normes-ref-name" style="color:${isActive?z.color:'var(--text)'};">${z.label}${isNormal?' ★':''}</div>
-            <div class="normes-ref-range">${z.min}${rMax} ${unit}</div>
-          </div>
-          ${isActive?`<div class="normes-ref-badge" style="background:${z.color}25;color:${z.color};">EN COURS</div>`:''}
-        </div>`;
-      }).join('')}
-      <div style="font-size:0.72rem;color:var(--text-muted);font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">★ = Valeur normale adulte</div>
-    </div>`;
-  }
-
-
-  /**
-   * Génère un mini graphique SVG de tendance (polyline des dernières valeurs).
-   * @param {number[]} history - Tableau de valeurs (max 12)
-   * @param {number}   min     - Borne inférieure de l'axe Y
-   * @param {number}   max     - Borne supérieure de l'axe Y
-   * @param {string}   color   - Couleur de la courbe
-   * @returns {string} HTML à injecter
-   */
-  function normesTrendSVG(history, min, max, color) {
-    if (history.length < 2) return `<div style="text-align:center;color:var(--text-muted);font-size:0.82rem;padding:12px;font-weight:700;">Bougez le curseur pour enregistrer des points</div>`;
-    const W=260,H=55,px=6,py=4;
-    const pts = history.map((v,i) => {
-      const x=px+(i/(history.length-1))*(W-2*px);
-      const y=H-py-((Math.min(max,Math.max(min,v))-min)/(max-min))*(H-2*py);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-    const dots = history.map((v,i) => {
-      const x=px+(i/(history.length-1))*(W-2*px);
-      const y=H-py-((Math.min(max,Math.max(min,v))-min)/(max-min))*(H-2*py);
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i===history.length-1?5:3}" fill="${color}" opacity="${i===history.length-1?1:0.6}"/>`;
-    }).join('');
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="height:55px;display:block;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>${dots}</svg>`;
-  }
-
-  // ── Fonctions UI ───────────────────────────────────────────────────
-  /** Ouvre la vue principale Normes & Alertes et lance son rendu. */
   function openNormes() {
     document.getElementById('normes-view').style.display = 'flex';
-    renderNormesScenarios();
-    renderNormesGrid();
+    renderNormes();
   }
-
-  /** Ferme la vue principale Normes & Alertes. */
   function closeNormes() { document.getElementById('normes-view').style.display = 'none'; }
 
-  /**
-   * Applique un scénario clinique prédéfini à tous les paramètres.
-   * @param {string} id - Identifiant du scénario dans NORMES_SCENARIOS
-   */
-  function applyNormesScenario(id) {
-    const sc = NORMES_SCENARIOS.find(s => s.id === id);
-    if (!sc) return;
-    normesCurrentScenario = id;
-    Object.assign(normesCurrentValues, sc.v);
-    triggerHaptic();
-    renderNormesScenarios();
-    renderNormesGrid();
-    if (normesCurrentParam) renderNormesDetail(normesCurrentParam);
-  }
+  function setNormesCat(id) { normesCurrentCat = id; renderNormes(); }
 
-  /** Génère la barre de scénarios cliniques. */
-  function renderNormesScenarios() {
-    const bar = document.getElementById('normes-scenarios-bar');
-    if (!bar) return;
-    bar.innerHTML = NORMES_SCENARIOS.map(sc => {
-      const active = normesCurrentScenario === sc.id;
-      return `<button class="normes-scenario-btn${active?' active':''}"
-        style="${active?`background:${sc.color};border-color:${sc.color};`:''}"
-        onclick="applyNormesScenario('${sc.id}')">${sc.label}</button>`;
-    }).join('');
-  }
-
-  /** Génère la grille des 7 tuiles de paramètres avec leurs valeurs actuelles. */
-  /** Génère la grille des 7 tuiles de paramètres avec barre de zones et valeur colorée. */
-  function renderNormesGrid() {
-    const grid = document.getElementById('normes-params-grid');
-    if (!grid) return;
-    const v = normesCurrentValues;
-    const pam = Math.round((v.pas + 2*v.pad) / 3);
-    const zPam=getNormesZone('pam',pam), zFc=getNormesZone('fc',v.fc);
-    const zFr=getNormesZone('fr',v.fr), zSpo2=getNormesZone('spo2',v.spo2);
-    const zGly=getNormesZone('glycemie',v.glycemie), zCeto=getNormesZone('cetonemie',v.cetonemie);
-    const zDiu=getNormesZone('diurese',v.diurese);
-
-    const tileTA = `<div class="normes-tile tile-ta" onclick="openNormesDetail('ta')"
-      style="border-top:4px solid ${zPam.color};">
-      <div class="normes-tile-header"><span class="normes-tile-name">Tension Artérielle & PAM</span><span class="normes-tile-icon">🩺</span></div>
-      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
-        <div class="normes-tile-value" style="color:${zPam.color};">${v.pas}/${v.pad}</div>
-        <div><div class="normes-tile-sub" style="color:${zPam.color};">PAM ${pam} mmHg</div><div class="normes-tile-unit">mmHg</div></div>
-      </div>
-      ${normesMiniBarHTML(pam, 0, 200, NORMES_ZONES.pam)}
-      <div class="normes-zone-lbl" style="color:${zPam.color};">${zPam.sev>=3?'🔴':zPam.sev>=1?'🟡':'🟢'} ${zPam.label}</div>
-    </div>`;
-
-    const makeTile = (id, icon, name, val, unit, zone, zMin, zMax, zones) => `
-      <div class="normes-tile" onclick="openNormesDetail('${id}')" style="border-top:4px solid ${zone.color};">
-        <div class="normes-tile-header"><span class="normes-tile-name">${name}</span><span class="normes-tile-icon">${icon}</span></div>
-        <div class="normes-tile-value" style="color:${zone.color};">${val}</div>
-        <div class="normes-tile-unit">${unit}</div>
-        ${normesMiniBarHTML(parseFloat(val)||0, zMin, zMax, zones)}
-        <div class="normes-zone-lbl" style="color:${zone.color};">${zone.sev>=3?'🔴':zone.sev>=1?'🟡':'🟢'} ${zone.label}</div>
-      </div>`;
-
-    grid.innerHTML = tileTA
-      + makeTile('fc',       '❤️',  'Pouls / FC',    v.fc,                      'bpm',     zFc,  20,  200, NORMES_ZONES.fc)
-      + makeTile('fr',       '🫁',  'Fréq. resp.',   v.fr,                      '/min',    zFr,   0,   50, NORMES_ZONES.fr)
-      + makeTile('spo2',     '💧',  'SpO₂',          v.spo2+'%',                '',        zSpo2,70,  100, NORMES_ZONES.spo2)
-      + makeTile('glycemie', '🍬',  'Glycémie',      v.glycemie.toFixed(1),     'g/L',     zGly, 0.3, 5.0, NORMES_ZONES.glycemie)
-      + makeTile('cetonemie','⚗️',  'Cétonémie',     v.cetonemie.toFixed(1),    'mmol/L',  zCeto, 0,  10,  NORMES_ZONES.cetonemie)
-      + makeTile('diurese',  '🚿',  'Diurèse',       v.diurese.toFixed(2),      'mL/kg/h', zDiu,  0,   4,  NORMES_ZONES.diurese);
-  }
-
-  /**
-   * Ouvre la vue détail d'un paramètre spécifique.
-   * @param {string} id - Identifiant du paramètre
-   */
-  function openNormesDetail(id) {
-    normesCurrentParam = id;
-    document.getElementById('normes-detail-view').style.display = 'flex';
-    renderNormesDetail(id);
-  }
-
-  /** Ferme la vue détail et retourne à la grille. */
-  function closeNormesDetail() {
-    document.getElementById('normes-detail-view').style.display = 'none';
-    renderNormesGrid();
-  }
-
-  /**
-   * Ajoute un point dans l'historique de tendance d'un paramètre (max 12).
-   * @param {string} param - Identifiant du paramètre
-   * @param {number} value - Valeur à enregistrer
-   */
-  function addTrendPoint(param, value) {
-    if (!normesTrendHistory[param]) normesTrendHistory[param] = [];
-    normesTrendHistory[param].push(parseFloat(value));
-    if (normesTrendHistory[param].length > 12) normesTrendHistory[param].shift();
-  }
-
-  /**
-   * Efface l'historique de tendance d'un paramètre et relance le rendu.
-   * @param {string} param - Identifiant du paramètre
-   */
-  function clearTrend(param) { normesTrendHistory[param] = []; renderNormesDetail(normesCurrentParam); }
-
-  /**
-   * Génère et injecte le contenu de la vue détail d'un paramètre.
-   * Nouveau design : barre horizontale lisible + tableau de référence + analyse clinique.
-   * @param {string} id - Identifiant du paramètre
-   */
-  function renderNormesDetail(id) {
-    const v = normesCurrentValues;
-    const TITLES = { ta:'🩺 TA & PAM', fc:'❤️ Pouls / FC', fr:'🫁 Fréq. respiratoire',
-                     spo2:'💧 SpO₂', glycemie:'🍬 Glycémie', cetonemie:'⚗️ Cétonémie', diurese:'🚿 Diurèse' };
-    const TREND_CFG = { pas:{min:60,max:260}, fc:{min:20,max:200}, fr:{min:0,max:50},
-                        spo2:{min:70,max:100}, glycemie:{min:0.3,max:5.0}, cetonemie:{min:0,max:10}, diurese:{min:0,max:4} };
-    document.getElementById('normes-detail-title').textContent = TITLES[id] || id;
-    let html = '<div class="normes-detail-content">';
-
-    if (id === 'ta') {
-      const pam = (v.pas + 2*v.pad) / 3;
-      const zPas=getNormesZone('pas',v.pas), zPad=getNormesZone('pad',v.pad), zPam=getNormesZone('pam',pam);
-      const wz = [zPas,zPad,zPam].reduce((a,b)=>b.sev>a.sev?b:a);
-      const wc = wz.color;
-      document.getElementById('normes-detail-badge').innerHTML = `<div class="normes-zone-badge" style="background:${wc};">${wz.sev>=3?'🔴':wz.sev>=1?'🟡':'🟢'} ${wz.label}</div>`;
-
-      // Carte valeur principale
-      html += `<div class="normes-val-card" style="border-top-color:${wc};">
-        <div style="display:flex;justify-content:center;gap:20px;align-items:center;flex-wrap:wrap;">
-          <div style="text-align:center;">
-            <div style="font-size:0.75rem;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">PAS</div>
-            <div class="normes-val-big" style="color:${zPas.color};">${v.pas}</div>
-            <div class="normes-val-unit">mmHg</div>
-          </div>
-          <div style="font-size:2rem;color:var(--text-muted);font-weight:300;">/</div>
-          <div style="text-align:center;">
-            <div style="font-size:0.75rem;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">PAD</div>
-            <div class="normes-val-big" style="color:${zPad.color};">${v.pad}</div>
-            <div class="normes-val-unit">mmHg</div>
-          </div>
-        </div>
-        <div id="ta-pam-display" class="normes-ta-pam" style="margin-top:14px;">
-          <div class="normes-ta-pam-lbl">Pression Artérielle Moyenne = (PAS + 2 × PAD) ÷ 3</div>
-          <div class="normes-ta-pam-val" style="color:${zPam.color};">PAM = ${Math.round(pam)} mmHg</div>
-          <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:12px;background:${zPam.color}20;margin-top:6px;">
-            <span style="font-size:0.78rem;font-weight:900;color:${zPam.color};">${zPam.sev>=3?'🔴':zPam.sev>=1?'🟡':'🟢'} ${zPam.label}</span>
-          </div>
-        </div>
-      </div>`;
-
-      // Barre PAM
-      html += normesZoneBarHTML(Math.round(pam), 0, 200, NORMES_ZONES.pam, 'mmHg PAM');
-
-      // Contrôles TA
-      html += `<div class="normes-ctrl-card">
-        <div style="font-size:0.72rem;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🎛️ Modifier les valeurs</div>
-        <div class="normes-ta-row">
-          <span class="normes-ta-label">PAS</span>
-          <button class="normes-ta-btn" onpointerdown="startTARepeat('pas',-5)" onpointerup="stopTARepeat()" onpointerleave="stopTARepeat()">−</button>
-          <div class="normes-ta-val" id="ta-pas-btn" style="color:${zPas.color};">${v.pas}</div>
-          <button class="normes-ta-btn" onpointerdown="startTARepeat('pas',+5)" onpointerup="stopTARepeat()" onpointerleave="stopTARepeat()">+</button>
-          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:800;">mmHg</span>
-        </div>
-        <input type="range" class="normes-slider" min="60" max="260" step="1" value="${v.pas}" oninput="normesSetTA('pas',this.value)" style="margin-bottom:14px;">
-        <div class="normes-ta-row">
-          <span class="normes-ta-label">PAD</span>
-          <button class="normes-ta-btn" onpointerdown="startTARepeat('pad',-5)" onpointerup="stopTARepeat()" onpointerleave="stopTARepeat()">−</button>
-          <div class="normes-ta-val" id="ta-pad-btn" style="color:${zPad.color};">${v.pad}</div>
-          <button class="normes-ta-btn" onpointerdown="startTARepeat('pad',+5)" onpointerup="stopTARepeat()" onpointerleave="stopTARepeat()">+</button>
-          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:800;">mmHg</span>
-        </div>
-        <input type="range" class="normes-slider" min="30" max="160" step="1" value="${v.pad}" oninput="normesSetTA('pad',this.value)">
-      </div>`;
-
-      // Tableau référence PAM
-      html += normesZoneTableHTML(Math.round(pam), NORMES_ZONES.pam, 'mmHg');
-
-      // Analyse
-      const ana = NORMES_ANALYSIS.ta(v.pas, v.pad, pam);
-      html += `<div class="normes-analysis-card" id="normes-analysis-ta" style="border-left-color:${wc};"><div class="normes-analysis-title">💬 Que faire ?</div><div class="normes-analysis-text">${ana}</div></div>`;
-      const tH = normesTrendHistory['pas']||[];
-      if (tH.length >= 2) html += `<div class="normes-ref-card"><div class="normes-ref-title">📈 Évolution PAS — ${tH.length} points<button class="normes-clear-trend" style="float:right;" onclick="clearTrend('pas')">Effacer</button></div>${normesTrendSVG(tH,60,260,wc)}</div>`;
-
-    } else {
-      const CFGS = {
-        fc:       {min:20,  max:200, step:1,    unit:'bpm',     zones:NORMES_ZONES.fc},
-        fr:       {min:0,   max:50,  step:1,    unit:'/min',    zones:NORMES_ZONES.fr},
-        spo2:     {min:70,  max:100, step:1,    unit:'%',       zones:NORMES_ZONES.spo2},
-        glycemie: {min:0.3, max:5.0, step:0.1,  unit:'g/L',     zones:NORMES_ZONES.glycemie},
-        cetonemie:{min:0,   max:10,  step:0.1,  unit:'mmol/L',  zones:NORMES_ZONES.cetonemie},
-        diurese:  {min:0,   max:4,   step:0.05, unit:'mL/kg/h', zones:NORMES_ZONES.diurese},
-      };
-      const cfg = CFGS[id]; const cur = v[id];
-      const az = normesGetActiveZone(cur, cfg.zones);
-      const ac = az.color;
-      document.getElementById('normes-detail-badge').innerHTML = `<div class="normes-zone-badge" style="background:${ac};">${az.sev>=3?'🔴':az.sev>=1?'🟡':'🟢'} ${az.label}</div>`;
-
-      // Carte valeur
-      const dv = cur < 1 ? cur.toFixed(2) : cur < 10 ? cur.toFixed(1) : Math.round(cur);
-      html += `<div class="normes-val-card" style="border-top-color:${ac};" id="normes-valcard-${id}">
-        <div class="normes-val-big" style="color:${ac};" id="normes-val-big-${id}">${dv}</div>
-        <div class="normes-val-unit">${cfg.unit}</div>
-        ${id==='glycemie'?`<div class="normes-mmol-row" style="margin-top:6px;"><span style="font-size:0.82rem;color:var(--text-muted);font-weight:800;">soit</span><span class="normes-mmol-val" id="glycemie-mmol">${(cur*5.5556).toFixed(1)} mmol/L</span></div>`:''}
-        <div class="normes-val-zone" style="color:${ac};background:${ac}20;" id="normes-val-zone-${id}">${az.sev>=3?'🔴':az.sev>=1?'🟡':'🟢'} ${az.label}</div>
-      </div>`;
-
-      // Barre de zones
-      html += `<div id="normes-bar-${id}">${normesZoneBarHTML(cur, cfg.min, cfg.max, cfg.zones, cfg.unit)}</div>`;
-
-      // Poids si diurèse
-      if (id === 'diurese') {
-        html += `<div class="normes-poids-row"><span class="normes-poids-lbl">⚖️ Poids patient</span>
-          <input type="number" class="normes-poids-input" value="${v.poids}" min="30" max="200"
-            oninput="normesCurrentValues.poids=parseFloat(this.value)||70;renderNormesDetail('diurese');" placeholder="70">
-          <span style="font-size:0.85rem;font-weight:900;color:var(--text-muted);">kg → ${Math.round(cur*v.poids)} mL/h</span></div>`;
-      }
-
-      // Slider
-      html += `<div class="normes-slider-card">
-        <div class="normes-slider-top">
-          <span class="normes-slider-lbl">Modifier la valeur</span>
-          <span class="normes-slider-cur" id="normes-slider-cur-${id}" style="color:${ac};">${dv} ${cfg.unit}</span>
-        </div>
-        <input type="range" class="normes-slider" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${cur}"
-          oninput="normesUpdate('${id}',parseFloat(this.value))">
-        <div class="normes-slider-minmax"><span>${cfg.min} ${cfg.unit}</span><span>${cfg.max} ${cfg.unit}</span></div>
-      </div>`;
-
-      // Tableau de référence
-      html += `<div id="normes-reftable-${id}">${normesZoneTableHTML(cur, cfg.zones, cfg.unit)}</div>`;
-
-      // Analyse
-      const ANA_FNS = {
-        fc:NORMES_ANALYSIS.fc, fr:NORMES_ANALYSIS.fr, spo2:NORMES_ANALYSIS.spo2,
-        glycemie:NORMES_ANALYSIS.glycemie, cetonemie:NORMES_ANALYSIS.cetonemie,
-        diurese:x=>NORMES_ANALYSIS.diurese(x, v.poids),
-      };
-      html += `<div class="normes-analysis-card" id="normes-analysis-${id}" style="border-left-color:${ac};"><div class="normes-analysis-title">💬 Que faire ?</div><div class="normes-analysis-text" id="normes-ana-txt-${id}">${ANA_FNS[id](cur)}</div></div>`;
-
-      // Courbe si données
-      const tH = normesTrendHistory[id]||[];
-      const tc = TREND_CFG[id];
-      if (tH.length >= 2) html += `<div class="normes-ref-card"><div class="normes-ref-title">📈 Évolution — ${tH.length} points<button class="normes-clear-trend" style="float:right;" onclick="clearTrend('${id}')">Effacer</button></div><div id="normes-trend-${id}">${normesTrendSVG(tH,tc.min,tc.max,ac)}</div></div>`;
+  function renderNormes() {
+    // Filtres catégories
+    const filtersEl = document.getElementById('normes-cat-filters');
+    if (filtersEl) {
+      filtersEl.innerHTML = NORMES_REF.map(c =>
+        `<button class="normes-cat-btn${normesCurrentCat===c.id?' active':''}" onclick="setNormesCat('${c.id}')">${c.icon} ${c.label}</button>`
+      ).join('');
     }
-    html += '</div>';
-    document.getElementById('normes-detail-body').innerHTML = html;
-  }
-  /**
-   * Met à jour un paramètre depuis le slider en temps réel — DOM partiel pour fluidité.
-   * @param {string} id    - Identifiant du paramètre
-   * @param {number} value - Nouvelle valeur
-   */
-  function normesUpdate(id, value) {
-    normesCurrentValues[id] = parseFloat(value);
-    normesCurrentScenario = '';
-    addTrendPoint(id, value);
-    const CFGS = {
-      fc:{min:20,max:200,zones:NORMES_ZONES.fc,unit:'bpm'},
-      fr:{min:0,max:50,zones:NORMES_ZONES.fr,unit:'/min'},
-      spo2:{min:70,max:100,zones:NORMES_ZONES.spo2,unit:'%'},
-      glycemie:{min:0.3,max:5.0,zones:NORMES_ZONES.glycemie,unit:'g/L'},
-      cetonemie:{min:0,max:10,zones:NORMES_ZONES.cetonemie,unit:'mmol/L'},
-      diurese:{min:0,max:4,zones:NORMES_ZONES.diurese,unit:'mL/kg/h'},
-    };
-    const cfg = CFGS[id]; if (!cfg) return;
-    const val = parseFloat(value);
-    const az = normesGetActiveZone(val, cfg.zones);
-    const ac = az.color;
-    const dv = val<1?val.toFixed(2):val<10?val.toFixed(1):Math.round(val);
-    const el = n => document.getElementById(n);
-
-    // Mise à jour valeur principale
-    if (el('normes-val-big-'+id)) { el('normes-val-big-'+id).textContent=dv; el('normes-val-big-'+id).style.color=ac; }
-    if (el('normes-val-zone-'+id)) { el('normes-val-zone-'+id).textContent=`${az.sev>=3?'🔴':az.sev>=1?'🟡':'🟢'} ${az.label}`; el('normes-val-zone-'+id).style.color=ac; el('normes-val-zone-'+id).style.background=ac+'20'; }
-    if (el('normes-valcard-'+id)) el('normes-valcard-'+id).style.borderTopColor=ac;
-
-    // Barre de zones
-    if (el('normes-bar-'+id)) el('normes-bar-'+id).innerHTML=normesZoneBarHTML(val,cfg.min,cfg.max,cfg.zones,cfg.unit);
-
-    // Curseur slider
-    if (el('normes-slider-cur-'+id)) { el('normes-slider-cur-'+id).textContent=`${dv} ${cfg.unit}`; el('normes-slider-cur-'+id).style.color=ac; }
-
-    // Tableau référence
-    if (el('normes-reftable-'+id)) el('normes-reftable-'+id).innerHTML=normesZoneTableHTML(val,cfg.zones,cfg.unit);
-
-    // Badge header
-    if (el('normes-detail-badge')) el('normes-detail-badge').innerHTML=`<div class="normes-zone-badge" style="background:${ac};">${az.sev>=3?'🔴':az.sev>=1?'🟡':'🟢'} ${az.label}</div>`;
-
-    // Glycémie mmol/L
-    if (el('glycemie-mmol') && id==='glycemie') el('glycemie-mmol').textContent=(val*5.5556).toFixed(1)+' mmol/L';
-
-    // Analyse
-    const ANA_FNS = {fc:NORMES_ANALYSIS.fc,fr:NORMES_ANALYSIS.fr,spo2:NORMES_ANALYSIS.spo2,
-      glycemie:NORMES_ANALYSIS.glycemie,cetonemie:NORMES_ANALYSIS.cetonemie,
-      diurese:x=>NORMES_ANALYSIS.diurese(x,normesCurrentValues.poids)};
-    if (el('normes-ana-txt-'+id)) el('normes-ana-txt-'+id).textContent=ANA_FNS[id](val);
-    if (el('normes-analysis-'+id)) el('normes-analysis-'+id).style.borderLeftColor=ac;
+    // Contenu
+    const cat = NORMES_REF.find(c => c.id === normesCurrentCat);
+    const wrap = document.getElementById('normes-table-wrap');
+    if (!cat || !wrap) return;
+    let html = '';
+    cat.groups.forEach(g => {
+      html += `<div class="normes-group">`;
+      html += `<div class="normes-group-title">${g.title}</div>`;
+      g.rows.forEach(r => {
+        const badge = r.a ? `<span class="normes-row-alert">${r.a}</span>` : r.w ? `<span class="normes-row-warn">${r.w}</span>` : '';
+        html += `<div class="normes-row">
+          <div class="normes-row-param">${r.p}</div>
+          <div class="normes-row-val">${r.n}</div>
+          <div class="normes-row-unit">${r.u}</div>
+          ${badge}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `<div class="normes-source">Sources : SFAR 2024 · SRLF · KDIGO 2024 · ESC/AHA 2023 · ARDSNet · ESICM</div>`;
+    wrap.innerHTML = html;
   }
 
-
-  /**
-   * Modifie PAS ou PAD d'un delta et rafraîchit la vue TA complète.
-   * @param {string} key   - "pas" ou "pad"
-   * @param {number} delta - Incrément (±5)
-   */
-  function changeTAValue(key, delta) {
-    const lim = {pas:[60,260],pad:[30,160]};
-    const [mn,mx] = lim[key];
-    normesCurrentValues[key] = Math.min(mx, Math.max(mn, normesCurrentValues[key] + delta));
-    normesCurrentScenario = '';
-    addTrendPoint(key, normesCurrentValues[key]);
-    renderNormesDetail('ta');
-    triggerHaptic();
-  }
-
-  /** Démarre la répétition d'un bouton TA maintenu. */
-  function startTARepeat(key, delta) { changeTAValue(key,delta); _taRepeatTimer = setInterval(()=>changeTAValue(key,delta), 180); }
-
-  /** Arrête la répétition d'un bouton TA. */
-  function stopTARepeat() { clearInterval(_taRepeatTimer); _taRepeatTimer = null; }
-
-  /**
-   * Met à jour PAS ou PAD depuis le slider et rafraîchit la vue TA.
-   * @param {string} key   - "pas" ou "pad"
-   * @param {number} value - Nouvelle valeur
-   */
-  function normesSetTA(key, value) {
-    normesCurrentValues[key] = parseInt(value);
-    normesCurrentScenario = '';
-    addTrendPoint(key, value);
-    renderNormesDetail('ta');
-  }
 
 
 
@@ -7481,7 +7076,6 @@
 
       // Vues plein écran — ordre du plus profond au plus superficiel
       if (isVisible('normes-respi-view'))        { closeNormesRespi(); return; }
-      if (isVisible('normes-detail-view'))        { closeNormesDetail(); return; }
       if (isVisible('normes-view'))               { closeNormes(); return; }
       if (isVisible('protocole-detail-view'))     { closeProtocoleDetail(); return; }
       if (isVisible('protocoles-view'))           { closeProtocoles(); return; }
@@ -7790,36 +7384,24 @@
     </div>
   </div>
 
-  <!-- ═══ NORMES & ALERTES — Vue principale ═══ -->
+  <!-- ═══ NORMES DE RÉFÉRENCE ═══ -->
   <div id="normes-view" class="fs-view" style="z-index:420;">
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
           <button class="fs-back" onclick="closeNormes()">←</button>
           <div>
-            <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">📊 Normes & Alertes</h2>
-            <div class="fs-subtitle" style="margin-top:2px;">Simulez des situations cliniques — analyse temps réel</div>
+            <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">📊 Normes de référence</h2>
+            <div class="fs-subtitle" style="margin-top:2px;">Réanimation adulte — valeurs seuils à jour</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="normes-scenarios-bar" id="normes-scenarios-bar"></div>
-    <div class="normes-params-grid" id="normes-params-grid"></div>
+    <div class="normes-cat-filters" id="normes-cat-filters"></div>
+    <div class="normes-table-wrap" id="normes-table-wrap"></div>
   </div>
-
-  <!-- ═══ NORMES — Vue détail paramètre ═══ -->
-  <div id="normes-detail-view" class="fs-view" style="z-index:430; display:none;">
-    <div class="fs-header">
-      <div class="fs-topbar">
-        <div class="fs-title-group">
-          <button class="fs-back" onclick="closeNormesDetail()">←</button>
-          <h2 id="normes-detail-title" style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;"></h2>
-        </div>
-        <div id="normes-detail-badge"></div>
-      </div>
-    </div>
-    <div id="normes-detail-body" style="flex:1; overflow-y:auto; padding:14px 0 80px;"></div>
-  </div>
+  <!-- Conservé pour le gestionnaire de swipe -->
+  <div id="normes-detail-view" class="fs-view" style="z-index:430; display:none;"></div>
 
 
 
