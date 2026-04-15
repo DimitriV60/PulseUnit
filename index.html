@@ -5591,6 +5591,18 @@
           { p: 'Indice de Tobin (f/Vt)',       n: '< 105',          u: '/L',         a: '> 105 = sevrage difficile' },
           { p: 'Glasgow pour extubation',      n: '≥ 10',           u: '/15',        w: 'Vérifier réflexe toux' },
         ]},
+        { title: 'VNI (Ventilation Non Invasive)', rows: [
+          { p: 'Fuites masque/casque',         n: '< 20 – 30',      u: 'L/min',      a: '> 30 = efficacité compromise' },
+          { p: 'AI (Aide Inspiratoire)',        n: 'Selon confort',  u: 'cmH₂O',     w: 'Cible Vt 6–8 mL/kg' },
+          { p: 'Pente (Rise Time)',             n: 'Courte (rapide)',u: '',           w: 'Mieux tolérée si soif d\'air' },
+          { p: 'Critères succès VNI',          n: 'SpO₂ ↑ FR ↓',   u: '',           w: 'Amélioration dans 1–2h' },
+        ]},
+        { title: 'Optiflow / OHFD + Index ROX', rows: [
+          { p: 'Débit',                        n: '30 – 60',        u: 'L/min',      w: 'Débuter à 30–40, titrer' },
+          { p: 'FiO₂',                         n: '21 – 100',       u: '%',          w: 'Réduire dès SpO₂ stable' },
+          { p: 'Température',                  n: '37',             u: '°C',         w: '31–34°C si intolérance chaleur' },
+          { p: 'Index ROX = (SpO₂/FiO₂)/FR',  n: '> 4.88',         u: '',           w: '< 2.85 = échec → intubation' },
+        ]},
       ]
     },
     {
@@ -5774,6 +5786,74 @@
           { p: 'FEna (fraction excrétée Na)',  n: '< 1 %',          u: '%',          w: '> 2% = atteinte rénale' },
           { p: 'Protéinurie',                  n: '< 0.15',         u: 'g/24h',      w: '> 0.30 = néphropathie' },
           { p: 'Rapport Prot/Créat urin.',     n: '< 30',           u: 'mg/mmol',    w: '> 30 = pathologique' },
+        ]},
+      ]
+    },
+    {
+      id: 'O2', icon: '💨', label: 'O₂',
+      groups: [
+        { title: 'Dispositifs O₂ — Débit & FiO₂ estimée', rows: [
+          { p: 'Lunettes nasales',             n: '1 – 6',          u: 'L/min',      w: '24–40 % FiO₂ · +4%/L ajouté' },
+          { p: 'Masque simple',                n: '5 – 10',         u: 'L/min',      w: '40–60 % FiO₂ · min 5L (CO₂)' },
+          { p: 'Masque haute conc. (MHC)',     n: '12 – 15',        u: 'L/min',      a: '80–95 % FiO₂ · sac doit rester gonflé' },
+          { p: 'Optiflow / OHFD',              n: '30 – 60',        u: 'L/min',      w: '21–100 % FiO₂ réglable' },
+          { p: 'Seuil barboteur',              n: '> 4 – 5',        u: 'L/min',      w: 'Humidification obligatoire au-delà' },
+        ]},
+        { title: 'Cibles SpO₂ selon contexte', rows: [
+          { p: 'Patient standard',             n: '94 – 98',        u: '%',          w: 'Éviter hyperoxie (toxique)' },
+          { p: 'BPCO / IRC',                   n: '88 – 92',        u: '%',          w: 'Préserver le stimulus respiratoire' },
+          { p: 'Intox. CO / ACR',              n: '100',            u: '%',          a: 'MHC 15 L/min d\'emblée' },
+          { p: 'SDRA / Hypoxémie permissive',  n: '88 – 92',        u: '%',          w: 'Éviter barotrauma par excès FiO₂' },
+          { p: 'Post-ACR (TTM)',               n: '94 – 98',        u: '%',          w: 'Éviter hyperoxie cérébrale' },
+        ]},
+        { title: 'Index ROX (succès Optiflow)', rows: [
+          { p: 'Formule',                      n: '(SpO₂/FiO₂) ÷ FR', u: '',        w: 'Évaluer à H1, H2, H6, H12' },
+          { p: 'Succès Optiflow',              n: '> 4.88',         u: '',           w: 'Poursuite OHFD justifiée' },
+          { p: 'Zone intermédiaire',           n: '2.85 – 4.88',    u: '',           w: 'Surveiller étroitement' },
+          { p: 'Échec probable',               n: '< 2.85',         u: '',           a: 'Risque intubation — appel médical' },
+        ]},
+        { title: 'Complications & surveillance', rows: [
+          { p: 'Hyperoxie',                    n: 'SpO₂ > 98%',     u: '',           w: 'Réduire débit dès stabilisation' },
+          { p: 'Assèchement muqueuses',        n: 'Sans barboteur', u: '',           w: 'Toujours humidifier > 4–5 L/min' },
+          { p: 'Escarres appui',               n: 'MHC / lunettes', u: '',           w: 'Contrôler haut des oreilles + nez' },
+          { p: 'Encombrement bronchique',      n: 'O₂ sec',         u: '',           w: 'Hydratation + aspiration si besoin' },
+        ]},
+      ]
+    },
+    {
+      id: 'BACTERIO', icon: '🧫', label: 'Bactério',
+      groups: [
+        { title: 'Prélèvements microbiologiques', rows: [
+          { p: 'Hémocultures (Hémocs)',        n: '2 flacons (aérobie + anaérobie)', u: '', a: 'Avant antibiotiques — asepsie stricte' },
+          { p: 'ECBU',                         n: 'Opercule sonde (désinfecté)',      u: '', w: 'Jamais dans le sac collecteur' },
+          { p: 'PDP / mini-LBA',               n: 'Via fibroscope',                  u: '', w: 'Pneumopathies sous VM' },
+          { p: 'ECBC (aspiration trachéale)',  n: 'Patients intubés',                u: '', w: 'Sécrétions bronchiques' },
+          { p: 'Coproculture',                 n: 'Diarrhée sous antibio',           u: '', w: 'Recherche Clostridioides difficile' },
+        ]},
+        { title: 'Seuils de significativité', rows: [
+          { p: 'ECBU',                         n: '≥ 10⁵',          u: 'UFC/mL',     w: 'Infection probable' },
+          { p: 'PDP / LBA',                    n: '≥ 10³ – 10⁴',    u: 'UFC/mL',     w: 'Selon technique' },
+          { p: 'Examen direct (Gram)',          n: 'H + 2',          u: '',           w: 'Gram+ violet · Gram− rose' },
+          { p: 'Culture',                      n: 'H + 24 à 48',    u: '',           w: 'Identification espèce' },
+          { p: 'Antibiogramme (S/I/R)',        n: 'H + 48 à 72',    u: '',           w: 'S = efficace · R = résistant' },
+        ]},
+        { title: 'Marqueurs biologiques', rows: [
+          { p: 'PCT',                          n: '< 0.1',          u: 'µg/L',       a: '> 0.5 = sepsis bactérien probable' },
+          { p: 'PCT — choc septique',          n: '> 10',           u: 'µg/L',       a: 'Sepsis sévère / choc' },
+          { p: 'CRP',                          n: '< 10',           u: 'mg/L',       w: '> 100 = infection significative' },
+          { p: 'Leucocytes',                   n: '4 – 10',         u: 'G/L',        a: '< 2 = neutropénie / sepsis grave' },
+          { p: 'Pic fébrile > 38.5°C',         n: 'Hémocultures ×2', u: '',          a: 'IMMÉDIATEMENT — avant ATB' },
+        ]},
+        { title: 'Dépistage BMR / BHRe (1×/semaine)', rows: [
+          { p: 'SARM (Staphylocoque doré R)',  n: 'Écouvillon nasal', u: '',          w: 'Résistant méticilline' },
+          { p: 'EBLSE (Entérobact. BLSE)',     n: 'Écouvillon rectal', u: '',         w: 'E. coli, Klebsiella résistants' },
+          { p: 'ERG (Entérocoque résist.)',     n: 'Écouvillon rectal', u: '',         w: 'Vancomycine-résistant' },
+        ]},
+        { title: 'Isolements (précautions complémentaires)', rows: [
+          { p: '🟡 Contact (jaune)',           n: 'Surblouse + gants', u: '',         w: 'BMR : SARM, EBLSE' },
+          { p: '🔵 Air (bleu)',                n: 'Masque FFP2 + chambre seule', u: '', a: 'Tuberculose, Rougeole' },
+          { p: '🟢 Gouttelettes (vert)',       n: 'Masque chirurgical', u: '',         w: 'Grippe, Méningite' },
+          { p: '⬛ Entérique (C. diff.)',       n: 'Tablier + savon + SHA', u: '',     a: 'SHA APRÈS savon (spores résistantes)' },
         ]},
       ]
     },
