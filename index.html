@@ -1434,11 +1434,15 @@
   }
 
   /**
-   * Ouvre la modale de connexion admin après avoir vidé les champs
-   * (évite que les valeurs précédentes restent affichées).
+   * Ouvre le panneau admin :
+   * - accès direct si une session admin est déjà active
+   * - sinon affiche la modale d'identifiants admin.
    */
   function openAdmin() {
-    // Si l'utilisateur connecté est l'admin, accès direct sans re-saisie
+    if (!currentUser) {
+      alert('Connectez-vous d’abord avec votre compte utilisateur.');
+      return;
+    }
     if (isAdmin()) {
       updateAdminPanelBtn();
       renderAdminResets();
@@ -1446,7 +1450,9 @@
       document.getElementById('admin-panel-modal').style.display = 'flex';
       return;
     }
-    alert('Accès réservé à l\'administrateur.');
+    document.getElementById('admin-user').value = '';
+    document.getElementById('admin-pass').value = '';
+    document.getElementById('admin-login-modal').style.display = 'flex';
   }
 
   /**
@@ -1507,6 +1513,13 @@
   const ADMIN_USER = 'admin';
   // SHA-256 de "PulseUnit2026!" — à remplacer par votre propre hash
   const ADMIN_PASS_HASH = 'edee7b91aea7969511d6c938138755c628df4202f3ad7a4b7719cf31d2e5fc56';
+  let adminSessionActive = sessionStorage.getItem('pulseunit_admin_session') === '1';
+
+  function setAdminSession(active) {
+    adminSessionActive = !!active;
+    if (adminSessionActive) sessionStorage.setItem('pulseunit_admin_session', '1');
+    else sessionStorage.removeItem('pulseunit_admin_session');
+  }
 
   async function checkAdmin() {
       const u = document.getElementById('admin-user').value.trim();
@@ -1520,6 +1533,7 @@
                                .map(b => b.toString(16).padStart(2, '0')).join('');
           // Comparaison sécurisée : identifiant + hash uniquement
           if (u === ADMIN_USER && hashHex === ADMIN_PASS_HASH) {
+              setAdminSession(true);
               document.getElementById('admin-login-modal').style.display = 'none';
               updateAdminPanelBtn();
               document.getElementById('admin-panel-modal').style.display = 'flex';
@@ -3284,11 +3298,9 @@
     return now > shiftDate;
   }
 
-  /** Vrai si l'utilisateur connecté est l'administrateur (Dimitri Valentin). */
+  /** Vrai si une session administrateur est active (indépendante du compte connecté). */
   function isAdmin() {
-    return currentUser &&
-      currentUser.firstName.toLowerCase() === 'dimitri' &&
-      currentUser.lastName.toLowerCase() === 'valentin';
+    return !!adminSessionActive;
   }
 
   /** Vrai si l'utilisateur est affecté à la garde en cours (ou admin). */
@@ -6748,6 +6760,7 @@
     if (!confirm('Se déconnecter ?')) return;
     await setPresence(false);
     stopPresenceHeartbeat();
+    setAdminSession(false);
     currentUser = null;
     sessionStorage.removeItem('pulseunit_current_user');
     localStorage.removeItem('pulseunit_autologin');
@@ -7135,6 +7148,7 @@
       setTimeout(checkWorkStatus, 0);
     } else {
       currentUser = null;
+      setAdminSession(false);
       sessionStorage.removeItem('pulseunit_current_user');
       updateHeaderUser();
       showAuthModal();
