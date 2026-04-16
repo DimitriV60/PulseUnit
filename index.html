@@ -534,6 +534,8 @@
   .plan-day.p-rcn       { background:rgba(100,116,139,0.32); border:1.5px solid #64748b;  color:var(--text); font-weight:800; }
   .plan-day.p-rh        { background:rgba(100,116,139,0.13); border:1px solid #64748b;    color:#64748b; }
   .plan-day.p-hs        { background:rgba(168,85,247,0.14);  border:1.5px solid #a855f7; color:#a855f7; font-weight:900; }
+  .plan-day.p-hs_j      { background:rgba(234,179,8,0.16);   border:1.5px solid #eab308; color:#eab308; font-weight:900; }
+  .plan-day.p-hs_n      { background:rgba(99,102,241,0.18);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
   .plan-day.p-formation { background:rgba(249,115,22,0.14);  border:1.5px solid #f97316; color:#f97316; font-weight:900; }
   .plan-day.p-repos     { background:rgba(100,116,139,0.13); border:1px solid #64748b; color:#64748b; }
   .plan-day.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
@@ -546,6 +548,33 @@
   .plan-day.p-frac      { background:rgba(236,72,153,0.16);  border:1.5px solid #ec4899; color:#ec4899; font-weight:900; }
   .plan-day.p-fracn1    { background:rgba(249,168,212,0.16); border:1.5px solid #f9a8d4; color:#f9a8d4; font-weight:900; }
   .plan-day:active { transform:scale(0.88); }
+
+  /* ── Bourse d'échange ── */
+  .bourse-section-lbl { font-size:0.68rem; font-weight:900; letter-spacing:.06em; color:var(--text-muted); text-transform:uppercase; padding:14px 0 6px; }
+  .bourse-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; display:flex; flex-direction:column; gap:8px; }
+  .bourse-card.accepted { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
+  .bourse-card-who { font-size:0.82rem; font-weight:800; color:var(--text); }
+  .bourse-card-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .bourse-card-note { font-size:0.77rem; color:var(--text-muted); font-style:italic; }
+  .bourse-pill { font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:20px; }
+  .bourse-pill.offer { background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
+  .bourse-pill.want  { background:rgba(96,206,234,0.12); color:#60ceea; border:1px solid rgba(96,206,234,0.3); }
+  .bourse-pill.indiff{ background:rgba(100,116,139,0.12); color:var(--text-muted); border:1px solid var(--border); }
+  .bourse-status-badge { font-size:0.68rem; font-weight:900; padding:3px 8px; border-radius:12px; }
+  .bourse-status-badge.open { background:rgba(245,158,11,0.15); color:#f59e0b; }
+  .bourse-status-badge.acc  { background:rgba(16,185,129,0.15); color:#10b981; }
+  .bourse-btn-accept { background:var(--brand-aqua); color:#000; border:none; border-radius:10px; padding:9px 0; font-size:0.82rem; font-weight:900; font-family:var(--font); cursor:pointer; width:100%; margin-top:4px; }
+  .bourse-btn-cancel { background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:7px 0; font-size:0.77rem; font-weight:700; font-family:var(--font); cursor:pointer; width:100%; margin-top:2px; }
+  .bourse-create-sheet { background:var(--card); border-radius:20px 20px 0 0; padding:20px 20px 40px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; }
+  .bourse-form-lbl { font-size:0.75rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; margin-top:14px; }
+  .bourse-shift-row { display:flex; gap:8px; }
+  .swap-shift-btn { flex:1; padding:9px 4px; border-radius:10px; font-size:0.78rem; font-weight:800; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text-muted); transition:all 0.15s; }
+  .swap-shift-btn.active { border-color:var(--brand-aqua); color:var(--brand-aqua); background:rgba(96,206,234,0.1); }
+  .bourse-input { width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:var(--font); font-size:0.88rem; padding:10px 12px; }
+  .bourse-input:focus { outline:none; border-color:var(--brand-aqua); }
+  .bourse-submit-btn { width:100%; padding:13px; border:none; border-radius:12px; background:var(--brand-aqua); color:#000; font-size:0.9rem; font-weight:900; font-family:var(--font); cursor:pointer; margin-top:16px; }
+  .bourse-cancel-btn { width:100%; padding:11px; border:1px solid var(--border); border-radius:12px; background:transparent; color:var(--text-muted); font-size:0.85rem; font-weight:700; font-family:var(--font); cursor:pointer; margin-top:8px; }
+  .fs-action-btn { background:var(--brand-aqua); color:#000; border:none; border-radius:50%; width:36px; height:36px; font-size:1.4rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
   .plan-bonus-bar { display:flex; gap:6px; padding:7px 14px; background:var(--bg); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
@@ -863,6 +892,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
       <div class="side-menu-section">ORGANISATION</div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">🔄 Bourse d'échange</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
       <div style="flex: 1; min-height: 20px;"></div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Signaler un bug</a>
@@ -3548,6 +3578,10 @@
     if(!currentUser) return;
     initShiftData(currentShiftKey);
     if(isShiftLocked(currentShiftKey)) return;
+    if(!isOnCurrentShift()) {
+      showToast('⛔ Vous n\'êtes pas affecté à cette garde');
+      return;
+    }
     // Seuls les IDE/AS peuvent modifier les secteurs médecins
     if(currentUser.role === 'med') {
       showToast('⛔ Les IDE/AS gèrent les secteurs médecins');
@@ -4796,9 +4830,9 @@
   }
 
   // États qui constituent un TRAVAIL (brisent un bloc CA)
-  const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'formation']);
+  const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'hs_j', 'hs_n', 'formation']);
   // Libellés courts affichés dans les cases
-  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'CA-1', rcn:'RCN', rh:'RH', hs:'HS', formation:'FO', ferie:'JF', maladie:'AM', hp:'HP', hpn1:'HP-1', rcv:'RCV', rcvn1:'RCV-1', frac:'FR', fracn1:'FR-1' };
+  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'CA-1', rcn:'RCN', rh:'RH', hs:'HS', hs_j:'HSJ', hs_n:'HSN', formation:'FO', ferie:'JF', maladie:'AM', hp:'HP', hpn1:'HP-1', rcv:'RCV', rcvn1:'RCV-1', frac:'FR', fracn1:'FR-1' };
   function planDayHTML(dayNum, state) {
     const lbl = PLAN_LABELS[state];
     if (!lbl) return String(dayNum);
@@ -4823,7 +4857,7 @@
     const cur      = getPlanDayState(dateStr);
     const defState = getPlanDefaultState(dateStr);
     // Cycle manuel — RCN/RH auto, ferie auto, repos → rh (weekend)
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'formation'];
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'hs_j', 'hs_n', 'formation'];
     const idx   = cycle.indexOf(cur);
     let next;
 
@@ -4917,7 +4951,7 @@
       } else {
         if (st === 'rcn') rcnSet.add(s);
         if (!isWE && !isHol && curPer.length>0) { caPeriodsWD.push([...curPer]); curPer=[]; } // jour ouvré non-CA coupe la période
-        if ((dow===0||isHol) && ['travail','jour','nuit','hs','formation'].includes(st)) djfCount++; // DJF travaillé
+        if ((dow===0||isHol) && ['travail','jour','nuit','hs','hs_j','hs_n','formation'].includes(st)) djfCount++; // DJF travaillé
       }
     }
     if (curPer.length>0) caPeriodsWD.push(curPer);
@@ -6014,6 +6048,164 @@
   }
   function closeNormes() { document.getElementById('normes-view').style.display = 'none'; }
 
+  // ── BOURSE D'ÉCHANGE ──────────────────────────────────────────────────────
+  function openBourse() {
+    const v = document.getElementById('bourse-view');
+    if (!v) return;
+    v.style.display = 'flex';
+    const addBtn = document.getElementById('bourse-add-btn');
+    if (addBtn) addBtn.style.display = currentUser ? 'flex' : 'none';
+    renderBourseList();
+  }
+  function closeBourse() {
+    document.getElementById('bourse-view').style.display = 'none';
+    document.getElementById('bourse-create-modal').style.display = 'none';
+  }
+
+  function openBourseCreate() {
+    if (!currentUser) { showToast('Connectez-vous pour proposer un échange'); return; }
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('swap-offered-date').value = today;
+    document.getElementById('swap-wanted-date').value = '';
+    document.getElementById('swap-note').value = '';
+    document.querySelectorAll('.swap-shift-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.swap-shift-btn[data-field="offered"][data-val="jour"]').classList.add('active');
+    document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="indiff"]').classList.add('active');
+    document.getElementById('bourse-create-modal').style.display = 'flex';
+  }
+  function closeBourseCreate() {
+    document.getElementById('bourse-create-modal').style.display = 'none';
+  }
+
+  function swapSelectShift(btn) {
+    const field = btn.dataset.field;
+    document.querySelectorAll(`.swap-shift-btn[data-field="${field}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  async function submitSwapRequest() {
+    if (!currentUser) return;
+    const offeredDate = document.getElementById('swap-offered-date').value;
+    if (!offeredDate) { showToast('Indiquez la date de la garde à céder'); return; }
+    const offeredShift = document.querySelector('.swap-shift-btn[data-field="offered"].active')?.dataset.val || 'jour';
+    const wantedDate  = document.getElementById('swap-wanted-date').value || '';
+    const wantedShift = document.querySelector('.swap-shift-btn[data-field="wanted"].active')?.dataset.val || 'indiff';
+    const note = (document.getElementById('swap-note').value || '').trim().slice(0, 200);
+    const req = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      userId: currentUser.id,
+      userName: (currentUser.firstName + ' ' + currentUser.lastName).trim(),
+      offeredDate, offeredShift, wantedDate, wantedShift, note,
+      ts: Date.now(), status: 'open', acceptedBy: null, acceptedByName: null
+    };
+    const updated = [...swapRequests, req];
+    closeBourseCreate();
+    try {
+      if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
+      swapRequests = updated;
+      renderBourseList();
+      showToast('✅ Demande publiée');
+    } catch(e) { showToast('Erreur de connexion'); }
+  }
+
+  async function acceptSwap(id) {
+    if (!currentUser) { showToast('Connectez-vous pour accepter un échange'); return; }
+    const idx = swapRequests.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    if (swapRequests[idx].userId === currentUser.id) { showToast('Vous ne pouvez pas accepter votre propre demande'); return; }
+    const updated = swapRequests.map(r => r.id === id
+      ? { ...r, status: 'accepted', acceptedBy: currentUser.id, acceptedByName: (currentUser.firstName + ' ' + currentUser.lastName).trim() }
+      : r
+    );
+    try {
+      if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
+      swapRequests = updated;
+      renderBourseList();
+      showToast('✅ Échange accepté — à confirmer avec votre cadre');
+    } catch(e) { showToast('Erreur de connexion'); }
+  }
+
+  async function cancelSwap(id) {
+    if (!currentUser) return;
+    const idx = swapRequests.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    if (swapRequests[idx].userId !== currentUser.id && !isAdmin()) { showToast('Action non autorisée'); return; }
+    const updated = swapRequests.filter(r => r.id !== id);
+    try {
+      if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
+      swapRequests = updated;
+      renderBourseList();
+      showToast('Demande supprimée');
+    } catch(e) { showToast('Erreur de connexion'); }
+  }
+
+  function renderBourseList() {
+    const el = document.getElementById('bourse-list');
+    if (!el) return;
+    const open     = swapRequests.filter(r => r.status === 'open');
+    const accepted = swapRequests.filter(r => r.status === 'accepted');
+    const mine     = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
+    const others   = open.filter(r => !currentUser || r.userId !== currentUser.id);
+
+    const fmtDate = ds => {
+      if (!ds) return '—';
+      const [y,m,d] = ds.split('-');
+      const wd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(ds+'T12:00:00').getDay()];
+      return `${wd} ${d}/${m}/${y}`;
+    };
+    const shiftLabel = s => s === 'jour' ? '☀️ Jour' : s === 'nuit' ? '🌙 Nuit' : '🔄 Indiff.';
+
+    let html = '';
+    if (swapRequests.length === 0) {
+      html = '<div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:0.9rem;">Aucune demande d\'échange en cours</div>';
+    } else {
+      if (others.length > 0) {
+        html += '<div class="bourse-section-lbl">Propositions disponibles</div>';
+        others.forEach(r => {
+          html += `<div class="bourse-card">
+            <div class="bourse-card-who">${r.userName}</div>
+            <div class="bourse-card-row">
+              <span class="bourse-pill offer">Cède <b>${fmtDate(r.offeredDate)}</b> ${shiftLabel(r.offeredShift)}</span>
+              ${r.wantedDate ? `<span class="bourse-pill want">Veut <b>${fmtDate(r.wantedDate)}</b> ${shiftLabel(r.wantedShift)}</span>` : `<span class="bourse-pill indiff">Veut toute garde ${shiftLabel(r.wantedShift)}</span>`}
+            </div>
+            ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
+            ${currentUser && r.userId !== currentUser.id ? `<button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">Accepter cet échange</button>` : ''}
+          </div>`;
+        });
+      }
+      if (mine.length > 0) {
+        html += '<div class="bourse-section-lbl">Mes demandes</div>';
+        mine.forEach(r => {
+          const isAcc = r.status === 'accepted';
+          html += `<div class="bourse-card ${isAcc ? 'accepted' : ''}">
+            <div class="bourse-card-who" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Ma garde : <b>${fmtDate(r.offeredDate)}</b> ${shiftLabel(r.offeredShift)}</span>
+              <span class="bourse-status-badge ${isAcc ? 'acc' : 'open'}">${isAcc ? 'Accepté' : 'En attente'}</span>
+            </div>
+            ${isAcc ? `<div class="bourse-card-note" style="color:var(--ok);">✅ Accepté par <b>${r.acceptedByName}</b> — à confirmer avec votre cadre</div>` : ''}
+            ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
+            <button class="bourse-btn-cancel" onclick="cancelSwap('${r.id}')">Supprimer</button>
+          </div>`;
+        });
+      }
+      if (accepted.filter(r => currentUser && r.userId !== currentUser.id && r.acceptedBy === currentUser.id).length > 0) {
+        html += '<div class="bourse-section-lbl">Échanges que j\'ai acceptés</div>';
+        accepted.filter(r => r.acceptedBy === currentUser?.id && r.userId !== currentUser?.id).forEach(r => {
+          html += `<div class="bourse-card accepted">
+            <div class="bourse-card-who">Échange avec <b>${r.userName}</b></div>
+            <div class="bourse-card-row"><span class="bourse-pill offer">Garde cédée : <b>${fmtDate(r.offeredDate)}</b> ${shiftLabel(r.offeredShift)}</span></div>
+            <div class="bourse-card-note" style="color:var(--ok);">✅ En attente de validation cadre</div>
+          </div>`;
+        });
+      }
+    }
+
+    const sub = document.getElementById('bourse-subtitle');
+    if (sub) sub.textContent = open.length > 0 ? `${open.length} demande${open.length > 1 ? 's' : ''} ouverte${open.length > 1 ? 's' : ''}` : 'Aucune demande en cours';
+
+    el.innerHTML = html;
+  }
+
   function setNormesCat(id) { normesCurrentCat = id; renderNormes(); }
 
   function renderNormes() {
@@ -6583,7 +6775,9 @@
   const AUTH_DOC    = db ? db.collection('pulseunit').doc('auth')     : null;
   const RESETS_DOC  = db ? db.collection('pulseunit').doc('resets')   : null;
   const PRESENCE_DOC = db ? db.collection('pulseunit').doc('presence') : null;
+  const SWAP_DOC     = db ? db.collection('pulseunit').doc('swaps')   : null;
   let onlineUsers = {}; // { userId: { firstName, lastName, role, lastSeen } }
+  let swapRequests = []; // demandes de permutation de gardes
   let selectedRole = '';
 
   // ── PRÉSENCE TEMPS RÉEL ───────────────────────────────────────────────────
@@ -7288,6 +7482,16 @@
         if (data.shiftHistory && typeof data.shiftHistory === 'object') shiftHistory = data.shiftHistory;
         renderApp();
       }, err => { console.warn("PulseUnit: Firebase hors ligne", err); });
+
+      // Écoute bourse d'échange
+      if (SWAP_DOC) {
+        SWAP_DOC.onSnapshot(doc => {
+          if (!doc.exists) return;
+          const data = doc.data();
+          if (Array.isArray(data.requests)) swapRequests = data.requests;
+          renderBourseList();
+        }, err => { console.warn("PulseUnit: Bourse hors ligne", err); });
+      }
     }
 
     // 3. Interface principale
@@ -8286,6 +8490,52 @@
     <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="change-pin-new" placeholder="Nouveau code" autocomplete="new-password">
     <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="change-pin-confirm" placeholder="Confirmer" autocomplete="new-password">
     <button class="auth-btn auth-btn-primary" onclick="changeTempPin()">Valider mon nouveau code</button>
+  </div>
+</div>
+
+<!-- ═══ BOURSE D'ÉCHANGE ═══ -->
+<div id="bourse-view" class="fs-view" style="z-index:440; display:none;">
+  <div class="fs-header">
+    <div class="fs-topbar">
+      <div class="fs-title-group">
+        <button class="fs-back" onclick="closeBourse()">←</button>
+        <div>
+          <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">🔄 Bourse d'échange</h2>
+          <div class="fs-subtitle" id="bourse-subtitle">Demandes de permutation de gardes</div>
+        </div>
+      </div>
+      <button class="fs-action-btn" id="bourse-add-btn" onclick="openBourseCreate()" style="display:none;">+</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:12px 16px 80px;" id="bourse-list"></div>
+</div>
+
+<!-- Modale création échange -->
+<div id="bourse-create-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);align-items:flex-end;">
+  <div class="bourse-create-sheet">
+    <h3 style="margin:0 0 4px;color:var(--text);font-weight:900;">Proposer un échange</h3>
+    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px;">La permutation doit être validée par votre cadre.</div>
+
+    <div class="bourse-form-lbl">Garde que je cède</div>
+    <input type="date" id="swap-offered-date" class="bourse-input">
+    <div style="margin-top:8px;"><div class="bourse-shift-row">
+      <button class="swap-shift-btn" data-field="offered" data-val="jour" onclick="swapSelectShift(this)">☀️ Jour</button>
+      <button class="swap-shift-btn" data-field="offered" data-val="nuit" onclick="swapSelectShift(this)">🌙 Nuit</button>
+    </div></div>
+
+    <div class="bourse-form-lbl">Garde souhaitée en échange <span style="font-weight:400;text-transform:none;">(optionnel)</span></div>
+    <input type="date" id="swap-wanted-date" class="bourse-input" placeholder="Laisser vide = toute garde acceptée">
+    <div style="margin-top:8px;"><div class="bourse-shift-row">
+      <button class="swap-shift-btn" data-field="wanted" data-val="jour" onclick="swapSelectShift(this)">☀️ Jour</button>
+      <button class="swap-shift-btn" data-field="wanted" data-val="nuit" onclick="swapSelectShift(this)">🌙 Nuit</button>
+      <button class="swap-shift-btn" data-field="wanted" data-val="indiff" onclick="swapSelectShift(this)">🔄 Indiff.</button>
+    </div></div>
+
+    <div class="bourse-form-lbl">Note <span style="font-weight:400;text-transform:none;">(optionnel, 200 car. max)</span></div>
+    <textarea id="swap-note" class="bourse-input" rows="2" maxlength="200" placeholder="Ex : raison familiale, weekend..."></textarea>
+
+    <button class="bourse-submit-btn" onclick="submitSwapRequest()">Publier la demande</button>
+    <button class="bourse-cancel-btn" onclick="closeBourseCreate()">Annuler</button>
   </div>
 </div>
 
