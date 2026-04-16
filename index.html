@@ -569,8 +569,19 @@
   .bourse-status-badge.acc  { background:rgba(16,185,129,0.15); color:#10b981; }
   .bourse-btn-accept { background:var(--brand-aqua); color:#000; border:none; border-radius:10px; padding:11px 0; font-size:0.85rem; font-weight:900; font-family:var(--font); cursor:pointer; width:100%; }
   .bourse-btn-cancel { background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:9px 0; font-size:0.78rem; font-weight:700; font-family:var(--font); cursor:pointer; width:100%; }
-  .bourse-empty { text-align:center; padding:50px 20px 20px; color:var(--text-muted); font-size:0.9rem; line-height:1.6; }
-  .bourse-empty-icon { font-size:2.5rem; margin-bottom:12px; }
+  .bourse-cal-wrap { margin-top:8px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface); }
+  .bourse-cal-nav { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; background:var(--surface-sec); border-bottom:1px solid var(--border); }
+  .bourse-cal-nav-btn { background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:4px 10px; border-radius:6px; font-family:var(--font); line-height:1; }
+  .bourse-cal-nav-month { font-size:0.82rem; font-weight:900; color:var(--text); }
+  .bourse-cal-dow { display:grid; grid-template-columns:repeat(7,1fr); padding:6px 8px 2px; gap:3px; background:var(--surface-sec); border-bottom:1px solid var(--border); }
+  .bourse-cal-dow-lbl { font-size:0.58rem; font-weight:800; color:var(--text-muted); text-align:center; text-transform:uppercase; padding:2px 0; }
+  .bourse-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); padding:6px 8px 10px; gap:3px; }
+  .bourse-cal-cell { aspect-ratio:1; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; cursor:pointer; transition:all 0.12s; -webkit-user-select:none; user-select:none; }
+  .bourse-cal-cell.empty { opacity:0; pointer-events:none; }
+  .bourse-cal-cell.past { opacity:0.3; cursor:default; pointer-events:none; }
+  .bourse-cal-cell.bc-selected { box-shadow:0 0 0 2.5px var(--brand-aqua); transform:scale(1.1); z-index:1; position:relative; }
+  .bourse-cal-footer { text-align:center; font-size:0.72rem; color:var(--brand-aqua); padding:6px 0 8px; cursor:pointer; font-weight:700; border-top:1px solid var(--border); }
+  .bourse-cal-footer.empty-sel { color:var(--text-muted); cursor:default; font-weight:400; }
   .bourse-create-sheet { background:var(--surface); border-radius:20px 20px 0 0; padding:20px 20px 44px; width:100%; max-height:88vh; overflow-y:auto; box-sizing:border-box; box-shadow:0 -4px 30px rgba(0,0,0,0.15); }
   .bourse-form-lbl { font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; margin-top:16px; }
   .bourse-shift-row { display:flex; gap:8px; }
@@ -6094,17 +6105,101 @@
   function openBourseCreate() {
     if (!currentUser) { showToast('Connectez-vous pour proposer un échange'); return; }
     const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
     document.getElementById('swap-offered-date').value = today;
     document.getElementById('swap-wanted-date').value = '';
     document.getElementById('swap-note').value = '';
     document.querySelectorAll('.swap-shift-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.swap-shift-btn[data-field="offered"][data-val="jour"]').classList.add('active');
     document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="indiff"]').classList.add('active');
+    _bourseCalY = now.getFullYear();
+    _bourseCalM = now.getMonth() + 1;
+    _bourseWanted = '';
     document.getElementById('bourse-create-modal').style.display = 'flex';
+    renderBourseCalendar();
   }
   function closeBourseCreate() {
     document.getElementById('bourse-create-modal').style.display = 'none';
   }
+
+  // ── Mini calendrier planning pour la garde souhaitée ────────────────────
+  let _bourseCalY = new Date().getFullYear();
+  let _bourseCalM = new Date().getMonth() + 1;
+  let _bourseWanted = '';
+
+  const _MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  function renderBourseCalendar() {
+    const wrap = document.getElementById('bourse-cal');
+    if (!wrap) return;
+    const y = _bourseCalY, m = _bourseCalM;
+    const firstDow = (new Date(y, m-1, 1).getDay() + 6) % 7; // Lu=0
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const today = new Date().toISOString().split('T')[0];
+
+    let html = `<div class="bourse-cal-nav">
+      <button class="bourse-cal-nav-btn" onclick="prevBourseMonth()">‹</button>
+      <span class="bourse-cal-nav-month">${_MONTHS_FR[m-1]} ${y}</span>
+      <button class="bourse-cal-nav-btn" onclick="nextBourseMonth()">›</button>
+    </div>
+    <div class="bourse-cal-dow">
+      <div class="bourse-cal-dow-lbl">Lu</div><div class="bourse-cal-dow-lbl">Ma</div>
+      <div class="bourse-cal-dow-lbl">Me</div><div class="bourse-cal-dow-lbl">Je</div>
+      <div class="bourse-cal-dow-lbl">Ve</div><div class="bourse-cal-dow-lbl">Sa</div>
+      <div class="bourse-cal-dow-lbl">Di</div>
+    </div>
+    <div class="bourse-cal-grid">`;
+
+    for (let i = 0; i < firstDow; i++) html += '<div class="bourse-cal-cell empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const st = getPlanDayState(ds);
+      const past = ds < today;
+      const sel  = ds === _bourseWanted;
+      html += `<div class="bourse-cal-cell p-${st}${past ? ' past' : ''}${sel ? ' bc-selected' : ''}" onclick="${past ? '' : `selectBourseWanted('${ds}')`}">${d}</div>`;
+    }
+    html += '</div>';
+
+    if (_bourseWanted) {
+      const [,bm,bd] = _bourseWanted.split('-');
+      const bwd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(_bourseWanted+'T12:00:00').getDay()];
+      html += `<div class="bourse-cal-footer" onclick="clearBourseWanted()">✕ Effacer — ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
+    } else {
+      html += `<div class="bourse-cal-footer empty-sel">Touchez un jour pour le sélectionner</div>`;
+    }
+    wrap.innerHTML = html;
+  }
+
+  window.selectBourseWanted = function(ds) {
+    _bourseWanted = ds;
+    document.getElementById('swap-wanted-date').value = ds;
+    const st = getPlanDayState(ds);
+    if (st === 'nuit' || st === 'hs_n') {
+      document.querySelectorAll('.swap-shift-btn[data-field="wanted"]').forEach(b => b.classList.remove('active'));
+      document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="nuit"]').classList.add('active');
+    } else if (st === 'jour' || st === 'hs_j' || st === 'travail') {
+      document.querySelectorAll('.swap-shift-btn[data-field="wanted"]').forEach(b => b.classList.remove('active'));
+      document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="jour"]').classList.add('active');
+    }
+    renderBourseCalendar();
+  };
+
+  window.clearBourseWanted = function() {
+    _bourseWanted = '';
+    document.getElementById('swap-wanted-date').value = '';
+    document.querySelectorAll('.swap-shift-btn[data-field="wanted"]').forEach(b => b.classList.remove('active'));
+    document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="indiff"]').classList.add('active');
+    renderBourseCalendar();
+  };
+
+  window.prevBourseMonth = function() {
+    if (_bourseCalM === 1) { _bourseCalM = 12; _bourseCalY--; } else _bourseCalM--;
+    renderBourseCalendar();
+  };
+  window.nextBourseMonth = function() {
+    if (_bourseCalM === 12) { _bourseCalM = 1; _bourseCalY++; } else _bourseCalM++;
+    renderBourseCalendar();
+  };
 
   function swapSelectShift(btn) {
     const field = btn.dataset.field;
@@ -8597,7 +8692,8 @@
     </div></div>
 
     <div class="bourse-form-lbl">Garde souhaitée en échange <span style="font-weight:400;text-transform:none;">(optionnel)</span></div>
-    <input type="date" id="swap-wanted-date" class="bourse-input" placeholder="Laisser vide = toute garde acceptée">
+    <input type="hidden" id="swap-wanted-date">
+    <div id="bourse-cal" class="bourse-cal-wrap"></div>
     <div style="margin-top:8px;"><div class="bourse-shift-row">
       <button class="swap-shift-btn" data-field="wanted" data-val="jour" onclick="swapSelectShift(this)">☀️ Jour</button>
       <button class="swap-shift-btn" data-field="wanted" data-val="nuit" onclick="swapSelectShift(this)">🌙 Nuit</button>
