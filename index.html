@@ -1225,7 +1225,16 @@
             <strong style="color:var(--text);">Ensuite</strong> — Recherche ton nom → sélectionne → entre ton code. Coche <em>"Se souvenir"</em> pour 3 mois d'auto-connexion.
           </div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text);">Nom sélectionné</strong> — La recherche se masque automatiquement. Utilise la <strong style="color:var(--brand-blue);">croix ✕</strong> à droite du nom si tu t'es trompé.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
             <strong style="color:var(--crit);">Code oublié ?</strong> — Clique "Code oublié ?" → envoie la demande → l'admin te fournit un code provisoire.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--crit);">Sécurité</strong> — Après <strong>3 codes faux</strong>, le compte est bloqué. Déblocage uniquement par l'administrateur.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--crit);">Accès Admin (bouton rouge)</strong> — Ouvre le panneau admin en <strong>lecture globale</strong> (pas de modification des attributions de lits).
           </div>
         </div>
       </details>
@@ -1621,7 +1630,9 @@
   const LEXIQUE_DATA = [
 /* ===== PERSONNEL ===== */
 { term:"Présence temps réel", fullName:"Suivi de connexion en direct", def:"Fonctionnalité PulseUnit affichant dans le panel admin la liste des utilisateurs actuellement connectés à l’application, avec leur rôle et l’heure de dernière activité.", expert:"Mise à jour automatique via Firebase onSnapshot. Chaque connexion/déconnexion/fermeture de page met à jour le statut. Utile pour l’admin afin de savoir qui est actif sur l’app en cours de garde.", cat:"PERSONNEL"},
-{ term:"PIN Code", fullName:"Code d’accès à 6 chiffres", def:"Code numérique personnel permettant l’authentification sécurisée dans PulseUnit. Hashé en SHA-256 côté client, jamais stocké en clair.", expert:"En cas d’oubli : utiliser ‘Code oublié ?’ → l’admin reçoit la demande et génère un code provisoire. À remplacer immédiatement lors de la 1ère connexion avec le code provisoire.", cat:"PERSONNEL"},
+{ term:"PIN Code", fullName:"Code d’accès à 6 chiffres", def:"Code numérique personnel permettant l’authentification sécurisée dans PulseUnit. Hashé en SHA-256 côté client, jamais stocké en clair.", expert:"En cas d’oubli : utiliser ‘Code oublié ?’ → l’admin reçoit la demande et génère un code provisoire. À remplacer immédiatement lors de la 1ère connexion avec le code provisoire. Après 3 erreurs, le compte est bloqué.", cat:"PERSONNEL"},
+{ term:"Compte bloqué", fullName:"Blocage sécurité après échecs PIN", def:"Mécanisme de protection qui bloque un compte utilisateur après 3 codes PIN erronés consécutifs.", expert:"Le déblocage se fait dans le panneau admin (liste des comptes) via le bouton 🔓, ou lors de la génération d’un code provisoire.", cat:"PERSONNEL"},
+{ term:"Session admin", fullName:"Connexion administrateur séparée", def:"Mode administrateur activé via identifiants admin dans l’écran de connexion, distinct du compte personnel.", expert:"Permet d’ouvrir le panneau admin et de consulter l’ensemble de l’app en lecture globale. Les attributions de lits restent non modifiables en session admin.", cat:"PERSONNEL"},
 { term:"Mode lecture seule", fullName:"Accès consultation sans modification", def:"Mode d’accès activé automatiquement si l’utilisateur n’est pas affecté à la garde en cours. Consultation possible, aucune modification permise.", expert:"Utile pour consulter l’historique des gardes passées ou vérifier les affectations sans risque de modification accidentelle. Les outils (lexique, calculateurs, protocoles) restent accessibles.", cat:"PERSONNEL"},
 { term:"IDE", fullName:"Infirmier Diplômé d’État", def:"Professionnel responsable de la réalisation des soins prescrits, de la surveillance continue des paramètres vitaux et de l’administration des thérapeutiques.", expert:"En réanimation, l’IDE doit anticiper les défaillances d’organes, interpréter les monitorages complexes (scope, respirateur, PiCCO) et agir rapidement sur prescription ou en rôle propre.", cat:"PERSONNEL"},
 { term:"AS", fullName:"Aide-Soignant", def:"Professionnel assurant les soins d’hygiène, de confort et participant à la surveillance clinique du patient sous la responsabilité de l’IDE.", expert:"Rôle clé en réa : prévention des escarres (mobilisation, matelas), kinésithérapie de confort, aide aux transferts lourds, surveillance des signes d’alerte à remonter à l’IDE.", cat:"PERSONNEL"},
