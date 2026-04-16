@@ -867,8 +867,7 @@
       <div style="flex: 1; min-height: 20px;"></div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Signaler un bug</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();">⚙️ Paramètres</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); logoutUser();">🚪 Déconnexion</a>
-      <a href="#" class="side-link" style="color: var(--crit); border-bottom:none;" onclick="closeSideMenu(); openAdmin();">🔒 Admin</a>
+      <a href="#" class="side-link" style="border-bottom:none;" onclick="closeSideMenu(); logoutUser();">🚪 Déconnexion</a>
     </div>
   </nav>
 
@@ -921,6 +920,7 @@
 
       <div class="settings-danger-section">
         <button class="btn-danger-soft" onclick="document.getElementById('settings-modal').style.display='none'; confirmClearShift();">🗑️ Vider la garde en cours</button>
+        <button class="btn-danger-soft" style="margin-top:8px; color:var(--crit); border-color:rgba(239,68,68,0.25);" onclick="document.getElementById('settings-modal').style.display='none'; openAdmin();">🔒 Accès Admin</button>
       </div>
 
       <button class="btn-primary" style="margin-top:14px;" onclick="document.getElementById('settings-modal').style.display='none'">Fermer</button>
@@ -3672,7 +3672,6 @@
     const notOnShift = currentUser && !isOnCurrentShift() && !locked;
     const banner = document.getElementById('locked-banner');
     if (locked) { banner.style.display = 'block'; banner.textContent = '🔒 GARDE TERMINÉE - LECTURE SEULE'; }
-    else if (notOnShift) { banner.style.display = 'block'; banner.style.background = '#6366f1'; banner.textContent = '👁 CONSULTATION UNIQUEMENT — Vous n\'êtes pas affecté à cette garde'; }
     else { banner.style.display = 'none'; }
     document.querySelectorAll('.shift-tab').forEach(b => b.classList.toggle('active', b.getAttribute('data-key') === currentShiftKey));
 
@@ -6925,20 +6924,7 @@
     const el = document.getElementById('header-user-info');
     if (!el) return;
     if (currentUser) {
-      const col = ROLE_COLORS[currentUser.role] || 'var(--brand-blue)';
-      const initial = escapeHTML(currentUser.firstName.charAt(0).toUpperCase());
-      el.innerHTML = `
-        <div style="display:flex; align-items:center; gap:6px;">
-          <div style="width:28px; height:28px; border-radius:50%; background:${col}22; border:2px solid ${col};
-            display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:900; color:${col}; flex-shrink:0;">
-            ${initial}
-          </div>
-          <div style="display:flex; flex-direction:column; line-height:1.1;">
-            <span style="font-size:0.72rem; font-weight:900; color:var(--text); white-space:nowrap;">${escapeHTML(currentUser.firstName)}</span>
-            <span style="font-size:0.6rem; font-weight:700; color:${col}; text-transform:uppercase;">${escapeHTML(currentUser.role)}</span>
-          </div>
-        </div>
-      `;
+      el.innerHTML = '';
     } else {
       el.innerHTML = `<button class="header-btn outline" onclick="showAuthModal()" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
     }
