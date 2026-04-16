@@ -7351,7 +7351,7 @@
     const modal = document.getElementById('work-status-modal');
     if (!modal) return;
     document.getElementById('work-title').textContent = `Bonjour ${currentUser.firstName} !`;
-    document.getElementById('work-desc').textContent = `Travaillez-vous sur la garde de ${isNight ? 'NUIT' : 'JOUR'} actuelle ?`;
+    document.getElementById('work-desc').textContent = `Travaillez-vous sur la garde de ${currentShiftKey.includes('-nuit') ? 'NUIT' : 'JOUR'} actuelle ?`;
     modal.style.display = 'flex';
   }
 
