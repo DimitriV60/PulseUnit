@@ -550,30 +550,36 @@
   .plan-day:active { transform:scale(0.88); }
 
   /* ── Bourse d'échange ── */
-  .bourse-section-lbl { font-size:0.68rem; font-weight:900; letter-spacing:.06em; color:var(--text-muted); text-transform:uppercase; padding:14px 0 6px; }
-  .bourse-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; display:flex; flex-direction:column; gap:8px; }
-  .bourse-card.accepted { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
-  .bourse-card-who { font-size:0.82rem; font-weight:800; color:var(--text); }
-  .bourse-card-row { display:flex; flex-wrap:wrap; gap:6px; }
-  .bourse-card-note { font-size:0.77rem; color:var(--text-muted); font-style:italic; }
-  .bourse-pill { font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:20px; }
-  .bourse-pill.offer { background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
-  .bourse-pill.want  { background:rgba(96,206,234,0.12); color:#60ceea; border:1px solid rgba(96,206,234,0.3); }
-  .bourse-pill.indiff{ background:rgba(100,116,139,0.12); color:var(--text-muted); border:1px solid var(--border); }
-  .bourse-status-badge { font-size:0.68rem; font-weight:900; padding:3px 8px; border-radius:12px; }
+  .bourse-section-lbl { font-size:0.7rem; font-weight:900; letter-spacing:.08em; color:var(--text-muted); text-transform:uppercase; padding:14px 0 8px; border-bottom:1px solid var(--border); margin-bottom:10px; }
+  .bourse-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:15px; margin-bottom:12px; display:flex; flex-direction:column; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .bourse-card.accepted { border-color:rgba(16,185,129,0.45); background:rgba(16,185,129,0.04); }
+  .bourse-card-header { display:flex; justify-content:space-between; align-items:center; }
+  .bourse-card-who { font-size:0.88rem; font-weight:900; color:var(--text); }
+  .bourse-card-line { display:flex; align-items:center; gap:8px; }
+  .bourse-card-label { font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; min-width:42px; }
+  .bourse-card-val { font-size:0.85rem; font-weight:800; color:var(--text); }
+  .bourse-shift-tag { font-size:0.72rem; font-weight:800; padding:3px 9px; border-radius:20px; }
+  .bourse-shift-tag.jour { background:rgba(234,179,8,0.15); color:#eab308; border:1px solid rgba(234,179,8,0.35); }
+  .bourse-shift-tag.nuit { background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.35); }
+  .bourse-shift-tag.indiff { background:var(--pill-bg); color:var(--text-muted); border:1px solid var(--border); }
+  .bourse-card-note { font-size:0.8rem; color:var(--text-muted); font-style:italic; padding:8px 10px; background:var(--surface-sec); border-radius:8px; }
+  .bourse-card-ok { font-size:0.82rem; color:#10b981; font-weight:700; }
+  .bourse-status-badge { font-size:0.68rem; font-weight:900; padding:4px 9px; border-radius:12px; }
   .bourse-status-badge.open { background:rgba(245,158,11,0.15); color:#f59e0b; }
   .bourse-status-badge.acc  { background:rgba(16,185,129,0.15); color:#10b981; }
-  .bourse-btn-accept { background:var(--brand-aqua); color:#000; border:none; border-radius:10px; padding:9px 0; font-size:0.82rem; font-weight:900; font-family:var(--font); cursor:pointer; width:100%; margin-top:4px; }
-  .bourse-btn-cancel { background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:7px 0; font-size:0.77rem; font-weight:700; font-family:var(--font); cursor:pointer; width:100%; margin-top:2px; }
-  .bourse-create-sheet { background:var(--card); border-radius:20px 20px 0 0; padding:20px 20px 40px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; }
-  .bourse-form-lbl { font-size:0.75rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; margin-top:14px; }
+  .bourse-btn-accept { background:var(--brand-aqua); color:#000; border:none; border-radius:10px; padding:11px 0; font-size:0.85rem; font-weight:900; font-family:var(--font); cursor:pointer; width:100%; }
+  .bourse-btn-cancel { background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:9px 0; font-size:0.78rem; font-weight:700; font-family:var(--font); cursor:pointer; width:100%; }
+  .bourse-empty { text-align:center; padding:50px 20px 20px; color:var(--text-muted); font-size:0.9rem; line-height:1.6; }
+  .bourse-empty-icon { font-size:2.5rem; margin-bottom:12px; }
+  .bourse-create-sheet { background:var(--surface); border-radius:20px 20px 0 0; padding:20px 20px 44px; width:100%; max-height:88vh; overflow-y:auto; box-sizing:border-box; box-shadow:0 -4px 30px rgba(0,0,0,0.15); }
+  .bourse-form-lbl { font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; margin-top:16px; }
   .bourse-shift-row { display:flex; gap:8px; }
-  .swap-shift-btn { flex:1; padding:9px 4px; border-radius:10px; font-size:0.78rem; font-weight:800; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text-muted); transition:all 0.15s; }
-  .swap-shift-btn.active { border-color:var(--brand-aqua); color:var(--brand-aqua); background:rgba(96,206,234,0.1); }
-  .bourse-input { width:100%; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:var(--font); font-size:0.88rem; padding:10px 12px; }
-  .bourse-input:focus { outline:none; border-color:var(--brand-aqua); }
-  .bourse-submit-btn { width:100%; padding:13px; border:none; border-radius:12px; background:var(--brand-aqua); color:#000; font-size:0.9rem; font-weight:900; font-family:var(--font); cursor:pointer; margin-top:16px; }
-  .bourse-cancel-btn { width:100%; padding:11px; border:1px solid var(--border); border-radius:12px; background:transparent; color:var(--text-muted); font-size:0.85rem; font-weight:700; font-family:var(--font); cursor:pointer; margin-top:8px; }
+  .swap-shift-btn { flex:1; padding:10px 4px; border-radius:10px; font-size:0.8rem; font-weight:800; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--surface-sec); color:var(--text-muted); transition:all 0.15s; }
+  .swap-shift-btn.active { border-color:var(--brand-aqua); color:var(--brand-aqua); background:rgba(64,206,239,0.1); }
+  .bourse-input { width:100%; box-sizing:border-box; background:var(--surface-sec); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:var(--font); font-size:0.88rem; padding:11px 12px; }
+  .bourse-input:focus { outline:none; border-color:var(--brand-aqua); background:var(--surface); }
+  .bourse-submit-btn { width:100%; padding:14px; border:none; border-radius:12px; background:var(--brand-aqua); color:#000; font-size:0.92rem; font-weight:900; font-family:var(--font); cursor:pointer; margin-top:18px; }
+  .bourse-cancel-btn { width:100%; padding:12px; border:1px solid var(--border); border-radius:12px; background:transparent; color:var(--text-muted); font-size:0.85rem; font-weight:700; font-family:var(--font); cursor:pointer; margin-top:8px; }
   .fs-action-btn { background:var(--brand-aqua); color:#000; border:none; border-radius:50%; width:36px; height:36px; font-size:1.4rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
@@ -6142,59 +6148,91 @@
   function renderBourseList() {
     const el = document.getElementById('bourse-list');
     if (!el) return;
-    const open     = swapRequests.filter(r => r.status === 'open');
-    const accepted = swapRequests.filter(r => r.status === 'accepted');
-    const mine     = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
-    const others   = open.filter(r => !currentUser || r.userId !== currentUser.id);
+    const open    = swapRequests.filter(r => r.status === 'open');
+    const mine    = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
+    const others  = open.filter(r => !currentUser || r.userId !== currentUser.id);
+    const myAcc   = swapRequests.filter(r => r.status === 'accepted' && currentUser && r.acceptedBy === currentUser.id && r.userId !== currentUser.id);
 
     const fmtDate = ds => {
       if (!ds) return '—';
       const [y,m,d] = ds.split('-');
       const wd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(ds+'T12:00:00').getDay()];
-      return `${wd} ${d}/${m}/${y}`;
+      return `${wd} ${parseInt(d)}/${parseInt(m)}`;
     };
-    const shiftLabel = s => s === 'jour' ? '☀️ Jour' : s === 'nuit' ? '🌙 Nuit' : '🔄 Indiff.';
+    const shiftTag = s => {
+      if (s === 'jour')  return `<span class="bourse-shift-tag jour">☀️ Jour</span>`;
+      if (s === 'nuit')  return `<span class="bourse-shift-tag nuit">🌙 Nuit</span>`;
+      return `<span class="bourse-shift-tag indiff">🔄 Indiff.</span>`;
+    };
 
     let html = '';
+
     if (swapRequests.length === 0) {
-      html = '<div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:0.9rem;">Aucune demande d\'échange en cours</div>';
+      html = `<div class="bourse-empty"><div class="bourse-empty-icon">🔄</div>Aucune demande d'échange en cours.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
     } else {
       if (others.length > 0) {
         html += '<div class="bourse-section-lbl">Propositions disponibles</div>';
         others.forEach(r => {
           html += `<div class="bourse-card">
-            <div class="bourse-card-who">${r.userName}</div>
-            <div class="bourse-card-row">
-              <span class="bourse-pill offer">Cède <b>${fmtDate(r.offeredDate)}</b> ${shiftLabel(r.offeredShift)}</span>
-              ${r.wantedDate ? `<span class="bourse-pill want">Veut <b>${fmtDate(r.wantedDate)}</b> ${shiftLabel(r.wantedShift)}</span>` : `<span class="bourse-pill indiff">Veut toute garde ${shiftLabel(r.wantedShift)}</span>`}
+            <div class="bourse-card-header">
+              <span class="bourse-card-who">${r.userName}</span>
             </div>
-            ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
-            ${currentUser && r.userId !== currentUser.id ? `<button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">Accepter cet échange</button>` : ''}
+            <div class="bourse-card-line">
+              <span class="bourse-card-label">Cède</span>
+              <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
+              ${shiftTag(r.offeredShift)}
+            </div>
+            <div class="bourse-card-line">
+              <span class="bourse-card-label">Veut</span>
+              ${r.wantedDate ? `<span class="bourse-card-val">${fmtDate(r.wantedDate)}</span>` : '<span class="bourse-card-val" style="color:var(--text-muted);">Toute garde</span>'}
+              ${shiftTag(r.wantedShift)}
+            </div>
+            ${r.note ? `<div class="bourse-card-note">${r.note}</div>` : ''}
+            ${currentUser ? `<button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">✅ Accepter cet échange</button>` : ''}
           </div>`;
         });
       }
+
       if (mine.length > 0) {
         html += '<div class="bourse-section-lbl">Mes demandes</div>';
         mine.forEach(r => {
           const isAcc = r.status === 'accepted';
           html += `<div class="bourse-card ${isAcc ? 'accepted' : ''}">
-            <div class="bourse-card-who" style="display:flex;justify-content:space-between;align-items:center;">
-              <span>Ma garde : <b>${fmtDate(r.offeredDate)}</b> ${shiftLabel(r.offeredShift)}</span>
-              <span class="bourse-status-badge ${isAcc ? 'acc' : 'open'}">${isAcc ? 'Accepté' : 'En attente'}</span>
+            <div class="bourse-card-header">
+              <span class="bourse-card-who">Ma garde à céder</span>
+              <span class="bourse-status-badge ${isAcc ? 'acc' : 'open'}">${isAcc ? '✓ Accepté' : 'En attente'}</span>
             </div>
-            ${isAcc ? `<div class="bourse-card-note" style="color:var(--ok);">✅ Accepté par <b>${r.acceptedByName}</b> — à confirmer avec votre cadre</div>` : ''}
-            ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
+            <div class="bourse-card-line">
+              <span class="bourse-card-label">Cède</span>
+              <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
+              ${shiftTag(r.offeredShift)}
+            </div>
+            <div class="bourse-card-line">
+              <span class="bourse-card-label">Veut</span>
+              ${r.wantedDate ? `<span class="bourse-card-val">${fmtDate(r.wantedDate)}</span>` : '<span class="bourse-card-val" style="color:var(--text-muted);">Toute garde</span>'}
+              ${shiftTag(r.wantedShift)}
+            </div>
+            ${r.note ? `<div class="bourse-card-note">${r.note}</div>` : ''}
+            ${isAcc ? `<div class="bourse-card-ok">✅ Accepté par <b>${r.acceptedByName}</b> — à valider avec le cadre</div>` : ''}
             <button class="bourse-btn-cancel" onclick="cancelSwap('${r.id}')">Supprimer</button>
           </div>`;
         });
       }
-      if (accepted.filter(r => currentUser && r.userId !== currentUser.id && r.acceptedBy === currentUser.id).length > 0) {
-        html += '<div class="bourse-section-lbl">Échanges que j\'ai acceptés</div>';
-        accepted.filter(r => r.acceptedBy === currentUser?.id && r.userId !== currentUser?.id).forEach(r => {
+
+      if (myAcc.length > 0) {
+        html += '<div class="bourse-section-lbl">Échanges acceptés par moi</div>';
+        myAcc.forEach(r => {
           html += `<div class="bourse-card accepted">
-            <div class="bourse-card-who">Échange avec <b>${r.userName}</b></div>
-            <div class="bourse-card-row"><span class="bourse-pill offer">Garde cédée : <b>${fmtDate(r.offeredDate)}</b> ${shiftLabel(r.offeredShift)}</span></div>
-            <div class="bourse-card-note" style="color:var(--ok);">✅ En attente de validation cadre</div>
+            <div class="bourse-card-header">
+              <span class="bourse-card-who">Échange avec ${r.userName}</span>
+              <span class="bourse-status-badge acc">✓ Accepté</span>
+            </div>
+            <div class="bourse-card-line">
+              <span class="bourse-card-label">Garde</span>
+              <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
+              ${shiftTag(r.offeredShift)}
+            </div>
+            <div class="bourse-card-ok">✅ En attente de validation cadre</div>
           </div>`;
         });
       }
