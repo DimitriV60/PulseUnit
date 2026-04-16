@@ -1270,7 +1270,7 @@
         </summary>
         <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <span style="color:var(--med); font-weight:800;">RÉA 1 ☎ 1862</span> / <span style="color:var(--med); font-weight:800;">RÉA 2 ☎ 1822</span> — Assigne le médecin à son secteur. Seul lui peut modifier ses chambres.
+            <span style="color:var(--med); font-weight:800;">RÉA 1 ☎ (61) 1862</span> / <span style="color:var(--med); font-weight:800;">RÉA 2 ☎ (61) 1822</span> — Assigne le médecin à son secteur. Seul lui peut modifier ses chambres.
           </div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
             <span style="color:var(--tech); font-weight:800;">IDE TECH</span> — Affecté via sa carte. Accès à la liste de tâches techniques du jour.
@@ -1892,7 +1892,7 @@
 { term:"PMO", fullName:"Prelevement Multi-Organes", def:"Prelevement d'organes a visee de transplantation. Mort encephalique ou MAASTRICHT.", expert:"Protocole strict : diagnostic mort encephalique, avis Agence de Biomedecine, accord familles. Coordination infirmiere de prelevement.", cat:"ABREV"},
 { term:"Pst", fullName:"Pansement", def:"Protection et traitement d'une plaie ou d'un site invasif.", expert:"CVC/KTA : pansement J0, J2 puis 1x/semaine. IOT : naso-buccal a chaque soin de bouche. Escarres : adapte a la profondeur.", cat:"ABREV"},
 { term:"QSP", fullName:"Quantite Suffisante Pour", def:"Completer avec un solvant jusqu'a obtenir le volume ou la concentration souhaitee.", expert:"Ex : SUF 250 ug QSP 50 mL dans NaCl 0.9%. Toujours preciser le solvant et le volume final.", cat:"ABREV"},
-{ term:"RDG", fullName:"Reanimateur De Garde", def:"Medecin reanimateur responsable lors de la garde. Interlocuteur medical principal hors heures ouvrables.", expert:"Numeros service : REA 1 telephone 1862 / REA 2 telephone 1822. Appel immediat en cas d'urgence vitale.", cat:"ABREV"},
+{ term:"RDG", fullName:"Reanimateur De Garde", def:"Medecin reanimateur responsable lors de la garde. Interlocuteur medical principal hors heures ouvrables.", expert:"Numeros service : REA 1 telephone (61) 1862 / REA 2 telephone (61) 1822. Appel immediat en cas d'urgence vitale.", cat:"ABREV"},
 { term:"SAP / PSE / IVSE", fullName:"Seringue Auto-Pousseuse / Pousse-Seringue Electrique", def:"Dispositif motorise pour administration precise. Indispensable pour drogues vitales.", expert:"Verifier debit, seringue chargee, alarme occlusion. Relais obligatoire pour catecholamines. Changer tubulure toutes les 24-72H.", cat:"ABREV"},
 { term:"SARM", fullName:"Staphylocoque Dore Resistant a la Meticilline", def:"BMR majeure resistant aux beta-lactamines. Traitement : Vancomycine.", expert:"Precautions contact strictes. Chambre individuelle si possible. Depistage nez/aisselles/perinee. Signalement hygiene systematique.", cat:"ABREV"},
 { term:"SAS", fullName:"Syndrome d'Apnee du Sommeil", def:"Pauses respiratoires repetees pendant le sommeil. Frequent chez les patients obeses ou cardiaques.", expert:"Peut compliquer le sevrage ventilatoire. Favoriser VNI nocturne lors du sevrage. Reprendre traitement habituel (PPC).", cat:"ABREV"},
@@ -3689,7 +3689,7 @@
       boardHTML += `<div class="bed-card special-card med-card">
         <div class="bed-header" style="color:var(--med)">
             <span class="b-num">RÉA ${i+1}</span>
-            <span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">📞 ${i===0?1862:1822}</span>
+            <span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">📞 ${i===0?'(61) 1862':'(61) 1822'}</span>
         </div>
         ${grid}
         ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${locked?'':`<span class="remove-btn" onclick="clearShift(${i},'med')">×</span>`}</div>` : `<div class="search-box">${locked?'---':`<input type="text" id="search-med-${i}" placeholder="🔍 Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>`}</div>`}
@@ -4310,8 +4310,8 @@
         { name: "Poste soignant", num: "0344616086", display: "(61) 6086" },
         { name: "IDE technique", num: "0344617125", display: "(61) 7125" },
         { name: "Bureau cadre", num: "0344616082", display: "(61) 6082" },
-        { name: "Réanimateur de garde — REA 1", num: "1862", display: "1862" },
-        { name: "Réanimateur de garde — REA 2", num: "1822", display: "1822" },
+        { name: "Réanimateur de garde — REA 1", num: "1862", display: "(61) 1862" },
+        { name: "Réanimateur de garde — REA 2", num: "1822", display: "(61) 1822" },
         { name: "Services de nuit", num: "0344616062", display: "(61) 6062" },
       ]
     },
