@@ -1391,7 +1391,30 @@
             <strong style="color:var(--text);">Régime ☀ Jour</strong> ou <strong style="color:var(--text);">☾ Nuit</strong> — le calcul s'adapte (max 21 j consécutifs jour / 22 j nuit, RCN, fractionnement). Coche les <strong style="color:var(--text);">DJF</strong> travaillés pour le calcul du RCV.
           </div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text);">Heures supplémentaires</strong> — trois états disponibles : <span style="color:#a855f7; font-weight:800;">HS</span> (générique) · <span style="color:#eab308; font-weight:800;">HSJ</span> (jour) · <span style="color:#818cf8; font-weight:800;">HSN</span> (nuit) — pour distinguer les HS selon la plage horaire. Tous comptent dans les DJF.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
             Données sauvegardées <strong style="color:var(--text);">localement</strong> sur l'appareil (non partagées). Bouton ↺ pour réinitialiser l'année.
+          </div>
+        </div>
+      </details>
+
+      <!-- BOURSE D'ÉCHANGE -->
+      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
+          <span style="font-size:1rem;">🔄</span> Bourse d'échange
+        </summary>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            Menu ☰ → <strong style="color:var(--text);">Bourse d'échange</strong>. Système de permutation de gardes entre collègues, synchronisé en temps réel.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text);">① Proposer</strong> — Appuyer sur <strong>+</strong>, sélectionner la garde à céder (date + Jour/Nuit) et la garde souhaitée (facultatif).<br>
+            <strong style="color:var(--text);">② Consulter</strong> — Les demandes ouvertes des collègues s'affichent en temps réel.<br>
+            <strong style="color:var(--text);">③ Accepter</strong> — Valide l'échange côté applicatif. La permutation doit ensuite être <strong style="color:var(--text);">confirmée avec le cadre de santé</strong>.
+          </div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            Connexion obligatoire. Les demandes sont <strong style="color:var(--text);">visibles de tous</strong> les utilisateurs connectés.
           </div>
         </div>
       </details>
@@ -3812,7 +3835,7 @@
       boardHTML += `<div class="bed-card special-card med-card">
         <div class="bed-header" style="color:var(--med)">
             <span class="b-num">RÉA ${i+1}</span>
-            <span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">📞 ${i===0?'(61) 1862':'(61) 1822'}</span>
+            <span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">📞 ${i===0?'1862':'1822'}</span>
         </div>
         ${grid}
         ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${locked?'':`<span class="remove-btn" onclick="clearShift(${i},'med')">×</span>`}</div>` : `<div class="search-box">${locked?'---':`<input type="text" id="search-med-${i}" placeholder="🔍 Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>`}</div>`}
