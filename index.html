@@ -582,6 +582,11 @@
   .bourse-cal-cell.bc-selected { box-shadow:0 0 0 2.5px var(--brand-aqua); transform:scale(1.1); z-index:1; position:relative; }
   .bourse-cal-footer { text-align:center; font-size:0.72rem; color:var(--brand-aqua); padding:6px 0 8px; cursor:pointer; font-weight:700; border-top:1px solid var(--border); }
   .bourse-cal-footer.empty-sel { color:var(--text-muted); cursor:default; font-weight:400; }
+  .bourse-role-badge { font-size:0.64rem; font-weight:900; padding:3px 8px; border-radius:10px; letter-spacing:.04em; }
+  .bourse-role-badge.b-ide  { background:rgba(96,206,234,0.15); color:var(--ide); border:1px solid rgba(96,206,234,0.35); }
+  .bourse-role-badge.b-as   { background:rgba(64,206,92,0.15);  color:var(--as);  border:1px solid rgba(64,206,92,0.35); }
+  .bourse-role-badge.b-med  { background:rgba(245,158,11,0.15); color:var(--med); border:1px solid rgba(245,158,11,0.35); }
+  .bourse-role-badge.b-tech { background:rgba(168,85,247,0.15); color:var(--tech);border:1px solid rgba(168,85,247,0.35); }
   .bourse-create-sheet { background:var(--surface); border-radius:20px 20px 0 0; padding:20px 20px 44px; width:100%; max-height:88vh; overflow-y:auto; box-sizing:border-box; box-shadow:0 -4px 30px rgba(0,0,0,0.15); }
   .bourse-form-lbl { font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; margin-top:16px; }
   .bourse-shift-row { display:flex; gap:8px; }
@@ -6219,7 +6224,10 @@
       id: Date.now().toString(36) + Math.random().toString(36).slice(2),
       userId: currentUser.id,
       userName: (currentUser.firstName + ' ' + currentUser.lastName).trim(),
-      offeredDate, offeredShift, wantedDate, wantedShift, note,
+      userRole: currentUser.role || 'ide',
+      offeredDate, offeredShift,
+      offeredPlanState: getPlanDayState(offeredDate),
+      wantedDate, wantedShift, note,
       ts: Date.now(), status: 'open', acceptedBy: null, acceptedByName: null
     };
     const updated = [...swapRequests, req];
@@ -6266,39 +6274,62 @@
   function renderBourseList() {
     const el = document.getElementById('bourse-list');
     if (!el) return;
-    const open    = swapRequests.filter(r => r.status === 'open');
-    const mine    = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
-    const others  = open.filter(r => !currentUser || r.userId !== currentUser.id);
-    const myAcc   = swapRequests.filter(r => r.status === 'accepted' && currentUser && r.acceptedBy === currentUser.id && r.userId !== currentUser.id);
+
+    const myRole  = currentUser?.role || null;
+    const ROLE_LBL = { ide:'IDE', as:'AS', med:'MED', tech:'TECH' };
+    const roleBadge = role => {
+      if (!role) return '';
+      return `<span class="bourse-role-badge b-${role}">${ROLE_LBL[role] || role.toUpperCase()}</span>`;
+    };
+    const planTag = st => {
+      if (!st || st === 'travail') return '';
+      const lbl = PLAN_LABELS[st];
+      if (!lbl) return '';
+      return `<span class="bourse-cal-cell p-${st}" style="width:24px;height:24px;font-size:0.62rem;border-radius:5px;flex-shrink:0;">${lbl}</span>`;
+    };
+
+    const mine   = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
+    const allOpen = swapRequests.filter(r => r.status === 'open');
+    // Filtrage par fonction : on ne voit que les demandes de sa propre fonction
+    const others = allOpen.filter(r => {
+      if (!currentUser || r.userId === currentUser.id) return false;
+      if (!r.userRole || !myRole) return true; // rétro-compat sans role
+      return r.userRole === myRole;
+    });
+    const myAcc  = swapRequests.filter(r => r.status === 'accepted' && currentUser && r.acceptedBy === currentUser.id && r.userId !== currentUser.id);
 
     const fmtDate = ds => {
       if (!ds) return '—';
-      const [y,m,d] = ds.split('-');
+      const [,m,d] = ds.split('-');
       const wd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(ds+'T12:00:00').getDay()];
       return `${wd} ${parseInt(d)}/${parseInt(m)}`;
     };
     const shiftTag = s => {
-      if (s === 'jour')  return `<span class="bourse-shift-tag jour">☀️ Jour</span>`;
-      if (s === 'nuit')  return `<span class="bourse-shift-tag nuit">🌙 Nuit</span>`;
+      if (s === 'jour') return `<span class="bourse-shift-tag jour">☀️ Jour</span>`;
+      if (s === 'nuit') return `<span class="bourse-shift-tag nuit">🌙 Nuit</span>`;
       return `<span class="bourse-shift-tag indiff">🔄 Indiff.</span>`;
     };
 
     let html = '';
 
-    if (swapRequests.length === 0) {
-      html = `<div class="bourse-empty"><div class="bourse-empty-icon">🔄</div>Aucune demande d'échange en cours.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
+    const roleTitle = myRole ? ` — ${ROLE_LBL[myRole] || myRole.toUpperCase()}` : '';
+
+    if (swapRequests.length === 0 || (others.length === 0 && mine.length === 0 && myAcc.length === 0)) {
+      html = `<div class="bourse-empty"><div class="bourse-empty-icon">🔄</div>Aucune demande en cours pour votre fonction.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
     } else {
       if (others.length > 0) {
-        html += '<div class="bourse-section-lbl">Propositions disponibles</div>';
+        html += `<div class="bourse-section-lbl">Propositions disponibles${roleTitle}</div>`;
         others.forEach(r => {
           html += `<div class="bourse-card">
             <div class="bourse-card-header">
               <span class="bourse-card-who">${r.userName}</span>
+              ${roleBadge(r.userRole)}
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Cède</span>
               <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
               ${shiftTag(r.offeredShift)}
+              ${planTag(r.offeredPlanState)}
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Veut</span>
@@ -6309,6 +6340,9 @@
             ${currentUser ? `<button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">✅ Accepter cet échange</button>` : ''}
           </div>`;
         });
+      } else if (currentUser) {
+        html += `<div class="bourse-section-lbl">Propositions disponibles${roleTitle}</div>`;
+        html += `<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:0.82rem;">Aucune demande ouverte pour votre fonction</div>`;
       }
 
       if (mine.length > 0) {
@@ -6318,12 +6352,16 @@
           html += `<div class="bourse-card ${isAcc ? 'accepted' : ''}">
             <div class="bourse-card-header">
               <span class="bourse-card-who">Ma garde à céder</span>
-              <span class="bourse-status-badge ${isAcc ? 'acc' : 'open'}">${isAcc ? '✓ Accepté' : 'En attente'}</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                ${roleBadge(r.userRole)}
+                <span class="bourse-status-badge ${isAcc ? 'acc' : 'open'}">${isAcc ? '✓ Accepté' : 'En attente'}</span>
+              </div>
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Cède</span>
               <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
               ${shiftTag(r.offeredShift)}
+              ${planTag(r.offeredPlanState)}
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Veut</span>
@@ -6343,12 +6381,16 @@
           html += `<div class="bourse-card accepted">
             <div class="bourse-card-header">
               <span class="bourse-card-who">Échange avec ${r.userName}</span>
-              <span class="bourse-status-badge acc">✓ Accepté</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                ${roleBadge(r.userRole)}
+                <span class="bourse-status-badge acc">✓ Accepté</span>
+              </div>
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Garde</span>
               <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
               ${shiftTag(r.offeredShift)}
+              ${planTag(r.offeredPlanState)}
             </div>
             <div class="bourse-card-ok">✅ En attente de validation cadre</div>
           </div>`;
