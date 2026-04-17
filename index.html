@@ -499,11 +499,6 @@
   .plan-regime-pill.active-jour { background:rgba(96,206,234,0.12); border-color:#60ceea; color:#60ceea; }
   .plan-regime-pill.active-nuit { background:rgba(239,68,68,0.10); border-color:#ef4444; color:#ef4444; }
   /* Strip de statut (remplace la bannière) */
-  .plan-status-strip { padding:7px 14px; font-size:0.8rem; font-weight:800; flex-shrink:0; transition:background 0.3s,color 0.3s; }
-  .plan-status-strip.ok    { background:var(--as-glow);   color:var(--as); }
-  .plan-status-strip.warn  { background:var(--med-glow);  color:var(--med); }
-  .plan-status-strip.fail  { background:var(--crit-glow); color:var(--crit); }
-  .plan-status-strip.empty { background:var(--surface);   color:var(--text-muted); font-weight:700; }
   /* Légende compacte collapsible */
   .plan-legend-toggle { display:flex; justify-content:space-between; align-items:center; padding:6px 14px; font-size:0.72rem; font-weight:700; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); background:var(--bg); -webkit-user-select:none; user-select:none; flex-shrink:0; }
   .plan-legend-compact { display:flex; flex-wrap:wrap; gap:5px 14px; padding:7px 14px 9px; font-size:0.7rem; font-weight:700; color:var(--text-muted); border-bottom:1px solid var(--border); background:var(--bg); flex-shrink:0; }
@@ -5134,24 +5129,7 @@
       ratioChip.className = 'psu' + (maxSpan > limit ? ' fail-u' : maxSpan > limit - 3 ? ' warn-u' : '');
     }
 
-    // Strip de statut
-    const strip = el('plan-status-strip');
-    const stxt  = el('plan-status-text');
-    if (strip && stxt) {
-      if (caCount === 0) {
-        strip.className = 'plan-status-strip empty';
-        stxt.textContent = 'Aucun CA posé';
-      } else if (maxSpan <= limit) {
-        strip.className = 'plan-status-strip ok';
-        stxt.textContent = `Conforme — ${maxSpan} j / ${limit} autorisés`;
-      } else if (maxSpan <= limit + 2) {
-        strip.className = 'plan-status-strip warn';
-        stxt.textContent = `Attention — ${maxSpan} j consécutifs (limite ${limit} j)`;
-      } else {
-        strip.className = 'plan-status-strip fail';
-        stxt.textContent = `Dépassement — ${maxSpan} j (+${maxSpan - limit} j)`;
-      }
-    }
+
 
     // Compter les jours posés par état vs le crédit
     const countPlaced = (state) => {
@@ -8215,16 +8193,6 @@
       <button class="plan-reset-btn" onclick="resetPlanningCA()" title="Effacer l'année">↺</button>
     </div>
 
-    <!-- Régime pills -->
-    <div class="plan-regime-pills">
-      <button class="plan-regime-pill active-jour" id="pbtn-jour" onclick="setPlanRegime('jour')">☀ Jour · max 21 j consécutifs</button>
-      <button class="plan-regime-pill" id="pbtn-nuit" onclick="setPlanRegime('nuit')">☾ Nuit · max 22 j (CA + RCN)</button>
-    </div>
-
-    <!-- Strip de statut -->
-    <div class="plan-status-strip empty" id="plan-status-strip">
-      <span id="plan-status-text">Aucun CA posé</span>
-    </div>
 
     <!-- Légende collapsible -->
     <div class="plan-legend-toggle" onclick="togglePlanLegend()">
