@@ -6115,7 +6115,6 @@
     document.getElementById('swap-wanted-date').value = '';
     document.getElementById('swap-note').value = '';
     document.querySelectorAll('.swap-shift-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.swap-shift-btn[data-field="offered"][data-val="jour"]').classList.add('active');
     document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="indiff"]').classList.add('active');
     _bourseCalY = now.getFullYear();
     _bourseCalM = now.getMonth() + 1;
@@ -8711,7 +8710,7 @@
       <div class="fs-title-group">
         <button class="fs-back" onclick="closeBourse()">←</button>
         <div>
-          <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">🔄 Bourse d'échange</h2>
+          <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">Bourse d'échange</h2>
           <div class="fs-subtitle" id="bourse-subtitle">Demandes de permutation de gardes</div>
         </div>
       </div>
