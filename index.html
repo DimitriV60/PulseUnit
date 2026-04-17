@@ -6109,9 +6109,7 @@
 
   function openBourseCreate() {
     if (!currentUser) { showToast('Connectez-vous pour proposer un échange'); return; }
-    const today = new Date().toISOString().split('T')[0];
     const now = new Date();
-    document.getElementById('swap-offered-date').value = today;
     document.getElementById('swap-wanted-date').value = '';
     document.getElementById('swap-note').value = '';
     document.querySelectorAll('.swap-shift-btn').forEach(b => b.classList.remove('active'));
@@ -6177,14 +6175,6 @@
   window.selectBourseWanted = function(ds) {
     _bourseWanted = ds;
     document.getElementById('swap-wanted-date').value = ds;
-    const st = getPlanDayState(ds);
-    if (st === 'nuit' || st === 'hs_n') {
-      document.querySelectorAll('.swap-shift-btn[data-field="wanted"]').forEach(b => b.classList.remove('active'));
-      document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="nuit"]').classList.add('active');
-    } else if (st === 'jour' || st === 'hs_j' || st === 'travail') {
-      document.querySelectorAll('.swap-shift-btn[data-field="wanted"]').forEach(b => b.classList.remove('active'));
-      document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="jour"]').classList.add('active');
-    }
     renderBourseCalendar();
   };
 
@@ -6213,10 +6203,8 @@
 
   async function submitSwapRequest() {
     if (!currentUser) return;
-    const offeredDate = document.getElementById('swap-offered-date').value;
-    if (!offeredDate) { showToast('Indiquez la date de la garde à céder'); return; }
-    const _offeredState = getPlanDayState(offeredDate);
-    const offeredShift = (_offeredState === 'nuit' || _offeredState === 'hs_n') ? 'nuit' : 'jour';
+    const offeredDate = '';
+    const offeredShift = '';
     const wantedDate  = document.getElementById('swap-wanted-date').value || '';
     const wantedShift = document.querySelector('.swap-shift-btn[data-field="wanted"].active')?.dataset.val || 'indiff';
     const note = (document.getElementById('swap-note').value || '').trim().slice(0, 200);
@@ -6226,7 +6214,6 @@
       userName: (currentUser.firstName + ' ' + currentUser.lastName).trim(),
       userRole: currentUser.role || 'ide',
       offeredDate, offeredShift,
-      offeredPlanState: getPlanDayState(offeredDate),
       wantedDate, wantedShift, note,
       ts: Date.now(), status: 'open', acceptedBy: null, acceptedByName: null
     };
@@ -8725,9 +8712,6 @@
   <div class="bourse-create-sheet">
     <h3 style="margin:0 0 4px;color:var(--text);font-weight:900;">Proposer un échange</h3>
     <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px;">La permutation doit être validée par votre cadre.</div>
-
-    <div class="bourse-form-lbl">Garde que je cède</div>
-    <input type="date" id="swap-offered-date" class="bourse-input">
 
     <div class="bourse-form-lbl">Garde souhaitée en échange <span style="font-weight:400;text-transform:none;">(optionnel)</span></div>
     <input type="hidden" id="swap-wanted-date">
