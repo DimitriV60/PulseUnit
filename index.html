@@ -527,26 +527,26 @@
   .psu.fail-u   .psu-val { color:var(--crit); }
   .plan-day { aspect-ratio:1; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.12s; -webkit-user-select:none; user-select:none; }
   .plan-day.empty { opacity:0; cursor:default; pointer-events:none; }
-  .plan-day.p-travail   { background:transparent; border:1px solid var(--border); color:var(--text-muted); opacity:0.6; }
-  .plan-day.p-jour      { background:rgba(96,206,234,0.18);  border:1.5px solid #60ceea; color:#60ceea; font-weight:900; }
-  .plan-day.p-nuit      { background:rgba(239,68,68,0.13);   border:1.5px solid #ef4444; color:#ef4444; font-weight:900; }
-  .plan-day.p-ca        { background:var(--as-glow);          border:1.5px solid var(--as); color:var(--as); font-weight:900; }
-  .plan-day.p-rcn       { background:rgba(100,116,139,0.32); border:1.5px solid #64748b;  color:var(--text); font-weight:800; }
-  .plan-day.p-rh        { background:rgba(100,116,139,0.13); border:1px solid #64748b;    color:#64748b; }
-  .plan-day.p-hs        { background:rgba(168,85,247,0.14);  border:1.5px solid #a855f7; color:#a855f7; font-weight:900; }
-  .plan-day.p-hs_j      { background:rgba(234,179,8,0.16);   border:1.5px solid #eab308; color:#eab308; font-weight:900; }
-  .plan-day.p-hs_n      { background:rgba(99,102,241,0.18);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
-  .plan-day.p-formation { background:rgba(249,115,22,0.14);  border:1.5px solid #f97316; color:#f97316; font-weight:900; }
-  .plan-day.p-repos     { background:rgba(100,116,139,0.13); border:1px solid #64748b; color:#64748b; }
-  .plan-day.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
-  .plan-day.p-maladie   { background:rgba(159,18,57,0.18);   border:1.5px solid #9f1239; color:#9f1239; font-weight:900; }
-  .plan-day.p-can1      { background:rgba(20,184,166,0.16);  border:1.5px solid #14b8a6; color:#14b8a6; font-weight:900; }
-  .plan-day.p-hp        { background:rgba(99,102,241,0.16);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
-  .plan-day.p-hpn1      { background:rgba(165,180,252,0.16); border:1.5px solid #a5b4fc; color:#a5b4fc; font-weight:900; }
-  .plan-day.p-rcv       { background:rgba(16,185,129,0.16);  border:1.5px solid #10b981; color:#10b981; font-weight:900; }
-  .plan-day.p-rcvn1     { background:rgba(110,231,183,0.18); border:1.5px solid #6ee7b7; color:#6ee7b7; font-weight:900; }
-  .plan-day.p-frac      { background:rgba(236,72,153,0.16);  border:1.5px solid #ec4899; color:#ec4899; font-weight:900; }
-  .plan-day.p-fracn1    { background:rgba(249,168,212,0.16); border:1.5px solid #f9a8d4; color:#f9a8d4; font-weight:900; }
+  .plan-day.p-travail,   .bourse-cal-cell.p-travail   { background:transparent; border:1px solid var(--border); color:var(--text-muted); opacity:0.6; }
+  .plan-day.p-jour,      .bourse-cal-cell.p-jour      { background:rgba(96,206,234,0.18);  border:1.5px solid #60ceea; color:#60ceea; font-weight:900; }
+  .plan-day.p-nuit,      .bourse-cal-cell.p-nuit      { background:rgba(239,68,68,0.13);   border:1.5px solid #ef4444; color:#ef4444; font-weight:900; }
+  .plan-day.p-ca,        .bourse-cal-cell.p-ca        { background:var(--as-glow);          border:1.5px solid var(--as); color:var(--as); font-weight:900; }
+  .plan-day.p-rcn,       .bourse-cal-cell.p-rcn       { background:rgba(100,116,139,0.32); border:1.5px solid #64748b;  color:var(--text); font-weight:800; }
+  .plan-day.p-rh,        .bourse-cal-cell.p-rh        { background:rgba(100,116,139,0.13); border:1px solid #64748b;    color:#64748b; }
+  .plan-day.p-hs,        .bourse-cal-cell.p-hs        { background:rgba(168,85,247,0.14);  border:1.5px solid #a855f7; color:#a855f7; font-weight:900; }
+  .plan-day.p-hs_j,      .bourse-cal-cell.p-hs_j      { background:rgba(234,179,8,0.16);   border:1.5px solid #eab308; color:#eab308; font-weight:900; }
+  .plan-day.p-hs_n,      .bourse-cal-cell.p-hs_n      { background:rgba(99,102,241,0.18);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
+  .plan-day.p-formation, .bourse-cal-cell.p-formation { background:rgba(249,115,22,0.14);  border:1.5px solid #f97316; color:#f97316; font-weight:900; }
+  .plan-day.p-repos,     .bourse-cal-cell.p-repos     { background:rgba(100,116,139,0.13); border:1px solid #64748b; color:#64748b; }
+  .plan-day.p-ferie,     .bourse-cal-cell.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
+  .plan-day.p-maladie,   .bourse-cal-cell.p-maladie   { background:rgba(159,18,57,0.18);   border:1.5px solid #9f1239; color:#9f1239; font-weight:900; }
+  .plan-day.p-can1,      .bourse-cal-cell.p-can1      { background:rgba(20,184,166,0.16);  border:1.5px solid #14b8a6; color:#14b8a6; font-weight:900; }
+  .plan-day.p-hp,        .bourse-cal-cell.p-hp        { background:rgba(99,102,241,0.16);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
+  .plan-day.p-hpn1,      .bourse-cal-cell.p-hpn1      { background:rgba(165,180,252,0.16); border:1.5px solid #a5b4fc; color:#a5b4fc; font-weight:900; }
+  .plan-day.p-rcv,       .bourse-cal-cell.p-rcv       { background:rgba(16,185,129,0.16);  border:1.5px solid #10b981; color:#10b981; font-weight:900; }
+  .plan-day.p-rcvn1,     .bourse-cal-cell.p-rcvn1     { background:rgba(110,231,183,0.18); border:1.5px solid #6ee7b7; color:#6ee7b7; font-weight:900; }
+  .plan-day.p-frac,      .bourse-cal-cell.p-frac      { background:rgba(236,72,153,0.16);  border:1.5px solid #ec4899; color:#ec4899; font-weight:900; }
+  .plan-day.p-fracn1,    .bourse-cal-cell.p-fracn1    { background:rgba(249,168,212,0.16); border:1.5px solid #f9a8d4; color:#f9a8d4; font-weight:900; }
   .plan-day:active { transform:scale(0.88); }
 
   /* ── Bourse d'échange ── */
@@ -6216,7 +6216,8 @@
     if (!currentUser) return;
     const offeredDate = document.getElementById('swap-offered-date').value;
     if (!offeredDate) { showToast('Indiquez la date de la garde à céder'); return; }
-    const offeredShift = document.querySelector('.swap-shift-btn[data-field="offered"].active')?.dataset.val || 'jour';
+    const _offeredState = getPlanDayState(offeredDate);
+    const offeredShift = (_offeredState === 'nuit' || _offeredState === 'hs_n') ? 'nuit' : 'jour';
     const wantedDate  = document.getElementById('swap-wanted-date').value || '';
     const wantedShift = document.querySelector('.swap-shift-btn[data-field="wanted"].active')?.dataset.val || 'indiff';
     const note = (document.getElementById('swap-note').value || '').trim().slice(0, 200);
@@ -8728,10 +8729,6 @@
 
     <div class="bourse-form-lbl">Garde que je cède</div>
     <input type="date" id="swap-offered-date" class="bourse-input">
-    <div style="margin-top:8px;"><div class="bourse-shift-row">
-      <button class="swap-shift-btn" data-field="offered" data-val="jour" onclick="swapSelectShift(this)">☀️ Jour</button>
-      <button class="swap-shift-btn" data-field="offered" data-val="nuit" onclick="swapSelectShift(this)">🌙 Nuit</button>
-    </div></div>
 
     <div class="bourse-form-lbl">Garde souhaitée en échange <span style="font-weight:400;text-transform:none;">(optionnel)</span></div>
     <input type="hidden" id="swap-wanted-date">
