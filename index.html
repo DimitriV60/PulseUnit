@@ -531,6 +531,7 @@
   .plan-day.p-hs,        .bourse-cal-cell.p-hs        { background:rgba(168,85,247,0.14);  border:1.5px solid #a855f7; color:#a855f7; font-weight:900; }
   .plan-day.p-hs_j,      .bourse-cal-cell.p-hs_j      { background:rgba(234,179,8,0.16);   border:1.5px solid #eab308; color:#eab308; font-weight:900; }
   .plan-day.p-hs_n,      .bourse-cal-cell.p-hs_n      { background:rgba(99,102,241,0.18);  border:1.5px solid #6366f1; color:#6366f1; font-weight:900; }
+  .plan-day.p-rc,        .bourse-cal-cell.p-rc        { background:rgba(251,146,60,0.15);  border:1.5px solid #fb923c; color:#fb923c; font-weight:900; }
   .plan-day.p-formation, .bourse-cal-cell.p-formation { background:rgba(249,115,22,0.14);  border:1.5px solid #f97316; color:#f97316; font-weight:900; }
   .plan-day.p-repos,     .bourse-cal-cell.p-repos     { background:rgba(100,116,139,0.13); border:1px solid #64748b; color:#64748b; }
   .plan-day.p-ferie,     .bourse-cal-cell.p-ferie     { background:rgba(245,158,11,0.18);  border:1.5px solid #f59e0b; color:#f59e0b; font-weight:900; }
@@ -631,6 +632,8 @@
   .plan-solde-inputs { display:flex; align-items:center; gap:6px; flex:1; flex-wrap:wrap; }
   .plan-solde-inputs input[type=number] { width:52px; padding:5px 6px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-size:0.9rem; font-weight:700; text-align:center; font-family:var(--font); }
   .plan-solde-inputs input[type=date]   { padding:5px 6px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-size:0.8rem; font-family:var(--font); flex:1; min-width:0; }
+  .plan-report-btn { font-size:0.68rem; padding:2px 6px; background:var(--surface); border:1px solid var(--border); color:var(--text-muted); border-radius:5px; cursor:pointer; white-space:nowrap; }
+  .plan-report-btn:hover { background:var(--as-glow); color:var(--as); border-color:var(--as); }
   .plan-solde-unit { font-size:0.78rem; font-weight:700; color:var(--text-muted); }
   .plan-solde-explbl { font-size:0.72rem; color:var(--text-muted); flex-shrink:0; }
   .plan-solde-warn { color:var(--med) !important; }
@@ -4912,7 +4915,7 @@
   // États qui constituent un TRAVAIL (brisent un bloc CA)
   const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'hs_j', 'hs_n', 'formation']);
   // Libellés courts affichés dans les cases
-  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'CA-1', rcn:'RCN', rh:'RH', hs:'HS', hs_j:'HSJ', hs_n:'HSN', formation:'FO', ferie:'JF', maladie:'AM', hp:'HP', hpn1:'HP-1', rcv:'RCV', rcvn1:'RCV-1', frac:'FR', fracn1:'FR-1' };
+  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'CA-1', rcn:'RCN', rh:'RH', hs:'HS', hs_j:'HSJ', hs_n:'HSN', rc:'RC', formation:'FO', ferie:'JF', maladie:'AM', hp:'HP', hpn1:'HP-1', rcv:'RCV', rcvn1:'RCV-1', frac:'FR', fracn1:'FR-1' };
   function planDayHTML(dayNum, state) {
     const lbl = PLAN_LABELS[state];
     if (!lbl) return String(dayNum);
@@ -4937,7 +4940,7 @@
     const cur      = getPlanDayState(dateStr);
     const defState = getPlanDefaultState(dateStr);
     // Cycle manuel — RCN/RH auto, ferie auto, repos → rh (weekend)
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'hs_j', 'hs_n', 'formation'];
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'hs_j', 'hs_n', 'rc', 'formation'];
     const idx   = cycle.indexOf(cur);
     let next;
 
@@ -5012,9 +5015,9 @@
 
   function calcPlanStats() {
     const caSet  = new Set();
-    const rcnSet = new Set();
     const fer    = getJoursFeries(planYear);
     let djfCount = 0, hsCA = 0;
+    let hsjCount = 0, hsnCount = 0, rcCount = 0;
     const caPeriodsWD = []; let curPer = []; // périodes CA jours ouvrés (pour fractionnement)
     // T12:00:00 → midi local = pas de décalage UTC
     const start  = new Date(`${planYear}-01-01T12:00:00`);
@@ -5030,7 +5033,9 @@
         const mo = d.getMonth()+1; if(mo<=4||mo>=11) hsCA++; // Hors Saison
         if (!isWE && !isHol) curPer.push(s); // jour ouvré CA → période frac
       } else {
-        if (st === 'rcn') rcnSet.add(s);
+        if (st === 'hs_j') hsjCount++;
+        else if (st === 'hs_n') hsnCount++;
+        else if (st === 'rc') rcCount++;
         if (!isWE && !isHol && curPer.length>0) { caPeriodsWD.push([...curPer]); curPer=[]; } // jour ouvré non-CA coupe la période
         if ((dow===0||isHol) && ['travail','jour','nuit','hs','hs_j','hs_n','formation'].includes(st)) djfCount++; // DJF travaillé
       }
@@ -5038,7 +5043,6 @@
     if (curPer.length>0) caPeriodsWD.push(curPer);
 
     const caCount  = caSet.size;
-    const rcnCount = rcnSet.size;
     // Bonus Hors Saison (Décret 2002-8, Art. 1)
     const hsBonus  = hsCA>=6 ? 2 : hsCA>=3 ? 1 : 0;
     // Bonus Fractionnement (Décret 2002-8, Art. 1) : ≥3 périodes ≥5j ouvrés
@@ -5053,11 +5057,16 @@
     const rcvn1Solde = (planSoldes && planSoldes.rcvn1) || 0;
     const fracSolde  = (planSoldes && planSoldes.frac)  || 0;
     const fracn1Solde = (planSoldes && planSoldes.fracn1) || 0;
-    const grandTotal = 25 + caN1Solde + hpSolde + hpn1Solde + rcvSolde + rcvn1Solde + fracSolde + fracn1Solde + hsBonus + fracBonus + rcvBonus;
+    const hsjSolde   = (planSoldes && planSoldes.hsj)   || 0;
+    const hsjN1Solde = (planSoldes && planSoldes.hsjN1) || 0;
+    const hsnSolde   = (planSoldes && planSoldes.hsn)   || 0;
+    const hsnN1Solde = (planSoldes && planSoldes.hsnN1) || 0;
+    const rcSolde    = (planSoldes && planSoldes.rc)    || 0;
+    const rcN1Solde  = (planSoldes && planSoldes.rcN1)  || 0;
+    const grandTotal = 25 + caN1Solde + hpSolde + hpn1Solde + rcvSolde + rcvn1Solde + fracSolde + fracn1Solde + hsBonus + fracBonus + rcvBonus + hsjSolde + hsjN1Solde + hsnSolde + hsnN1Solde + rcSolde + rcN1Solde;
 
     const leaveSet = new Set([...caSet]);
-    if (planRegime === 'nuit') rcnSet.forEach(d => leaveSet.add(d));
-    if (leaveSet.size === 0) return { caCount, rcnCount, maxSpan: 0, periods: [], djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal };
+    if (leaveSet.size === 0) return { caCount, hsjCount, hsnCount, rcCount, maxSpan: 0, periods: [], djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal };
 
     const sorted = [...leaveSet].sort();
     const periods = [];
@@ -5097,27 +5106,26 @@
       return Math.round((e - s) / 86400000) + 1;
     });
     const maxSpan = Math.max(...periodsSpan);
-    return { caCount, rcnCount, maxSpan, periods: periods.map((p,i) => ({...p, span: periodsSpan[i]})), djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal };
+    return { caCount, hsjCount, hsnCount, rcCount, maxSpan, periods: periods.map((p,i) => ({...p, span: periodsSpan[i]})), djfCount, hsCA, hsBonus, fracBonus, rcvBonus, grandTotal };
   }
 
   function updatePlanStats() {
     const limit = planRegime === 'nuit' ? 22 : 21;
     const stats = calcPlanStats();
-    const { caCount, rcnCount, maxSpan, djfCount, hsBonus, fracBonus, rcvBonus, grandTotal } = stats;
+    const { caCount, hsjCount, hsnCount, rcCount, maxSpan, djfCount, hsBonus, fracBonus, rcvBonus, grandTotal } = stats;
     const el = id => document.getElementById(id);
     const set = (id, v) => { const e = el(id); if(e) e.textContent = v; };
 
     set('pstat-ca',    caCount);
-    set('pstat-rcn',   rcnCount);
     set('pstat-ratio', (maxSpan||0) + '/' + limit);
-    set('pstat-hs',    hsBonus ? '+' + hsBonus : '+0');
+    set('pstat-hsj',   hsjCount);
+    set('pstat-hsn',   hsnCount);
+    set('pstat-rc',    rcCount);
     set('pstat-frac',  fracBonus ? '+' + fracBonus : '+0');
     set('pstat-djf',   planRegime !== 'nuit' ? djfCount : '—');
     set('pstat-rcv',   planRegime !== 'nuit' ? (rcvBonus ? '+' + rcvBonus : '+0') : '—');
     set('pstat-tot',   grandTotal);
 
-    const rcnChip = el('pstat-rcn-chip');
-    if (rcnChip) rcnChip.style.display = planRegime === 'nuit' ? 'flex' : 'none';
     const djfChip = el('pstat-djf-chip');
     const rcvChip = el('pstat-rcv-chip');
     if (djfChip) djfChip.style.opacity = planRegime === 'nuit' ? '0.3' : '1';
@@ -5140,7 +5148,7 @@
       }
       return n;
     };
-    const soldeMap = { can1:'caN1', hp:'hp', hpn1:'hpn1', rcv:'rcv', rcvn1:'rcvn1', frac:'frac', fracn1:'fracn1' };
+    const soldeMap = { can1:'caN1', hp:'hp', hpn1:'hpn1', rcv:'rcv', rcvn1:'rcvn1', frac:'frac', fracn1:'fracn1', hs_j:'hsj', hs_n:'hsn', rc:'rc' };
     Object.entries(soldeMap).forEach(([state, key]) => {
       const placed = countPlaced(state);
       const credit = planSoldes[key] || 0;
@@ -5170,6 +5178,12 @@
         warnOrNot(solde.rcvExp,   solde.rcv)   ? warnOrNot(solde.rcvExp,   solde.rcv)   + ' RCV'    : '',
         warnOrNot(solde.fracn1Exp,solde.fracn1)? warnOrNot(solde.fracn1Exp,solde.fracn1)+ ' FR-1'   : '',
         warnOrNot(solde.fracExp,  solde.frac)  ? warnOrNot(solde.fracExp,  solde.frac)  + ' FR'     : '',
+        solde.hsjN1 ? solde.hsjN1 + ' HSJ-1' : '',
+        solde.hsj   ? solde.hsj   + ' HSJ'   : '',
+        solde.hsnN1 ? solde.hsnN1 + ' HSN-1' : '',
+        solde.hsn   ? solde.hsn   + ' HSN'   : '',
+        solde.rcN1  ? solde.rcN1  + ' RC-1'  : '',
+        solde.rc    ? solde.rc    + ' RC'    : '',
       ].filter(Boolean);
       soldeTotal.innerHTML = parts.length ? parts.join(' · ') : '—';
     }
@@ -5240,7 +5254,7 @@
 
   // ── Soldes (CA N-1, HP, RCV avec dates limites) ──────────────────────
   let planSoldes = (() => {
-    const defaults = { caN1: 0, caN1Exp: '', hp: 0, hpExp: '', hpn1: 0, hpn1Exp: '', rcv: 0, rcvExp: '', rcvn1: 0, rcvn1Exp: '', frac: 0, fracExp: '', fracn1: 0, fracn1Exp: '' };
+    const defaults = { caN1: 0, caN1Exp: '', hp: 0, hpExp: '', hpn1: 0, hpn1Exp: '', rcv: 0, rcvExp: '', rcvn1: 0, rcvn1Exp: '', frac: 0, fracExp: '', fracn1: 0, fracn1Exp: '', hsj: 0, hsjN1: 0, hsn: 0, hsnN1: 0, rc: 0, rcN1: 0 };
     const stored = JSON.parse(localStorage.getItem('pulseunit_plan_soldes') || 'null');
     return stored ? { ...defaults, ...stored } : defaults;
   })();
@@ -5248,6 +5262,13 @@
 
   window.updatePlanSolde = function(field, val) {
     planSoldes[field] = val; savePlanSoldes(); updatePlanStats();
+  };
+  window.reportSolde = function(fromKey, toKey, inputId) {
+    planSoldes[toKey] = planSoldes[fromKey] || 0;
+    savePlanSoldes();
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = planSoldes[toKey] || '';
+    updatePlanStats();
   };
 
   let planLegendOpen = false;
@@ -8213,6 +8234,9 @@
       <span id="plan-legend-rcn"><span class="plan-legend-dot" style="background:rgba(100,116,139,0.32);border:1.5px solid #64748b;"></span>RCN <em style="font-weight:400;">(auto)</em></span>
       <span><span class="plan-legend-dot" style="background:rgba(100,116,139,0.13);border:1px solid #64748b;"></span>RH</span>
       <span><span class="plan-legend-dot" style="background:rgba(168,85,247,0.14);border:1.5px solid #a855f7;"></span>HS</span>
+      <span><span class="plan-legend-dot" style="background:rgba(234,179,8,0.16);border:1.5px solid #eab308;"></span>HSJ HS Jour</span>
+      <span><span class="plan-legend-dot" style="background:rgba(99,102,241,0.18);border:1.5px solid #6366f1;"></span>HSN HS Nuit</span>
+      <span><span class="plan-legend-dot" style="background:rgba(251,146,60,0.15);border:1.5px solid #fb923c;"></span>RC Récup.</span>
       <span><span class="plan-legend-dot" style="background:rgba(249,115,22,0.14);border:1.5px solid #f97316;"></span>FO Form.</span>
       <span><span class="plan-legend-dot" style="background:rgba(245,158,11,0.18);border:1.5px solid #f59e0b;"></span>JF Férié</span>
       <span><span class="plan-legend-dot" style="background:rgba(159,18,57,0.18);border:1.5px solid #9f1239;"></span>AM Maladie</span>
@@ -8302,6 +8326,57 @@
             <span id="solde-frac-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
           </div>
         </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#a5b4fc;">HSJ N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-hsj-n1" placeholder="0" onchange="updatePlanSolde('hsjN1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#eab308;">HS Jour</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-hsj" placeholder="0" onchange="updatePlanSolde('hsj',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span id="solde-hs_j-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-hs_j-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+            <button class="plan-report-btn" onclick="reportSolde('hsj','hsjN1','solde-hsj-n1')" title="Reporter le solde vers N-1">→ N-1</button>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#a5b4fc;">HSN N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-hsn-n1" placeholder="0" onchange="updatePlanSolde('hsnN1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#6366f1;">HS Nuit</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-hsn" placeholder="0" onchange="updatePlanSolde('hsn',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span id="solde-hs_n-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-hs_n-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+            <button class="plan-report-btn" onclick="reportSolde('hsn','hsnN1','solde-hsn-n1')" title="Reporter le solde vers N-1">→ N-1</button>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#fb923c;">RC N-1</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-rc-n1" placeholder="0" onchange="updatePlanSolde('rcN1',+this.value)">
+            <span class="plan-solde-unit">j</span>
+          </div>
+        </div>
+        <div class="plan-solde-row">
+          <span class="plan-solde-lbl" style="color:#fb923c;">RC Récup.</span>
+          <div class="plan-solde-inputs">
+            <input type="number" min="0" max="99" id="solde-rc" placeholder="0" onchange="updatePlanSolde('rc',+this.value)">
+            <span class="plan-solde-unit">j</span>
+            <span id="solde-rc-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
+            <span id="solde-rc-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
+            <button class="plan-report-btn" onclick="reportSolde('rc','rcN1','solde-rc-n1')" title="Reporter le solde vers N-1">→ N-1</button>
+          </div>
+        </div>
         <div class="plan-solde-total-bar">
           <span style="color:var(--text-muted);font-size:0.75rem;">Soldes disponibles</span>
           <span id="plan-solde-total-val" style="color:var(--as);font-weight:900;">—</span>
@@ -8318,17 +8393,21 @@
         <div class="psu-val" id="pstat-ca">0</div>
         <div class="psu-lbl">CA</div>
       </div>
-      <div class="psu rcnc" id="pstat-rcn-chip" style="display:none;">
-        <div class="psu-val" id="pstat-rcn">0</div>
-        <div class="psu-lbl">RCN</div>
-      </div>
       <div class="psu" id="pstat-ratio-chip">
         <div class="psu-val" id="pstat-ratio">0/21</div>
         <div class="psu-lbl">Consécutifs</div>
       </div>
       <div class="psu hs">
-        <div class="psu-val" id="pstat-hs">+0</div>
-        <div class="psu-lbl">Bonus HS</div>
+        <div class="psu-val" id="pstat-hsj">0</div>
+        <div class="psu-lbl">HS Jour</div>
+      </div>
+      <div class="psu hs">
+        <div class="psu-val" id="pstat-hsn">0</div>
+        <div class="psu-lbl">HS Nuit</div>
+      </div>
+      <div class="psu">
+        <div class="psu-val" id="pstat-rc">0</div>
+        <div class="psu-lbl">RC</div>
       </div>
       <div class="psu">
         <div class="psu-val" id="pstat-frac">+0</div>
