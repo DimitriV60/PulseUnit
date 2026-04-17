@@ -7844,9 +7844,9 @@
     const wsKey = `pu_ws_${currentShiftKey}_${currentUser.id}`;
     if (localStorage.getItem(wsKey) !== null) return;
 
-    // Planning : si le jour est explicitement non travaillé → skip silencieux
-    const planState = getPlanDayState(dateOnly);
-    if (!PLAN_WORK_STATES.has(planState)) return;
+    // Planning : uniquement si l'agent a explicitement renseigné un état de travail
+    const planState = planStates[dateOnly];
+    if (!planState || !PLAN_WORK_STATES.has(planState)) return;
 
     // Nettoyage des réponses périmées (> 4 jours)
     const cutoffStr = (() => { const d = new Date(); d.setDate(d.getDate()-4); return d.toISOString().split('T')[0]; })();
