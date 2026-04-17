@@ -596,6 +596,18 @@
   .bourse-input:focus { outline:none; border-color:var(--brand-aqua); background:var(--surface); }
   .bourse-submit-btn { width:100%; padding:14px; border:none; border-radius:12px; background:var(--brand-aqua); color:#000; font-size:0.92rem; font-weight:900; font-family:var(--font); cursor:pointer; margin-top:18px; }
   .bourse-cancel-btn { width:100%; padding:12px; border:1px solid var(--border); border-radius:12px; background:transparent; color:var(--text-muted); font-size:0.85rem; font-weight:700; font-family:var(--font); cursor:pointer; margin-top:8px; }
+  .swap-want-btn { flex:1; padding:10px 4px; border-radius:10px; font-size:0.8rem; font-weight:800; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--surface-sec); color:var(--text-muted); transition:all 0.15s; min-width:60px; }
+  .swap-want-btn.active { border-color:var(--brand-aqua); color:var(--brand-aqua); background:rgba(64,206,239,0.1); }
+  .bourse-compat-badge { font-size:0.65rem; font-weight:900; padding:3px 8px; border-radius:10px; white-space:nowrap; }
+  .bourse-compat-badge.bc-green { background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+  .bourse-compat-badge.bc-red   { background:rgba(239,68,68,0.12);  color:#ef4444; border:1px solid rgba(239,68,68,0.25); }
+  .bourse-card.compat-ok { border-color:rgba(16,185,129,0.4); }
+  .bourse-status-badge.prop { background:rgba(96,165,250,0.15); color:#60a5fa; }
+  .bourse-prop-box { background:var(--surface-sec); border:1px solid var(--border); border-radius:10px; padding:12px; margin-top:4px; }
+  .bourse-prop-who { font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
+  .bourse-prop-date { font-size:0.95rem; font-weight:900; color:var(--text); }
+  .bourse-empty { text-align:center; color:var(--text-muted); padding:40px 20px; font-size:0.88rem; line-height:1.6; }
+  .bourse-empty-icon { font-size:2.5rem; margin-bottom:12px; }
   .fs-action-btn { background:var(--brand-aqua); color:#000; border:none; border-radius:50%; width:36px; height:36px; font-size:1.4rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
   .plan-stats-bar { display:flex; gap:6px; padding:10px 14px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-bar::-webkit-scrollbar { display:none; }
@@ -6105,144 +6117,234 @@
   function closeBourse() {
     document.getElementById('bourse-view').style.display = 'none';
     document.getElementById('bourse-create-modal').style.display = 'none';
+    const pm = document.getElementById('bourse-propose-modal');
+    if (pm) pm.style.display = 'none';
   }
+
+  // ─── Constantes ───────────────────────────────────────────────────────────────
+  const _MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  function _isGardeState(st) { return ['jour','nuit','hs_j','hs_n','hs'].includes(st); }
+
+  // ─── État formulaire création ─────────────────────────────────────────────────
+  let _offCalY = new Date().getFullYear(), _offCalM = new Date().getMonth() + 1;
+  let _offDate  = '';
+  let _wantType = 'indiff';
+  let _wantCalY = new Date().getFullYear(), _wantCalM = new Date().getMonth() + 1;
+  let _wantDate = '';
+
+  // ─── État formulaire proposition ──────────────────────────────────────────────
+  let _propReqId = '', _propCalY = new Date().getFullYear(), _propCalM = new Date().getMonth() + 1, _propDate = '';
 
   function openBourseCreate() {
     if (!currentUser) { showToast('Connectez-vous pour proposer un échange'); return; }
     const now = new Date();
-    document.getElementById('swap-wanted-date').value = '';
+    _offCalY = now.getFullYear(); _offCalM = now.getMonth() + 1; _offDate = '';
+    _wantType = 'indiff';
+    _wantCalY = now.getFullYear(); _wantCalM = now.getMonth() + 1; _wantDate = '';
     document.getElementById('swap-note').value = '';
-    document.querySelectorAll('.swap-shift-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="indiff"]').classList.add('active');
-    _bourseCalY = now.getFullYear();
-    _bourseCalM = now.getMonth() + 1;
-    _bourseWanted = '';
+    document.querySelectorAll('.swap-want-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'indiff'));
+    document.getElementById('bourse-wanted-cal-wrap').style.display = 'none';
     document.getElementById('bourse-create-modal').style.display = 'flex';
-    renderBourseCalendar();
+    renderOfferedCal();
   }
-  function closeBourseCreate() {
+  window.closeBourseCreate = function() {
     document.getElementById('bourse-create-modal').style.display = 'none';
-  }
+  };
 
-  // ── Mini calendrier planning pour la garde souhaitée ────────────────────
-  let _bourseCalY = new Date().getFullYear();
-  let _bourseCalM = new Date().getMonth() + 1;
-  let _bourseWanted = '';
-
-  const _MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-
-  function renderBourseCalendar() {
-    const wrap = document.getElementById('bourse-cal');
+  // ─── Calendrier garde à céder ─────────────────────────────────────────────────
+  function _buildBourneCal(wrapId, y, m, selDate, today, clickFn, clearFn, prevFn, nextFn, filterFn, emptyMsg) {
+    const wrap = document.getElementById(wrapId);
     if (!wrap) return;
-    const y = _bourseCalY, m = _bourseCalM;
-    const firstDow = (new Date(y, m-1, 1).getDay() + 6) % 7; // Lu=0
-    const daysInMonth = new Date(y, m, 0).getDate();
-    const today = new Date().toISOString().split('T')[0];
-
-    let html = `<div class="bourse-cal-nav">
-      <button class="bourse-cal-nav-btn" onclick="prevBourseMonth()">‹</button>
+    const firstDow = (new Date(y, m-1, 1).getDay() + 6) % 7;
+    const days = new Date(y, m, 0).getDate();
+    let h = `<div class="bourse-cal-nav">
+      <button class="bourse-cal-nav-btn" onclick="${prevFn}()">‹</button>
       <span class="bourse-cal-nav-month">${_MONTHS_FR[m-1]} ${y}</span>
-      <button class="bourse-cal-nav-btn" onclick="nextBourseMonth()">›</button>
+      <button class="bourse-cal-nav-btn" onclick="${nextFn}()">›</button>
     </div>
     <div class="bourse-cal-dow">
       <div class="bourse-cal-dow-lbl">Lu</div><div class="bourse-cal-dow-lbl">Ma</div>
       <div class="bourse-cal-dow-lbl">Me</div><div class="bourse-cal-dow-lbl">Je</div>
       <div class="bourse-cal-dow-lbl">Ve</div><div class="bourse-cal-dow-lbl">Sa</div>
       <div class="bourse-cal-dow-lbl">Di</div>
-    </div>
-    <div class="bourse-cal-grid">`;
-
-    for (let i = 0; i < firstDow; i++) html += '<div class="bourse-cal-cell empty"></div>';
-    for (let d = 1; d <= daysInMonth; d++) {
+    </div><div class="bourse-cal-grid">`;
+    for (let i = 0; i < firstDow; i++) h += '<div class="bourse-cal-cell empty"></div>';
+    for (let d = 1; d <= days; d++) {
       const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const st = getPlanDayState(ds);
-      const past = ds < today;
-      const sel  = ds === _bourseWanted;
-      html += `<div class="bourse-cal-cell p-${st}${past ? ' past' : ''}${sel ? ' bc-selected' : ''}" onclick="${past ? '' : `selectBourseWanted('${ds}')`}">${d}</div>`;
+      const inactive = ds < today || (filterFn && !filterFn(st));
+      const sel = ds === selDate;
+      h += `<div class="bourse-cal-cell p-${st}${inactive ? ' past' : ''}${sel ? ' bc-selected' : ''}" onclick="${inactive ? '' : `${clickFn}('${ds}')`}">${d}</div>`;
     }
-    html += '</div>';
-
-    if (_bourseWanted) {
-      const [,bm,bd] = _bourseWanted.split('-');
-      const bwd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(_bourseWanted+'T12:00:00').getDay()];
-      html += `<div class="bourse-cal-footer" onclick="clearBourseWanted()">✕ Effacer — ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
+    h += '</div>';
+    if (selDate) {
+      const [,bm,bd] = selDate.split('-');
+      const bwd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(selDate+'T12:00:00').getDay()];
+      const st = getPlanDayState(selDate);
+      const lbl = (st === 'nuit' || st === 'hs_n') ? '🌙 Nuit' : '☀️ Jour';
+      h += `<div class="bourse-cal-footer" onclick="${clearFn}()">✕ ${lbl} — ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
     } else {
-      html += `<div class="bourse-cal-footer empty-sel">Touchez un jour pour le sélectionner</div>`;
+      h += `<div class="bourse-cal-footer empty-sel">${emptyMsg}</div>`;
     }
-    wrap.innerHTML = html;
+    wrap.innerHTML = h;
   }
 
-  window.selectBourseWanted = function(ds) {
-    _bourseWanted = ds;
-    document.getElementById('swap-wanted-date').value = ds;
-    renderBourseCalendar();
-  };
-
-  window.clearBourseWanted = function() {
-    _bourseWanted = '';
-    document.getElementById('swap-wanted-date').value = '';
-    document.querySelectorAll('.swap-shift-btn[data-field="wanted"]').forEach(b => b.classList.remove('active'));
-    document.querySelector('.swap-shift-btn[data-field="wanted"][data-val="indiff"]').classList.add('active');
-    renderBourseCalendar();
-  };
-
-  window.prevBourseMonth = function() {
-    if (_bourseCalM === 1) { _bourseCalM = 12; _bourseCalY--; } else _bourseCalM--;
-    renderBourseCalendar();
-  };
-  window.nextBourseMonth = function() {
-    if (_bourseCalM === 12) { _bourseCalM = 1; _bourseCalY++; } else _bourseCalM++;
-    renderBourseCalendar();
-  };
-
-  function swapSelectShift(btn) {
-    const field = btn.dataset.field;
-    document.querySelectorAll(`.swap-shift-btn[data-field="${field}"]`).forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+  function renderOfferedCal() {
+    const today = new Date().toISOString().split('T')[0];
+    _buildBourneCal('bourse-offered-cal', _offCalY, _offCalM, _offDate, today, 'pickOffDate', 'clearOffDate', 'prevOffCal', 'nextOffCal', _isGardeState, 'Sélectionnez une garde à céder');
   }
+  window.pickOffDate  = ds => { _offDate = ds; renderOfferedCal(); };
+  window.clearOffDate = ()  => { _offDate = ''; renderOfferedCal(); };
+  window.prevOffCal   = ()  => { if (_offCalM===1){_offCalM=12;_offCalY--;}else _offCalM--; renderOfferedCal(); };
+  window.nextOffCal   = ()  => { if (_offCalM===12){_offCalM=1;_offCalY++;}else _offCalM++; renderOfferedCal(); };
 
+  // ─── Type voulu ───────────────────────────────────────────────────────────────
+  window.selectWantedType = function(btn) {
+    _wantType = btn.dataset.val;
+    document.querySelectorAll('.swap-want-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const wrap = document.getElementById('bourse-wanted-cal-wrap');
+    if (_wantType === 'date') { wrap.style.display = 'block'; renderWantedCal(); }
+    else { wrap.style.display = 'none'; _wantDate = ''; }
+  };
+
+  // ─── Calendrier date précise souhaitée ────────────────────────────────────────
+  function renderWantedCal() {
+    const wrap = document.getElementById('bourse-wanted-cal');
+    if (!wrap) return;
+    const y = _wantCalY, m = _wantCalM;
+    const today = new Date().toISOString().split('T')[0];
+    const firstDow = (new Date(y, m-1, 1).getDay() + 6) % 7;
+    const days = new Date(y, m, 0).getDate();
+    let h = `<div class="bourse-cal-nav">
+      <button class="bourse-cal-nav-btn" onclick="prevWantCal()">‹</button>
+      <span class="bourse-cal-nav-month">${_MONTHS_FR[m-1]} ${y}</span>
+      <button class="bourse-cal-nav-btn" onclick="nextWantCal()">›</button>
+    </div>
+    <div class="bourse-cal-dow">
+      <div class="bourse-cal-dow-lbl">Lu</div><div class="bourse-cal-dow-lbl">Ma</div>
+      <div class="bourse-cal-dow-lbl">Me</div><div class="bourse-cal-dow-lbl">Je</div>
+      <div class="bourse-cal-dow-lbl">Ve</div><div class="bourse-cal-dow-lbl">Sa</div>
+      <div class="bourse-cal-dow-lbl">Di</div>
+    </div><div class="bourse-cal-grid">`;
+    for (let i = 0; i < firstDow; i++) h += '<div class="bourse-cal-cell empty"></div>';
+    for (let d = 1; d <= days; d++) {
+      const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const past = ds < today;
+      const sel = ds === _wantDate;
+      h += `<div class="bourse-cal-cell${past?' past':''}${sel?' bc-selected':''}" style="border:1px solid var(--border);" onclick="${past?'':` pickWantDate('${ds}')`}">${d}</div>`;
+    }
+    h += '</div>';
+    if (_wantDate) {
+      const [,bm,bd] = _wantDate.split('-');
+      const bwd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(_wantDate+'T12:00:00').getDay()];
+      h += `<div class="bourse-cal-footer" onclick="clearWantDate()">✕ ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
+    } else {
+      h += `<div class="bourse-cal-footer empty-sel">Touchez une date</div>`;
+    }
+    wrap.innerHTML = h;
+  }
+  window.pickWantDate  = ds => { _wantDate = ds; renderWantedCal(); };
+  window.clearWantDate = ()  => { _wantDate = ''; renderWantedCal(); };
+  window.prevWantCal   = ()  => { if (_wantCalM===1){_wantCalM=12;_wantCalY--;}else _wantCalM--; renderWantedCal(); };
+  window.nextWantCal   = ()  => { if (_wantCalM===12){_wantCalM=1;_wantCalY++;}else _wantCalM++; renderWantedCal(); };
+
+  // ─── Soumettre la demande ─────────────────────────────────────────────────────
   async function submitSwapRequest() {
     if (!currentUser) return;
-    const offeredDate = '';
-    const offeredShift = '';
-    const wantedDate  = document.getElementById('swap-wanted-date').value || '';
-    const wantedShift = document.querySelector('.swap-shift-btn[data-field="wanted"].active')?.dataset.val || 'indiff';
+    if (!_offDate) { showToast('Sélectionnez la garde à céder'); return; }
+    if (_wantType === 'date' && !_wantDate) { showToast('Sélectionnez la date souhaitée'); return; }
+    const offSt = getPlanDayState(_offDate);
+    const offShift = (offSt === 'nuit' || offSt === 'hs_n') ? 'nuit' : 'jour';
     const note = (document.getElementById('swap-note').value || '').trim().slice(0, 200);
     const req = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2),
       userId: currentUser.id,
       userName: (currentUser.firstName + ' ' + currentUser.lastName).trim(),
       userRole: currentUser.role || 'ide',
-      offeredDate, offeredShift,
-      wantedDate, wantedShift, note,
-      ts: Date.now(), status: 'open', acceptedBy: null, acceptedByName: null
+      offeredDate: _offDate, offeredShift: offShift,
+      wantedType: _wantType,
+      wantedDate: _wantType === 'date' ? _wantDate : '',
+      note, ts: Date.now(), status: 'open',
+      proposedBy: null, proposedByName: null, proposedByRole: null,
+      proposedDate: null, proposedShift: null,
+      acceptedBy: null, acceptedByName: null
     };
     const updated = [...swapRequests, req];
     closeBourseCreate();
     try {
       if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
-      swapRequests = updated;
-      renderBourseList();
+      swapRequests = updated; renderBourseList();
       showToast('✅ Demande publiée');
     } catch(e) { showToast('Erreur de connexion'); }
   }
 
+  // ─── Proposer sa garde ────────────────────────────────────────────────────────
+  window.openBoursePropose = function(id) {
+    if (!currentUser) { showToast('Connectez-vous pour proposer'); return; }
+    _propReqId = id;
+    const now = new Date();
+    _propCalY = now.getFullYear(); _propCalM = now.getMonth() + 1; _propDate = '';
+    document.getElementById('bourse-propose-modal').style.display = 'flex';
+    renderProposeCal();
+  };
+  window.closeBoursePropose = function() {
+    document.getElementById('bourse-propose-modal').style.display = 'none';
+  };
+  function renderProposeCal() {
+    const today = new Date().toISOString().split('T')[0];
+    _buildBourneCal('bourse-propose-cal', _propCalY, _propCalM, _propDate, today, 'pickPropDate', 'clearPropDate', 'prevPropCal', 'nextPropCal', _isGardeState, 'Sélectionnez votre garde à proposer');
+  }
+  window.pickPropDate  = ds => { _propDate = ds; renderProposeCal(); };
+  window.clearPropDate = ()  => { _propDate = ''; renderProposeCal(); };
+  window.prevPropCal   = ()  => { if (_propCalM===1){_propCalM=12;_propCalY--;}else _propCalM--; renderProposeCal(); };
+  window.nextPropCal   = ()  => { if (_propCalM===12){_propCalM=1;_propCalY++;}else _propCalM++; renderProposeCal(); };
+  window.submitPropose = async function() {
+    if (!currentUser || !_propReqId) return;
+    if (!_propDate) { showToast('Sélectionnez une garde à proposer'); return; }
+    const propSt = getPlanDayState(_propDate);
+    const propShift = (propSt === 'nuit' || propSt === 'hs_n') ? 'nuit' : 'jour';
+    const updated = swapRequests.map(r => r.id === _propReqId
+      ? { ...r, status: 'proposed',
+          proposedBy: currentUser.id,
+          proposedByName: (currentUser.firstName + ' ' + currentUser.lastName).trim(),
+          proposedByRole: currentUser.role || 'ide',
+          proposedDate: _propDate, proposedShift: propShift }
+      : r
+    );
+    closeBoursePropose();
+    try {
+      if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
+      swapRequests = updated; renderBourseList();
+      showToast('✅ Proposition envoyée');
+    } catch(e) { showToast('Erreur de connexion'); }
+  };
+
+  // ─── Accepter / Refuser une proposition ──────────────────────────────────────
   async function acceptSwap(id) {
-    if (!currentUser) { showToast('Connectez-vous pour accepter un échange'); return; }
-    const idx = swapRequests.findIndex(r => r.id === id);
-    if (idx === -1) return;
-    if (swapRequests[idx].userId === currentUser.id) { showToast('Vous ne pouvez pas accepter votre propre demande'); return; }
+    if (!currentUser) return;
+    const r = swapRequests.find(x => x.id === id);
+    if (!r || r.userId !== currentUser.id) return;
+    const updated = swapRequests.map(x => x.id === id
+      ? { ...x, status: 'accepted', acceptedBy: x.proposedBy, acceptedByName: x.proposedByName }
+      : x
+    );
+    try {
+      if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
+      swapRequests = updated; renderBourseList();
+      showToast('✅ Échange confirmé — à valider avec le cadre');
+    } catch(e) { showToast('Erreur de connexion'); }
+  }
+  window.declineProposal = async function(id) {
     const updated = swapRequests.map(r => r.id === id
-      ? { ...r, status: 'accepted', acceptedBy: currentUser.id, acceptedByName: (currentUser.firstName + ' ' + currentUser.lastName).trim() }
+      ? { ...r, status: 'open', proposedBy: null, proposedByName: null, proposedByRole: null, proposedDate: null, proposedShift: null }
       : r
     );
     try {
       if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
-      swapRequests = updated;
-      renderBourseList();
-      showToast('✅ Échange accepté — à confirmer avec votre cadre');
+      swapRequests = updated; renderBourseList();
+      showToast('Proposition refusée');
     } catch(e) { showToast('Erreur de connexion'); }
-  }
+  };
 
   async function cancelSwap(id) {
     if (!currentUser) return;
@@ -6252,142 +6354,137 @@
     const updated = swapRequests.filter(r => r.id !== id);
     try {
       if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
-      swapRequests = updated;
-      renderBourseList();
+      swapRequests = updated; renderBourseList();
       showToast('Demande supprimée');
     } catch(e) { showToast('Erreur de connexion'); }
   }
 
+  // ─── Rendu liste bourse ───────────────────────────────────────────────────────
   function renderBourseList() {
     const el = document.getElementById('bourse-list');
     if (!el) return;
-
-    const myRole  = currentUser?.role || null;
     const ROLE_LBL = { ide:'IDE', as:'AS', med:'MED', tech:'TECH' };
-    const roleBadge = role => {
-      if (!role) return '';
-      return `<span class="bourse-role-badge b-${role}">${ROLE_LBL[role] || role.toUpperCase()}</span>`;
-    };
-    const planTag = st => {
-      if (!st || st === 'travail') return '';
-      const lbl = PLAN_LABELS[st];
-      if (!lbl) return '';
-      return `<span class="bourse-cal-cell p-${st}" style="width:24px;height:24px;font-size:0.62rem;border-radius:5px;flex-shrink:0;">${lbl}</span>`;
-    };
-
-    const mine   = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
-    const allOpen = swapRequests.filter(r => r.status === 'open');
-    // Filtrage par fonction : on ne voit que les demandes de sa propre fonction
-    const others = allOpen.filter(r => {
-      if (!currentUser || r.userId === currentUser.id) return false;
-      if (!r.userRole || !myRole) return true; // rétro-compat sans role
-      return r.userRole === myRole;
-    });
-    const myAcc  = swapRequests.filter(r => r.status === 'accepted' && currentUser && r.acceptedBy === currentUser.id && r.userId !== currentUser.id);
-
+    const myRole = currentUser?.role || null;
+    const roleBadge = role => role
+      ? `<span class="bourse-role-badge b-${role}">${ROLE_LBL[role]||role.toUpperCase()}</span>` : '';
     const fmtDate = ds => {
       if (!ds) return '—';
       const [,m,d] = ds.split('-');
       const wd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(ds+'T12:00:00').getDay()];
       return `${wd} ${parseInt(d)}/${parseInt(m)}`;
     };
-    const shiftTag = s => {
-      if (s === 'jour') return `<span class="bourse-shift-tag jour">☀️ Jour</span>`;
-      if (s === 'nuit') return `<span class="bourse-shift-tag nuit">🌙 Nuit</span>`;
-      return `<span class="bourse-shift-tag indiff">🔄 Indiff.</span>`;
+    const shiftLbl = s => s === 'nuit' ? '🌙 Nuit' : '☀️ Jour';
+    const wantedLbl = r => {
+      if ((r.wantedType||r.wantedShift) === 'date' && r.wantedDate) return `📅 ${fmtDate(r.wantedDate)}`;
+      if ((r.wantedType||r.wantedShift) === 'jour') return '☀️ Jour';
+      if ((r.wantedType||r.wantedShift) === 'nuit') return '🌙 Nuit';
+      return '🔄 Indiff.';
     };
+    function checkCompat(r) {
+      if (!currentUser || r.userId === currentUser.id) return null;
+      const today = new Date().toISOString().split('T')[0];
+      const wt = r.wantedType || r.wantedShift || 'indiff';
+      if (wt === 'date') {
+        return _isGardeState(getPlanDayState(r.wantedDate)) ? 'green' : 'red';
+      }
+      for (const [date, state] of Object.entries(planStates)) {
+        if (date <= today) continue;
+        if (wt === 'indiff' && _isGardeState(state)) return 'green';
+        if (wt === 'jour' && (state==='jour'||state==='hs_j')) return 'green';
+        if (wt === 'nuit' && (state==='nuit'||state==='hs_n')) return 'green';
+      }
+      return 'red';
+    }
+
+    const mine   = swapRequests.filter(r => currentUser && r.userId === currentUser.id);
+    const others = swapRequests.filter(r => {
+      if (!r || r.status === 'accepted') return false;
+      if (currentUser && r.userId === currentUser.id) return false;
+      if (myRole && r.userRole && r.userRole !== myRole) return false;
+      return true;
+    });
 
     let html = '';
-
-    const roleTitle = myRole ? ` — ${ROLE_LBL[myRole] || myRole.toUpperCase()}` : '';
-
-    if (swapRequests.length === 0 || (others.length === 0 && mine.length === 0 && myAcc.length === 0)) {
-      html = `<div class="bourse-empty"><div class="bourse-empty-icon">🔄</div>Aucune demande en cours pour votre fonction.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
+    if (others.length === 0 && mine.length === 0) {
+      html = `<div class="bourse-empty"><div class="bourse-empty-icon">💱</div>Aucune demande en cours pour votre fonction.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
     } else {
-      if (others.length > 0) {
-        html += `<div class="bourse-section-lbl">Propositions disponibles${roleTitle}</div>`;
+      html += `<div class="bourse-section-lbl">Propositions disponibles</div>`;
+      if (others.length === 0) {
+        html += `<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:0.82rem;">Aucune demande ouverte pour votre fonction</div>`;
+      } else {
         others.forEach(r => {
-          html += `<div class="bourse-card">
+          const compat = checkCompat(r);
+          const isProp = r.status === 'proposed';
+          const isMyProp = isProp && r.proposedBy === currentUser?.id;
+          const compatBadge = compat === 'green'
+            ? `<span class="bourse-compat-badge bc-green">🟢 Possible</span>`
+            : compat === 'red'
+            ? `<span class="bourse-compat-badge bc-red">🔴 Non dispo</span>` : '';
+          const canPropose = currentUser && compat === 'green' && !isProp;
+          html += `<div class="bourse-card${compat==='green'?' compat-ok':''}">
             <div class="bourse-card-header">
-              <span class="bourse-card-who">${r.userName}</span>
-              ${roleBadge(r.userRole)}
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="bourse-card-who">${r.userName}</span>${roleBadge(r.userRole)}
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;">
+                ${compatBadge}
+                <span class="bourse-status-badge ${isProp?'prop':'open'}">${isProp?'En cours':'Ouvert'}</span>
+              </div>
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Cède</span>
-              <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
-              ${shiftTag(r.offeredShift)}
-              ${planTag(r.offeredPlanState)}
+              <span class="bourse-card-val">${shiftLbl(r.offeredShift)} du ${fmtDate(r.offeredDate)}</span>
             </div>
             <div class="bourse-card-line">
-              <span class="bourse-card-label">Veut</span>
-              ${r.wantedDate ? `<span class="bourse-card-val">${fmtDate(r.wantedDate)}</span>` : '<span class="bourse-card-val" style="color:var(--text-muted);">Toute garde</span>'}
-              ${shiftTag(r.wantedShift)}
+              <span class="bourse-card-label">Contre</span>
+              <span class="bourse-card-val">${wantedLbl(r)}</span>
             </div>
-            ${r.note ? `<div class="bourse-card-note">${r.note}</div>` : ''}
-            ${currentUser ? `<button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">✅ Accepter cet échange</button>` : ''}
+            ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
+            ${canPropose ? `<button class="bourse-btn-accept" onclick="openBoursePropose('${r.id}')">Proposer ma garde</button>` : ''}
+            ${isProp && !isMyProp ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:center;padding:6px 0;">Une proposition est déjà en attente</div>` : ''}
           </div>`;
         });
-      } else if (currentUser) {
-        html += `<div class="bourse-section-lbl">Propositions disponibles${roleTitle}</div>`;
-        html += `<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:0.82rem;">Aucune demande ouverte pour votre fonction</div>`;
       }
 
       if (mine.length > 0) {
         html += '<div class="bourse-section-lbl">Mes demandes</div>';
         mine.forEach(r => {
-          const isAcc = r.status === 'accepted';
-          html += `<div class="bourse-card ${isAcc ? 'accepted' : ''}">
+          const isAcc  = r.status === 'accepted';
+          const isProp = r.status === 'proposed';
+          html += `<div class="bourse-card${isAcc?' accepted':''}">
             <div class="bourse-card-header">
-              <span class="bourse-card-who">Ma garde à céder</span>
-              <div style="display:flex;gap:6px;align-items:center;">
-                ${roleBadge(r.userRole)}
-                <span class="bourse-status-badge ${isAcc ? 'acc' : 'open'}">${isAcc ? '✓ Accepté' : 'En attente'}</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="bourse-card-who">${r.userName}</span>${roleBadge(r.userRole)}
               </div>
+              <span class="bourse-status-badge ${isAcc?'acc':isProp?'prop':'open'}">${isAcc?'✓ Accepté':isProp?'💬 Proposition':'Ouvert'}</span>
             </div>
             <div class="bourse-card-line">
               <span class="bourse-card-label">Cède</span>
-              <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
-              ${shiftTag(r.offeredShift)}
-              ${planTag(r.offeredPlanState)}
+              <span class="bourse-card-val">${shiftLbl(r.offeredShift)} du ${fmtDate(r.offeredDate)}</span>
             </div>
             <div class="bourse-card-line">
-              <span class="bourse-card-label">Veut</span>
-              ${r.wantedDate ? `<span class="bourse-card-val">${fmtDate(r.wantedDate)}</span>` : '<span class="bourse-card-val" style="color:var(--text-muted);">Toute garde</span>'}
-              ${shiftTag(r.wantedShift)}
+              <span class="bourse-card-label">Contre</span>
+              <span class="bourse-card-val">${wantedLbl(r)}</span>
             </div>
-            ${r.note ? `<div class="bourse-card-note">${r.note}</div>` : ''}
-            ${isAcc ? `<div class="bourse-card-ok">✅ Accepté par <b>${r.acceptedByName}</b> — à valider avec le cadre</div>` : ''}
-            <button class="bourse-btn-cancel" onclick="cancelSwap('${r.id}')">Supprimer</button>
-          </div>`;
-        });
-      }
-
-      if (myAcc.length > 0) {
-        html += '<div class="bourse-section-lbl">Échanges acceptés par moi</div>';
-        myAcc.forEach(r => {
-          html += `<div class="bourse-card accepted">
-            <div class="bourse-card-header">
-              <span class="bourse-card-who">Échange avec ${r.userName}</span>
-              <div style="display:flex;gap:6px;align-items:center;">
-                ${roleBadge(r.userRole)}
-                <span class="bourse-status-badge acc">✓ Accepté</span>
+            ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
+            ${isProp ? `<div class="bourse-prop-box">
+              <div class="bourse-prop-who">${r.proposedByName} ${roleBadge(r.proposedByRole)} propose :</div>
+              <div class="bourse-prop-date">${shiftLbl(r.proposedShift)} du ${fmtDate(r.proposedDate)}</div>
+              <div style="display:flex;gap:8px;margin-top:10px;">
+                <button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">✅ Accepter</button>
+                <button class="bourse-btn-cancel" onclick="declineProposal('${r.id}')">Refuser</button>
               </div>
-            </div>
-            <div class="bourse-card-line">
-              <span class="bourse-card-label">Garde</span>
-              <span class="bourse-card-val">${fmtDate(r.offeredDate)}</span>
-              ${shiftTag(r.offeredShift)}
-              ${planTag(r.offeredPlanState)}
-            </div>
-            <div class="bourse-card-ok">✅ En attente de validation cadre</div>
+            </div>` : ''}
+            ${isAcc ? `<div class="bourse-card-ok">✅ Échange avec <b>${r.acceptedByName}</b> — à valider avec le cadre</div>` : ''}
+            ${!isAcc ? `<button class="bourse-btn-cancel" style="margin-top:8px;" onclick="cancelSwap('${r.id}')">Supprimer</button>` : ''}
           </div>`;
         });
       }
     }
 
+    const openCount = swapRequests.filter(r => r.status !== 'accepted').length;
     const sub = document.getElementById('bourse-subtitle');
-    if (sub) sub.textContent = open.length > 0 ? `${open.length} demande${open.length > 1 ? 's' : ''} ouverte${open.length > 1 ? 's' : ''}` : 'Aucune demande en cours';
-
+    if (sub) sub.textContent = openCount > 0 ? `${openCount} demande${openCount>1?'s':''} en cours` : 'Aucune demande';
     el.innerHTML = html;
   }
 
@@ -8711,22 +8808,38 @@
 <div id="bourse-create-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);align-items:flex-end;">
   <div class="bourse-create-sheet">
     <h3 style="margin:0 0 4px;color:var(--text);font-weight:900;">Proposer un échange</h3>
-    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px;">La permutation doit être validée par votre cadre.</div>
+    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">Validation requise par votre cadre.</div>
 
-    <div class="bourse-form-lbl">Garde souhaitée en échange <span style="font-weight:400;text-transform:none;">(optionnel)</span></div>
-    <input type="hidden" id="swap-wanted-date">
-    <div id="bourse-cal" class="bourse-cal-wrap"></div>
-    <div style="margin-top:8px;"><div class="bourse-shift-row">
-      <button class="swap-shift-btn" data-field="wanted" data-val="jour" onclick="swapSelectShift(this)">☀️ Jour</button>
-      <button class="swap-shift-btn" data-field="wanted" data-val="nuit" onclick="swapSelectShift(this)">🌙 Nuit</button>
-      <button class="swap-shift-btn" data-field="wanted" data-val="indiff" onclick="swapSelectShift(this)">🔄 Indiff.</button>
-    </div></div>
+    <div class="bourse-form-lbl">Garde à céder</div>
+    <div id="bourse-offered-cal" class="bourse-cal-wrap"></div>
+
+    <div class="bourse-form-lbl" style="margin-top:14px;">Je veux en échange</div>
+    <div class="bourse-shift-row" style="flex-wrap:wrap;gap:6px;">
+      <button class="swap-want-btn active" data-val="indiff" onclick="selectWantedType(this)">🔄 Indiff.</button>
+      <button class="swap-want-btn" data-val="jour" onclick="selectWantedType(this)">☀️ Jour</button>
+      <button class="swap-want-btn" data-val="nuit" onclick="selectWantedType(this)">🌙 Nuit</button>
+      <button class="swap-want-btn" data-val="date" onclick="selectWantedType(this)">📅 Date</button>
+    </div>
+    <div id="bourse-wanted-cal-wrap" style="display:none;">
+      <div id="bourse-wanted-cal" class="bourse-cal-wrap" style="margin-top:8px;"></div>
+    </div>
 
     <div class="bourse-form-lbl">Note <span style="font-weight:400;text-transform:none;">(optionnel, 200 car. max)</span></div>
     <textarea id="swap-note" class="bourse-input" rows="2" maxlength="200" placeholder="Ex : raison familiale, weekend..."></textarea>
 
     <button class="bourse-submit-btn" onclick="submitSwapRequest()">Publier la demande</button>
     <button class="bourse-cancel-btn" onclick="closeBourseCreate()">Annuler</button>
+  </div>
+</div>
+
+<!-- Modale proposition garde -->
+<div id="bourse-propose-modal" style="display:none;position:fixed;inset:0;z-index:501;background:rgba(0,0,0,0.7);align-items:flex-end;">
+  <div class="bourse-create-sheet">
+    <h3 style="margin:0 0 4px;color:var(--text);font-weight:900;">Ma garde à proposer</h3>
+    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">Sélectionnez la garde que vous proposez en échange.</div>
+    <div id="bourse-propose-cal" class="bourse-cal-wrap"></div>
+    <button class="bourse-submit-btn" style="margin-top:14px;" onclick="submitPropose()">Envoyer la proposition</button>
+    <button class="bourse-cancel-btn" onclick="closeBoursePropose()">Annuler</button>
   </div>
 </div>
 
