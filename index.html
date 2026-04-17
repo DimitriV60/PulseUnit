@@ -5209,8 +5209,8 @@
 
   function renderPlanCalendrier() {
     const limit = planRegime === 'nuit' ? 22 : 21;
-    document.getElementById('pbtn-jour').className = 'plan-regime-pill' + (planRegime === 'jour' ? ' active-jour' : '');
-    document.getElementById('pbtn-nuit').className = 'plan-regime-pill' + (planRegime === 'nuit' ? ' active-nuit' : '');
+    const pj = document.getElementById('pbtn-jour'); if(pj) pj.className = 'plan-regime-pill' + (planRegime === 'jour' ? ' active-jour' : '');
+    const pn = document.getElementById('pbtn-nuit'); if(pn) pn.className = 'plan-regime-pill' + (planRegime === 'nuit' ? ' active-nuit' : '');
     document.getElementById('plan-year-label').textContent = planYear;
     const rcnLeg = document.getElementById('plan-legend-rcn');
     if (rcnLeg) rcnLeg.style.display = planRegime === 'nuit' ? 'inline' : 'none';
