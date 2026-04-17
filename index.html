@@ -926,7 +926,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
       <div class="side-menu-section">ORGANISATION</div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">🔄 Bourse d'échange</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">Bourse d'échange</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
       <div style="flex: 1; min-height: 20px;"></div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Signaler un bug</a>
@@ -6128,7 +6128,8 @@
   // ─── État formulaire création ─────────────────────────────────────────────────
   let _offCalY = new Date().getFullYear(), _offCalM = new Date().getMonth() + 1;
   let _offDate  = '';
-  let _wantType = 'indiff';
+  let _wantType  = 'indiff';
+  let _wantShift = 'jour'; // utilisé quand _wantType === 'date'
   let _wantCalY = new Date().getFullYear(), _wantCalM = new Date().getMonth() + 1;
   let _wantDate = '';
 
@@ -6139,7 +6140,7 @@
     if (!currentUser) { showToast('Connectez-vous pour proposer un échange'); return; }
     const now = new Date();
     _offCalY = now.getFullYear(); _offCalM = now.getMonth() + 1; _offDate = '';
-    _wantType = 'indiff';
+    _wantType = 'indiff'; _wantShift = 'jour';
     _wantCalY = now.getFullYear(); _wantCalM = now.getMonth() + 1; _wantDate = '';
     document.getElementById('swap-note').value = '';
     document.querySelectorAll('.swap-want-btn').forEach(b => b.classList.toggle('active', b.dataset.val === 'indiff'));
@@ -6201,10 +6202,20 @@
   // ─── Type voulu ───────────────────────────────────────────────────────────────
   window.selectWantedType = function(btn) {
     _wantType = btn.dataset.val;
-    document.querySelectorAll('.swap-want-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.swap-want-btn:not([id^="btn-want-"])').forEach(b => b.classList.toggle('active', b === btn));
     const wrap = document.getElementById('bourse-wanted-cal-wrap');
-    if (_wantType === 'date') { wrap.style.display = 'block'; renderWantedCal(); }
-    else { wrap.style.display = 'none'; _wantDate = ''; }
+    if (_wantType === 'date') {
+      wrap.style.display = 'block';
+      _wantShift = 'jour';
+      document.querySelectorAll('#btn-want-jour,#btn-want-nuit,#btn-want-indiff-date').forEach(b => b.classList.toggle('active', b.id === 'btn-want-jour'));
+      renderWantedCal();
+    } else {
+      wrap.style.display = 'none'; _wantDate = '';
+    }
+  };
+  window.selectWantedShift = function(btn) {
+    _wantShift = btn.dataset.val;
+    document.querySelectorAll('#btn-want-jour,#btn-want-nuit,#btn-want-indiff-date').forEach(b => b.classList.toggle('active', b === btn));
   };
 
   // ─── Calendrier date précise souhaitée ────────────────────────────────────────
@@ -6263,6 +6274,7 @@
       userRole: currentUser.role || 'ide',
       offeredDate: _offDate, offeredShift: offShift,
       wantedType: _wantType,
+      wantedShift: _wantType === 'date' ? _wantShift : 'indiff',
       wantedDate: _wantType === 'date' ? _wantDate : '',
       note, ts: Date.now(), status: 'open',
       proposedBy: null, proposedByName: null, proposedByRole: null,
@@ -6375,9 +6387,12 @@
     };
     const shiftLbl = s => s === 'nuit' ? '🌙 Nuit' : '☀️ Jour';
     const wantedLbl = r => {
-      if ((r.wantedType||r.wantedShift) === 'date' && r.wantedDate) return `📅 ${fmtDate(r.wantedDate)}`;
-      if ((r.wantedType||r.wantedShift) === 'jour') return '☀️ Jour';
-      if ((r.wantedType||r.wantedShift) === 'nuit') return '🌙 Nuit';
+      if (r.wantedType === 'date' && r.wantedDate) {
+        const shiftPart = r.wantedShift === 'nuit' ? '🌙 Nuit' : r.wantedShift === 'indiff_date' ? '🔄 Indiff.' : '☀️ Jour';
+        return `${shiftPart} du ${fmtDate(r.wantedDate)}`;
+      }
+      if (r.wantedType === 'jour' || r.wantedShift === 'jour') return '☀️ Jour';
+      if (r.wantedType === 'nuit' || r.wantedShift === 'nuit') return '🌙 Nuit';
       return '🔄 Indiff.';
     };
     function checkCompat(r) {
@@ -6385,7 +6400,13 @@
       const today = new Date().toISOString().split('T')[0];
       const wt = r.wantedType || r.wantedShift || 'indiff';
       if (wt === 'date') {
-        return _isGardeState(getPlanDayState(r.wantedDate)) ? 'green' : 'red';
+        const st = getPlanDayState(r.wantedDate);
+        if (!_isGardeState(st)) return 'red';
+        const ws = r.wantedShift || 'indiff_date';
+        if (ws === 'indiff_date') return 'green';
+        if (ws === 'jour' && (st === 'jour' || st === 'hs_j')) return 'green';
+        if (ws === 'nuit' && (st === 'nuit' || st === 'hs_n')) return 'green';
+        return 'red';
       }
       for (const [date, state] of Object.entries(planStates)) {
         if (date <= today) continue;
@@ -8814,14 +8835,17 @@
     <div id="bourse-offered-cal" class="bourse-cal-wrap"></div>
 
     <div class="bourse-form-lbl" style="margin-top:14px;">Je veux en échange</div>
-    <div class="bourse-shift-row" style="flex-wrap:wrap;gap:6px;">
+    <div class="bourse-shift-row" style="gap:8px;">
       <button class="swap-want-btn active" data-val="indiff" onclick="selectWantedType(this)">🔄 Indiff.</button>
-      <button class="swap-want-btn" data-val="jour" onclick="selectWantedType(this)">☀️ Jour</button>
-      <button class="swap-want-btn" data-val="nuit" onclick="selectWantedType(this)">🌙 Nuit</button>
-      <button class="swap-want-btn" data-val="date" onclick="selectWantedType(this)">📅 Date</button>
+      <button class="swap-want-btn" data-val="date" onclick="selectWantedType(this)">📅 Date précise</button>
     </div>
-    <div id="bourse-wanted-cal-wrap" style="display:none;">
-      <div id="bourse-wanted-cal" class="bourse-cal-wrap" style="margin-top:8px;"></div>
+    <div id="bourse-wanted-cal-wrap" style="display:none;margin-top:8px;">
+      <div id="bourse-wanted-cal" class="bourse-cal-wrap"></div>
+      <div class="bourse-shift-row" style="gap:8px;margin-top:8px;">
+        <button class="swap-want-btn active" data-val="jour" id="btn-want-jour" onclick="selectWantedShift(this)">☀️ Jour</button>
+        <button class="swap-want-btn" data-val="nuit" id="btn-want-nuit" onclick="selectWantedShift(this)">🌙 Nuit</button>
+        <button class="swap-want-btn" data-val="indiff_date" id="btn-want-indiff-date" onclick="selectWantedShift(this)">🔄 Indiff.</button>
+      </div>
     </div>
 
     <div class="bourse-form-lbl">Note <span style="font-weight:400;text-transform:none;">(optionnel, 200 car. max)</span></div>
