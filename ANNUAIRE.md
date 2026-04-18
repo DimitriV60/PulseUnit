@@ -27,9 +27,9 @@
 | 5 | [checklist](#5-checklist) | `features/checklist/` | 1155–1175 | 341–379 | 4080–4167 |
 | 6 | [lexique](#6-lexique) | `features/lexique/` ✅ data migrée | 1177–1193 | 234–255 | 2744–2804 (données dans `data.js`) |
 | 7 | [calculators](#7-calculators) | `features/calculators/` | 1195–1222 | 256–328 | 2814–3349 |
-| 8 | [protocols](#8-protocols) | `features/protocols/` | 8090–8120 | 398–430 | 4467–4839 |
+| 8 | [protocols](#8-protocols) | `features/protocols/` ✅ data migrée | 8090–8120 | 398–430 | 4467–4839 (données dans `data.js`) |
 | 9 | [tasks](#9-tasks) | `features/tasks/` | 1224–1243 | 264–277 | 2860–2948 |
-| 10 | [norms](#10-norms) | `features/norms/` | 8431–8450 | 648–685 | 6107–6604 |
+| 10 | [norms](#10-norms) | `features/norms/` ✅ data migrée | 8431–8450 | 648–685 | 6107–6604 (données dans `data.js`) |
 | 11 | [respirator](#11-respirator) | `features/respirator/` | ~8700+ | 709–854 | 6656–7108 |
 | 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` | 8202–8429 | 490–647 | 4857–5261 |
 | 13 | [conges-calendar](#13-conges-calendar) | `features/conges-calendar/` | 8123–8199 | 432–486 | 5343–5750 |
@@ -165,7 +165,8 @@ settings ──→ theme, auth
 
 - **Rôle** : protocoles lecture seule, accordéon par sections.
 - **index.html** : HTML 8090–8120 · CSS 398–430 · JS 4467–4839.
-- **État** : `currentProtoId`, `PROTOCOLS_DATA`.
+- **Données** ✅ migrées : [`src/features/protocols/data.js`](src/features/protocols/data.js) (expose `window.PROTOCOLS_DATA`, chargé via `<script src>` ligne 1508).
+- **État** : `currentProtoId`.
 - **Fonctions** : `openProtocoles`, `closeProtocoles`, `renderProtoList`, `openProtocoleDetail`, `closeProtocoleDetail`, `renderProtoDetail`, `toggleProtoSection`.
 
 ### 9. tasks
@@ -179,7 +180,8 @@ settings ──→ theme, auth
 
 - **Rôle** : 6 catégories de normes de référence (vitaux, GDS, ventilation, biologie, dialyse, urines).
 - **index.html** : HTML 8431–8450 · CSS 648–685 · JS 6107–6604.
-- **État** : `normesCurrentCat`, `NORMES_REF`.
+- **Données** ✅ migrées : [`src/features/norms/data.js`](src/features/norms/data.js) (expose `window.NORMES_REF`, chargé via `<script src>` ligne 1509).
+- **État** : `normesCurrentCat`.
 - **Fonctions** : `openNormes`, `closeNormes`, `renderNormes`, `setNormesCat`, `normesGetActiveZone`, `normesZoneBarHTML`.
 
 ### 11. respirator

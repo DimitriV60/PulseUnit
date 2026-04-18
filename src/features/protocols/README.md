@@ -2,7 +2,17 @@
 
 Voir [`ANNUAIRE.md`](../../../ANNUAIRE.md#8-protocols) (section 8).
 
-- **index.html** — HTML 8090–8120 · CSS 398–430 · JS 4467–4839.
-- **État store** : `currentProtoId`.
-- **Données** : `PROTOCOLS_DATA` (sections, steps, notes).
-- **Fonctions clés** : `openProtocoles`, `closeProtocoles`, `renderProtoList`, `openProtocoleDetail`, `closeProtocoleDetail`, `renderProtoDetail`, `toggleProtoSection`.
+## Fichiers de ce dossier
+
+- [`data.js`](./data.js) — protocoles (sections, steps, notes). Chargé via `<script src="src/features/protocols/data.js">` dans `index.html`. Expose `window.PROTOCOLS_DATA`.
+
+## Dans `index.html`
+
+- HTML vue : lignes ~8090–8120.
+- CSS : lignes ~398–430.
+- JS handlers : lignes ~4467–4839.
+- Référence : `const PROTOCOLS_DATA = window.PROTOCOLS_DATA;`.
+
+## État store
+
+- `currentProtoId` (protocole ouvert).
