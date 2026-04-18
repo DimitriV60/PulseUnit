@@ -246,8 +246,9 @@ settings ──→ theme, auth
 ### 19. sidemenu
 
 - **Rôle** : drawer latéral, navigation principale.
-- **index.html** : HTML 916–938 · CSS 215–224 · JS 2720–2744.
-- **Fonctions** : `openSideMenu`, `closeSideMenu`.
+- **index.html** : HTML 916–938 · CSS 215–224.
+- **Handlers extraits** → [`src/features/sidemenu/handlers.js`](src/features/sidemenu/handlers.js) (chargé ligne 1516).
+- **Fonctions** : `window.openSideMenu`, `window.closeSideMenu`.
 
 ---
 

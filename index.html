@@ -1513,6 +1513,7 @@
 <script src="src/features/checklist/data.js"></script>
 <script src="src/features/respirator/config.js"></script>
 <script src="src/features/planning-ca/config.js"></script>
+<script src="src/features/sidemenu/handlers.js"></script>
 
 <script>
 
@@ -1821,32 +1822,8 @@
   ];
   const reaBedsList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16];
 
-  /**
-   * Ouvre le menu latéral gauche avec une animation de glissement.
-   * Affiche l'overlay sombre en arrière-plan pour bloquer le reste de l'interface.
-   */
-  function openSideMenu() {
-      document.getElementById('side-menu-overlay').style.display = 'block';
-      const btn = document.getElementById('menu-toggle-btn');
-      if (btn) btn.setAttribute('aria-expanded', 'true');
-      setTimeout(() => {
-          document.getElementById('side-menu-overlay').style.opacity = '1';
-          document.getElementById('side-menu').style.transform = 'translateX(0)';
-      }, 10);
-  }
-
-  /**
-   * Ferme le menu latéral avec animation. Masque l'overlay après la transition (300 ms).
-   */
-  function closeSideMenu() {
-      document.getElementById('side-menu').style.transform = 'translateX(-100%)';
-      document.getElementById('side-menu-overlay').style.opacity = '0';
-      const btn = document.getElementById('menu-toggle-btn');
-      if (btn) btn.setAttribute('aria-expanded', 'false');
-      setTimeout(() => {
-          document.getElementById('side-menu-overlay').style.display = 'none';
-      }, 300);
-  }
+  // openSideMenu + closeSideMenu → src/features/sidemenu/handlers.js
+  // (exposés sur window.openSideMenu et window.closeSideMenu)
 
   /** Ouvre la vue plein écran du Lexique & Abréviations et lance son rendu. */
   function openLexique() { document.getElementById('lexique-view').style.display = 'flex'; renderLexique(); }
