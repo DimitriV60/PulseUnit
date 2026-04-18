@@ -149,10 +149,10 @@ settings ──→ theme, auth
 ### 6. lexique
 
 - **Rôle** : 260+ termes médicaux, 13 catégories, recherche + filtrage.
-- **index.html** : HTML 1177–1193 · CSS 234–255 · JS 2744–2804.
-- **Données** ✅ migrées : [`src/features/lexique/data.js`](src/features/lexique/data.js) (expose `window.LEXIQUE_DATA`, chargé via `<script src>` ligne 1507).
-- **État** : `currentLexiqueFilter`.
-- **Fonctions** : `openLexique`, `closeLexique`, `setLexiqueFilter`, `toggleLexCard`, `renderLexique`.
+- **index.html** : HTML 1177–1193 · CSS 234–255.
+- **Données** ✅ migrées : [`src/features/lexique/data.js`](src/features/lexique/data.js) — `window.LEXIQUE_DATA`.
+- **Handlers** ✅ migrés : [`src/features/lexique/handlers.js`](src/features/lexique/handlers.js) — `window.openLexique`, `window.closeLexique`, `window.setLexiqueFilter`, `window.toggleLexCard`, `window.renderLexique`.
+- **État** : `currentLexiqueFilter` local au module handlers.
 
 ### 7. calculators
 

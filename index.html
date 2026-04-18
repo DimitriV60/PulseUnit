@@ -1515,6 +1515,7 @@
 <script src="src/features/planning-ca/config.js"></script>
 <script src="src/features/sidemenu/handlers.js"></script>
 <script src="src/features/calculators/handlers.js"></script>
+<script src="src/features/lexique/handlers.js"></script>
 
 <script>
 
@@ -1796,7 +1797,7 @@
   // LEXIQUE_DATA chargé depuis src/features/lexique/data.js (voir ANNUAIRE.md)
   const LEXIQUE_DATA = window.LEXIQUE_DATA;
 
-  let currentLexiqueFilter = 'TOUT';
+  // currentLexiqueFilter + handlers (open/close/set/toggle/render) → src/features/lexique/handlers.js
 
   // CALCULATORS_DATA chargé depuis src/features/calculators/data.js (voir ANNUAIRE.md)
   const CALCULATORS_DATA = window.CALCULATORS_DATA;
@@ -1826,65 +1827,8 @@
   // openSideMenu + closeSideMenu → src/features/sidemenu/handlers.js
   // (exposés sur window.openSideMenu et window.closeSideMenu)
 
-  /** Ouvre la vue plein écran du Lexique & Abréviations et lance son rendu. */
-  function openLexique() { document.getElementById('lexique-view').style.display = 'flex'; renderLexique(); }
-  /** Ferme la vue plein écran du Lexique. */
-  function closeLexique() { document.getElementById('lexique-view').style.display = 'none'; }
-  /**
-   * Applique un filtre de catégorie sur le lexique et relance le rendu.
-   * @param {string} cat - Catégorie (ex: "VENTILATION", "SCORES", "TOUT")
-   */
-  function setLexiqueFilter(cat) { currentLexiqueFilter = cat; renderLexique(); }
-  /**
-   * Bascule l'affichage de l'explication experte d'une carte du lexique.
-   * @param {HTMLElement} element - L'élément .lex-card cliqué
-   */
-  function toggleLexCard(element) { element.classList.toggle('expanded'); }
-
-  /**
-   * Génère et affiche toutes les cartes du lexique selon la recherche
-   * et le filtre de catégorie actifs.
-   */
-  function renderLexique() {
-      const search = document.getElementById('lexique-search').value.toLowerCase();
-      const categories = ["TOUT","PERSONNEL","MONITORAGE","NEURO","SCORES","VENTILATION","VOIES","MATÉRIEL","HÉMODYNAMIQUE","BIO","SEPSIS","MÉDICAMENTS","ÉLIMINATION"];
-      
-      const catLabels = {"TOUT":"TOUT","PERSONNEL":"PERSONNEL","MONITORAGE":"MONITORAGE","NEURO":"NEURO","SCORES":"SCORES","VENTILATION":"VENTILATION","VOIES":"VOIES","MATÉRIEL":"MATÉRIEL","HÉMODYNAMIQUE":"HÉMO","BIO":"BIO","SEPSIS":"SEPSIS","MÉDICAMENTS":"MÉDICS","ÉLIMINATION":"ÉLIMINATION","ABREV":"ABRÉVIATIONS"};
-      let filtersHTML = '';
-      categories.forEach(cat => {
-          const isActive = cat === currentLexiqueFilter ? 'active' : '';
-          const label = catLabels[cat] || cat;
-          filtersHTML += `<button class="lex-filter-btn ${isActive}" onclick="setLexiqueFilter('${cat}')">${label}</button>`;
-      });
-      document.getElementById('lexique-filters').innerHTML = filtersHTML;
-
-      let filteredData = LEXIQUE_DATA.filter(item => {
-          const matchCat = currentLexiqueFilter === 'TOUT' || item.cat === currentLexiqueFilter;
-          const matchSearch = item.term.toLowerCase().includes(search) || item.def.toLowerCase().includes(search) || item.fullName.toLowerCase().includes(search);
-          return matchCat && matchSearch;
-      });
-
-      document.getElementById('lexique-count').textContent = `${filteredData.length} termes affichés`;
-
-      let contentHTML = '';
-      if(filteredData.length === 0) {
-          contentHTML = `<div style="color:var(--text-muted); text-align:center; padding:20px;">Aucun résultat trouvé.</div>`;
-      } else {
-          filteredData.forEach(item => {
-              contentHTML += `
-              <div class="lex-card" onclick="toggleLexCard(this)">
-                  <div class="lex-term">${escapeHTML(item.term)}</div>
-                  <div class="lex-fullname">${escapeHTML(item.fullName)}</div>
-                  <div class="lex-def">${escapeHTML(item.def)}</div>
-                  <div class="lex-separator"></div>
-                  <div class="lex-hint">↓ Cliquer pour explication experte</div>
-                  <span class="lex-tag">${escapeHTML(item.cat)}</span>
-                  <div class="lex-expert">${escapeHTML(item.expert)}</div>
-              </div>`;
-          });
-      }
-      document.getElementById('lexique-content').innerHTML = contentHTML;
-  }
+  // openLexique, closeLexique, setLexiqueFilter, toggleLexCard, renderLexique
+  // → src/features/lexique/handlers.js
 
   // openCalculateurs, closeCalculateurs, renderCalculateurs, openCalcModal, closeCalcModal
   // execCalcLive, execCalc → src/features/calculators/handlers.js
