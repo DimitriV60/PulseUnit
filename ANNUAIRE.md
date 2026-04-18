@@ -211,12 +211,13 @@ settings ──→ theme, auth
 - **État** : `calYear`, `calRegime`, `calSelectedCA`, `calWorkedDJF`.
 - **Fonctions** : `openCalendrierConges`, `closeCalendrierConges`, `renderCalendrier`, `renderCalMonth`, `toggleCADay`, `toggleDJFDay`, `calcCongesStats`, `setCalRegime`, `getJoursFeries`.
 
-### 14. swap-shifts
+### 14. bourse
 
 - **Rôle** : bourse d'échange de gardes temps réel (Firebase).
-- **index.html** : HTML 8930–8986 · CSS 548–607 · JS 6146–6549.
-- **État** : `swapRequests`, `_offDate`, `_wantType`, `_wantDate`, `_wantShift`, `_propReqId`.
-- **Fonctions** : `openBourse`, `closeBourse`, `renderBourseList`, `openBourseCreate`, `submitSwapRequest`, `renderOfferedCal`, `renderWantedCal`, `submitPropose`.
+- **index.html** : HTML ~5862–5928 · CSS 548–607 · JS migré.
+- **Handlers** ✅ migrés : [`src/features/bourse/handlers.js`](src/features/bourse/handlers.js) — 17 fonctions exposées sur `window` (voir [README](src/features/bourse/README.md)).
+- **État local au module** : calendriers (`_offCalY/M/Date`, `_wantCalY/M/Date`, `_wantType`, `_wantShift`, `_propReqId`, `_propCalY/M`, `_propDate`).
+- **État partagé inline** : `swapRequests` (let ~4046, mutué par listener Firebase `SWAP_DOC.onSnapshot` + tous les handlers d'écriture).
 
 ### 15. services
 
