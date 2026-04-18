@@ -219,9 +219,8 @@ settings ──→ theme, auth
 ### 15. services
 
 - **Rôle** : annuaire services externes (urgences, SAMU…).
-- **index.html** : JS 4620–4680.
-- **Données** ✅ migrées : [`src/features/services/data.js`](src/features/services/data.js) (expose `window.SERVICES_DATA`, chargé via `<script src>` ligne 1511).
-- **Fonctions** : `openServices`, `closeServices`, `renderServices`.
+- **Données** ✅ migrées : [`src/features/services/data.js`](src/features/services/data.js) — `window.SERVICES_DATA`.
+- **Handlers** ✅ migrés : [`src/features/services/handlers.js`](src/features/services/handlers.js) — `window.openServices`, `window.closeServices`, `window.renderServices`.
 
 ### 16. admin
 

@@ -4,13 +4,14 @@ Voir [`ANNUAIRE.md`](../../../ANNUAIRE.md#15-services) (section 15).
 
 ## Fichiers de ce dossier
 
-- [`data.js`](./data.js) — annuaire services externes (urgences, SAMU, etc.). Chargé via `<script src="src/features/services/data.js">` dans `index.html`. Expose `window.SERVICES_DATA`.
+- [`data.js`](./data.js) — annuaire services externes (urgences, SAMU, etc.). Chargé ligne ~1511 d'`index.html`. Expose `window.SERVICES_DATA`.
+- [`handlers.js`](./handlers.js) — handlers UI avec recherche. Chargé ligne ~1520 d'`index.html`. Expose `window.openServices`, `window.closeServices`, `window.renderServices`.
 
 ## Dans `index.html`
 
-- JS handlers : lignes ~4620–4680 (markup généré inline).
-- Référence : `const SERVICES_DATA = window.SERVICES_DATA;`.
+- HTML vue : `#services-view`.
+- JS : **migré vers `handlers.js`**.
 
-## Fonctions
+## État
 
-`openServices`, `closeServices`, `renderServices`.
+Aucun — lecture seule + recherche locale.
