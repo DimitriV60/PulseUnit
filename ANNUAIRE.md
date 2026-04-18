@@ -156,11 +156,11 @@ settings ──→ theme, auth
 
 ### 7. calculators
 
-- **Rôle** : 15 calculateurs (IBW, PAM, P/F, ΔP, PSE, glycémie…).
-- **index.html** : HTML 1195–1222 · CSS 256–328 · JS 2814–3349.
-- **Données** ✅ migrées : [`src/features/calculators/data.js`](src/features/calculators/data.js) (expose `window.CALCULATORS_DATA`, chargé via `<script src>` ligne 1510).
-- **État** : aucun (calcul pur).
-- **Fonctions** : `openCalculateurs`, `closeCalculateurs`, `renderCalculateurs`, `openCalcModal`, `closeCalcModal`, `execCalcLive`, `execCalc`.
+- **Rôle** : 16 calculateurs (IBW, PAM, P/F, ΔP, PSE, GCS, RASS, Waterlow, congés…).
+- **index.html** : HTML 1195–1222 · CSS 256–328.
+- **Données** ✅ migrées : [`src/features/calculators/data.js`](src/features/calculators/data.js) — `window.CALCULATORS_DATA`.
+- **Handlers** ✅ migrés : [`src/features/calculators/handlers.js`](src/features/calculators/handlers.js) — `window.openCalculateurs`, `window.closeCalculateurs`, `window.openCalcModal`, `window.closeCalcModal`, `window.execCalc`, `window.execCalcLive`.
+- **État** : aucun (calculs purs, sans persistance).
 
 ### 8. protocols
 
