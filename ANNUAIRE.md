@@ -180,10 +180,10 @@ settings ──→ theme, auth
 ### 10. norms
 
 - **Rôle** : 6 catégories de normes de référence (vitaux, GDS, ventilation, biologie, dialyse, urines).
-- **index.html** : HTML 8431–8450 · CSS 648–685 · JS 6107–6604.
-- **Données** ✅ migrées : [`src/features/norms/data.js`](src/features/norms/data.js) (expose `window.NORMES_REF`, chargé via `<script src>` ligne 1509).
-- **État** : `normesCurrentCat`.
-- **Fonctions** : `openNormes`, `closeNormes`, `renderNormes`, `setNormesCat`, `normesGetActiveZone`, `normesZoneBarHTML`.
+- **index.html** : HTML 8431–8450 · CSS 648–685.
+- **Données** ✅ migrées : [`src/features/norms/data.js`](src/features/norms/data.js) — `window.NORMES_REF`.
+- **Handlers** ✅ migrés : [`src/features/norms/handlers.js`](src/features/norms/handlers.js) — `window.openNormes`, `window.closeNormes`, `window.setNormesCat`, `window.renderNormes`. Helpers partagés avec respirator : `window.normesGetActiveZone`, `window.normesZoneBarHTML`.
+- **État** : `normesCurrentCat` local au module.
 
 ### 11. respirator
 
