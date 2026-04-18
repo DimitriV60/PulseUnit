@@ -26,7 +26,7 @@
 | 4 | [beds](#4-beds) | `features/beds/` | 1245–1248 | 131–209 | 3760–4046 |
 | 5 | [checklist](#5-checklist) | `features/checklist/` | 1155–1175 | 341–379 | 4080–4167 |
 | 6 | [lexique](#6-lexique) | `features/lexique/` ✅ data migrée | 1177–1193 | 234–255 | 2744–2804 (données dans `data.js`) |
-| 7 | [calculators](#7-calculators) | `features/calculators/` | 1195–1222 | 256–328 | 2814–3349 |
+| 7 | [calculators](#7-calculators) | `features/calculators/` ✅ data migrée | 1195–1222 | 256–328 | 2814–3349 (données dans `data.js`) |
 | 8 | [protocols](#8-protocols) | `features/protocols/` ✅ data migrée | 8090–8120 | 398–430 | 4467–4839 (données dans `data.js`) |
 | 9 | [tasks](#9-tasks) | `features/tasks/` | 1224–1243 | 264–277 | 2860–2948 |
 | 10 | [norms](#10-norms) | `features/norms/` ✅ data migrée | 8431–8450 | 648–685 | 6107–6604 (données dans `data.js`) |
@@ -34,7 +34,7 @@
 | 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` | 8202–8429 | 490–647 | 4857–5261 |
 | 13 | [conges-calendar](#13-conges-calendar) | `features/conges-calendar/` | 8123–8199 | 432–486 | 5343–5750 |
 | 14 | [swap-shifts](#14-swap-shifts) | `features/swap-shifts/` | 8930–8986 | 548–607 | 6146–6549 |
-| 15 | [services](#15-services) | `features/services/` | inline | — | 4620–4680 |
+| 15 | [services](#15-services) | `features/services/` ✅ data migrée | inline | — | 4620–4680 (données dans `data.js`) |
 | 16 | [admin](#16-admin) | `features/admin/` | 996–1087 | — | 1603–1720, 7582–7891 |
 | 17 | [presence](#17-presence) | `features/presence/` | — | — | 7125–7167 |
 | 18 | [search](#18-search) | `features/search/` | 908–912 | — | 3545–3680 |
@@ -158,6 +158,7 @@ settings ──→ theme, auth
 
 - **Rôle** : 15 calculateurs (IBW, PAM, P/F, ΔP, PSE, glycémie…).
 - **index.html** : HTML 1195–1222 · CSS 256–328 · JS 2814–3349.
+- **Données** ✅ migrées : [`src/features/calculators/data.js`](src/features/calculators/data.js) (expose `window.CALCULATORS_DATA`, chargé via `<script src>` ligne 1510).
 - **État** : aucun (calcul pur).
 - **Fonctions** : `openCalculateurs`, `closeCalculateurs`, `renderCalculateurs`, `openCalcModal`, `closeCalcModal`, `execCalcLive`, `execCalc`.
 
@@ -219,8 +220,8 @@ settings ──→ theme, auth
 
 - **Rôle** : annuaire services externes (urgences, SAMU…).
 - **index.html** : JS 4620–4680.
+- **Données** ✅ migrées : [`src/features/services/data.js`](src/features/services/data.js) (expose `window.SERVICES_DATA`, chargé via `<script src>` ligne 1511).
 - **Fonctions** : `openServices`, `closeServices`, `renderServices`.
-- **Config** : `CONFIG.contacts`.
 
 ### 16. admin
 
