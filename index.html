@@ -1516,6 +1516,7 @@
 <script src="src/features/sidemenu/handlers.js"></script>
 <script src="src/features/calculators/handlers.js"></script>
 <script src="src/features/lexique/handlers.js"></script>
+<script src="src/features/protocols/handlers.js"></script>
 
 <script>
 
@@ -2817,20 +2818,9 @@
   // PROTOCOLS_DATA chargé depuis src/features/protocols/data.js (voir ANNUAIRE.md)
   const PROTOCOLS_DATA = window.PROTOCOLS_DATA;
 
-  let currentProtoId = null;
-
-  /**
-   * Ouvre la vue plein écran des protocoles de soin et affiche la liste.
-   */
-  function openProtocoles() {
-    document.getElementById('protocoles-view').style.display = 'flex';
-    renderProtoList();
-  }
-
-  /** Ferme la vue plein écran des protocoles. */
-  function closeProtocoles() {
-    document.getElementById('protocoles-view').style.display = 'none';
-  }
+  // openProtocoles, closeProtocoles, renderProtoList, openProtocoleDetail,
+  // closeProtocoleDetail, renderProtoDetail, toggleProtoSection
+  // → src/features/protocols/handlers.js
 
   /**
    * Données des services — à compléter avec les numéros réels.
@@ -2966,109 +2956,8 @@
     results.style.display = 'block';
   }
 
-  /**
-   * Génère et affiche la liste des protocoles depuis PROTOCOLS_DATA.
-   * Chaque carte indique l'icône, le titre, le sous-titre et la référence réglementaire.
-   */
-  function renderProtoList() {
-    /* Liste des protocoles — lecture seule, aucune progression */
-    const el = document.getElementById('proto-list-content');
-    let html = '';
-    PROTOCOLS_DATA.forEach(p => {
-      const totalSteps = p.sections.reduce((acc, s) => acc + s.steps.length, 0);
-      html += `
-        <div class="proto-card" onclick="openProtocoleDetail('${p.id}')" style="border-left:4px solid ${p.color};">
-          <div class="proto-card-icon">${p.icon}</div>
-          <div class="proto-card-body">
-            <div class="proto-card-title">${escapeHTML(p.title)}</div>
-            <div class="proto-card-sub">${escapeHTML(p.subtitle)}</div>
-            <span class="proto-card-ref">${escapeHTML(p.ref)}</span>
-          </div>
-          <div class="proto-card-arrow">›</div>
-        </div>`;
-    });
-    el.innerHTML = html;
-  }
-
-  /**
-   * Ouvre la vue détail d'un protocole (lecture seule — aucune case à cocher).
-   * @param {string} id - Identifiant du protocole dans PROTOCOLS_DATA
-   */
-  function openProtocoleDetail(id) {
-    currentProtoId = id;
-    const p = PROTOCOLS_DATA.find(x => x.id === id);
-    if (!p) return;
-    document.getElementById('proto-detail-title').textContent = p.icon + ' ' + p.title;
-    document.getElementById('proto-detail-ref').textContent = p.ref;
-    renderProtoDetail(p);
-    document.getElementById('protocole-detail-view').style.display = 'flex';
-  }
-
-  /**
-   * Ferme la vue détail d'un protocole et retourne à la liste.
-   */
-  function closeProtocoleDetail() {
-    document.getElementById('protocole-detail-view').style.display = 'none';
-    renderProtoList();
-  }
-
-  /* resetCurrentProtocole supprimé — mode lecture seule */
-
-  /**
-   * Génère le contenu détaillé d'un protocole (sections + étapes) en lecture seule.
-   * Chaque section est repliable via toggleProtoSection().
-   * @param {object} p - Objet protocole depuis PROTOCOLS_DATA
-   */
-  function renderProtoDetail(p) {
-    /* Affichage en LECTURE SEULE — pas d'interaction, pas de cases à cocher */
-    let html = '';
-    p.sections.forEach((sec, si) => {
-      const isFirst = si === 0;
-      html += `
-        <div class="proto-section">
-          <div class="proto-section-header" onclick="toggleProtoSection('${sec.id}')">
-            <div class="proto-section-title">
-              <span>${sec.icon}</span>
-              <span>${escapeHTML(sec.title)}</span>
-              <span class="proto-section-badge">${sec.steps.length} étapes</span>
-            </div>
-            <span class="proto-section-chevron ${isFirst ? 'open' : ''}" id="chev-${sec.id}">›</span>
-          </div>
-          <div class="proto-steps ${isFirst ? 'open' : ''}" id="steps-${sec.id}">`;
-      if (sec.info) {
-        html += `<div class="proto-info-block"><p>${escapeHTML(sec.info)}</p></div>`;
-      }
-      sec.steps.forEach((step) => {
-        /* Chaque étape : icône + texte + note. Pas de case, pas de onclick. */
-        const isWarn = step.note && step.note.startsWith('⚠️');
-        html += `
-          <div class="proto-step-ro">
-            <div class="proto-step-icon">${step.icon}</div>
-            <div style="flex:1;">
-              <div class="proto-step-text">${escapeHTML(step.text)}</div>
-              ${step.note ? `<div class="${isWarn ? 'proto-warn-block' : 'proto-step-note'}" style="${isWarn ? 'margin:4px 0 0;padding:6px 10px;' : ''}">${isWarn ? '<p>' : ''}${escapeHTML(step.note)}${isWarn ? '</p>' : ''}</div>` : ''}
-            </div>
-          </div>`;
-      });
-      html += `</div></div>`;
-    });
-    document.getElementById('proto-detail-content').innerHTML = html;
-  }
-
-  /**
-   * Ouvre ou referme une section de protocole (accordéon).
-   * @param {string} secId - Identifiant de la section (attribut id du bloc steps)
-   */
-  function toggleProtoSection(secId) {
-    const stepsEl = document.getElementById('steps-' + secId);
-    const chevEl  = document.getElementById('chev-'  + secId);
-    if (!stepsEl || !chevEl) return;
-    const isOpen = stepsEl.classList.contains('open');
-    stepsEl.classList.toggle('open', !isOpen);
-    chevEl.classList.toggle('open', !isOpen);
-  }
-
-  /* toggleProtoStep supprimé — mode lecture seule */
+  // renderProtoList, openProtocoleDetail, closeProtocoleDetail, renderProtoDetail,
+  // toggleProtoSection → src/features/protocols/handlers.js
   /* ═══════════════════════════════════════════════════════════════════
      MODULE PLANNING CA — Validation jours consécutifs FPH
      Règles : 21 j consécutifs (agents de jour)

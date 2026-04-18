@@ -165,10 +165,10 @@ settings ──→ theme, auth
 ### 8. protocols
 
 - **Rôle** : protocoles lecture seule, accordéon par sections.
-- **index.html** : HTML 8090–8120 · CSS 398–430 · JS 4467–4839.
-- **Données** ✅ migrées : [`src/features/protocols/data.js`](src/features/protocols/data.js) (expose `window.PROTOCOLS_DATA`, chargé via `<script src>` ligne 1508).
-- **État** : `currentProtoId`.
-- **Fonctions** : `openProtocoles`, `closeProtocoles`, `renderProtoList`, `openProtocoleDetail`, `closeProtocoleDetail`, `renderProtoDetail`, `toggleProtoSection`.
+- **index.html** : HTML 8090–8120 · CSS 398–430.
+- **Données** ✅ migrées : [`src/features/protocols/data.js`](src/features/protocols/data.js) — `window.PROTOCOLS_DATA`.
+- **Handlers** ✅ migrés : [`src/features/protocols/handlers.js`](src/features/protocols/handlers.js) — `window.openProtocoles`, `window.closeProtocoles`, `window.renderProtoList`, `window.openProtocoleDetail`, `window.closeProtocoleDetail`, `window.renderProtoDetail`, `window.toggleProtoSection`.
+- **État** : aucun (lecture seule).
 
 ### 9. tasks
 
