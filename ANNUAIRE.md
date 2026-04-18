@@ -174,9 +174,10 @@ settings ──→ theme, auth
 ### 9. tasks
 
 - **Rôle** : tâches IDE tech quotidiennes (jour/nuit), cochage, traçabilité.
-- **index.html** : HTML 1224–1243 · CSS 264–277 · JS 2860–2948.
-- **État** : `shiftHistory[key].techTasks`.
-- **Fonctions** : `openTasks`, `closeTasks`, `toggleTask`, `renderTasks`.
+- **index.html** : HTML 1224–1243 · CSS 264–277 · JS migré.
+- **Données** ✅ migrées : [`src/features/tasks/data.js`](src/features/tasks/data.js) — `window.TECH_TASKS`.
+- **Handlers** ✅ migrés : [`src/features/tasks/handlers.js`](src/features/tasks/handlers.js) — `window.openTasks`, `window.closeTasks`, `window.toggleTask`, `window.renderTasks`.
+- **État** : `shiftHistory[key].techTasks`, `shiftHistory[key].congratsShown`.
 
 ### 10. norms
 
