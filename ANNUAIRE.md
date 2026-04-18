@@ -30,7 +30,7 @@
 | 8 | [protocols](#8-protocols) | `features/protocols/` ✅ data migrée | 8090–8120 | 398–430 | 4467–4839 (données dans `data.js`) |
 | 9 | [tasks](#9-tasks) | `features/tasks/` | 1224–1243 | 264–277 | 2860–2948 |
 | 10 | [norms](#10-norms) | `features/norms/` ✅ data migrée | 8431–8450 | 648–685 | 6107–6604 (données dans `data.js`) |
-| 11 | [respirator](#11-respirator) | `features/respirator/` | ~8700+ | 709–854 | 6656–7108 |
+| 11 | [respirator](#11-respirator) | `features/respirator/` ✅ config migrée | ~8700+ | 709–854 | 6656–7108 (config dans `config.js`) |
 | 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` | 8202–8429 | 490–647 | 4857–5261 |
 | 13 | [conges-calendar](#13-conges-calendar) | `features/conges-calendar/` | 8123–8199 | 432–486 | 5343–5750 |
 | 14 | [swap-shifts](#14-swap-shifts) | `features/swap-shifts/` | 8930–8986 | 548–607 | 6146–6549 |
@@ -188,9 +188,10 @@ settings ──→ theme, auth
 
 - **Rôle** : simulateur ventilatoire — 4 modes (PC/VC/VS-AI/VNI), 8 scénarios, waveforms animées.
 - **index.html** : HTML ~8700+ · CSS 709–854 · JS 6656–7108.
+- **Config** ✅ migrée : [`src/features/respirator/config.js`](src/features/respirator/config.js) (expose `window.RV_SCENARIOS`, `window.RV_CFG`, `window.RV_ZONES`, chargé via `<script src>` ligne 1510).
 - **État** : `respiValues`, `respiMode`, `respiScenario`, `_rvAnimId`, `_rvModalParam`, `_rvRepeatTimer`, `_rvSimTime`.
 - **Fonctions** : `openNormesRespi`, `closeNormesRespi`, `setRespiMode`, `applyRvScenario`, `openRvModal`, `closeRvModal`, `rvModalSlide`, `updatePhysiology`, `rvDrawScope`, `rvAnimLoop`, `rvGetAnalysis`.
-- **Config** : `RV_CFG`, `RV_ZONES`, `RV_SCENARIOS`, `BADGE`, `CH`.
+- **Config inline restante** : `BADGE`, `CH` (dans la fonction `renderNormesRespi`).
 
 ### 12. planning-ca
 
