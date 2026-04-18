@@ -1509,7 +1509,10 @@
 <script src="src/features/norms/data.js"></script>
 <script src="src/features/calculators/data.js"></script>
 <script src="src/features/services/data.js"></script>
+<script src="src/features/tasks/data.js"></script>
+<script src="src/features/checklist/data.js"></script>
 <script src="src/features/respirator/config.js"></script>
+<script src="src/features/planning-ca/config.js"></script>
 
 <script>
 
@@ -1797,48 +1800,11 @@
   const CALCULATORS_DATA = window.CALCULATORS_DATA;
 
 
-  /* ===== DATA TACHES IDE TECH ===== */
-  const TECH_TASKS = [
-    { id: 't1', title: 'Vérifier sortie étiquettes (Médicaments + DM)', shifts: ['ALL'] },
-    { id: 't2', title: 'Rangement médicaments et DM', shifts: ['1-J', '1-N', '3-J', '3-N', '5-J', '5-N'] },
-    { id: 't3', title: 'Traçabilité stups et albumines', shifts: ['ALL'] },
-    { id: 't4', title: 'SARM prélèvements', shifts: ['2-J'] },
-    { id: 't5', title: 'Sortir les écouvillons', shifts: ['1-N'] },
-    { id: 't6', title: 'Préparation bilans sanguins', shifts: ['ALL-N'] },
-    { id: 't7', title: 'Analyse des GDS', shifts: ['ALL-J'], time: 'Matin' },
-    { id: 't8', title: 'Traçabilité temp. frigo médicaments', shifts: ['ALL-J'], time: 'Matin' },
-    { id: 't9', title: 'Traçabilité dossier mode dégradé', shifts: ['1-J'], time: 'Matin' },
-    { id: 't10', title: 'Tests du SOKINOX', shifts: ['ALL'] },
-    { id: 't11', title: 'Désinfection générateur ARTIS (Chaleur)', shifts: ['1-J','1-N','2-J','2-N','3-J','3-N','4-J','4-N','5-J','5-N','6-J','6-N'] },
-    { id: 't11b', title: 'Désinfection ARTIS (Chaleur CleanCart A + Rinçage)', shifts: ['0-J', '0-N'] },
-    { id: 't12', title: 'Vérif/traçabilité chariot urgences / DSA', shifts: ['6-N'] },
-    { id: 't13', title: 'Vérif Sac Thomas / boite IOT difficile', shifts: ['6-N'] },
-    { id: 't14', title: 'Vérif/traçabilité vidéolaryngoscope', shifts: ['ALL-N'] },
-    { id: 't15', title: 'Vérif/traçabilité des 2 boites intubation', shifts: ['ALL'] },
-    { id: 't16', title: 'Présence module capno dans sa boite', shifts: ['ALL'] },
-    { id: 't17a', title: 'Changement circuits simples (+ de 30 jours)', shifts: ['ALL-N'] },
-    { id: 't17b', title: 'Changement circuits avec humidificateur (+ de 15 jours)', shifts: ['ALL-N'] },
-    { id: 't17c', title: 'Sortir les filtres respiratoires', shifts: ['ALL-N'] },
-    { id: 't18', title: 'Gestion stock solutés CVVH', shifts: ['1-J', '3-J', '5-J'], time: 'Matin' },
-    { id: 't19', title: 'Gestion stock fibro UU', shifts: ['1-J', '3-J', '5-J'], time: 'Matin' },
-    { id: 't20', title: 'Gestion stocks stup/albu/COPILOTE', shifts: ['6-J'], time: 'Matin' },
-    { id: 't21', title: 'Gestion des Obus O2', shifts: ['2-N', '4-N', '0-N'] },
-    { id: 't22', title: 'Commande LABO', shifts: ['3-J', '3-N', '5-J', '5-N'] },
-    { id: 't23', title: 'Commande Stérilisation (AS de Nuit)', shifts: ['0-N'] }
-  ];
+  // TECH_TASKS chargé depuis src/features/tasks/data.js
+  const TECH_TASKS = window.TECH_TASKS;
 
-  const CHECKLIST_ITEMS = [
-    { id: 'tiroir',       label: 'Tiroir de ventilation',      icon: '🗂️' },
-    { id: 'bavu',         label: 'BAVU (masque + filtre)',      icon: '🫁' },
-    { id: 'scope',        label: 'Alarmes scope',               icon: '📊' },
-    { id: 'cables',       label: 'Câbles',                      icon: '🔌' },
-    { id: 'aspiration',   label: 'Système d\'aspiration',      icon: '💨' },
-    { id: 'o2',           label: 'Oxygène (O2)',                icon: '🟦' },
-    { id: 'zero_kt',      label: 'Zéro KT artériel',           icon: '🎯' },
-    { id: 'ballonnet',    label: 'Pression ballonnet (20-30 cmH₂O)', icon: '🔵' },
-    { id: 'humidificateur', label: 'Réchauffeur / Humidificateur', icon: '💧' },
-    { id: 'alarme_respi', label: 'Alarme respirateur',          icon: '🚨' },
-  ];
+  // CHECKLIST_ITEMS chargé depuis src/features/checklist/data.js
+  const CHECKLIST_ITEMS = window.CHECKLIST_ITEMS;
 
   let currentChecklistBed = null;
 
@@ -3654,9 +3620,9 @@
   }
 
   // États qui constituent un TRAVAIL (brisent un bloc CA)
-  const PLAN_WORK_STATES = new Set(['travail', 'jour', 'nuit', 'hs', 'hs_j', 'hs_n', 'formation']);
-  // Libellés courts affichés dans les cases
-  const PLAN_LABELS = { jour:'J', nuit:'N', ca:'CA', can1:'CA-1', rcn:'RCN', rh:'RH', hs:'HS', hs_j:'HSJ', hs_n:'HSN', rc:'RC', formation:'FO', ferie:'JF', maladie:'AM', hp:'HP', hpn1:'HP-1', rcv:'RCV', rcvn1:'RCV-1', frac:'FR', fracn1:'FR-1' };
+  // PLAN_WORK_STATES et PLAN_LABELS chargés depuis src/features/planning-ca/config.js
+  const PLAN_WORK_STATES = window.PLAN_WORK_STATES;
+  const PLAN_LABELS = window.PLAN_LABELS;
   function planDayHTML(dayNum, state) {
     const lbl = PLAN_LABELS[state];
     if (!lbl) return String(dayNum);

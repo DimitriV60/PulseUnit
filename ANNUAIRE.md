@@ -24,14 +24,14 @@
 | 2 | [settings](#2-settings) | `features/settings/` | 940–994 | 36–82, 381–397 | 18–34, 1551–1596 |
 | 3 | [shift](#3-shift) | `features/shift/` | 895–914, 1245–1254 | 85–152 | 3349–3760 |
 | 4 | [beds](#4-beds) | `features/beds/` | 1245–1248 | 131–209 | 3760–4046 |
-| 5 | [checklist](#5-checklist) | `features/checklist/` | 1155–1175 | 341–379 | 4080–4167 |
+| 5 | [checklist](#5-checklist) | `features/checklist/` ✅ data migrée | 1155–1175 | 341–379 | 4080–4167 (items dans `data.js`) |
 | 6 | [lexique](#6-lexique) | `features/lexique/` ✅ data migrée | 1177–1193 | 234–255 | 2744–2804 (données dans `data.js`) |
 | 7 | [calculators](#7-calculators) | `features/calculators/` ✅ data migrée | 1195–1222 | 256–328 | 2814–3349 (données dans `data.js`) |
 | 8 | [protocols](#8-protocols) | `features/protocols/` ✅ data migrée | 8090–8120 | 398–430 | 4467–4839 (données dans `data.js`) |
-| 9 | [tasks](#9-tasks) | `features/tasks/` | 1224–1243 | 264–277 | 2860–2948 |
+| 9 | [tasks](#9-tasks) | `features/tasks/` ✅ data migrée | 1224–1243 | 264–277 | 2860–2948 (tâches dans `data.js`) |
 | 10 | [norms](#10-norms) | `features/norms/` ✅ data migrée | 8431–8450 | 648–685 | 6107–6604 (données dans `data.js`) |
 | 11 | [respirator](#11-respirator) | `features/respirator/` ✅ config migrée | ~8700+ | 709–854 | 6656–7108 (config dans `config.js`) |
-| 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` | 8202–8429 | 490–647 | 4857–5261 |
+| 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` ✅ config migrée | 8202–8429 | 490–647 | 4857–5261 (PLAN_LABELS dans `config.js`) |
 | 13 | [conges-calendar](#13-conges-calendar) | `features/conges-calendar/` | 8123–8199 | 432–486 | 5343–5750 |
 | 14 | [swap-shifts](#14-swap-shifts) | `features/swap-shifts/` | 8930–8986 | 548–607 | 6146–6549 |
 | 15 | [services](#15-services) | `features/services/` ✅ data migrée | inline | — | 4620–4680 (données dans `data.js`) |

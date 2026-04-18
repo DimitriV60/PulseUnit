@@ -2,6 +2,17 @@
 
 Voir [`ANNUAIRE.md`](../../../ANNUAIRE.md#5-checklist) (section 5).
 
-- **index.html** — HTML 1155–1175 · CSS 341–379 · JS 4080–4167.
-- **État store** : `currentChecklistBed`, `shiftHistory[key].checklistData`.
-- **Fonctions clés** : `openChecklist`, `closeChecklist`, `selectChecklistBed`, `toggleChecklistItem`, `renderChecklistView`, `checklistDoneCount`, `getChecklistForBed`.
+## Fichiers de ce dossier
+
+- [`data.js`](./data.js) — 10 items de vérification chambre (id, label, icon). Chargé via `<script src>` ligne 1513 d'`index.html`. Expose `window.CHECKLIST_ITEMS`.
+
+## Dans `index.html`
+
+- HTML vue : lignes ~1155–1175.
+- CSS : lignes ~341–379.
+- JS handlers : lignes ~4080–4167.
+- Référence : `const CHECKLIST_ITEMS = window.CHECKLIST_ITEMS;`.
+
+## État store
+
+- `currentChecklistBed`, `shiftHistory[key].checklistData`.
