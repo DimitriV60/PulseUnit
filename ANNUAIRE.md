@@ -142,9 +142,10 @@ settings ──→ theme, auth
 ### 5. checklist
 
 - **Rôle** : 10 items de vérification par chambre, traçabilité par garde.
-- **index.html** : HTML 1155–1175 · CSS 341–379 · JS 4080–4167.
-- **État** : `currentChecklistBed`, `shiftHistory[key].checklistData`.
-- **Fonctions** : `openChecklist`, `closeChecklist`, `selectChecklistBed`, `toggleChecklistItem`, `renderChecklistView`, `checklistDoneCount`, `getChecklistForBed`.
+- **index.html** : HTML 1155–1175 · CSS 341–379.
+- **Données** ✅ migrées : [`src/features/checklist/data.js`](src/features/checklist/data.js) — `window.CHECKLIST_ITEMS`.
+- **Handlers** ✅ migrés : [`src/features/checklist/handlers.js`](src/features/checklist/handlers.js) — `window.openChecklist`, `window.closeChecklist`, `window.selectChecklistBed`, `window.toggleChecklistItem`, `window.renderChecklistView`.
+- **État** : `currentChecklistBed` local au module. Persistance Firebase : `shiftHistory[key].checklistChambre[bedId]`.
 
 ### 6. lexique
 
