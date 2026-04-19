@@ -111,11 +111,12 @@ settings ──→ theme, auth
 
 ### 1. auth
 
-- **Rôle** : connexion, inscription, reset PIN, sessions admin.
-- **index.html** : HTML 8851–8927 · CSS 282–322 · JS 7111–7455.
-- **État** : `currentUser`, `authUsers`, `resetRequests`, `adminSessionActive`, `selectedRole`.
-- **Fonctions** : `registerUser`, `loginUser`, `loginAdminFromAuth`, `changeTempPin`, `logoutUser`, `selectRole`, `filterAuthUsers`, `selectAuthUser`, `clearSelectedAuthUser`, `sendResetRequest`, `verifyAdminCredentials`.
-- **Dépendances** : Firebase AUTH_DOC/RESETS_DOC, SHA-256, localStorage/sessionStorage.
+- **Rôle** : connexion, inscription, reset PIN, sessions admin, gestion admin utilisateurs, toast, alpha/WhatsApp.
+- ✅ **JS migré** : [`src/features/auth/handlers.js`](src/features/auth/handlers.js) — chargé après `admin/handlers.js`.
+- **index.html** : HTML (modales auth) · CSS 282–322 · JS extrait vers handlers.js.
+- **État inline** : `currentUser`, `authUsers`, `resetRequests`, `onlineUsers`, `selectedRole`, `_savePending`, `AUTH_DOC`, `RESETS_DOC`, `PRESENCE_DOC`, `SWAP_DOC`, `PLANS_DOC` + listeners Firebase.
+- **Exposé window** : `hashPin`, `showAuthView`, `selectRole`, `filterAuthUsers`, `selectAuthUser`, `clearSelectedAuthUser`, `filterForgotUsers`, `selectForgotUser`, `showAuthModal`, `checkAutoLogin`, `registerUser`, `loginUser`, `loginAdminFromAuth`, `changeTempPin`, `logoutUser`, `updateHeaderUser`, `openAlphaModal`, `copyAlphaLink`, `sendWhatsAppBug`, `showToast`, `sendResetRequest`, `adminSetTempPin`, `renderAdminResets`, `adminSelectNewRole`, `adminCreateUser`, `adminUnlockUser`, `adminDeleteUser`, `openAdminUsersList`, `renderAdminUsers`, `changeMyPin`, `loadAuth`.
+- **Dépendances** : Firebase AUTH_DOC/RESETS_DOC, SHA-256, localStorage/sessionStorage, `admin/handlers.js` (`setAdminSession`, `verifyAdminCredentials`), `presence/handlers.js` (`setPresence`), `planning-ca/handlers.js` (`loadUserPlan`).
 
 ### 2. settings
 
@@ -227,10 +228,14 @@ settings ──→ theme, auth
 
 ### 16. admin
 
-- **Rôle** : panel admin (comptes, reset PIN, verrouillage USIP).
-- **index.html** : HTML 996–1087 · JS 1603–1720, 7582–7891.
-- **État** : `adminSessionActive`, `authUsers`, `resetRequests`, `onlineUsers`, `_adminNewRole`.
-- **Fonctions** : `openAdmin`, `checkAdmin`, `setAdminSession`, `toggleAdminUsipLock`, `renderAdminResets`, `renderAdminUsers`, `adminSelectNewRole`.
+- **Rôle** : panel admin (authentification SHA-256, verrouillage USIP).
+- ✅ **JS migré** : [`src/features/admin/handlers.js`](src/features/admin/handlers.js) — chargé **avant** `auth/handlers.js`.
+- **index.html** : HTML 996–1087 · JS extrait vers handlers.js.
+- **État** (script scope) : `adminSessionActive`, `ADMIN_USER`, `ADMIN_PASS_HASH`.
+- **Exposé window** : `openAdmin`, `checkAdmin`, `togglePass`, `updateAdminPanelBtn`, `toggleAdminUsipLock`.
+- **Partagé script scope** : `isAdmin`, `setAdminSession`, `verifyAdminCredentials`.
+- **Dépendances** : `currentUser` (auth inline), `shiftHistory`, `currentShiftKey`, `initShiftData`, `saveData`, `renderApp` (inline) ; `renderAdminResets`, `renderAdminUsers` (auth/handlers.js).
+- La gestion des utilisateurs admin (adminCreateUser, adminDeleteUser, renderAdminUsers, etc.) est dans [`auth/handlers.js`](src/features/auth/handlers.js) (section 1).
 
 ### 17. presence
 
