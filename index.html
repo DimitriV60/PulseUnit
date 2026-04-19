@@ -1522,6 +1522,8 @@
 <script src="src/features/checklist/handlers.js"></script>
 <script src="src/features/tasks/handlers.js"></script>
 <script src="src/features/bourse/handlers.js"></script>
+<script src="src/features/presence/handlers.js"></script>
+<script src="src/features/search/handlers.js"></script>
 
 <script>
 
@@ -2571,73 +2573,7 @@
 
   // openServices, closeServices, renderServices → src/features/services/handlers.js
 
-  /** Recherche globale dashboard — Services + Lexique + Protocoles */
-  function renderGlobalSearch() {
-    const input = document.getElementById('global-search');
-    const results = document.getElementById('global-search-results');
-    const q = (input?.value || '').trim();
-
-    if (!q || q.length < 2) { results.style.display = 'none'; return; }
-    const ql = q.toLowerCase();
-
-    let html = '';
-
-    // Services
-    const srvMatches = [];
-    SERVICES_DATA.forEach(section => {
-      section.entries.forEach(entry => {
-        if (entry.name.toLowerCase().includes(ql) || (entry.display && entry.display.toLowerCase().includes(ql)) || (entry.num && entry.num.includes(ql))) {
-          srvMatches.push({ ...entry, cat: section.cat });
-        }
-      });
-    });
-    if (srvMatches.length) {
-      html += `<div style="padding:8px 14px 4px; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--brand-aqua);">📞 Services</div>`;
-      srvMatches.slice(0, 5).forEach(e => {
-        const hasNum = e.num && e.num.trim() !== '';
-        const label = e.display && e.display.trim() !== '' ? e.display : e.num;
-        html += `<div style="padding:10px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; cursor:pointer;" onclick="document.getElementById('global-search-results').style.display='none'; document.getElementById('global-search').value=''; openServices(); setTimeout(()=>{document.getElementById('services-search').value='${escapeHTML(e.name)}'; renderServices();},120);">
-          <span style="font-size:0.88rem; font-weight:700; color:var(--text);">${escapeHTML(e.name)} <span style="font-size:0.75rem; color:var(--text-muted);">${escapeHTML(e.cat)}</span></span>
-          ${hasNum ? `<span style="font-size:0.95rem; font-weight:900; color:var(--brand-aqua); white-space:nowrap;">${escapeHTML(label)}</span>` : ''}
-        </div>`;
-      });
-    }
-
-    // Lexique
-    const lexMatches = LEXIQUE_DATA.filter(t =>
-      t.term.toLowerCase().includes(ql) || t.fullName.toLowerCase().includes(ql) || t.def.toLowerCase().includes(ql)
-    );
-    if (lexMatches.length) {
-      html += `<div style="padding:8px 14px 4px; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--med);">📖 Lexique</div>`;
-      lexMatches.slice(0, 4).forEach(t => {
-        html += `<div style="padding:10px 14px; border-top:1px solid var(--border); cursor:pointer;" onclick="document.getElementById('global-search-results').style.display='none'; document.getElementById('global-search').value=''; openLexique(); setTimeout(()=>{document.getElementById('lexique-search').value='${escapeHTML(t.term)}'; renderLexique();},120);">
-          <span style="font-size:0.88rem; font-weight:700; color:var(--text);">${escapeHTML(t.term)}</span>
-          <span style="font-size:0.78rem; color:var(--text-muted); margin-left:8px;">${escapeHTML(t.fullName)}</span>
-        </div>`;
-      });
-    }
-
-    // Protocoles
-    const protoMatches = PROTOCOLS_DATA.filter(p =>
-      p.title.toLowerCase().includes(ql) || (p.subtitle && p.subtitle.toLowerCase().includes(ql))
-    );
-    if (protoMatches.length) {
-      html += `<div style="padding:8px 14px 4px; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; color:var(--ok);">📋 Protocoles</div>`;
-      protoMatches.slice(0, 3).forEach(p => {
-        html += `<div style="padding:10px 14px; border-top:1px solid var(--border); cursor:pointer;" onclick="document.getElementById('global-search-results').style.display='none'; document.getElementById('global-search').value=''; openProtocoles();">
-          <span style="font-size:0.88rem; font-weight:700; color:var(--text);">${escapeHTML(p.title)}</span>
-          ${p.subtitle ? `<span style="font-size:0.78rem; color:var(--text-muted); margin-left:8px;">${escapeHTML(p.subtitle)}</span>` : ''}
-        </div>`;
-      });
-    }
-
-    if (!html) {
-      html = `<div style="padding:16px 14px; font-size:0.88rem; font-weight:700; color:var(--text-muted);">Aucun résultat pour "${escapeHTML(q)}"</div>`;
-    }
-
-    results.innerHTML = html;
-    results.style.display = 'block';
-  }
+  // renderGlobalSearch → src/features/search/handlers.js
 
   // renderProtoList, openProtocoleDetail, closeProtocoleDetail, renderProtoDetail,
   // toggleProtoSection → src/features/protocols/handlers.js
@@ -4051,38 +3987,9 @@
   let swapRequests = []; // demandes de permutation de gardes
   let selectedRole = '';
 
-  // ── PRÉSENCE TEMPS RÉEL ───────────────────────────────────────────────────
-  async function setPresence(online) {
-    if (!PRESENCE_DOC || !currentUser) return;
-    try {
-      if (online) {
-        await PRESENCE_DOC.set({
-          [currentUser.id]: {
-            firstName: currentUser.firstName,
-            lastName:  currentUser.lastName,
-            role:      currentUser.role,
-            lastSeen:  Date.now()
-          }
-        }, { merge: true });
-      } else {
-        await PRESENCE_DOC.set(
-          { [currentUser.id]: firebase.firestore.FieldValue.delete() },
-          { merge: true }
-        );
-      }
-    } catch(e) { console.warn('Presence error:', e); }
-  }
-
-  // Mise à jour de présence toutes les 60s pour garder le statut actif
-  let _presenceInterval = null;
-  function startPresenceHeartbeat() {
-    stopPresenceHeartbeat();
-    setPresence(true);
-    _presenceInterval = setInterval(() => setPresence(true), 60000);
-  }
-  function stopPresenceHeartbeat() {
-    if (_presenceInterval) { clearInterval(_presenceInterval); _presenceInterval = null; }
-  }
+  // ── PRÉSENCE TEMPS RÉEL ──
+  // setPresence, startPresenceHeartbeat, stopPresenceHeartbeat → src/features/presence/handlers.js
+  // (onlineUsers + listener onSnapshot restent inline car mutés par Firebase et lus par admin)
 
   // Écoute temps réel des utilisateurs connectés
   if (PRESENCE_DOC) {

@@ -235,15 +235,16 @@ settings ──→ theme, auth
 ### 17. presence
 
 - **Rôle** : heartbeat 60s + affichage utilisateurs connectés.
-- **index.html** : JS 7125–7167.
-- **État** : `onlineUsers`.
-- **Fonctions** : `startPresenceHeartbeat`, `stopPresenceHeartbeat`, `setPresence`.
+- **index.html** : JS migré.
+- **Handlers** ✅ migrés : [`src/features/presence/handlers.js`](src/features/presence/handlers.js) — `window.setPresence`, `window.startPresenceHeartbeat`, `window.stopPresenceHeartbeat`.
+- **Inline restant** : variable `onlineUsers` + listener `PRESENCE_DOC.onSnapshot` (mutés par Firebase, lus par admin).
 
 ### 18. search
 
-- **Rôle** : recherche globale multi-source (lexique + protocoles + services).
-- **index.html** : HTML 908–912 · JS 3545–3680.
-- **Fonctions** : `renderGlobalSearch`, `doSearch`, `openModalSpec`.
+- **Rôle** : recherche globale dashboard (Services + Lexique + Protocoles).
+- **index.html** : HTML 908–912 · JS migré.
+- **Handlers** ✅ migrés : [`src/features/search/handlers.js`](src/features/search/handlers.js) — `window.renderGlobalSearch`.
+- **Hors périmètre** : `doSearch` + `openModalSpec` restent inline (couplés au roster/bed-grid — recherche soignant).
 
 ### 19. sidemenu
 
