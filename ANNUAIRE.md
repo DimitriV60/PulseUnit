@@ -30,8 +30,8 @@
 | 8 | [protocols](#8-protocols) | `features/protocols/` ✅ data migrée | 8090–8120 | 398–430 | 4467–4839 (données dans `data.js`) |
 | 9 | [tasks](#9-tasks) | `features/tasks/` ✅ data migrée | 1224–1243 | 264–277 | 2860–2948 (tâches dans `data.js`) |
 | 10 | [norms](#10-norms) | `features/norms/` ✅ data migrée | 8431–8450 | 648–685 | 6107–6604 (données dans `data.js`) |
-| 11 | [respirator](#11-respirator) | `features/respirator/` ✅ config migrée | ~8700+ | 709–854 | 6656–7108 (config dans `config.js`) |
-| 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` ✅ config migrée | 8202–8429 | 490–647 | 4857–5261 (PLAN_LABELS dans `config.js`) |
+| 11 | [respirator](#11-respirator) | `features/respirator/` ✅ **JS migré** | ~4644+ | 709–854 | `handlers.js` (Canvas/RAF, oscilloscope 5 cycles) |
+| 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` ✅ **JS migré** | ~4144+ | 490–647 | `handlers.js` (validation FPH 21/22 j, drag-to-paint) |
 | 13 | [conges-calendar](#13-conges-calendar) | `features/conges-calendar/` | 8123–8199 | 432–486 | 5343–5750 |
 | 14 | [swap-shifts](#14-swap-shifts) | `features/swap-shifts/` | 8930–8986 | 548–607 | 6146–6549 |
 | 15 | [services](#15-services) | `features/services/` ✅ data migrée | inline | — | 4620–4680 (données dans `data.js`) |
