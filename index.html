@@ -1529,6 +1529,7 @@
 <script src="src/features/planning-ca/handlers.js"></script>
 <script src="src/features/admin/handlers.js"></script>
 <script src="src/features/auth/handlers.js"></script>
+<script src="src/features/settings/handlers.js"></script>
 
 <script>
 
@@ -1571,56 +1572,14 @@
     }
   }, true);
 
-  /**
-   * Enregistre et applique le thème choisi. Sauvegardé en localStorage.
-   * @param {string} t - "auto", "light" ou "dark"
-   */
-  function setTheme(t) {
-      savedTheme = t;
-      localStorage.setItem("pulseunit_theme", t);
-      applyTheme(t);
-      updateThemeBtns();
-  }
-
-  /**
-   * Met à jour l'état visuel des 3 boutons de thème (Auto / Clair / Sombre)
-   * dans la modale Paramètres pour refléter le choix actif.
-   */
-  function updateThemeBtns() {
-      const btns = { auto: 'theme-btn-auto', light: 'theme-btn-light', dark: 'theme-btn-dark' };
-      const desc = { auto: 'Automatique (☀️ Jour / 🌙 Nuit selon l\'heure)', light: 'Thème clair permanent', dark: 'Thème sombre permanent' };
-      Object.entries(btns).forEach(([key, id]) => {
-          const el = document.getElementById(id);
-          if (!el) return;
-          const active = savedTheme === key;
-          el.style.background  = active ? 'var(--brand-aqua)' : 'var(--pill-bg)';
-          el.style.color       = active ? '#fff' : 'var(--text)';
-          el.style.borderColor = active ? 'var(--brand-aqua)' : 'var(--border)';
-          el.style.boxShadow   = active ? '0 0 8px rgba(64,206,234,0.3)' : 'none';
-      });
-      const d = document.getElementById('theme-desc-modal');
-      if (d) d.textContent = desc[savedTheme] || '';
-  }
-
-  /**
-   * Bascule un paramètre booléen (sons, haptique) et le sauvegarde en localStorage.
-   * @param {string} key - Clé du paramètre : "sound" ou "haptic"
-   */
-  function toggleAppSetting(key) {
-      appSettings[key] = document.getElementById('setting-' + key).checked;
-      localStorage.setItem('pulseunit_settings', JSON.stringify(appSettings));
-  }
+  // PARAMÈTRES (thème, son, haptique) → src/features/settings/handlers.js
+  // (init thème anti-flash savedTheme/applyTheme/appSettings reste inline dans <head>)
 
   document.addEventListener("DOMContentLoaded", () => {
       updateThemeBtns();
       document.getElementById('setting-sound').checked = appSettings.sound;
       document.getElementById('setting-haptic').checked = appSettings.haptic;
   });
-
-  /** Ouvre la modale des paramètres de l'application. */
-  function openSettings() {
-      document.getElementById('settings-modal').style.display = 'flex';
-  }
 
   // PANNEAU ADMIN → src/features/admin/handlers.js (SHA-256, verrouillage USIP)
 

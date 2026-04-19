@@ -121,9 +121,11 @@ settings ──→ theme, auth
 ### 2. settings
 
 - **Rôle** : thème (auto/light/dark), son, haptic, changement PIN.
-- **index.html** : HTML 940–994 · CSS 36–82, 381–397 · JS 18–34, 1551–1596.
-- **État** : `savedTheme`, `appSettings`.
-- **Fonctions** : `applyTheme`, `setTheme`, `updateThemeBtns`, `toggleAppSetting`, `getAutoTheme`, `changeMyPin`.
+- ✅ **JS migré** : [`src/features/settings/handlers.js`](src/features/settings/handlers.js) — chargé après `auth/handlers.js`.
+- **index.html** : HTML 940–994 · CSS 36–82, 381–397 · JS modal migré.
+- **État inline** (reste dans `<head>` anti-FOUC) : `savedTheme`, `appSettings`, `getAutoTheme`, `applyTheme`.
+- **Exposé window** : `openSettings`, `setTheme`, `updateThemeBtns`, `toggleAppSetting`.
+- **Hors périmètre** : `changeMyPin` → `auth/handlers.js` (dépend du hash PIN).
 
 ### 3. shift
 
