@@ -207,9 +207,9 @@ settings ──→ theme, auth
 ### 13. conges-calendar
 
 - **Rôle** : simulateur CA (hors saison vs estival, fractionnement, bonus HS/RCV).
-- **index.html** : HTML 8123–8199 · CSS 432–486 · JS 5343–5750.
-- **État** : `calYear`, `calRegime`, `calSelectedCA`, `calWorkedDJF`.
-- **Fonctions** : `openCalendrierConges`, `closeCalendrierConges`, `renderCalendrier`, `renderCalMonth`, `toggleCADay`, `toggleDJFDay`, `calcCongesStats`, `setCalRegime`, `getJoursFeries`.
+- **index.html** : HTML ~4500+ · CSS 432–486 · JS migré.
+- **Handlers** ✅ migrés : [`src/features/conges-calendar/handlers.js`](src/features/conges-calendar/handlers.js) — 11 fonctions exposées sur `window` (open/close/render/toggle/set/calc). État `calYear`, `calRegime`, `calSelectedCA`, `calWorkedDJF` local au module.
+- **Persistance** : `localStorage` (`pulseunit_cal_ca`, `pulseunit_cal_djf`).
 
 ### 14. bourse
 
