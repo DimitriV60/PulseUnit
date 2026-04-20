@@ -40,6 +40,8 @@
 | 18 | [search](#18-search) | `features/search/` | 908–912 | — | 3545–3680 |
 | 19 | [sidemenu](#19-sidemenu) | `features/sidemenu/` | 916–938 | 215–224 | 2720–2744 |
 | 20 | [projet](#20-projet) | `features/projet/` ✅ **JS migré** | lexique-projet-view, securite-view | — | `handlers.js` (3 fonctions) |
+| 21 | [work-status](#21-work-status) | `features/work-status/` ✅ **JS migré** | work-status-modal | — | `handlers.js` (modale travail/lecture) |
+| 22 | [gestures](#22-gestures) | `features/gestures/` ✅ **JS migré** | — | — | `handlers.js` (drag-to-paint + swipe) |
 
 ---
 
@@ -267,6 +269,21 @@ settings ──→ theme, auth
 - **index.html** : HTML `#lexique-projet-view`, `#securite-view` · CSS inline.
 - **Handlers** ✅ migrés : [`src/features/projet/handlers.js`](src/features/projet/handlers.js) — `window.openLexiqueProjet`, `window.openSecurite`, `window.toggleProjetSection`.
 - **Dépendances** : `triggerHaptic` (core/helpers.js).
+
+### 21. work-status
+
+- **Rôle** : demande « Travaillez-vous ? » au login, assignation auto selon le planning.
+- **index.html** : HTML `#work-status-modal`.
+- **Handlers** ✅ migrés : [`src/features/work-status/handlers.js`](src/features/work-status/handlers.js) — `window.checkWorkStatus`, `window.handleWorkChoice`.
+- **Persistance** : `localStorage.pu_ws_<shiftKey>_<userId>` (purge 4 j).
+- **Dépendances** : `currentUser`, `currentShiftKey`, `shiftHistory`, `planStates`, `isShiftLocked`, `isAdmin`, `initShiftData`, `saveData`, `toggleSelection`, `renderApp`, `showToast`, `getPlanDefaultState`.
+
+### 22. gestures
+
+- **Rôle** : gestes tactiles globaux (drag-to-paint planning + swipe-back).
+- **index.html** : listeners globaux, pas de HTML dédié.
+- **Handlers** ✅ migrés : [`src/features/gestures/handlers.js`](src/features/gestures/handlers.js) — deux listeners installés à l'import.
+- **Dépendances** : `planDrag`, `planLockedMonths`, `planYear`, `cyclePlanDay`, `savePlanData`, `updatePlanStats`, `applyPlanStateDrag`, `getPlanDayState`, `NORMES_REF`, `setNormesCat`, `getNormesCurrentCat`, `closeNormes`, `closeNormesRespi`, `closeProtocoleDetail`, `closeProtocoles`, `closeCalendrierConges`, `closePlanningCA`, `closeTasks`, `closeCalculateurs`, `closeLexique`, `closeCalcModal`, `closeSideMenu`.
 
 ---
 
