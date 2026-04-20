@@ -130,16 +130,16 @@ settings ──→ theme, auth
 ### 3. shift
 
 - **Rôle** : garde courante (jour/nuit), allocation soignants → lits, sérialisation.
-- **index.html** : HTML 895–914, 1245–1254 · CSS 85–152 · JS 3349–3760.
-- **État** : `currentShiftKey`, `shiftHistory`, `roster`, `selectedStaffForTap`.
-- **Fonctions** : `initShiftData`, `saveData`, `initDates`, `renderApp`, `toggleSelection`, `clearSelection`, `canEditBeds`, `isShiftLocked`.
+- **index.html** : HTML 895–914, 1245–1254 · CSS 85–152.
+- **Handlers** ✅ migrés : [`src/features/shift/handlers.js`](src/features/shift/handlers.js) — `window.initShiftData`, `window.saveData`, `window.hardResetApp`, `window.clearSelection`, `window.updateStickyBanner`, `window.toggleSelection`, `window.isShiftLocked`, `window.isOnCurrentShift`, `window.canEditBeds`, `window.initDates`, `window.doSearch`, `window.selectSuggestion`, `window.triggerCreateNew`, `window.assignSpecDirect`, `window.openModalSpec`, `window.createNewStaff`, `window.clearShift`, `window.clearCurrentShift`, `window.getStaffTargets`, `window.confirmClearShift`, `window.executeClearShift`.
+- **État** : `currentShiftKey`, `shiftHistory`, `roster`, `selectedStaffForTap` (inline, partagés via portée lexicale).
 
 ### 4. beds
 
 - **Rôle** : grille principale (RÉA + USIP), affectations IDE/AS/MED/TECH, marqueurs BMR/dialyse/critique.
-- **index.html** : HTML 1245–1248 · CSS 131–209 · JS 3760–4046.
+- **index.html** : HTML 1245–1248 · CSS 131–209.
+- **Handlers** ✅ migrés : [`src/features/beds/handlers.js`](src/features/beds/handlers.js) — `window.toggleMedBed`, `window.assignLit`, `window.toggleLit`, `window.getAllBedIds`, `window.renderApp`.
 - **État** : `selectedStaffForTap`, `shiftHistory[key].assignments`.
-- **Fonctions** : `assignLit`, `toggleLit`, `getAllBedIds`, `renderApp`.
 - **Config** : `CONFIG` (structure 2 secteurs).
 
 ### 5. checklist
