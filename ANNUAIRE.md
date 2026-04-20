@@ -290,6 +290,7 @@ settings ──→ theme, auth
 ## Core — helpers transverses
 
 - **[`src/core/helpers.js`](src/core/helpers.js)** ✅ — `window.escapeHTML`, `window.triggerHaptic`, `window.playSound`. Chargé **en premier** (avant toutes les features) pour être disponible partout. Dépend de `appSettings` (init inline anti-FOUC).
+- **[`src/core/app-init.js`](src/core/app-init.js)** ✅ — `window.appInit`. Chargé **en dernier**, invoqué inline par `appInit()`. Orchestre : `loadAuth` → Firebase (PULSEUNIT_DOC + PLANS_DOC + SWAP_DOC onSnapshot) → `initDates` → auto-login ou modale d'auth.
 
 ---
 
