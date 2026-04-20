@@ -1530,44 +1530,15 @@
 <script src="src/features/admin/handlers.js"></script>
 <script src="src/features/auth/handlers.js"></script>
 <script src="src/features/settings/handlers.js"></script>
+<script src="src/core/helpers.js"></script>
+<script src="src/features/projet/handlers.js"></script>
 <script src="src/features/shift/handlers.js"></script>
 <script src="src/features/beds/handlers.js"></script>
 
 <script>
 
-  // EVENT LISTENER GLOBAL POUR RETOUR HAPTIQUE
-  /**
-   * Déclenche un retour haptique (vibration) si le paramètre est activé.
-   * Android/Chrome : API Vibration standard 30 ms.
-   * iOS Safari : API Vibration non supportée — fallback sonore discret.
-   */
-  function triggerHaptic() {
-    if (!appSettings.haptic) return;
-
-    // Android / Chrome : Vibration API standard
-    if (navigator.vibrate) {
-      try { navigator.vibrate(30); } catch(err) {}
-      return;
-    }
-
-    // iOS Safari : pas de vibration web possible
-    // Fallback : clic audio très discret si le son est activé
-    if (appSettings.sound) {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 1000;
-        gain.gain.setValueAtTime(0.05, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.05);
-      } catch(err) {}
-    }
-  }
-
+  // triggerHaptic, escapeHTML, playSound → src/core/helpers.js
+  // EVENT LISTENER GLOBAL POUR RETOUR HAPTIQUE (reste inline : utilise triggerHaptic global)
   document.addEventListener('click', (e) => {
     if (e.target.closest('button, .shift-tab, .staff-card, .bed-card, .a-btn, .med-bed-btn, .task-item, .lex-card, .calc-tile, .sugg-item, .close-menu-btn, .menu-btn, summary, input[type="checkbox"]')) {
       triggerHaptic();
@@ -1587,50 +1558,7 @@
 
   // confirmClearShift, executeClearShift → src/features/shift/handlers.js
 
-  /**
-   * Neutralise les caractères HTML spéciaux pour prévenir les injections XSS.
-   * À utiliser systématiquement avant d'injecter du texte utilisateur dans le DOM.
-   * @param {string} str - La chaîne à sécuriser
-   * @returns {string} La chaîne avec &, <, >, ', " échappés en entités HTML
-   */
-  function escapeHTML(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-    }[tag] || tag));
-  }
-  
-  /**
-   * Joue un son synthétisé via l'API Web Audio (aucun fichier audio externe).
-   * Utilisé pour les félicitations quand toutes les tâches IDE Technique sont validées.
-   * @param {string} type - Type de son. Valeur supportée : "success"
-   */
-  function playSound(type) {
-      if (!appSettings.sound) return;
-      try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const playNote = (freq, startTime, duration) => {
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.type = 'sine';
-              osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-              gain.gain.setValueAtTime(0.1, ctx.currentTime + startTime);
-              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
-              osc.connect(gain);
-              gain.connect(ctx.destination);
-              osc.start(ctx.currentTime + startTime);
-              osc.stop(ctx.currentTime + startTime + duration);
-          };
-          if (type === 'success') {
-              playNote(523.25, 0, 0.2); 
-              playNote(659.25, 0.1, 0.2); 
-              playNote(783.99, 0.2, 0.2); 
-              playNote(1046.50, 0.3, 0.5); 
-          }
-      } catch (e) {
-          console.log("Audio non supporté par ce navigateur.");
-      }
-  }
+  // escapeHTML, playSound → src/core/helpers.js
 
   const ICONS = {
     bmr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
@@ -1761,33 +1689,7 @@
 
 
 
-  /**
-   * Ouvre la vue Lexique de l'application (termes techniques et métier de PulseUnit).
-   */
-  function openLexiqueProjet() {
-    document.getElementById('lexique-projet-view').style.display = 'flex';
-  }
-
-  /**
-   * Ouvre la vue Sécurité & Données (état des corrections, données stockées).
-   */
-  function openSecurite() {
-    document.getElementById('securite-view').style.display = 'flex';
-  }
-
-  /**
-   * Bascule l'ouverture/fermeture d'une section dans les vues Lexique Projet et Sécurité.
-   * @param {string} id - Identifiant de la section (ex: 'lp-roles', 'sec-auth')
-   */
-  function toggleProjetSection(id) {
-    const body = document.getElementById('body-' + id);
-    const chev  = document.getElementById('chev-' + id);
-    if (!body || !chev) return;
-    const isOpen = body.classList.contains('open');
-    body.classList.toggle('open', !isOpen);
-    chev.classList.toggle('open', !isOpen);
-    triggerHaptic();
-  }
+  // openLexiqueProjet, openSecurite, toggleProjetSection → src/features/projet/handlers.js
 
 
 

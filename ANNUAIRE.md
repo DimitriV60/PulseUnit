@@ -39,6 +39,7 @@
 | 17 | [presence](#17-presence) | `features/presence/` | — | — | 7125–7167 |
 | 18 | [search](#18-search) | `features/search/` | 908–912 | — | 3545–3680 |
 | 19 | [sidemenu](#19-sidemenu) | `features/sidemenu/` | 916–938 | 215–224 | 2720–2744 |
+| 20 | [projet](#20-projet) | `features/projet/` ✅ **JS migré** | lexique-projet-view, securite-view | — | `handlers.js` (3 fonctions) |
 
 ---
 
@@ -259,6 +260,19 @@ settings ──→ theme, auth
 - **index.html** : HTML 916–938 · CSS 215–224.
 - **Handlers extraits** → [`src/features/sidemenu/handlers.js`](src/features/sidemenu/handlers.js) (chargé ligne 1516).
 - **Fonctions** : `window.openSideMenu`, `window.closeSideMenu`.
+
+### 20. projet
+
+- **Rôle** : vues "Lexique Projet" (rôles, états planning, terminologies) et "Sécurité & Données" (corrections appliquées, données stockées).
+- **index.html** : HTML `#lexique-projet-view`, `#securite-view` · CSS inline.
+- **Handlers** ✅ migrés : [`src/features/projet/handlers.js`](src/features/projet/handlers.js) — `window.openLexiqueProjet`, `window.openSecurite`, `window.toggleProjetSection`.
+- **Dépendances** : `triggerHaptic` (core/helpers.js).
+
+---
+
+## Core — helpers transverses
+
+- **[`src/core/helpers.js`](src/core/helpers.js)** ✅ — `window.escapeHTML`, `window.triggerHaptic`, `window.playSound`. Chargé **en premier** (avant toutes les features) pour être disponible partout. Dépend de `appSettings` (init inline anti-FOUC).
 
 ---
 
