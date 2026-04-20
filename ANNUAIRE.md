@@ -291,6 +291,8 @@ settings ──→ theme, auth
 
 - **[`src/core/helpers.js`](src/core/helpers.js)** ✅ — `window.escapeHTML`, `window.triggerHaptic`, `window.playSound`. Chargé **en premier** (avant toutes les features) pour être disponible partout. Dépend de `appSettings` (init inline anti-FOUC).
 - **[`src/core/app-init.js`](src/core/app-init.js)** ✅ — `window.appInit`. Chargé **en dernier**, invoqué inline par `appInit()`. Orchestre : `loadAuth` → Firebase (PULSEUNIT_DOC + PLANS_DOC + SWAP_DOC onSnapshot) → `initDates` → auto-login ou modale d'auth.
+- **[`src/core/firebase-init.js`](src/core/firebase-init.js)** ✅ — Bootstrap Firebase. Chargé juste après la CDN Firebase dans `<head>`. Expose `window.db`, `window.PULSEUNIT_DOC`, `window.AUTH_DOC`, `window.RESETS_DOC`, `window.PRESENCE_DOC`, `window.SWAP_DOC`, `window.PLANS_DOC`.
+- **[`src/core/constants.js`](src/core/constants.js)** ✅ — Constantes statiques : `window.ICONS` (SVG lits), `window.CONFIG` (structure RÉA+USIP), `window.reaBedsList`. Chargé dans `<head>` avant tous les handlers.
 
 ---
 

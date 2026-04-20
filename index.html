@@ -858,36 +858,10 @@
 <!-- Firebase SDK (sync temps réel entre collègues) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script>
-  // ── CONFIGURATION FIREBASE ────────────────────────────────────────────────
-  // Pour activer la synchronisation : remplacez les valeurs ci-dessous
-  // par celles de votre projet Firebase (voir instructions dans README).
-  const FIREBASE_CONFIG = {
-    apiKey:            "AIzaSyBtzRiQmNe4HWRsxJp_hexxOOCDjmPBCrs",
-    authDomain:        "pulseunit-c9c5c.firebaseapp.com",
-    projectId:         "pulseunit-c9c5c",
-    storageBucket:     "pulseunit-c9c5c.firebasestorage.app",
-    messagingSenderId: "939253358188",
-    appId:             "1:939253358188:web:5aff65e5495084cc574249"
-  };
-
-  let db = null;
-  let PULSEUNIT_DOC = null;
-
-  // N'initialiser Firebase que si la config a été remplie
-  if (FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY") {
-    try {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      db = firebase.firestore();
-      PULSEUNIT_DOC = db.collection('pulseunit').doc('shared');
-      console.log("PulseUnit: Firebase connecté ✓");
-    } catch(e) {
-      console.error("PulseUnit: erreur init Firebase", e);
-    }
-  } else {
-    console.warn("PulseUnit: Firebase non configuré — mode localStorage uniquement");
-  }
-</script>
+<!-- Bootstrap Firebase : db + tous les *_DOC sur window -->
+<script src="src/core/firebase-init.js"></script>
+<!-- Constantes partagées : ICONS, CONFIG, reaBedsList -->
+<script src="src/core/constants.js"></script>
 
 </head>
 <body>
@@ -1563,13 +1537,7 @@
 
   // escapeHTML, playSound → src/core/helpers.js
 
-  const ICONS = {
-    bmr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
-    dialyse: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`,
-    crit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>`,
-    closed: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-  };
+  // ICONS → src/core/constants.js
 
   // LEXIQUE_DATA chargé depuis src/features/lexique/data.js (voir ANNUAIRE.md)
   const LEXIQUE_DATA = window.LEXIQUE_DATA;
@@ -1596,11 +1564,7 @@
   let currentShiftKey = ''; 
   let selectedStaffForTap = null;
 
-  const CONFIG = [
-    { type: 'rea', name: 'RÉANIMATION (15 lits)', beds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16], color: 'var(--brand-blue)' },
-    { type: 'usip', name: 'USIP (5 lits)', beds: [1, 2, 3, 4, 5], color: 'var(--med)' }
-  ];
-  const reaBedsList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16];
+  // CONFIG, reaBedsList → src/core/constants.js
 
   // openSideMenu + closeSideMenu → src/features/sidemenu/handlers.js
   // (exposés sur window.openSideMenu et window.closeSideMenu)
@@ -1709,11 +1673,7 @@
   let authUsers = {};
   let resetRequests = [];
   let _savePending = false; // Bloque onSnapshot pendant un écrit local en cours
-  const AUTH_DOC    = db ? db.collection('pulseunit').doc('auth')     : null;
-  const RESETS_DOC  = db ? db.collection('pulseunit').doc('resets')   : null;
-  const PRESENCE_DOC = db ? db.collection('pulseunit').doc('presence') : null;
-  const SWAP_DOC     = db ? db.collection('pulseunit').doc('swaps')   : null;
-  const PLANS_DOC    = db ? db.collection('pulseunit').doc('plans')   : null;
+  // AUTH_DOC, RESETS_DOC, PRESENCE_DOC, SWAP_DOC, PLANS_DOC → src/core/firebase-init.js
   let onlineUsers = {}; // { userId: { firstName, lastName, role, lastSeen } }
   let swapRequests = []; // demandes de permutation de gardes
   let selectedRole = '';
