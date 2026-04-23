@@ -1477,6 +1477,9 @@
     </div>
   </div>
 
+<!-- Helpers transverses — chargé en premier (escapeHTML, triggerHaptic, playSound) -->
+<script src="src/core/helpers.js"></script>
+
 <!-- Données extraites (architecture feature-based) — voir ANNUAIRE.md -->
 <script src="src/features/lexique/data.js"></script>
 <script src="src/features/protocols/data.js"></script>
@@ -1486,14 +1489,16 @@
 <script src="src/features/tasks/data.js"></script>
 <script src="src/features/checklist/data.js"></script>
 <script src="src/features/respirator/config.js"></script>
-<script src="src/features/respirator/handlers.js"></script>
 <script src="src/features/planning-ca/config.js"></script>
+
+<!-- Handlers features — ordre selon dépendances (voir ANNUAIRE.md) -->
 <script src="src/features/sidemenu/handlers.js"></script>
 <script src="src/features/calculators/handlers.js"></script>
 <script src="src/features/lexique/handlers.js"></script>
 <script src="src/features/protocols/handlers.js"></script>
 <script src="src/features/services/handlers.js"></script>
 <script src="src/features/norms/handlers.js"></script>
+<script src="src/features/respirator/handlers.js"></script>
 <script src="src/features/checklist/handlers.js"></script>
 <script src="src/features/tasks/handlers.js"></script>
 <script src="src/features/bourse/handlers.js"></script>
@@ -1504,7 +1509,6 @@
 <script src="src/features/admin/handlers.js"></script>
 <script src="src/features/auth/handlers.js"></script>
 <script src="src/features/settings/handlers.js"></script>
-<script src="src/core/helpers.js"></script>
 <script src="src/features/projet/handlers.js"></script>
 <script src="src/features/shift/handlers.js"></script>
 <script src="src/features/beds/handlers.js"></script>

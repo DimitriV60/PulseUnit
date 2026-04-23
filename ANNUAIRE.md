@@ -1,66 +1,68 @@
 # ANNUAIRE PulseUnit — Index des features
 
-> **À lire en premier** avant toute modification de `index.html` (9000 lignes).
-> Ce fichier est la carte : il pointe, pour chaque feature, les lignes exactes à ouvrir dans `index.html` et le dossier `src/features/<nom>/` correspondant.
+> **À lire en premier** avant toute modification du code.
+> Ce fichier est la carte : il pointe, pour chaque feature, le dossier `src/features/<nom>/` et les fonctions exposées.
 >
-> **État actuel** : `index.html` reste le fichier unique déployé. `src/` contient le scaffolding de la future architecture modulaire (store global + stubs + données extractibles). La migration se fait progressivement par PR.
+> **État actuel (2026-04-23)** : Migration Phase 1 terminée. `index.html` réduit de 9000 → **2620 lignes** (−70%). Toutes les features ont leurs `handlers.js` dans `src/features/`. Les données pures sont dans `data.js`. `index.html` ne contient plus que HTML + CSS + balises `<script src>`.
 
 ---
 
 ## Comment utiliser cet annuaire
 
 1. Identifie la feature concernée dans le tableau ci-dessous.
-2. Ouvre `index.html` aux lignes indiquées (HTML / CSS / JS).
-3. Consulte `src/features/<nom>/README.md` pour les fonctions et l'état utilisé.
-4. Modifie `index.html` directement (pour l'instant). Le jour où une feature est migrée, son README pointera vers les fichiers `src/features/<nom>/*.js`.
+2. Ouvre `src/features/<nom>/handlers.js` (et `data.js` si besoin).
+3. Le HTML/CSS correspondant reste dans `index.html` — les numéros de lignes ci-dessous référencent **l'index.html actuel (2620 lignes)**.
+4. Consulte `src/features/<nom>/README.md` pour le détail des fonctions et de l'état.
 
 ---
 
 ## Table des features (index principal)
 
-| # | Feature | Dossier `src/` | HTML | CSS | JS |
-|---|---------|----------------|------|-----|----|
-| 1 | [auth](#1-auth) | `features/auth/` | 8851–8927 | 282–322 | 7111–7455 |
-| 2 | [settings](#2-settings) | `features/settings/` | 940–994 | 36–82, 381–397 | 18–34, 1551–1596 |
-| 3 | [shift](#3-shift) | `features/shift/` | 895–914, 1245–1254 | 85–152 | 3349–3760 |
-| 4 | [beds](#4-beds) | `features/beds/` | 1245–1248 | 131–209 | 3760–4046 |
-| 5 | [checklist](#5-checklist) | `features/checklist/` ✅ data migrée | 1155–1175 | 341–379 | 4080–4167 (items dans `data.js`) |
-| 6 | [lexique](#6-lexique) | `features/lexique/` ✅ data migrée | 1177–1193 | 234–255 | 2744–2804 (données dans `data.js`) |
-| 7 | [calculators](#7-calculators) | `features/calculators/` ✅ data migrée | 1195–1222 | 256–328 | 2814–3349 (données dans `data.js`) |
-| 8 | [protocols](#8-protocols) | `features/protocols/` ✅ data migrée | 8090–8120 | 398–430 | 4467–4839 (données dans `data.js`) |
-| 9 | [tasks](#9-tasks) | `features/tasks/` ✅ data migrée | 1224–1243 | 264–277 | 2860–2948 (tâches dans `data.js`) |
-| 10 | [norms](#10-norms) | `features/norms/` ✅ data migrée | 8431–8450 | 648–685 | 6107–6604 (données dans `data.js`) |
-| 11 | [respirator](#11-respirator) | `features/respirator/` ✅ **JS migré** | ~4644+ | 709–854 | `handlers.js` (Canvas/RAF, oscilloscope 5 cycles) |
-| 12 | [planning-ca](#12-planning-ca) | `features/planning-ca/` ✅ **JS migré** | ~4144+ | 490–647 | `handlers.js` (validation FPH 21/22 j, drag-to-paint) |
-| 13 | [conges-calendar](#13-conges-calendar) | `features/conges-calendar/` | 8123–8199 | 432–486 | 5343–5750 |
-| 14 | [swap-shifts](#14-swap-shifts) | `features/swap-shifts/` | 8930–8986 | 548–607 | 6146–6549 |
-| 15 | [services](#15-services) | `features/services/` ✅ data migrée | inline | — | 4620–4680 (données dans `data.js`) |
-| 16 | [admin](#16-admin) | `features/admin/` | 996–1087 | — | 1603–1720, 7582–7891 |
-| 17 | [presence](#17-presence) | `features/presence/` | — | — | 7125–7167 |
-| 18 | [search](#18-search) | `features/search/` | 908–912 | — | 3545–3680 |
-| 19 | [sidemenu](#19-sidemenu) | `features/sidemenu/` | 916–938 | 215–224 | 2720–2744 |
-| 20 | [projet](#20-projet) | `features/projet/` ✅ **JS migré** | lexique-projet-view, securite-view | — | `handlers.js` (3 fonctions) |
-| 21 | [work-status](#21-work-status) | `features/work-status/` ✅ **JS migré** | work-status-modal | — | `handlers.js` (modale travail/lecture) |
-| 22 | [gestures](#22-gestures) | `features/gestures/` ✅ **JS migré** | — | — | `handlers.js` (drag-to-paint + swipe) |
+Toutes les features ont leurs handlers dans `src/features/`. Les colonnes indiquent les fichiers présents.
+
+| # | Feature | handlers.js | data.js | Notes |
+|---|---------|:-----------:|:-------:|-------|
+| 1 | [auth](#1-auth) | ✅ | — | 636 lignes — auth, PIN, admin users |
+| 2 | [settings](#2-settings) | ✅ | — | thème, son, haptic |
+| 3 | [shift](#3-shift) | ✅ | — | 320 lignes — garde, roster, dates |
+| 4 | [beds](#4-beds) | ✅ | — | 296 lignes — grille RÉA+USIP |
+| 5 | [checklist](#5-checklist) | ✅ | ✅ | 10 items/chambre |
+| 6 | [lexique](#6-lexique) | ✅ | ✅ | 260+ termes, 13 catégories |
+| 7 | [calculators](#7-calculators) | ✅ | ✅ | 16 calculateurs, 575 lignes data |
+| 8 | [protocols](#8-protocols) | ✅ | ✅ | accordéon lecture seule |
+| 9 | [tasks](#9-tasks) | ✅ | ✅ | tâches IDE tech jour/nuit |
+| 10 | [norms](#10-norms) | ✅ | ✅ | 6 catégories normes de référence |
+| 11 | [respirator](#11-respirator) | ✅ | config.js | Canvas/RAF, 4 modes, 8 scénarios |
+| 12 | [planning-ca](#12-planning-ca) | ✅ | config.js | drag-to-paint, FPH 21/22 j, Firestore |
+| 13 | [conges-calendar](#13-conges-calendar) | ✅ | — | simulateur CA, localStorage |
+| 14 | [bourse](#14-bourse) | ✅ | — | échange gardes, Firestore temps réel |
+| 15 | [services](#15-services) | ✅ | ✅ | annuaire services externes |
+| 16 | [admin](#16-admin) | ✅ | — | panel admin, chargé avant auth |
+| 17 | [presence](#17-presence) | ✅ | — | heartbeat 60s |
+| 18 | [search](#18-search) | ✅ | — | recherche globale dashboard |
+| 19 | [sidemenu](#19-sidemenu) | ✅ | — | drawer navigation |
+| 20 | [projet](#20-projet) | ✅ | — | vues lexique-projet + sécurité |
+| 21 | [work-status](#21-work-status) | ✅ | — | modale "travaillez-vous ?" |
+| 22 | [gestures](#22-gestures) | ✅ | — | drag-to-paint + swipe global |
+
+> **Note** : `src/features/swap-shifts/` ne contient qu'un README — la feature est implémentée dans `bourse/handlers.js` (renommée).
 
 ---
 
-## Éléments transverses
+## Éléments transverses (index.html — 2620 lignes)
 
-| Zone | Lignes | Description |
-|------|--------|-------------|
-| `<head>` meta + manifest | 1–9 | Viewport, manifest.json, theme-color, Google Fonts |
-| Init thème (inline) | 10–34 | localStorage theme, media query dark |
-| CSS variables `:root` | 35–82 | Palette, typo, spacing — variables centrales |
-| Header sticky | 895–914 | Titre, user info, recherche globale, shift-nav |
-| Side menu | 916–938 | Drawer de navigation |
-| Sticky banner | 1250–1253 | Validation sélection staff |
-| CDN | 857–860 | QRCode, Firebase App, Firebase Firestore |
-| Firebase init | 861–890 | Config + initializeApp |
-| `DOMContentLoaded` | 1587 | Point d'entrée app |
-| `renderApp()` | 3760 | Rendu principal grille lits |
-| Service worker reg | 8989–8992 | Enregistrement PWA |
-| Données lexique | `src/features/lexique/data.js` ✅ | ~260 termes (extrait d'index.html) — chargé via `<script src>` ligne 1507 |
+| Zone | Description |
+|------|-------------|
+| `<head>` meta + manifest | Viewport, manifest.json, theme-color, Google Fonts |
+| Init thème inline (`<head>`) | localStorage theme, media query dark — anti-FOUC, reste inline |
+| CSS variables `:root` | Palette, typo, spacing — toujours dans `<head>` |
+| CDN (Firebase + QRCode) | `<head>` — chargés avant `firebase-init.js` |
+| `src/core/firebase-init.js` | `<head>` — expose `db`, `*_DOC` sur `window` |
+| `src/core/constants.js` | `<head>` — expose `ICONS`, `CONFIG`, `reaBedsList` |
+| Header sticky | HTML `index.html` — titre, user info, recherche, shift-nav |
+| Side menu | HTML `index.html` — drawer navigation |
+| Service worker reg | Fin de `index.html` — enregistrement PWA |
+| Inline `<script>` résiduel | Fin de `index.html` — listeners click global (haptic), `appInit()` call |
 
 ---
 
@@ -72,7 +74,7 @@
 | `AUTH_DOC` | `pulseunit/auth` | auth, admin |
 | `RESETS_DOC` | `pulseunit/resets` | auth (reset PIN), admin |
 | `PRESENCE_DOC` | `pulseunit/presence` | presence, admin |
-| `SWAP_DOC` | `pulseunit/swap` | swap-shifts |
+| `SWAP_DOC` | `pulseunit/swap` | bourse (swap-shifts renommée) |
 
 ---
 
@@ -88,7 +90,7 @@ currentLexiqueFilter, currentProtoId, normesCurrentCat, currentChecklistBed     
 planYear, planRegime, planStates, planLockedMonths, planSoldes                           → planning-ca
 calYear, calRegime, calSelectedCA, calWorkedDJF                                          → conges-calendar
 respiValues, respiMode, respiScenario                                                    → respirator
-swapRequests                                                                             → swap-shifts
+swapRequests                                                                             → bourse (swap-shifts renommée)
 ```
 
 Voir `src/core/store.js` pour l'API (`store.get`, `store.set`, `store.subscribe`, `store.persist`, `store.hydrate`).
@@ -289,25 +291,44 @@ settings ──→ theme, auth
 
 ## Core — helpers transverses
 
-- **[`src/core/helpers.js`](src/core/helpers.js)** ✅ — `window.escapeHTML`, `window.triggerHaptic`, `window.playSound`. Chargé **en premier** (avant toutes les features) pour être disponible partout. Dépend de `appSettings` (init inline anti-FOUC).
+- **[`src/core/helpers.js`](src/core/helpers.js)** ✅ — `window.escapeHTML`, `window.triggerHaptic`, `window.playSound`. Chargé **en premier dans `<body>`**, avant tous les feature handlers. Dépend de `appSettings` (init inline anti-FOUC — disponible à l'appel).
 - **[`src/core/app-init.js`](src/core/app-init.js)** ✅ — `window.appInit`. Chargé **en dernier**, invoqué inline par `appInit()`. Orchestre : `loadAuth` → Firebase (PULSEUNIT_DOC + PLANS_DOC + SWAP_DOC onSnapshot) → `initDates` → auto-login ou modale d'auth.
 - **[`src/core/firebase-init.js`](src/core/firebase-init.js)** ✅ — Bootstrap Firebase. Chargé juste après la CDN Firebase dans `<head>`. Expose `window.db`, `window.PULSEUNIT_DOC`, `window.AUTH_DOC`, `window.RESETS_DOC`, `window.PRESENCE_DOC`, `window.SWAP_DOC`, `window.PLANS_DOC`.
 - **[`src/core/constants.js`](src/core/constants.js)** ✅ — Constantes statiques : `window.ICONS` (SVG lits), `window.CONFIG` (structure RÉA+USIP), `window.reaBedsList`. Chargé dans `<head>` avant tous les handlers.
 
+### Ordre de chargement dans `index.html`
+
+```
+<head>
+  firebase CDN → firebase-init.js → constants.js
+
+<body>
+  helpers.js          ← EN PREMIER (escapeHTML, triggerHaptic, playSound)
+  [data.js / config.js par feature]
+  [handlers.js par feature — ordre selon dépendances]
+  app-init.js         ← EN DERNIER
+  <script> appInit() </script>
+```
+
 ---
 
-## Stratégie de migration (proposition)
+## État de la migration — Phase 1 terminée ✅
 
-Priorité décroissante pour extraire vers `src/features/` sans risque :
+Toutes les features ont été extraites dans `src/features/`. `index.html` : 9000 → **2620 lignes (−70%)**.
 
-1. **Données pures** (LEXIQUE_DATA, PROTOCOLS_DATA, NORMES_REF, RV_CFG, PLAN_LABELS) — gros volume, zéro logique, parfait candidat.
-2. **Features isolées** (lexique, norms, calculators, conges-calendar) — peu de dépendances transverses.
-3. **Features semi-isolées** (protocols, tasks, services, sidemenu, search).
-4. **Features avec état** (settings, auth, presence).
-5. **Features critiques / couplées** (shift, beds, checklist, planning-ca, admin) — en dernier, migration prudente.
+| Phase | Description | État |
+|-------|-------------|------|
+| 1 | Données pures → `data.js` (lexique, protocols, norms, calculators, services, tasks, checklist) | ✅ Terminé |
+| 1 | Handlers → `handlers.js` (toutes les 22 features) | ✅ Terminé |
+| 2 | Supprimer les doublons inline restants dans `index.html` | À faire |
+| 3 | Introduire ES modules (import/export) si besoin | Optionnel |
 
-Chaque étape = 1 PR, dev sur sa branche dédiée, fusion sur `main` (déclenche déploiement Firebase auto).
+### Prochaines étapes
+
+- **Phase 2** : vérifier et supprimer tout code JS résiduel dans `index.html` (inline `<script>` en fin de fichier)
+- **Pathologies** : nouvelle feature à créer (`src/features/pathologies/`) — 400 pathologies, menu par système (voir backlog PulseUnit)
+- Chaque nouvelle PR = 1 branche dédiée → merge `main` → déploiement auto Vercel
 
 ---
 
-*Dernière mise à jour de la cartographie : 2026-04-18.*
+*Dernière mise à jour : 2026-04-23 — Phase 1 terminée, helpers.js corrigé, table mise à jour.*
