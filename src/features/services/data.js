@@ -11,8 +11,8 @@
         { name: "Poste soignant", num: "0344616086", display: "(61) 6086" },
         { name: "IDE technique", num: "0344617125", display: "(61) 7125" },
         { name: "Bureau cadre", num: "0344616082", display: "(61) 6082" },
-        { name: "Réanimateur de garde — REA 1", num: "1862", display: "(61) 1862" },
-        { name: "Réanimateur de garde — REA 2", num: "1822", display: "(61) 1822" },
+        { name: "Réanimateur de garde — REA 1", num: "0344611862", display: "03 44 61 18 62" },
+        { name: "Réanimateur de garde — REA 2", num: "0344611822", display: "03 44 61 18 22" },
         { name: "Services de nuit", num: "0344616062", display: "(61) 6062" },
       ]
     },

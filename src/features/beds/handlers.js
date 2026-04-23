@@ -157,7 +157,7 @@ window.renderApp = function renderApp() {
             <div class="bed-header" style="flex-shrink:0; color:var(--text-muted); margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; justify-content:center;">
                 <span class="b-num" style="font-size:0.85rem; font-weight:900; text-transform:uppercase; letter-spacing:1px;">\uD83D\uDCCB EFFECTIF</span>
             </div>
-            <div class="mini-list" id="mini-list-content" style="flex:1; overflow-y:auto; max-height:130px; padding-right:5px; margin-bottom:10px;">${miniListHTML}</div>
+            <div class="mini-list" id="mini-list-content" style="flex:1; overflow-y:auto; max-height:220px; padding-right:5px; margin-bottom:10px;">${miniListHTML}</div>
         </div>
       </div>
     `;
@@ -179,7 +179,7 @@ window.renderApp = function renderApp() {
         boardHTML += `<div class="bed-card special-card med-card">
         <div class="bed-header" style="color:var(--med)">
             <span class="b-num">R\u00C9A ${i + 1}</span>
-            <span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</span>
+            <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
         </div>
         ${grid}
         ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${locked ? '' : `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>`}</div>` : `<div class="search-box">${locked ? '---' : `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>`}</div>`}

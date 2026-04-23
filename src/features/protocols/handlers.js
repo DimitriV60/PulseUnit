@@ -66,11 +66,11 @@ window.renderProtoDetail = function renderProtoDetail(p) {
         if (sec.info) {
             html += `<div class="proto-info-block"><p>${escapeHTML(sec.info)}</p></div>`;
         }
-        sec.steps.forEach((step) => {
+        sec.steps.forEach((step, stepIdx) => {
             const isWarn = step.note && step.note.startsWith('⚠️');
             html += `
             <div class="proto-step-ro">
-              <div class="proto-step-icon">${step.icon}</div>
+              <div class="proto-step-icon" style="font-size:0.72rem; font-weight:900; color:var(--text-muted); min-width:1.5rem; text-align:center;">${stepIdx + 1}</div>
               <div style="flex:1;">
                 <div class="proto-step-text">${escapeHTML(step.text)}</div>
                 ${step.note ? `<div class="${isWarn ? 'proto-warn-block' : 'proto-step-note'}" style="${isWarn ? 'margin:4px 0 0;padding:6px 10px;' : ''}">${isWarn ? '<p>' : ''}${escapeHTML(step.note)}${isWarn ? '</p>' : ''}</div>` : ''}
