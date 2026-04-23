@@ -73,3 +73,14 @@ window.renderGlobalSearch = function renderGlobalSearch() {
     results.innerHTML = html;
     results.style.display = 'block';
 };
+
+// ── Fermeture résultats au clic hors zone ────────────────────────────────────
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-box') && !e.target.closest('.search-area')) {
+    document.querySelectorAll('.suggestions').forEach(el => el.style.display = 'none');
+  }
+  if (!e.target.closest('#global-search') && !e.target.closest('#global-search-results')) {
+    const r = document.getElementById('global-search-results');
+    if (r) r.style.display = 'none';
+  }
+});

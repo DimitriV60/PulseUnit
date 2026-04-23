@@ -41,3 +41,10 @@ window.toggleAppSetting = function toggleAppSetting(key) {
     appSettings[key] = document.getElementById('setting-' + key).checked;
     localStorage.setItem('pulseunit_settings', JSON.stringify(appSettings));
 };
+
+// ── Init UI au chargement ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    updateThemeBtns();
+    document.getElementById('setting-sound').checked  = appSettings.sound;
+    document.getElementById('setting-haptic').checked = appSettings.haptic;
+});

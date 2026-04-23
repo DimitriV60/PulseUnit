@@ -124,3 +124,10 @@ document.addEventListener('touchend', function(e) {
     if (menuOpen())                            { closeSideMenu(); return; }
   }, { passive: true });
 })();
+
+// ── Retour haptique global au clic ───────────────────────────────────────────
+document.addEventListener('click', (e) => {
+  if (e.target.closest('button, .shift-tab, .staff-card, .bed-card, .a-btn, .med-bed-btn, .task-item, .lex-card, .calc-tile, .sugg-item, .close-menu-btn, .menu-btn, summary, input[type="checkbox"]')) {
+    triggerHaptic();
+  }
+}, true);
