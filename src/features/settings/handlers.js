@@ -13,6 +13,10 @@ window.openSettings = function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
 };
 
+window.openRGPD = function openRGPD() {
+    document.getElementById('rgpd-modal').style.display = 'flex';
+};
+
 window.setTheme = function setTheme(t) {
     savedTheme = t;
     localStorage.setItem('pulseunit_theme', t);
