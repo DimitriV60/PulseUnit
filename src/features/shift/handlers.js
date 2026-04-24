@@ -154,17 +154,19 @@ window.initDates = function initDates() {
     const nav = document.getElementById('shift-nav'); nav.innerHTML = '';
     const today = new Date(); const daysArr = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
     const h = today.getHours();
-    // Calculer currentShiftKey avec le même format de clé que le loop (évite décalage UTC/local)
+    // Date locale (getFullYear/Month/Date) — évite le décalage UTC/heure locale (France UTC+2)
+    // toISOString() donnait la date UTC, provoquant une clé "avant-hier" entre minuit et 2h du matin
+    const toDS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     for (let i = 0; i <= 1; i++) {
         const d = new Date(today); d.setDate(d.getDate() - i);
-        const ds = d.toISOString().split('T')[0];
+        const ds = toDS(d);
         if (i === 0 && h >= 8 && h < 20) { currentShiftKey = `${ds}-jour`; break; }
         if (i === 0 && h >= 20)           { currentShiftKey = `${ds}-nuit`; break; }
         if (i === 1 && h < 8)             { currentShiftKey = `${ds}-nuit`; break; }
     }
     for (let i = 0; i <= 7; i++) {
         const d = new Date(today); d.setDate(d.getDate() - i);
-        const ds = d.toISOString().split('T')[0];
+        const ds = toDS(d);
         const lbl = i === 0 ? 'AUJ.' : i === 1 ? 'HIER' : `${daysArr[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
         ['jour', 'nuit'].forEach(p => {
             const key = `${ds}-${p}`;
@@ -176,7 +178,6 @@ window.initDates = function initDates() {
             nav.appendChild(btn);
         });
     }
-    // Scroll vers l'onglet actif
     const activeTab = nav.querySelector('.shift-tab.active');
     if (activeTab) activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
     initShiftData(currentShiftKey);

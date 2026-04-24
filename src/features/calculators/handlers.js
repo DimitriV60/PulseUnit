@@ -41,10 +41,10 @@ function renderCalculateurs() {
         });
     });
 
-    // Groupe EER — tuile spéciale qui ouvre directement l'onglet EER Citrate
+    // Groupe EER
     parts.push(`<div style="grid-column:1/-1; font-size:0.65rem; font-weight:900; color:var(--brand-aqua); text-transform:uppercase; letter-spacing:1.5px; padding:4px 0 2px; border-bottom:1px solid var(--border); margin-bottom:2px;">EER / ANTICOAGULATION</div>`);
     parts.push(`
-    <div class="calc-tile" onclick="closeCalculateurs(); openDilutions(); setDilutionTab('eer');" style="grid-column:1/-1; max-width:160px;">
+    <div class="calc-tile" onclick="openCalcModal('eer')">
         <div class="calc-icon">🩸</div>
         <div class="calc-name">EER Citrate</div>
     </div>`);

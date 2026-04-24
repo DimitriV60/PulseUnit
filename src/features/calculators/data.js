@@ -647,4 +647,50 @@
       </div>
     `
   },
+
+  /* ===== GROUPE EER ===== */
+  {
+    id: 'eer', icon: '🩸', title: 'EER Citrate — Prismaflex',
+    html: `
+      <div style="overflow-y:auto; max-height:70vh; padding-bottom:20px;">
+        <div style="margin-bottom:16px;">
+          <div style="font-size:0.75rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Paramètres initiaux — entrer le poids</div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input type="number" id="eer-poids-input" min="40" max="200" placeholder="Poids (kg)"
+              style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:1rem; font-weight:900; font-family:var(--font); outline:none;"
+              oninput="calcEER()">
+            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:700; white-space:nowrap;">kg</span>
+          </div>
+          <div id="eer-result"></div>
+          <div style="margin-top:8px; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:6px 10px; background:var(--surface-sec); border-radius:6px; border:1px solid var(--border);">
+            ⚠️ Débit sang = constante — NE PAS MODIFIER
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:0.75rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Ajustements CA ionisé</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; margin-bottom:8px; padding:6px 10px; background:rgba(239,68,68,0.07); border-radius:6px; border:1px solid rgba(239,68,68,0.2);">
+            ⚠️ 3 changements consécutifs → appeler le médecin
+          </div>
+          <div style="font-size:0.78rem; font-weight:900; color:var(--text); margin-bottom:6px;">CA ionisé patient — cible 1,0 – 1,2 mmol/L</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <button onclick="eerCaChange('patient','low')" style="padding:10px; border-radius:8px; border:1px solid var(--crit); background:rgba(239,68,68,0.08); color:var(--crit); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&lt; 1,0<br>⬆️ +10% Ca²⁺</button>
+            <button onclick="eerCaChange('patient','high')" style="padding:10px; border-radius:8px; border:1px solid var(--med); background:rgba(245,158,11,0.08); color:var(--med); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&gt; 1,2<br>⬇️ -10% Ca²⁺</button>
+          </div>
+          <div style="font-size:0.78rem; font-weight:900; color:var(--text); margin-bottom:6px;">CA post-filtre — cible 0,25 – 0,35 mmol/L</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <button onclick="eerCaChange('filtre','low')" style="padding:10px; border-radius:8px; border:1px solid var(--med); background:rgba(245,158,11,0.08); color:var(--med); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&lt; 0,25<br>⬇️ Citrate −0,5</button>
+            <button onclick="eerCaChange('filtre','high')" style="padding:10px; border-radius:8px; border:1px solid var(--crit); background:rgba(239,68,68,0.08); color:var(--crit); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&gt; 0,35<br>⬆️ Citrate +0,5</button>
+          </div>
+          <div id="eer-alerts"></div>
+        </div>
+        <div style="padding:10px 12px; background:var(--surface-sec); border-radius:8px; border:1px solid var(--border); font-size:0.72rem; color:var(--text-muted); font-weight:700; line-height:1.7;">
+          <div style="color:var(--text); font-weight:900; margin-bottom:4px;">🕐 Prélèvements CA ionisé</div>
+          • 60 min après initiation EERC<br>
+          • Toutes les 4–6h si stable<br>
+          • 1h après modification citrate ou Ca²⁺<br>
+          <span style="color:var(--crit);">⚠️ Attendre 45 min après changement poche citrate / seringue Ca²⁺ / arrêt pompe</span>
+        </div>
+      </div>
+    `
+  },
   ];
