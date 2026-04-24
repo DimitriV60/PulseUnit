@@ -152,34 +152,53 @@ window.canEditBeds = canEditBeds;
 
 window.initDates = function initDates() {
     const nav = document.getElementById('shift-nav'); nav.innerHTML = '';
-    const today = new Date(); const daysArr = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+    const today = new Date();
     const h = today.getHours();
-    // Date locale (getFullYear/Month/Date) — évite le décalage UTC/heure locale (France UTC+2)
-    // toISOString() donnait la date UTC, provoquant une clé "avant-hier" entre minuit et 2h du matin
+    const daysArr = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
     const toDS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    for (let i = 0; i <= 1; i++) {
-        const d = new Date(today); d.setDate(d.getDate() - i);
-        const ds = toDS(d);
-        if (i === 0 && h >= 8 && h < 20) { currentShiftKey = `${ds}-jour`; break; }
-        if (i === 0 && h >= 20)           { currentShiftKey = `${ds}-nuit`; break; }
-        if (i === 1 && h < 8)             { currentShiftKey = `${ds}-nuit`; break; }
+
+    // Détermine la garde actuelle (date locale) — pas de garde future dans la nav
+    const curDate = new Date(today);
+    let curPeriod;
+    if (h >= 8 && h < 20)    { curPeriod = 'jour'; }
+    else if (h >= 20)         { curPeriod = 'nuit'; }
+    else                      { curDate.setDate(curDate.getDate() - 1); curPeriod = 'nuit'; }
+    currentShiftKey = `${toDS(curDate)}-${curPeriod}`;
+
+    // Génère 8 gardes en remontant 12h par 12h depuis la garde actuelle
+    // Ordre : nuit → jour du même jour → nuit du jour précédent → …
+    const shifts = [];
+    const d = new Date(curDate);
+    let period = curPeriod;
+    for (let i = 0; i < 8; i++) {
+        shifts.push({ ds: toDS(d), period });
+        if (period === 'nuit') { period = 'jour'; }
+        else { d.setDate(d.getDate() - 1); period = 'nuit'; }
     }
-    for (let i = 0; i <= 7; i++) {
-        const d = new Date(today); d.setDate(d.getDate() - i);
-        const ds = toDS(d);
-        const baseLbl = i === 0 ? 'AUJ.' : i === 1 ? 'HIER' : `${daysArr[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
-        ['jour', 'nuit'].forEach(p => {
-            const key = `${ds}-${p}`;
-            // Nuit de la veille encore en cours (minuit–8h) → afficher AUJ. N, pas HIER N
-            const lbl = (i === 1 && h < 8 && p === 'nuit') ? 'AUJ.' : baseLbl;
-            const btn = document.createElement('div');
-            btn.className = `shift-tab ${key === currentShiftKey ? 'active' : ''}`;
-            btn.textContent = `${lbl} ${p[0].toUpperCase()}`;
-            btn.setAttribute('data-key', key);
-            btn.onclick = () => { currentShiftKey = key; clearSelection(); renderApp(); checkWorkStatus(); };
-            nav.appendChild(btn);
-        });
-    }
+
+    // Labels basés sur la date calendaire locale (sauf garde actuelle → toujours AUJ.)
+    const todayDS = toDS(today);
+    const yestDate = new Date(today); yestDate.setDate(yestDate.getDate() - 1);
+    const yestDS = toDS(yestDate);
+
+    shifts.forEach((shift, idx) => {
+        const key = `${shift.ds}-${shift.period}`;
+        let lbl;
+        if (idx === 0)              lbl = 'AUJ.';
+        else if (shift.ds === todayDS) lbl = 'AUJ.';
+        else if (shift.ds === yestDS)  lbl = 'HIER';
+        else {
+            const sd = new Date(shift.ds + 'T12:00:00');
+            lbl = `${daysArr[sd.getDay()]} ${sd.getDate()}/${sd.getMonth() + 1}`;
+        }
+        const btn = document.createElement('div');
+        btn.className = `shift-tab ${key === currentShiftKey ? 'active' : ''}`;
+        btn.textContent = `${lbl} ${shift.period[0].toUpperCase()}`;
+        btn.setAttribute('data-key', key);
+        btn.onclick = () => { currentShiftKey = key; clearSelection(); renderApp(); checkWorkStatus(); };
+        nav.appendChild(btn);
+    });
+
     const activeTab = nav.querySelector('.shift-tab.active');
     if (activeTab) activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
     initShiftData(currentShiftKey);
