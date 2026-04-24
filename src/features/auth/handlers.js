@@ -211,12 +211,24 @@ window.loginUser = async function loginUser() {
     if (user.blocked) {
         return alert('Compte bloqué après 3 codes erronés.\nContactez l’administrateur.');
     }
-    if (user.tempPin && pin === user.tempPin) {
-        currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
-        sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
-        document.getElementById('auth-modal').style.display = 'none';
-        document.getElementById('auth-change-pin-modal').style.display = 'flex';
-        return;
+    if (user.tempPin) {
+        if (user.tempPinExpiry && Date.now() > user.tempPinExpiry) {
+            authUsers[userId].tempPin = null;
+            authUsers[userId].tempPinExpiry = null;
+            if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+            return alert('Code provisoire expiré.\nDemandez un nouveau code à l\'administrateur.');
+        }
+        const tempHash = await hashPin(pin);
+        if (tempHash === user.tempPin) {
+            authUsers[userId].tempPin = null;
+            authUsers[userId].tempPinExpiry = null;
+            if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+            currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
+            sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('auth-change-pin-modal').style.display = 'flex';
+            return;
+        }
     }
     const pinHash = await hashPin(pin);
     if (pinHash !== user.pinHash) {
@@ -245,7 +257,7 @@ window.loginUser = async function loginUser() {
             firstName: user.firstName,
             lastName: user.lastName,
             role: user.role,
-            expiry: Date.now() + 90 * 24 * 60 * 60 * 1000
+            expiry: Date.now() + 7 * 24 * 60 * 60 * 1000
         }));
     }
     startPresenceHeartbeat();
@@ -421,7 +433,9 @@ window.adminSetTempPin = async function adminSetTempPin(userId) {
     const tempPin = prompt('Code provisoire à 6 chiffres :');
     if (!tempPin) return;
     if (!/^\d{6}$/.test(tempPin)) return alert('6 chiffres requis.');
-    authUsers[userId].tempPin = tempPin;
+    const tempPinHash = await hashPin(tempPin);
+    authUsers[userId].tempPin = tempPinHash;
+    authUsers[userId].tempPinExpiry = Date.now() + 60 * 60 * 1000; // TTL 1h
     authUsers[userId].failedAttempts = 0;
     authUsers[userId].blocked = false;
     authUsers[userId].blockedAt = null;
@@ -432,7 +446,7 @@ window.adminSetTempPin = async function adminSetTempPin(userId) {
     if (RESETS_DOC) await RESETS_DOC.set({ requests: resetRequests });
     renderAdminResets();
     const u = authUsers[userId];
-    alert(`Code provisoire "${tempPin}" défini pour ${u.firstName} ${u.lastName}.\nDemandez-lui de se connecter avec ce code.`);
+    alert(`Code provisoire "${tempPin}" défini pour ${u.firstName} ${u.lastName}.\nDemandez-lui de se connecter avec ce code.\nValide 1 heure.`);
 };
 
 function renderAdminResets() {
