@@ -902,6 +902,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();" style="display:none;">🫁 Simulateur Respirateur</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPathologies();">🩺 Pathologies</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openProcedures();">🔬 Procédures & Dilutions</a>
       <div class="side-menu-section">ORGANISATION</div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">↔️ Bourse d'échange</a>
@@ -1624,6 +1625,7 @@
 <script src="src/features/settings/handlers.js"></script>
 <script src="src/features/projet/handlers.js"></script>
 <script src="src/features/shift/handlers.js"></script>
+<script src="src/features/procedures/handlers.js"></script>
 <script src="src/features/bed-notes/handlers.js"></script>
 <script src="src/features/beds/handlers.js"></script>
 <script src="src/features/work-status/handlers.js"></script>
@@ -2249,6 +2251,32 @@
   </div>
 
   <!-- ═══ PATHOLOGIES ═══ -->
+  <!-- ===== PROCÉDURES & DILUTIONS ===== -->
+  <div id="procedures-view" class="fs-view" style="z-index:416; display:none;">
+    <div class="fs-header">
+      <div class="fs-topbar">
+        <div class="fs-title-group">
+          <button class="fs-back" onclick="closeProcedures()">←</button>
+          <div>
+            <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">🔬 Procédures & Dilutions</h2>
+            <div class="fs-subtitle">Checklists terrain — Table de dilution GHPSO</div>
+          </div>
+        </div>
+        <button id="proc-reset-btn" onclick="resetProcChecklist()" style="display:none; align-items:center; gap:5px; background:var(--surface-sec); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">↺ Reset</button>
+      </div>
+      <div style="padding:0 16px 10px; display:flex; gap:8px;">
+        <button id="proc-tab-ktc"        onclick="setProcTab('ktc')"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTC</button>
+        <button id="proc-tab-intubation" onclick="setProcTab('intubation')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">Intubation</button>
+        <button id="proc-tab-dilution"   onclick="setProcTab('dilution')"   style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">Dilutions</button>
+      </div>
+      <div id="proc-search-wrap" style="padding:0 16px 10px;">
+        <input type="text" id="proc-search" placeholder="🔍 Filtrer par médicament..." oninput="filterDilutions()" autocomplete="off"
+          style="width:100%; box-sizing:border-box; padding:9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; font-weight:700; font-family:var(--font); outline:none; display:none;">
+      </div>
+    </div>
+    <div id="procedures-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
+  </div>
+
   <div id="pathologies-view" class="fs-view" style="z-index:415; display:none;">
     <div class="fs-header">
       <div class="fs-topbar">
