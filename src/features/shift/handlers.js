@@ -154,13 +154,14 @@ window.initDates = function initDates() {
     const nav = document.getElementById('shift-nav'); nav.innerHTML = '';
     const today = new Date(); const daysArr = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
     const h = today.getHours();
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-    const yestStr = yesterday.toISOString().split('T')[0];
-    // Déterminer la garde actuelle avant de créer les tabs
-    if (h >= 8 && h < 20)       currentShiftKey = `${todayStr}-jour`;
-    else if (h >= 20)           currentShiftKey = `${todayStr}-nuit`;
-    else                        currentShiftKey = `${yestStr}-nuit`;
+    // Calculer currentShiftKey avec le même format de clé que le loop (évite décalage UTC/local)
+    for (let i = 0; i <= 1; i++) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        const ds = d.toISOString().split('T')[0];
+        if (i === 0 && h >= 8 && h < 20) { currentShiftKey = `${ds}-jour`; break; }
+        if (i === 0 && h >= 20)           { currentShiftKey = `${ds}-nuit`; break; }
+        if (i === 1 && h < 8)             { currentShiftKey = `${ds}-nuit`; break; }
+    }
     for (let i = 0; i <= 7; i++) {
         const d = new Date(today); d.setDate(d.getDate() - i);
         const ds = d.toISOString().split('T')[0];
