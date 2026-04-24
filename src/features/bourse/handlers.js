@@ -320,7 +320,7 @@ window.renderBourseList = function renderBourseList() {
 
     let html = '';
     if (others.length === 0 && mine.length === 0) {
-        html = `<div class="bourse-empty"><div class="bourse-empty-icon">💱</div>Aucune demande en cours pour votre fonction.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
+        html = `<div class="bourse-empty"><div class="bourse-empty-icon">↔️</div>Aucune demande en cours pour votre fonction.<br><span style="font-size:0.82rem;">Appuyez sur <b>+</b> pour proposer un échange.</span></div>`;
     } else {
         html += `<div class="bourse-section-lbl">Propositions disponibles</div>`;
         if (others.length === 0) {

@@ -48,6 +48,14 @@ window.handleBedTap = function handleBedTap(bedId) {
 
 window.openBedNote = function openBedNote(bedId) {
     if (!currentUser) { showToast('Connectez-vous pour laisser une note'); return; }
+    initShiftData(currentShiftKey);
+    const h = shiftHistory[currentShiftKey];
+    const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');
+    const meds = shiftHistory[dateOnly + '-meds'] || [];
+    const isActive = (h.activeStaffIds || []).includes(currentUser.id)
+                  || h.techIdeId === currentUser.id
+                  || meds.includes(currentUser.id);
+    if (!isActive && !isAdmin()) { showToast('\u26D4 Vous devez \u00EAtre de garde pour laisser une note'); return; }
     _currentNotesBed = bedId;
     const parts = bedId.split('-');
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
