@@ -19,31 +19,42 @@
  * Expose sur window : appInit.
  */
 
-// ── Listeners globaux installés au démarrage ──────────────────────────────────
-
-// Présence temps réel — mis à jour quand un collègue se connecte/déconnecte
-if (PRESENCE_DOC) {
-  PRESENCE_DOC.onSnapshot(doc => {
-    onlineUsers = (doc.exists && doc.data()) ? doc.data() : {};
-    renderAdminUsers();
-  });
-}
-
-// Demandes de reset PIN — badge admin en temps réel
-if (RESETS_DOC) {
-  RESETS_DOC.onSnapshot(doc => {
-    if (doc.exists && doc.data().requests) {
-      resetRequests = doc.data().requests;
-      renderAdminResets();
-    }
-  });
-}
-
 // Nettoyage présence à la fermeture de page
 window.addEventListener('beforeunload', () => setPresence(false));
 
 // ── Point d'entrée principal ──────────────────────────────────────────────────
 window.appInit = async function appInit() {
+  // 0. Attendre l'auth anonyme Firebase (nécessaire pour les Firestore Security Rules)
+  await window._authReady;
+
+  // 0b. Charger le hash admin depuis Firestore (config/admin) — retiré du source
+  if (window.db) {
+    try {
+      const cfgDoc = await window.db.collection('config').doc('admin').get();
+      if (cfgDoc.exists && cfgDoc.data().passHash) {
+        window.ADMIN_PASS_HASH_REMOTE = cfgDoc.data().passHash;
+      }
+    } catch (e) {
+      console.warn('PulseUnit: config admin non chargée', e);
+    }
+  }
+
+  // Listeners temps réel — après auth pour éviter les erreurs "permission denied"
+  if (PRESENCE_DOC) {
+    PRESENCE_DOC.onSnapshot(doc => {
+      onlineUsers = (doc.exists && doc.data()) ? doc.data() : {};
+      renderAdminUsers();
+    });
+  }
+  if (RESETS_DOC) {
+    RESETS_DOC.onSnapshot(doc => {
+      if (doc.exists && doc.data().requests) {
+        resetRequests = doc.data().requests;
+        renderAdminResets();
+      }
+    });
+  }
+
   // 1. Comptes en premier (avant checkAutoLogin)
   await loadAuth();
 

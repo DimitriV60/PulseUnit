@@ -8,9 +8,7 @@
  * Partage script scope : adminSessionActive, isAdmin, setAdminSession.
  */
 
-const ADMIN_USER      = 'admin';
-// SHA-256 de "PulseUnit2026!" — remplacer par votre propre hash
-const ADMIN_PASS_HASH = 'edee7b91aea7969511d6c938138755c628df4202f3ad7a4b7719cf31d2e5fc56';
+const ADMIN_USER = 'admin';
 let adminSessionActive = false;
 
 function setAdminSession(active) {
@@ -79,7 +77,8 @@ async function verifyAdminCredentials(user, pass) {
     const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(pass));
     const hashHex    = Array.from(new Uint8Array(hashBuffer))
                            .map(b => b.toString(16).padStart(2, '0')).join('');
-    const storedHash = localStorage.getItem('pu_admin_pass_hash') || ADMIN_PASS_HASH;
+    const storedHash = localStorage.getItem('pu_admin_pass_hash') || window.ADMIN_PASS_HASH_REMOTE;
+    if (!storedHash) return false;
     return user === ADMIN_USER && hashHex === storedHash;
 }
 

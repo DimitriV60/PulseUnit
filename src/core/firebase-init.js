@@ -28,6 +28,11 @@ window.RESETS_DOC = null;
 window.PRESENCE_DOC = null;
 window.SWAP_DOC = null;
 window.PLANS_DOC = null;
+window.ADMIN_PASS_HASH_REMOTE = null;
+
+// Promesse résolue quand l'auth anonyme Firebase est prête.
+// app-init.js await cette promesse avant tout accès Firestore.
+window._authReady = Promise.resolve();
 
 if (window.FIREBASE_CONFIG.apiKey !== 'VOTRE_API_KEY') {
   try {
@@ -39,6 +44,23 @@ if (window.FIREBASE_CONFIG.apiKey !== 'VOTRE_API_KEY') {
     window.PRESENCE_DOC  = window.db.collection('pulseunit').doc('presence');
     window.SWAP_DOC      = window.db.collection('pulseunit').doc('swaps');
     window.PLANS_DOC     = window.db.collection('pulseunit').doc('plans');
+
+    // Auth anonyme — satisfait les Firestore Security Rules (request.auth != null)
+    window._authReady = new Promise(resolve => {
+      const auth = firebase.auth();
+      const unsub = auth.onAuthStateChanged(user => {
+        if (user) {
+          unsub();
+          resolve();
+        } else {
+          auth.signInAnonymously().catch(e => {
+            console.warn('PulseUnit: auth anonyme échouée', e);
+            resolve(); // continuer en mode dégradé
+          });
+        }
+      });
+    });
+
     console.log('PulseUnit: Firebase connecté ✓');
   } catch (e) {
     console.error('PulseUnit: erreur init Firebase', e);
