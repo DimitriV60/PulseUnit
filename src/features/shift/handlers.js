@@ -167,9 +167,11 @@ window.initDates = function initDates() {
     for (let i = 0; i <= 7; i++) {
         const d = new Date(today); d.setDate(d.getDate() - i);
         const ds = toDS(d);
-        const lbl = i === 0 ? 'AUJ.' : i === 1 ? 'HIER' : `${daysArr[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
+        const baseLbl = i === 0 ? 'AUJ.' : i === 1 ? 'HIER' : `${daysArr[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
         ['jour', 'nuit'].forEach(p => {
             const key = `${ds}-${p}`;
+            // Nuit de la veille encore en cours (minuit–8h) → afficher AUJ. N, pas HIER N
+            const lbl = (i === 1 && h < 8 && p === 'nuit') ? 'AUJ.' : baseLbl;
             const btn = document.createElement('div');
             btn.className = `shift-tab ${key === currentShiftKey ? 'active' : ''}`;
             btn.textContent = `${lbl} ${p[0].toUpperCase()}`;

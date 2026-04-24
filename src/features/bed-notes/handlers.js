@@ -31,7 +31,7 @@ function _saveBedNotes(notes) {
 window.getBedNoteForCurrentUser = function getBedNoteForCurrentUser(bedId) {
     if (!currentUser) return null;
     const notes = _getBedNotes();
-    return notes[bedId] || null;
+    return notes[currentShiftKey + ':' + bedId] || null;
 };
 
 window.handleBedTap = function handleBedTap(bedId) {
@@ -65,7 +65,7 @@ window.openBedNote = function openBedNote(bedId) {
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
     document.getElementById('bed-note-bed-label').textContent = label;
     const notes = _getBedNotes();
-    const existing = notes[bedId];
+    const existing = notes[currentShiftKey + ':' + bedId];
     document.getElementById('bed-note-text').value = existing ? existing.text : '';
     document.getElementById('bed-note-delete-btn').style.display = existing ? 'block' : 'none';
     document.getElementById('bed-note-modal').style.display = 'flex';
@@ -82,7 +82,7 @@ window.saveBedNote = function saveBedNote() {
     if (!_currentNotesBed) return;
     if (!text) { deleteBedNote(); return; }
     const notes = _getBedNotes();
-    notes[_currentNotesBed] = { text, createdAt: Date.now() };
+    notes[currentShiftKey + ':' + _currentNotesBed] = { text, createdAt: Date.now() };
     _saveBedNotes(notes);
     closeBedNote();
     renderApp();
@@ -92,7 +92,7 @@ window.saveBedNote = function saveBedNote() {
 window.deleteBedNote = function deleteBedNote() {
     if (!_currentNotesBed) return;
     const notes = _getBedNotes();
-    delete notes[_currentNotesBed];
+    delete notes[currentShiftKey + ':' + _currentNotesBed];
     _saveBedNotes(notes);
     closeBedNote();
     renderApp();
