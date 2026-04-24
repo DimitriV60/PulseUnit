@@ -1379,7 +1379,7 @@
             <strong style="color:var(--crit);">Sécurité</strong> — Après <strong>3 codes faux</strong>, le compte est bloqué. Déblocage uniquement par l'administrateur.
           </div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--crit);">Accès Admin (bouton rouge)</strong> — Ouvre le panneau admin en <strong>lecture globale</strong> (pas de modification des attributions de lits).
+            <strong style="color:var(--crit);">Connexion Admin</strong> — Bouton rouge <em>Accès Admin</em> → entre le nom <em>admin</em> + mot de passe. L'admin accède à <strong style="color:var(--text);">toutes les fonctionnalités</strong> pour tester et détecter les bugs. Changer le mot de passe via le panneau admin.
           </div>
         </div>
       </details>
@@ -1440,7 +1440,7 @@
         <div style="margin-top:10px; background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
           Tape sur le <strong style="color:var(--text);">numéro + barre de progression</strong> sous un lit pour ouvrir la checklist (10 points).<br>
           Barre <span style="color:var(--med); font-weight:800;">orange</span> = en cours · <span style="color:var(--as); font-weight:800;">verte</span> = complet.<br>
-          Sauvegardé par garde.
+          <strong style="color:var(--crit);">Réservé aux agents de garde</strong> — inaccessible en mode lecture seule. Sauvegardé par garde.
         </div>
       </details>
 
@@ -1467,10 +1467,11 @@
         </summary>
         <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
           <div style="padding:4px 2px 2px; font-size:0.7rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted);">Outils cliniques</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📖 <strong style="color:var(--text);">Lexique</strong> — 270+ termes, 13 catégories, recherche libre</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📖 <strong style="color:var(--text);">Lexique</strong> — 270+ termes, 14 catégories (+ Application), recherche libre</div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📊 <strong style="color:var(--text);">Normes de référence</strong> — 6 tables : Vitaux, GDS, Ventilation, Biologie, Dialyse, Urines</div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📋 <strong style="color:var(--text);">Protocoles</strong> — Cathéter artériel, Thermogard (lecture seule)</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🧮 <strong style="color:var(--text);">Calculateurs</strong> — GCS, RASS, PAM, VT, P/F, Driving Pressure, Diurèse…</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🧮 <strong style="color:var(--text);">Calculateurs</strong> — GCS, RASS, PAM, VT, P/F, Driving Pressure, Diurèse, Besoins caloriques (lambda / réa)…</div>
+          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🦠 <strong style="color:var(--text);">Pathologies</strong> — 400+ pathologies, 22 systèmes, recherche + filtrage par onglet</div>
           <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🫁 <strong style="color:var(--text);">Simulateur Respirateur</strong> — 6 paramètres, 8 scénarios cliniques</div>
         </div>
       </details>
@@ -1534,8 +1535,10 @@
           <span style="font-size:1rem;">📞</span> Les Services
         </summary>
         <div style="margin-top:10px; background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
-          Menu ☰ → <strong style="color:var(--text);">Les Services</strong>. Annuaire complet des services et numéros de poste internes.<br>
-          Recherche par nom ou numéro. Les résultats apparaissent également dans la <strong style="color:var(--text);">recherche globale</strong> en haut du dashboard.
+          Menu ☰ → <strong style="color:var(--text);">Les Services</strong>. Annuaire interne GHPSO (Creil + Senlis).<br>
+          <strong style="color:var(--text);">📋 Annuaire</strong> — tous les services par catégorie avec badge étage.<br>
+          <strong style="color:var(--text);">🏢 Par étage</strong> — du sous-sol au 7ème étage, entrées directes sans sous-niveaux.<br>
+          Barre de recherche filtre en temps réel. Résultats aussi dans la <strong style="color:var(--text);">recherche globale</strong> du dashboard.
         </div>
       </details>
 

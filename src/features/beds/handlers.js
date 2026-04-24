@@ -193,7 +193,7 @@ window.renderApp = function renderApp() {
               <span class="b-num">R\u00C9A ${i + 1}</span>
               ${_lockBtn}
             </div>
-            <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '(61) 1862' : '(61) 1822'}</a>
+            <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
         </div>
         ${grid}
         ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${medEditable ? `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${medEditable ? `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
@@ -245,7 +245,7 @@ window.renderApp = function renderApp() {
         uGrid += `<div class="med-bed-btn ${isActive}" onclick="toggleMedBed('usip-${n}', 2)">${n}</div>`;
     });
     uGrid += `</div>`;
-    let uPhone = (ms[2] && ms[2] === ms[0]) ? '(61) 1862' : (ms[2] && ms[2] === ms[1] ? '(61) 1822' : '');
+    let uPhone = (ms[2] && ms[2] === ms[0]) ? '1862' : (ms[2] && ms[2] === ms[1] ? '1822' : '');
     let uPhoneNum = (ms[2] && ms[2] === ms[0]) ? '0344611862' : (ms[2] && ms[2] === ms[1] ? '0344611822' : '');
 
     boardHTML += `<div class="bed-card special-card med-card ${t.uAllC ? (h.adminLockUsip ? 'admin-closed' : 'closed') : ''}" style="${t.uAllC ? 'pointer-events:none;' : ''}">

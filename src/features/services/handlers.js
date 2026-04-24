@@ -90,7 +90,7 @@ function _renderAnnuaire(data, q, escapeHTML) {
 
 /* ── Vue PAR ÉTAGE : regroupement plat par étage ── */
 function _renderParEtage(data, q, escapeHTML) {
-    const FLOOR_ORDER = ['RDC', 'RDC / Sous-sol', 'Sous-sol', 'Étage 1', 'Étage 1 / 2', 'Étage 2', 'Étages 2 à 6', 'Étage 3', 'Étage 4', 'Étage 5', 'Étage 6', 'Étage 7', '—'];
+    const FLOOR_ORDER = ['Sous-sol', 'RDC / Sous-sol', 'RDC', 'Étage 1', 'Étage 1 / 2', 'Étage 2', 'Étages 2 à 6', 'Étage 3', 'Étage 4', 'Étage 5', 'Étage 6', 'Étage 7', '—'];
     const FLOOR_ICON  = { 'RDC': '🚪', 'RDC / Sous-sol': '🚪', 'Sous-sol': '⬇️', 'Étage 1': '1️⃣', 'Étage 1 / 2': '1️⃣', 'Étage 2': '2️⃣', 'Étages 2 à 6': '📊', 'Étage 3': '3️⃣', 'Étage 4': '4️⃣', 'Étage 5': '5️⃣', 'Étage 6': '6️⃣', 'Étage 7': '7️⃣', '—': '📍' };
 
     // Collect entries by (site+floor)
