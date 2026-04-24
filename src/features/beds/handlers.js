@@ -183,13 +183,16 @@ window.renderApp = function renderApp() {
         });
         grid += `</div>`;
         const medEditable = !locked && !h.medLocked;
+        const _lockBtn = isAdmin()
+            ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>`
+            : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`;
         boardHTML += `<div class="bed-card special-card med-card">
         <div class="bed-header" style="color:var(--med)">
-            <span class="b-num">R\u00C9A ${i + 1}</span>
-            <div style="display:flex;align-items:center;gap:6px;">
-              ${isAdmin() ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;padding:2px;line-height:1;opacity:${h.medLocked ? '1' : '0.4'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : `<span style="font-size:0.9rem;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'Verrouill\u00E9 par l\u2019admin' : 'Non verrouill\u00E9'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`}
-              <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span class="b-num">R\u00C9A ${i + 1}</span>
+              ${_lockBtn}
             </div>
+            <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
         </div>
         ${grid}
         ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${medEditable ? `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${medEditable ? `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
@@ -246,11 +249,11 @@ window.renderApp = function renderApp() {
     boardHTML += `<div class="bed-card special-card med-card ${t.uAllC ? (h.adminLockUsip ? 'admin-closed' : 'closed') : ''}" style="${t.uAllC ? 'pointer-events:none;' : ''}">
       ${t.uAllC ? `<div class="closed-overlay">${ICONS.closed}<span style="margin-top:5px;">USIP FERM\u00C9E</span></div>` : `
       <div class="bed-header" style="color:var(--med)">
-        <span class="b-num">R\u00C9A USIP</span>
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${isAdmin() ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;padding:2px;line-height:1;opacity:${h.medLocked ? '1' : '0.4'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : `<span style="font-size:0.9rem;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'Verrouill\u00E9' : 'Non verrouill\u00E9'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`}
-          ${uPhone ? `<span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">\uD83D\uDCDE ${uPhone}</span>` : ''}
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="b-num">R\u00C9A USIP</span>
+          ${isAdmin() ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`}
         </div>
+        ${uPhone ? `<span style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med);">\uD83D\uDCDE ${uPhone}</span>` : ''}
       </div>
       ${uGrid}
       ${m2 ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m2.lastName).toUpperCase()} ${locked ? '' : `<span class="remove-btn" onclick="clearShift(2,'med')">\u00D7</span>`}</div>` : `<div class="search-box">${locked ? '---' : `<input type="text" id="search-med-2" class="special-input" placeholder="\uD83D\uDD0D Nom Doc..." oninput="doSearch('med-2',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-2"></div>`}</div>`}

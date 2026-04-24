@@ -264,9 +264,13 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
         const ok = await verifyAdminCredentials(user, pass);
         if (!ok) return alert('Identifiants admin incorrects.');
         setAdminSession(true);
-        if (!currentUser) {
-            currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'Lecture', role: 'admin' };
-            sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+        // L'admin obtient un currentUser complet pour accéder à toutes les features
+        currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'PulseUnit', role: 'ide' };
+        sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+        // Ajouter l'admin à la garde active pour bypasser les gardes-checks
+        initShiftData(currentShiftKey);
+        if (!shiftHistory[currentShiftKey].activeStaffIds.includes('admin_view')) {
+            shiftHistory[currentShiftKey].activeStaffIds.push('admin_view');
         }
         document.getElementById('auth-modal').style.display = 'none';
         updateHeaderUser();

@@ -576,8 +576,12 @@
   {
     id: 'calorique', icon: '🍽️', title: 'Besoins caloriques — Harris-Benedict',
     html: `
-      <div style="font-size:0.78rem; color:var(--ide); background:var(--ide-glow); border:1px solid rgba(96,206,234,0.3); border-radius:8px; padding:10px; margin-bottom:12px; font-weight:700;">
-        ⚠️ En réanimation, objectif habituel 20–25 kcal/kg/j (phase aiguë) puis 25–30 kcal/kg/j. Adapter au contexte clinique.
+      <div class="calc-form-group">
+        <span class="calc-label">Contexte</span>
+        <select id="cal_contexte" class="calc-select" onchange="calUpdateContexte()">
+          <option value="lambda">Personne lambda</option>
+          <option value="rea">Réanimation / Hospitalier</option>
+        </select>
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Sexe</span>
@@ -588,26 +592,36 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Âge (ans)</span>
-        <input type="number" id="cal_age" class="calc-input" placeholder="ex : 52" min="15" max="110" oninput="execCalcLive('calorique')">
+        <input type="number" id="cal_age" class="calc-input" placeholder="ex : 35" min="15" max="110" oninput="execCalcLive('calorique')">
       </div>
       <div class="calc-form-group">
-        <span class="calc-label">Poids actuel (kg)</span>
+        <span class="calc-label">Poids (kg)</span>
         <input type="number" id="cal_poids" class="calc-input" placeholder="ex : 70" min="30" max="250" step="0.5" oninput="execCalcLive('calorique')">
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Taille (cm)</span>
         <input type="number" id="cal_taille" class="calc-input" placeholder="ex : 175" min="100" max="220" oninput="execCalcLive('calorique')">
       </div>
-      <div class="calc-form-group">
-        <span class="calc-label">Facteur d'activité</span>
+      <div class="calc-form-group" id="cal_activite_row">
+        <span class="calc-label">Niveau d'activité physique</span>
         <select id="cal_activite" class="calc-select" onchange="execCalcLive('calorique')">
-          <option value="1.0">1.0 — Alité, sédaté / ventilé immobile</option>
-          <option value="1.1" selected>1.1 — Alité, éveillé (réanimation standard)</option>
-          <option value="1.2">1.2 — Légèrement actif (levé au fauteuil)</option>
-          <option value="1.3">1.3 — Modérément actif (kiné régulière)</option>
+          <option value="1.2">Sédentaire (bureau, peu de sport)</option>
+          <option value="1.375">Légèrement actif (1–3 séances/sem)</option>
+          <option value="1.55" selected>Modérément actif (3–5 séances/sem)</option>
+          <option value="1.725">Très actif (6–7 séances/sem)</option>
+          <option value="1.9">Extrêmement actif (sportif intensif)</option>
         </select>
       </div>
-      <div class="calc-form-group">
+      <div class="calc-form-group" id="cal_activite_rea_row" style="display:none;">
+        <span class="calc-label">Facteur d'activité (réa)</span>
+        <select id="cal_activite_rea" class="calc-select" onchange="execCalcLive('calorique')">
+          <option value="1.0">1.0 — Alité, sédaté / ventilé immobile</option>
+          <option value="1.1" selected>1.1 — Alité, éveillé</option>
+          <option value="1.2">1.2 — Levé au fauteuil</option>
+          <option value="1.3">1.3 — Kiné régulière</option>
+        </select>
+      </div>
+      <div class="calc-form-group" id="cal_stress_row" style="display:none;">
         <span class="calc-label">Facteur de stress / agression</span>
         <select id="cal_stress" class="calc-select" onchange="execCalcLive('calorique')">
           <option value="1.0">1.0 — Post-op simple, stable</option>
