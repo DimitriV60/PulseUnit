@@ -1626,6 +1626,7 @@
 <script src="src/features/projet/handlers.js"></script>
 <script src="src/features/shift/handlers.js"></script>
 <script src="src/features/procedures/handlers.js"></script>
+<script src="src/features/procedures/eer.js"></script>
 <script src="src/features/bed-notes/handlers.js"></script>
 <script src="src/features/beds/handlers.js"></script>
 <script src="src/features/work-status/handlers.js"></script>
@@ -2268,6 +2269,7 @@
         <button id="proc-tab-ktc"        onclick="setProcTab('ktc')"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTC</button>
         <button id="proc-tab-intubation" onclick="setProcTab('intubation')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">Intubation</button>
         <button id="proc-tab-dilution"   onclick="setProcTab('dilution')"   style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">Dilutions</button>
+        <button id="proc-tab-eer"        onclick="setProcTab('eer')"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">EER</button>
       </div>
       <div id="proc-search-wrap" style="padding:0 16px 10px;">
         <input type="text" id="proc-search" placeholder="🔍 Filtrer par médicament..." oninput="filterDilutions()" autocomplete="off"
