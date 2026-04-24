@@ -209,7 +209,7 @@ window.loginUser = async function loginUser() {
     const user = authUsers[userId];
     if (!user) return alert('Utilisateur introuvable.');
     if (user.blocked) {
-        return alert('Compte bloqué après 3 codes erronés.\nContactez l’administrateur.');
+        return alert('Compte bloqué après 3 codes erronés.\nContactez l\'administrateur.');
     }
     if (user.tempPin) {
         if (user.tempPinExpiry && Date.now() > user.tempPinExpiry) {
@@ -247,7 +247,7 @@ window.loginUser = async function loginUser() {
                 authUsers[userId].failedAttempts = tries;
                 if (tries >= 3) { authUsers[userId].blocked = true; authUsers[userId].blockedAt = Date.now(); }
             } catch (e) {
-                console.warn(‘PulseUnit: transaction failedAttempts:’, e);
+                console.warn('PulseUnit: transaction failedAttempts:', e);
                 tries = (authUsers[userId].failedAttempts || 0) + 1;
                 authUsers[userId].failedAttempts = tries;
                 if (tries >= 3) { authUsers[userId].blocked = true; authUsers[userId].blockedAt = Date.now(); }
@@ -258,8 +258,8 @@ window.loginUser = async function loginUser() {
             authUsers[userId].failedAttempts = tries;
             if (tries >= 3) { authUsers[userId].blocked = true; authUsers[userId].blockedAt = Date.now(); }
         }
-        if (tries >= 3) { renderAdminUsers(); return alert(‘Compte bloqué après 3 codes erronés.\nContactez l\’administrateur.’); }
-        document.getElementById(‘auth-pin’).value = ‘’;
+        if (tries >= 3) { renderAdminUsers(); return alert('Compte bloqué après 3 codes erronés.\nContactez l\'administrateur.'); }
+        document.getElementById('auth-pin').value = '';
         return alert(`Code incorrect. Tentative ${tries}/3.`);
     }
     authUsers[userId].failedAttempts = 0;
