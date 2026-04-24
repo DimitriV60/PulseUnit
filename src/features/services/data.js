@@ -7,14 +7,14 @@
     {
       cat: "Réanimation — Creil",
       icon: "🏥",
-      floor: "3e étage",
+      floor: "RDC",
       site: "Creil",
       entries: [
         { name: "Poste soignant", num: "0344616086", display: "(61) 6086" },
         { name: "IDE technique", num: "0344617125", display: "(61) 7125" },
         { name: "Bureau cadre", num: "0344616082", display: "(61) 6082" },
-        { name: "Réanimateur de garde — REA 1", num: "0344611862", display: "03 44 61 18 62" },
-        { name: "Réanimateur de garde — REA 2", num: "0344611822", display: "03 44 61 18 22" },
+        { name: "Réanimateur de garde — REA 1", num: "0344611862", display: "(61) 1862", reveal: "03 44 61 18 62" },
+        { name: "Réanimateur de garde — REA 2", num: "0344611822", display: "(61) 1822", reveal: "03 44 61 18 22" },
         { name: "Services de nuit", num: "0344616062", display: "(61) 6062" },
       ]
     },
@@ -35,7 +35,7 @@
     {
       cat: "Biologie & Imagerie — Creil",
       icon: "🔬",
-      floor: "RDC / 1er étage",
+      floor: "RDC / Sous-sol",
       site: "Creil",
       entries: [
         { name: "Laboratoires", num: "0344616530", display: "(61) 6530" },
@@ -46,7 +46,7 @@
     {
       cat: "Pharmacie — Creil",
       icon: "💊",
-      floor: "RDC",
+      floor: "Sous-sol",
       site: "Creil",
       entries: [
         { name: "Pharmacie hospitalière", num: "0344616883", display: "(61) 6883" },
@@ -55,7 +55,7 @@
     {
       cat: "Cardiologie & USC — Creil",
       icon: "❤️",
-      floor: "2e étage",
+      floor: "Étage 5",
       site: "Creil",
       entries: [
         { name: "Cardiologie", num: "0344616523", display: "(61) 6523" },
@@ -66,7 +66,7 @@
     {
       cat: "Blocs & Chirurgies — Creil",
       icon: "🔪",
-      floor: "2e étage",
+      floor: "Étage 1 / 2",
       site: "Creil",
       entries: [
         { name: "Bloc opératoire 1", num: "0344616153", display: "(61) 6153" },
@@ -83,25 +83,25 @@
     {
       cat: "Spécialités médicales — Creil",
       icon: "⚕️",
-      floor: "3e / 4e étage",
+      floor: "Étages 2 à 6",
       site: "Creil",
       entries: [
-        { name: "Neurologie", num: "0344616433", display: "(61) 6433" },
-        { name: "Pneumologie", num: "0344616546", display: "(61) 6546" },
+        { name: "Neurologie (Étage 4)", num: "0344616433", display: "(61) 6433" },
+        { name: "Pneumologie (Étage 5)", num: "0344616546", display: "(61) 6546" },
         { name: "Pneumologie — standard", num: "0344616500", display: "(61) 6500" },
-        { name: "Médecine polyvalente", num: "0344616264", display: "(61) 6264" },
-        { name: "Néphrologie-hémodialyse", num: "0344616093", display: "(61) 6093" },
+        { name: "Médecine polyvalente (Étage 2)", num: "0344616264", display: "(61) 6264" },
+        { name: "Néphrologie-hémodialyse (Sous-sol)", num: "0344616093", display: "(61) 6093" },
         { name: "Néphrologie 2", num: "0344616094", display: "(61) 6094" },
-        { name: "Ophtalmologie", num: "0344616972", display: "(61) 6972" },
+        { name: "Ophtalmologie (Étage 1)", num: "0344616972", display: "(61) 6972" },
         { name: "Dermatologie", num: "0344616500", display: "(61) 6500" },
         { name: "Gynécologie", num: "0344616982", display: "(61) 6982" },
-        { name: "Pédiatrie", num: "0344616623", display: "(61) 6623" },
+        { name: "Pédiatrie (Étage 6)", num: "0344616623", display: "(61) 6623" },
       ]
     },
     {
       cat: "Oncologie — Creil",
       icon: "🎗️",
-      floor: "4e étage",
+      floor: "Étage 3",
       site: "Creil",
       entries: [
         { name: "Oncologie", num: "0344616456", display: "(61) 6456" },

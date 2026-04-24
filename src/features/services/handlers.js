@@ -20,15 +20,30 @@ window.toggleServicesView = function toggleServicesView() {
     window.renderServices();
 };
 
+window.revealServiceNum = function revealServiceNum(el, num, fullDisplay) {
+    el.innerHTML = `<a href="tel:${num}" style="font-size:0.95rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap; letter-spacing:0.03em;">${fullDisplay} 📞</a>`;
+    el.onclick = null;
+    el.style.cursor = 'default';
+};
+
 function renderEntryRow(entry, escapeHTML) {
     const hasNum = entry.num && entry.num.trim() !== '';
     const label = entry.display && entry.display.trim() !== '' ? entry.display : entry.num;
+    if (!hasNum) {
+        return `<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${escapeHTML(entry.name)}</span>
+            <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); white-space:nowrap; background:var(--surface-sec); border-radius:6px; padding:4px 10px;">À venir</span>
+        </div>`;
+    }
+    if (entry.reveal) {
+        return `<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${escapeHTML(entry.name)}</span>
+            <span onclick="revealServiceNum(this,'${escapeHTML(entry.num)}','${escapeHTML(entry.reveal)}')" style="font-size:1rem; font-weight:900; color:var(--brand-aqua); white-space:nowrap; letter-spacing:0.03em; cursor:pointer;">${escapeHTML(label)}</span>
+        </div>`;
+    }
     return `<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
         <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${escapeHTML(entry.name)}</span>
-        ${hasNum
-            ? `<a href="tel:${escapeHTML(entry.num)}" style="font-size:1rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap; letter-spacing:0.03em;">${escapeHTML(label)}</a>`
-            : `<span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); white-space:nowrap; background:var(--surface-sec); border-radius:6px; padding:4px 10px;">À venir</span>`
-        }
+        <a href="tel:${escapeHTML(entry.num)}" style="font-size:1rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap; letter-spacing:0.03em;">${escapeHTML(label)}</a>
     </div>`;
 }
 
@@ -65,7 +80,7 @@ window.renderServices = function renderServices() {
         // Sort: Creil first by floor label, then Senlis
         const sorted = [...floorMap.values()].sort((a, b) => {
             if (a.site !== b.site) return a.site === 'Creil' ? -1 : 1;
-            const rank = { 'Sous-sol': 0, 'RDC': 1, 'RDC / 1er étage': 2, '1er étage': 3, '2e étage': 4, '3e étage': 5, '3e / 4e étage': 6, '4e étage': 7 };
+            const rank = { 'Sous-sol': 0, 'RDC': 1, 'RDC / Sous-sol': 1, 'Étage 1': 2, 'Étage 1 / 2': 2, 'Étage 2': 3, 'Étage 2 à 6': 3, 'Étage 3': 4, 'Étage 4': 5, 'Étage 5': 6, 'Étage 6': 7, 'Étage 7': 8 };
             return (rank[a.floor] ?? 99) - (rank[b.floor] ?? 99);
         });
 
