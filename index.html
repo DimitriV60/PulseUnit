@@ -1078,6 +1078,17 @@
       <button class="btn-primary" id="admin-usip-btn" style="background:var(--crit); margin-bottom:10px; transition:all 0.2s;" onclick="toggleAdminUsipLock()">🔒 Verrouiller USIP</button>
       <button class="btn-primary" style="background:var(--text-muted); margin-bottom:10px; color:#fff;" onclick="document.getElementById('admin-panel-modal').style.display='none'; confirmClearShift();">🗑️ Vider garde</button>
       <button class="btn-primary" style="background:transparent; border:1px solid var(--crit); color:var(--crit); margin-bottom:15px;" onclick="hardResetApp()">⚠️ Réparer l'App</button>
+
+      <hr style="border-color:var(--border); margin-bottom:15px;">
+      <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Changer le mot de passe admin</div>
+      <input id="admin-cur-pass" type="password" placeholder="Mot de passe actuel" autocomplete="off"
+        style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
+      <input id="admin-new-pass" type="password" placeholder="Nouveau mot de passe (min 8 car.)" autocomplete="off"
+        style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
+      <input id="admin-conf-pass" type="password" placeholder="Confirmer le nouveau mot de passe" autocomplete="off"
+        style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
+      <button onclick="changeAdminPassword()" class="btn-primary" style="width:100%; margin-bottom:15px;">Valider le nouveau mot de passe</button>
+
       <button class="header-btn outline" style="width:100%; padding:10px; height:auto;" onclick="document.getElementById('admin-panel-modal').style.display='none'">Fermer</button>
     </div>
   </div>

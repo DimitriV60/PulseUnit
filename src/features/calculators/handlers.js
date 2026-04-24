@@ -20,7 +20,7 @@ function renderCalculateurs() {
         {label:"VENTILATION", ids:["ibw", "pf", "dp"], color:"var(--ide)"},
         {label:"HÉMODYNAMIQUE", ids:["pam", "pse"], color:"var(--med)"},
         {label:"MÉDICAMENTS", ids:["dosekg", "convmgml", "diurese", "imc"], color:"var(--as)"},
-        {label:"RH / ADMIN", ids:["pct", "transmission", "conges", "conges_ete"], color:"var(--text-muted)"},
+        {label:"RH / ADMIN", ids:["pct", "transmission"], color:"var(--text-muted)"},
         {label:"NUTRITION", ids:["calorique"], color:"var(--as)"},
     ];
 
@@ -53,6 +53,19 @@ window.openCalcModal = function openCalcModal(id) {
 
 window.closeCalcModal = function closeCalcModal() {
     document.getElementById('calc-modal').style.display = 'none';
+};
+
+window.calUpdateContexte = function calUpdateContexte() {
+    const ctx = document.getElementById('cal_contexte')?.value;
+    const isRea = ctx === 'rea';
+    const lambdaRow = document.getElementById('cal_activite_row');
+    const reaRow    = document.getElementById('cal_activite_rea_row');
+    const stressRow = document.getElementById('cal_stress_row');
+    if (lambdaRow) lambdaRow.style.display = isRea ? 'none' : '';
+    if (reaRow)    reaRow.style.display    = isRea ? '' : 'none';
+    if (stressRow) stressRow.style.display = isRea ? '' : 'none';
+    const box = document.getElementById('res_cal_box');
+    if (box) box.style.display = 'none';
 };
 
 window.execCalcLive = function execCalcLive(id) {
@@ -353,29 +366,36 @@ window.execCalc = function execCalc(id) {
         document.getElementById('res_ete_box').style.display = 'flex';
     }
     else if(id === 'calorique') {
+        const contexte = document.getElementById('cal_contexte')?.value || 'lambda';
         const sexe    = document.getElementById('cal_sexe').value;
         const age     = parseFloat(document.getElementById('cal_age').value);
         const poids   = parseFloat(document.getElementById('cal_poids').value);
         const taille  = parseFloat(document.getElementById('cal_taille').value);
-        const activite = parseFloat(document.getElementById('cal_activite').value);
-        const stress  = parseFloat(document.getElementById('cal_stress').value);
         if (isNaN(age) || isNaN(poids) || isNaN(taille)) return;
         let mb = 0;
         if (sexe === 'H') mb = 88.362 + (13.397 * poids) + (4.799 * taille) - (5.677 * age);
         else              mb = 447.593 + (9.247 * poids) + (3.098 * taille) - (4.330 * age);
-        const dej = Math.round(mb * activite * stress);
-        const mbRound = Math.round(mb);
-        const dejPoids = (dej / poids).toFixed(1);
-        const proteines = Math.round(poids * 1.3); // 1.2–1.5 g/kg/j en réa
-        const eau = Math.round(poids * 30);         // 30 mL/kg/j estimation
-        let warn = '';
-        if (poids > 100) warn = '⚠️ Obésité détectée — envisager le poids idéal théorique (IBW) plutôt que le poids réel.';
-        document.getElementById('res_cal_mb').textContent = mbRound + ' kcal/j';
+        let dej = 0, detail = '', warn = '';
+        if (contexte === 'rea') {
+            const activite = parseFloat(document.getElementById('cal_activite_rea').value);
+            const stress   = parseFloat(document.getElementById('cal_stress').value);
+            dej = Math.round(mb * activite * stress);
+            const proteines = Math.round(poids * 1.3);
+            const eau = Math.round(poids * 30);
+            detail = `<span style="color:var(--text);">≈ <strong>${(dej/poids).toFixed(1)} kcal/kg/j</strong></span><br>` +
+                     `Protéines : <strong style="color:var(--ide);">${proteines} g/j</strong> (1,3 g/kg/j)<br>` +
+                     `Hydratation estimée : <strong style="color:var(--ide);">${eau} mL/j</strong> (30 mL/kg/j)`;
+            if (poids > 100) warn = '⚠️ Obésité — envisager le poids idéal théorique (IBW).';
+        } else {
+            const activite = parseFloat(document.getElementById('cal_activite').value);
+            dej = Math.round(mb * activite);
+            const prot = Math.round(poids * 0.8);
+            detail = `<span style="color:var(--text);">≈ <strong>${(dej/poids).toFixed(1)} kcal/kg/j</strong></span><br>` +
+                     `Protéines recommandées : <strong style="color:var(--ide);">${prot}–${Math.round(poids*1.2)} g/j</strong> (0,8–1,2 g/kg/j)`;
+        }
+        document.getElementById('res_cal_mb').textContent = Math.round(mb) + ' kcal/j';
         document.getElementById('res_cal_dej').textContent = dej + ' kcal/j';
-        document.getElementById('res_cal_detail').innerHTML =
-            `<span style="color:var(--text);">≈ <strong>${dejPoids} kcal/kg/j</strong></span><br>` +
-            `Protéines estimées : <strong style="color:var(--ide);">${proteines} g/j</strong> (1,3 g/kg/j)<br>` +
-            `Hydratation de base : <strong style="color:var(--ide);">${eau} mL/j</strong> (30 mL/kg/j)`;
+        document.getElementById('res_cal_detail').innerHTML = detail;
         document.getElementById('res_cal_warn').textContent = warn;
         document.getElementById('res_cal_box').style.display = 'flex';
     }

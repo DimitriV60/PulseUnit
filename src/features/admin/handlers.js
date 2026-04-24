@@ -79,8 +79,28 @@ async function verifyAdminCredentials(user, pass) {
     const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(pass));
     const hashHex    = Array.from(new Uint8Array(hashBuffer))
                            .map(b => b.toString(16).padStart(2, '0')).join('');
-    return user === ADMIN_USER && hashHex === ADMIN_PASS_HASH;
+    const storedHash = localStorage.getItem('pu_admin_pass_hash') || ADMIN_PASS_HASH;
+    return user === ADMIN_USER && hashHex === storedHash;
 }
+
+window.changeAdminPassword = async function changeAdminPassword() {
+    const cur  = document.getElementById('admin-cur-pass').value;
+    const nw   = document.getElementById('admin-new-pass').value;
+    const conf = document.getElementById('admin-conf-pass').value;
+    if (!cur || !nw || !conf) { showToast('⛔ Remplissez tous les champs'); return; }
+    if (nw.length < 8)  { showToast('⛔ Minimum 8 caractères'); return; }
+    if (nw !== conf)    { showToast('⛔ Les mots de passe ne correspondent pas'); return; }
+    const ok = await verifyAdminCredentials(ADMIN_USER, cur);
+    if (!ok) { showToast('⛔ Mot de passe actuel incorrect'); return; }
+    const encoder    = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(nw));
+    const hashHex    = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('pu_admin_pass_hash', hashHex);
+    document.getElementById('admin-cur-pass').value = '';
+    document.getElementById('admin-new-pass').value = '';
+    document.getElementById('admin-conf-pass').value = '';
+    showToast('✅ Mot de passe admin mis à jour');
+};
 
 window.checkAdmin = async function checkAdmin() {
     const u = document.getElementById('admin-user').value.trim();

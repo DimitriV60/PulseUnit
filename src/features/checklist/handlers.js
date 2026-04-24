@@ -23,6 +23,16 @@ function checklistDoneCount(bedId) {
 }
 
 window.openChecklist = function openChecklist(bedId) {
+    if (!isAdmin()) {
+        initShiftData(currentShiftKey);
+        const h = shiftHistory[currentShiftKey];
+        const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');
+        const meds = shiftHistory[dateOnly + '-meds'] || [];
+        const isActive = (h.activeStaffIds || []).includes(currentUser?.id)
+                      || h.techIdeId === currentUser?.id
+                      || meds.includes(currentUser?.id);
+        if (!isActive) { showToast('\u26D4 Vous devez \u00EAtre de garde pour acc\u00E9der \u00E0 la v\u00E9rif chambre'); return; }
+    }
     initShiftData(currentShiftKey);
     const el = document.getElementById('checklist-view');
     el.style.display = 'flex';
