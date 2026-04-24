@@ -62,6 +62,11 @@ window.toggleLit = function toggleLit(id, p, e) {
     let h = shiftHistory[currentShiftKey];
     if (!h.assignments[id]) h.assignments[id] = { ide: null, as: null, bmr: false, dialyse: false, crit: false, closed: false };
     let d = h.assignments[id];
+    // Seuls l'IDE et l'AS affectés peuvent modifier l'état si le lit est déjà assigné
+    if ((d.ide || d.as) && currentUser?.id !== d.ide && currentUser?.id !== d.as) {
+        showToast('\u26D4 Seuls l\u2019IDE et l\u2019AS de ce lit peuvent modifier son \u00E9tat');
+        return;
+    }
     d[p] = !d[p];
     if (p === 'closed' && d.closed) { d.ide = null; d.as = null; }
     renderApp();
@@ -177,13 +182,17 @@ window.renderApp = function renderApp() {
             grid += `<div class="med-bed-btn ${isActive}" onclick="toggleMedBed('${n}', ${i})">${n}</div>`;
         });
         grid += `</div>`;
+        const medEditable = !locked && !h.medLocked;
         boardHTML += `<div class="bed-card special-card med-card">
         <div class="bed-header" style="color:var(--med)">
             <span class="b-num">R\u00C9A ${i + 1}</span>
-            <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
+            <div style="display:flex;align-items:center;gap:6px;">
+              ${isAdmin() ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:1rem;cursor:pointer;padding:2px;line-height:1;" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : (h.medLocked ? '<span style="font-size:0.85rem;" title="Verrouill\u00E9">\uD83D\uDD12</span>' : '')}
+              <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
+            </div>
         </div>
         ${grid}
-        ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${locked ? '' : `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>`}</div>` : `<div class="search-box">${locked ? '---' : `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>`}</div>`}
+        ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${medEditable ? `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${medEditable ? `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
       </div>`;
     });
 
@@ -267,7 +276,10 @@ window.renderApp = function renderApp() {
                     const _pct = Math.round((_done / _total) * 100);
                     const _stCl = _done === _total ? 'done' : _done > 0 ? 'partial' : 'empty';
                     const _scoreTxt = _stCl === 'done' ? '\u2713 OK' : `${_done}/${_total}`;
-                    return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" onclick="assignLit('${id}')">
+                    const _myNote = typeof getBedNoteForCurrentUser === 'function' ? getBedNoteForCurrentUser(id) : null;
+                    const _noteDot = _myNote ? `<div style="position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--brand-aqua);box-shadow:0 0 4px var(--brand-aqua);" title="Ma note"></div>` : '';
+                    return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;" onclick="handleBedTap('${id}')">
+              ${_noteDot}
               <div class="bed-bg-num">${n}</div>
               <div class="bed-header">
                   <span class="b-num">${n}</span>

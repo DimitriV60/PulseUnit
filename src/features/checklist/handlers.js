@@ -51,6 +51,12 @@ window.selectChecklistBed = function selectChecklistBed(bedId) {
 
 window.toggleChecklistItem = function toggleChecklistItem(itemId) {
     if (!currentChecklistBed) return;
+    initShiftData(currentShiftKey);
+    const assigned = (shiftHistory[currentShiftKey].assignments || {})[currentChecklistBed] || {};
+    if (assigned.ide && currentUser?.id !== assigned.ide && currentUser?.id !== assigned.as) {
+        showToast('\u26D4 Seul l\u2019IDE ou l\u2019AS de ce lit peut cocher les items');
+        return;
+    }
     const cl = getChecklistForBed(currentChecklistBed);
     cl[itemId] = !cl[itemId];
     saveData();

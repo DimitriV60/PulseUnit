@@ -276,7 +276,7 @@
   .task-title { font-weight: 700; font-size: 0.9rem; color: var(--text); flex: 1; line-height: 1.3; text-align: left; margin: 0; }
   .task-time { font-size: 0.7rem; font-weight: 900; color: var(--tech); background: var(--tech-glow); padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
 
-  #calc-modal, #add-modal, #tuto-modal, #settings-modal, #admin-login-modal, #admin-panel-modal, #confirm-clear-modal, #congrats-modal, #remove-agent-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+  #calc-modal, #add-modal, #tuto-modal, #settings-modal, #admin-login-modal, #admin-panel-modal, #confirm-clear-modal, #congrats-modal, #remove-agent-modal, #bed-note-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
   #confirm-clear-modal, #congrats-modal { z-index: 600; }
 
   /* AUTH */
@@ -1089,6 +1089,24 @@
     </div>
   </div>
 
+  <!-- Modale note temporaire lit (double-tap) -->
+  <div id="bed-note-modal" style="z-index:600;">
+    <div class="modal-content" style="width:min(380px,92vw);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div>
+          <div style="font-size:1rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
+          <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-top:2px;">Visible uniquement par vous · Expire après 72h</div>
+        </div>
+        <button onclick="closeBedNote()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
+      </div>
+      <textarea id="bed-note-text" rows="4" placeholder="Votre note sur ce lit..." style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.88rem; font-weight:600; resize:none; font-family:inherit; box-sizing:border-box; outline:none;"></textarea>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button id="bed-note-delete-btn" onclick="deleteBedNote()" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
+        <button onclick="saveBedNote()" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <div id="congrats-modal">
     <div class="modal-content" style="text-align: center;">
       <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉</div>
@@ -1551,6 +1569,7 @@
 <script src="src/features/settings/handlers.js"></script>
 <script src="src/features/projet/handlers.js"></script>
 <script src="src/features/shift/handlers.js"></script>
+<script src="src/features/bed-notes/handlers.js"></script>
 <script src="src/features/beds/handlers.js"></script>
 <script src="src/features/work-status/handlers.js"></script>
 <script src="src/features/gestures/handlers.js"></script>

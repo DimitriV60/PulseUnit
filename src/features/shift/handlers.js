@@ -16,6 +16,7 @@
 function initShiftData(key) {
     if (!shiftHistory[key]) shiftHistory[key] = { activeStaffIds: [], techIdeId: null, adminLockUsip: false, techTasks: [], assignments: {}, congratsShown: false };
     if (shiftHistory[key].adminLockUsip === undefined) shiftHistory[key].adminLockUsip = false;
+    if (shiftHistory[key].medLocked === undefined) shiftHistory[key].medLocked = false;
     if (shiftHistory[key].congratsShown === undefined) shiftHistory[key].congratsShown = false;
     if (!shiftHistory[key].techTasks) shiftHistory[key].techTasks = [];
     if (!shiftHistory[key].assignments) shiftHistory[key].assignments = {};
@@ -96,9 +97,26 @@ window.toggleSelection = function toggleSelection(id) {
         if (!isOnCurrentShift() && currentUser) alert('Vous n\'\u00EAtes pas affect\u00E9 \u00E0 cette garde \u2014 acc\u00E8s en lecture seule.');
         return;
     }
+    if (currentUser?.role === 'med') {
+        showToast('\u26D4 Les m\u00E9decins ne g\u00E8rent pas les assignations IDE/AS');
+        return;
+    }
+    if (id !== currentUser?.id) {
+        showToast('\u26D4 Vous pouvez uniquement vous s\u00E9lectionner vous-m\u00EAme');
+        return;
+    }
     selectedStaffForTap = (selectedStaffForTap === id) ? null : id;
     updateStickyBanner();
     renderApp();
+};
+
+window.toggleMedLock = function toggleMedLock() {
+    if (!isAdmin()) return;
+    initShiftData(currentShiftKey);
+    shiftHistory[currentShiftKey].medLocked = !shiftHistory[currentShiftKey].medLocked;
+    saveData();
+    renderApp();
+    showToast(shiftHistory[currentShiftKey].medLocked ? '\uD83D\uDD12 Cartes r\u00E9a verrouill\u00E9es' : '\uD83D\uDD13 Cartes r\u00E9a d\u00E9verrouill\u00E9es');
 };
 
 function isShiftLocked(shiftKey) {
