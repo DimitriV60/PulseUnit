@@ -56,6 +56,10 @@ window.openBedNote = function openBedNote(bedId) {
                   || h.techIdeId === currentUser.id
                   || meds.includes(currentUser.id);
     if (!isActive && !isAdmin()) { showToast('\u26D4 Vous devez \u00EAtre de garde pour laisser une note'); return; }
+    const d = h.assignments?.[bedId] || {};
+    const isAssigned = d.ide === currentUser.id || d.as === currentUser.id;
+    const isTech = h.techIdeId === currentUser.id;
+    if (!isAssigned && !isTech && !isAdmin()) { showToast('\u26D4 Vous ne pouvez noter que vos propres lits'); return; }
     _currentNotesBed = bedId;
     const parts = bedId.split('-');
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
