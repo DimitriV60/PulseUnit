@@ -164,7 +164,7 @@ window.renderApp = function renderApp() {
             <div class="bed-header" style="flex-shrink:0; color:var(--text-muted); margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; justify-content:center;">
                 <span class="b-num" style="font-size:0.85rem; font-weight:900; text-transform:uppercase; letter-spacing:1px;">\uD83D\uDCCB EFFECTIF</span>
             </div>
-            <div class="mini-list" id="mini-list-content" style="flex:1; overflow-y:auto; max-height:220px; padding-right:5px; margin-bottom:10px;">${miniListHTML}</div>
+            <div class="mini-list" id="mini-list-content" style="flex:1; overflow-y:auto; min-height:0; padding-right:5px; margin-bottom:10px;">${miniListHTML}</div>
         </div>
       </div>
     `;
