@@ -232,17 +232,34 @@ window.loginUser = async function loginUser() {
     }
     const pinHash = await hashPin(pin);
     if (pinHash !== user.pinHash) {
-        const tries = (user.failedAttempts || 0) + 1;
-        authUsers[userId].failedAttempts = tries;
-        if (tries >= 3) {
-            authUsers[userId].blocked = true;
-            authUsers[userId].blockedAt = Date.now();
-            if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
-            renderAdminUsers();
-            return alert('Compte bloqué après 3 codes erronés.\nContactez l’administrateur.');
+        let tries;
+        if (AUTH_DOC && window.db) {
+            try {
+                tries = await window.db.runTransaction(async tx => {
+                    const snap = await tx.get(AUTH_DOC);
+                    const u = (snap.data()?.users || {})[userId] || {};
+                    const n = (u.failedAttempts || 0) + 1;
+                    const upd = { [`users.${userId}.failedAttempts`]: n };
+                    if (n >= 3) { upd[`users.${userId}.blocked`] = true; upd[`users.${userId}.blockedAt`] = Date.now(); }
+                    tx.update(AUTH_DOC, upd);
+                    return n;
+                });
+                authUsers[userId].failedAttempts = tries;
+                if (tries >= 3) { authUsers[userId].blocked = true; authUsers[userId].blockedAt = Date.now(); }
+            } catch (e) {
+                console.warn(‘PulseUnit: transaction failedAttempts:’, e);
+                tries = (authUsers[userId].failedAttempts || 0) + 1;
+                authUsers[userId].failedAttempts = tries;
+                if (tries >= 3) { authUsers[userId].blocked = true; authUsers[userId].blockedAt = Date.now(); }
+                await AUTH_DOC.set({ users: authUsers });
+            }
+        } else {
+            tries = (authUsers[userId].failedAttempts || 0) + 1;
+            authUsers[userId].failedAttempts = tries;
+            if (tries >= 3) { authUsers[userId].blocked = true; authUsers[userId].blockedAt = Date.now(); }
         }
-        if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
-        document.getElementById('auth-pin').value = '';
+        if (tries >= 3) { renderAdminUsers(); return alert(‘Compte bloqué après 3 codes erronés.\nContactez l\’administrateur.’); }
+        document.getElementById(‘auth-pin’).value = ‘’;
         return alert(`Code incorrect. Tentative ${tries}/3.`);
     }
     authUsers[userId].failedAttempts = 0;
