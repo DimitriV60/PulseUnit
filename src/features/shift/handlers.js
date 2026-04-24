@@ -309,6 +309,30 @@ window.getStaffTargets = function getStaffTargets() {
     return { rIDE_T, rAS_T, uIDE_T, uAS_T, rI, rA, uI, uA, uAllC: uC === 5, rC, uC };
 };
 
+var _pendingRemoveStaffId = null;
+
+window.showRemoveAgentConfirm = function showRemoveAgentConfirm(staffId) {
+    const p = roster.find(r => r.id === staffId);
+    if (!p) return;
+    _pendingRemoveStaffId = staffId;
+    const el = document.getElementById('remove-agent-name');
+    if (el) el.textContent = `${p.firstName} ${p.lastName.charAt(0)}.`;
+    document.getElementById('remove-agent-modal').style.display = 'flex';
+};
+
+window.keepAgent = function keepAgent() {
+    document.getElementById('remove-agent-modal').style.display = 'none';
+    _pendingRemoveStaffId = null;
+};
+
+window.removeAgent = function removeAgent() {
+    document.getElementById('remove-agent-modal').style.display = 'none';
+    if (_pendingRemoveStaffId) {
+        clearShift(_pendingRemoveStaffId, 'staff');
+        _pendingRemoveStaffId = null;
+    }
+};
+
 window.confirmClearShift = function confirmClearShift() {
     if (isShiftLocked(currentShiftKey)) return alert('Garde verrouill\u00E9e. Impossible de vider.');
     document.getElementById('confirm-clear-modal').style.display = 'flex';

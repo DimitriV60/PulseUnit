@@ -110,7 +110,8 @@ window.renderApp = function renderApp() {
             clickAttr = `onclick="toggleSelection('${p.id}')"`;
             if (selectedStaffForTap === p.id) bgStyle = 'var(--ide-glow)';
         }
-        miniListHTML += `<div class="mini-item" style="border-color:${col}; cursor:${isSelectable && !locked ? 'pointer' : 'default'}; background:${bgStyle};" ${clickAttr}><span>${escapeHTML(p.firstName)} ${escapeHTML(p.lastName[0])}.</span><span class="role-badge" style="color:${col}">${roleLbl}</span></div>`;
+        const removeX = (isSelectable && !locked) ? `<span onclick="event.stopPropagation();showRemoveAgentConfirm('${p.id}')" style="margin-left:6px;font-size:1rem;line-height:1;cursor:pointer;color:var(--crit);opacity:0.55;flex-shrink:0;">×</span>` : '';
+        miniListHTML += `<div class="mini-item" style="border-color:${col}; cursor:${isSelectable && !locked ? 'pointer' : 'default'}; background:${bgStyle};" ${clickAttr}><span>${escapeHTML(p.firstName)} ${escapeHTML(p.lastName[0])}.</span>${removeX}<span class="role-badge" style="color:${col}">${roleLbl}</span></div>`;
     });
 
     boardHTML += `

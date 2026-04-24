@@ -29,6 +29,12 @@ window.checkWorkStatus = function checkWorkStatus() {
   const explicitState = planStates[dateOnly];
   const effectiveState = explicitState || getPlanDefaultState(dateOnly);
 
+  // Ne pas auto-placer si le type planning ne correspond pas à la garde courante
+  // (ex: planning='nuit' mais on est en shift jour → attendre l'ouverture de la nuit)
+  const shiftType = currentShiftKey.includes('-nuit') ? 'nuit' : 'jour';
+  if ((effectiveState === 'nuit' || effectiveState === 'hs_n') && shiftType === 'jour') return;
+  if ((effectiveState === 'jour' || effectiveState === 'hs_j') && shiftType === 'nuit') return;
+
   if (AUTO_STATES.has(effectiveState)) {
     localStorage.setItem(wsKey, '1');
     handleWorkChoice(true);
