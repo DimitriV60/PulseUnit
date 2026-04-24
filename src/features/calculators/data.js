@@ -571,7 +571,7 @@
         <div id="res_ete_bonus" style="font-size:0.78rem; color:var(--as); font-weight:700; margin-top:4px;"></div>
       </div>
     `
-  }
+  },
   /* ===== GROUPE NUTRITION ===== */
   {
     id: 'calorique', icon: '🍽️', title: 'Besoins caloriques — Harris-Benedict',

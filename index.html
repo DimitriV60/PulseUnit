@@ -903,7 +903,7 @@
       <a href="#" class="side-link" onclick="closeSideMenu(); openPathologies();">🩺 Pathologies</a>
       <div class="side-menu-section">ORGANISATION</div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">Bourse d'échange</a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">↔️ Bourse d'échange</a>
       <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
       <div style="flex: 1; min-height: 20px;"></div>
       <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Signaler un bug</a>
@@ -2242,9 +2242,13 @@
           </div>
         </div>
       </div>
-      <div style="padding:0 16px 12px;">
+      <div style="padding:0 16px 8px;">
         <input type="text" id="pathologies-search" placeholder="🔍 Rechercher une pathologie ou un système..." oninput="renderPathologies()" autocomplete="off"
           style="width:100%; box-sizing:border-box; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
+      </div>
+      <div style="padding:0 16px 12px; display:flex; gap:8px;">
+        <button id="patho-tab-all" onclick="setPathoTab('all')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Toutes</button>
+        <button id="patho-tab-rea" onclick="setPathoTab('rea')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">🏥 Réanimation</button>
       </div>
     </div>
     <div style="padding:12px 20px 20px; max-width:700px; margin:0 auto; width:100%; overflow-y:auto; flex:1;">
@@ -2486,7 +2490,7 @@
       <div class="fs-title-group">
         <button class="fs-back" onclick="closeBourse()">←</button>
         <div>
-          <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">Bourse d'échange</h2>
+          <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">↔️ Bourse d'échange</h2>
           <div class="fs-subtitle" id="bourse-subtitle">Demandes de permutation de gardes</div>
         </div>
       </div>
