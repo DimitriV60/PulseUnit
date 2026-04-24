@@ -153,6 +153,14 @@ window.canEditBeds = canEditBeds;
 window.initDates = function initDates() {
     const nav = document.getElementById('shift-nav'); nav.innerHTML = '';
     const today = new Date(); const daysArr = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+    const h = today.getHours();
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const yestStr = yesterday.toISOString().split('T')[0];
+    // Déterminer la garde actuelle avant de créer les tabs
+    if (h >= 8 && h < 20)       currentShiftKey = `${todayStr}-jour`;
+    else if (h >= 20)           currentShiftKey = `${todayStr}-nuit`;
+    else                        currentShiftKey = `${yestStr}-nuit`;
     for (let i = 0; i <= 7; i++) {
         const d = new Date(today); d.setDate(d.getDate() - i);
         const ds = d.toISOString().split('T')[0];
@@ -165,11 +173,11 @@ window.initDates = function initDates() {
             btn.setAttribute('data-key', key);
             btn.onclick = () => { currentShiftKey = key; clearSelection(); renderApp(); checkWorkStatus(); };
             nav.appendChild(btn);
-            if (i === 0 && today.getHours() >= 8 && today.getHours() < 20 && p === 'jour') currentShiftKey = key;
-            if (i === 0 && today.getHours() >= 20 && p === 'nuit') currentShiftKey = key;
-            if (i === 1 && today.getHours() < 8 && p === 'nuit') currentShiftKey = key;
         });
     }
+    // Scroll vers l'onglet actif
+    const activeTab = nav.querySelector('.shift-tab.active');
+    if (activeTab) activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
     initShiftData(currentShiftKey);
     renderApp();
 };
