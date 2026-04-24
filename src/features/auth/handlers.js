@@ -549,12 +549,16 @@ window.adminUnlockUser = async function adminUnlockUser(userId) {
 };
 
 window.adminDeleteUser = async function adminDeleteUser(userId) {
-    const u = authUsers[userId];
-    if (!u) return;
-    const name = `${u.firstName} ${u.lastName.toUpperCase()}`;
-    if (!confirm(`Supprimer le compte de ${name} ?\n\nCette action est irréversible.`)) return;
-    delete authUsers[userId];
-    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    const authU = authUsers[userId];
+    const rosterU = roster.find(r => r.id === userId);
+    const src = authU || rosterU;
+    if (!src) return;
+    const name = `${src.firstName} ${(src.lastName || '').toUpperCase()}`;
+    if (!confirm(`Supprimer ${name} ?\n\nCette action est irréversible.`)) return;
+    if (authU) {
+        delete authUsers[userId];
+        if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    }
     roster = roster.filter(r => r.id !== userId);
     saveData();
     if (PRESENCE_DOC) {
@@ -596,21 +600,30 @@ function renderAdminUsers() {
     if (!container) return;
 
     const q = (document.getElementById('admin-users-search')?.value || '').toLowerCase().trim();
-    let entries = Object.entries(authUsers).sort((a, b) =>
-        (a[1].lastName || '').localeCompare(b[1].lastName || '')
+
+    // Comptes avec auth (authUsers)
+    let authEntries = Object.entries(authUsers).map(([id, u]) => ({ id, u, hasAuth: true }));
+
+    // Entrées roster sans compte auth (créées via createNewStaff)
+    const rosterOnly = roster
+        .filter(r => !authUsers[r.id])
+        .map(r => ({ id: r.id, u: { firstName: r.firstName, lastName: r.lastName, role: r.role }, hasAuth: false }));
+
+    let allEntries = [...authEntries, ...rosterOnly].sort((a, b) =>
+        (a.u.lastName || '').localeCompare(b.u.lastName || '')
     );
-    if (q) entries = entries.filter(([, u]) =>
+    if (q) allEntries = allEntries.filter(({ u }) =>
         u.firstName.toLowerCase().includes(q) || (u.lastName || '').toLowerCase().includes(q)
     );
 
     const countEl = document.getElementById('admin-users-count');
-    if (countEl) countEl.textContent = `${Object.keys(authUsers).length} compte(s) au total`;
+    if (countEl) countEl.textContent = `${authEntries.length} compte(s) · ${rosterOnly.length} sans compte`;
 
-    if (entries.length === 0) {
+    if (allEntries.length === 0) {
         container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:16px 0;">Aucun résultat</p>';
         return;
     }
-    container.innerHTML = entries.map(([id, u]) => {
+    container.innerHTML = allEntries.map(({ id, u, hasAuth }) => {
         const col = ROLE_COLORS[u.role] || 'var(--brand-blue)';
         const isOnline = !!onlineUsers[id];
         const created = u.createdAt
@@ -620,14 +633,17 @@ function renderAdminUsers() {
         const lockDate = u.blockedAt
             ? new Date(u.blockedAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
             : '';
-        return `<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; background:var(--surface-sec); margin-bottom:7px; border:1px solid var(--border);">
+        const subline = hasAuth
+            ? `Créé le ${created}${isBlocked ? ` · <span style="color:var(--crit); font-weight:900;">BLOQUÉ${lockDate ? ' (' + lockDate + ')' : ''}</span>` : ''}`
+            : `<span style="color:var(--text-muted); font-style:italic;">Pas de compte — roster uniquement</span>`;
+        return `<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; background:var(--surface-sec); margin-bottom:7px; border:1px solid ${hasAuth ? 'var(--border)' : 'var(--border)'}; opacity:${hasAuth ? '1' : '0.75'};">
         <span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${isOnline ? '#22c55e' : 'var(--border)'}; flex-shrink:0;" title="${isOnline ? 'Connecté' : 'Hors ligne'}"></span>
         <div style="flex:1; min-width:0;">
           <div style="font-weight:800; font-size:0.85rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(u.firstName)} ${escapeHTML((u.lastName || '').toUpperCase())}</div>
-          <div style="font-size:0.68rem; color:var(--text-muted);">Créé le ${created}${isBlocked ? ` · <span style="color:var(--crit); font-weight:900;">BLOQUÉ${lockDate ? ' (' + lockDate + ')' : ''}</span>` : ''}</div>
+          <div style="font-size:0.68rem; color:var(--text-muted);">${subline}</div>
         </div>
         <span style="font-size:0.7rem; font-weight:700; color:${col}; background:${col}22; padding:2px 7px; border-radius:4px; flex-shrink:0;">${u.role.toUpperCase()}</span>
-        ${isBlocked ? `<button onclick="adminUnlockUser('${id}')" style="background:var(--as); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;" title="Débloquer">🔓</button>` : ''}
+        ${hasAuth && isBlocked ? `<button onclick="adminUnlockUser('${id}')" style="background:var(--as); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;" title="Débloquer">🔓</button>` : ''}
         <button onclick="adminDeleteUser('${id}')" style="background:none; border:none; color:var(--crit); font-size:1.15rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Supprimer">🗑️</button>
       </div>`;
     }).join('');
