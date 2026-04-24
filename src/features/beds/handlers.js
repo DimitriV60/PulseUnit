@@ -12,11 +12,6 @@
  * Expose sur window : toggleMedBed, assignLit, toggleLit, getAllBedIds, renderApp.
  */
 
-window.revealBedNum = function revealBedNum(el, num, fullDisplay) {
-    el.innerHTML = `<a href="tel:${num}" style="color:inherit;text-decoration:none;">\uD83D\uDCDE ${fullDisplay}</a>`;
-    el.onclick = null;
-    el.style.cursor = 'default';
-};
 
 window.toggleMedBed = function toggleMedBed(bedKey, docIndex) {
     if (!currentUser) return;
@@ -198,7 +193,7 @@ window.renderApp = function renderApp() {
               <span class="b-num">R\u00C9A ${i + 1}</span>
               ${_lockBtn}
             </div>
-            <span onclick="revealBedNum(this,'${i === 0 ? '0344611862' : '0344611822'}','${i === 0 ? '03 44 61 18 62' : '03 44 61 18 22'}')" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); cursor:pointer;">\uD83D\uDCDE ${i === 0 ? '(61) 1862' : '(61) 1822'}</span>
+            <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '(61) 1862' : '(61) 1822'}</a>
         </div>
         ${grid}
         ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.lastName).toUpperCase()} ${medEditable ? `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${medEditable ? `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
@@ -252,7 +247,6 @@ window.renderApp = function renderApp() {
     uGrid += `</div>`;
     let uPhone = (ms[2] && ms[2] === ms[0]) ? '(61) 1862' : (ms[2] && ms[2] === ms[1] ? '(61) 1822' : '');
     let uPhoneNum = (ms[2] && ms[2] === ms[0]) ? '0344611862' : (ms[2] && ms[2] === ms[1] ? '0344611822' : '');
-    let uPhoneFull = (ms[2] && ms[2] === ms[0]) ? '03 44 61 18 62' : (ms[2] && ms[2] === ms[1] ? '03 44 61 18 22' : '');
 
     boardHTML += `<div class="bed-card special-card med-card ${t.uAllC ? (h.adminLockUsip ? 'admin-closed' : 'closed') : ''}" style="${t.uAllC ? 'pointer-events:none;' : ''}">
       ${t.uAllC ? `<div class="closed-overlay">${ICONS.closed}<span style="margin-top:5px;">USIP FERM\u00C9E</span></div>` : `
@@ -261,7 +255,7 @@ window.renderApp = function renderApp() {
           <span class="b-num">R\u00C9A USIP</span>
           ${isAdmin() ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`}
         </div>
-        ${uPhone ? `<span onclick="revealBedNum(this,'${uPhoneNum}','${uPhoneFull}')" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); cursor:pointer;">\uD83D\uDCDE ${uPhone}</span>` : ''}
+        ${uPhone ? `<a href="tel:${uPhoneNum}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${uPhone}</a>` : ''}
       </div>
       ${uGrid}
       ${m2 ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m2.lastName).toUpperCase()} ${locked ? '' : `<span class="remove-btn" onclick="clearShift(2,'med')">\u00D7</span>`}</div>` : `<div class="search-box">${locked ? '---' : `<input type="text" id="search-med-2" class="special-input" placeholder="\uD83D\uDD0D Nom Doc..." oninput="doSearch('med-2',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-2"></div>`}</div>`}
