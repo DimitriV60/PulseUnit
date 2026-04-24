@@ -21,6 +21,7 @@ function renderCalculateurs() {
         {label:"HÉMODYNAMIQUE", ids:["pam", "pse"], color:"var(--med)"},
         {label:"MÉDICAMENTS", ids:["dosekg", "convmgml", "diurese", "imc"], color:"var(--as)"},
         {label:"RH / ADMIN", ids:["pct", "transmission", "conges", "conges_ete"], color:"var(--text-muted)"},
+        {label:"NUTRITION", ids:["calorique"], color:"var(--as)"},
     ];
 
     const CALCULATORS_DATA = window.CALCULATORS_DATA;
@@ -350,6 +351,33 @@ window.execCalc = function execCalc(id) {
         document.getElementById('res_ete_rules').innerHTML  = rules;
         document.getElementById('res_ete_bonus').innerHTML  = bonusTxt;
         document.getElementById('res_ete_box').style.display = 'flex';
+    }
+    else if(id === 'calorique') {
+        const sexe    = document.getElementById('cal_sexe').value;
+        const age     = parseFloat(document.getElementById('cal_age').value);
+        const poids   = parseFloat(document.getElementById('cal_poids').value);
+        const taille  = parseFloat(document.getElementById('cal_taille').value);
+        const activite = parseFloat(document.getElementById('cal_activite').value);
+        const stress  = parseFloat(document.getElementById('cal_stress').value);
+        if (isNaN(age) || isNaN(poids) || isNaN(taille)) return;
+        let mb = 0;
+        if (sexe === 'H') mb = 88.362 + (13.397 * poids) + (4.799 * taille) - (5.677 * age);
+        else              mb = 447.593 + (9.247 * poids) + (3.098 * taille) - (4.330 * age);
+        const dej = Math.round(mb * activite * stress);
+        const mbRound = Math.round(mb);
+        const dejPoids = (dej / poids).toFixed(1);
+        const proteines = Math.round(poids * 1.3); // 1.2–1.5 g/kg/j en réa
+        const eau = Math.round(poids * 30);         // 30 mL/kg/j estimation
+        let warn = '';
+        if (poids > 100) warn = '⚠️ Obésité détectée — envisager le poids idéal théorique (IBW) plutôt que le poids réel.';
+        document.getElementById('res_cal_mb').textContent = mbRound + ' kcal/j';
+        document.getElementById('res_cal_dej').textContent = dej + ' kcal/j';
+        document.getElementById('res_cal_detail').innerHTML =
+            `<span style="color:var(--text);">≈ <strong>${dejPoids} kcal/kg/j</strong></span><br>` +
+            `Protéines estimées : <strong style="color:var(--ide);">${proteines} g/j</strong> (1,3 g/kg/j)<br>` +
+            `Hydratation de base : <strong style="color:var(--ide);">${eau} mL/j</strong> (30 mL/kg/j)`;
+        document.getElementById('res_cal_warn').textContent = warn;
+        document.getElementById('res_cal_box').style.display = 'flex';
     }
     else if(id === 'transmission') {
         const jours = parseFloat(document.getElementById('calc_tr_jours').value);

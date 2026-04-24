@@ -7,6 +7,8 @@
     {
       cat: "Réanimation — Creil",
       icon: "🏥",
+      floor: "3e étage",
+      site: "Creil",
       entries: [
         { name: "Poste soignant", num: "0344616086", display: "(61) 6086" },
         { name: "IDE technique", num: "0344617125", display: "(61) 7125" },
@@ -19,6 +21,8 @@
     {
       cat: "Urgences & UMJ — Creil",
       icon: "🚨",
+      floor: "RDC",
+      site: "Creil",
       entries: [
         { name: "Urgences — accueil", num: "0344616063", display: "(61) 6063" },
         { name: "Urgences — standard", num: "0344616100", display: "(61) 6100" },
@@ -31,6 +35,8 @@
     {
       cat: "Biologie & Imagerie — Creil",
       icon: "🔬",
+      floor: "RDC / 1er étage",
+      site: "Creil",
       entries: [
         { name: "Laboratoires", num: "0344616530", display: "(61) 6530" },
         { name: "Imagerie médicale", num: "0344616121", display: "(61) 6121" },
@@ -40,6 +46,8 @@
     {
       cat: "Pharmacie — Creil",
       icon: "💊",
+      floor: "RDC",
+      site: "Creil",
       entries: [
         { name: "Pharmacie hospitalière", num: "0344616883", display: "(61) 6883" },
       ]
@@ -47,6 +55,8 @@
     {
       cat: "Cardiologie & USC — Creil",
       icon: "❤️",
+      floor: "2e étage",
+      site: "Creil",
       entries: [
         { name: "Cardiologie", num: "0344616523", display: "(61) 6523" },
         { name: "Cardiologie 2", num: "0344616538", display: "(61) 6538" },
@@ -56,6 +66,8 @@
     {
       cat: "Blocs & Chirurgies — Creil",
       icon: "🔪",
+      floor: "2e étage",
+      site: "Creil",
       entries: [
         { name: "Bloc opératoire 1", num: "0344616153", display: "(61) 6153" },
         { name: "Bloc opératoire 2", num: "0344616150", display: "(61) 6150" },
@@ -71,6 +83,8 @@
     {
       cat: "Spécialités médicales — Creil",
       icon: "⚕️",
+      floor: "3e / 4e étage",
+      site: "Creil",
       entries: [
         { name: "Neurologie", num: "0344616433", display: "(61) 6433" },
         { name: "Pneumologie", num: "0344616546", display: "(61) 6546" },
@@ -87,6 +101,8 @@
     {
       cat: "Oncologie — Creil",
       icon: "🎗️",
+      floor: "4e étage",
+      site: "Creil",
       entries: [
         { name: "Oncologie", num: "0344616456", display: "(61) 6456" },
         { name: "HDJ Oncologie", num: "0344616302", display: "(61) 6302" },
@@ -98,6 +114,8 @@
     {
       cat: "Hygiène & Stérilisation — Creil",
       icon: "🧴",
+      floor: "Sous-sol",
+      site: "Creil",
       entries: [
         { name: "Hygiène hospitalière (EOH)", num: "0344616562", display: "(61) 6562" },
         { name: "Stérilisation", num: "0344616892", display: "(61) 6892" },
@@ -106,6 +124,8 @@
     {
       cat: "Logistique & Supports — Creil",
       icon: "🔧",
+      floor: "—",
+      site: "Creil",
       entries: [
         { name: "Standard général Creil", num: "0344616000", display: "(61) 6000" },
         { name: "Brancardage", num: "", display: "" },
@@ -116,6 +136,8 @@
     {
       cat: "Site de Senlis",
       icon: "🏨",
+      floor: "—",
+      site: "Senlis",
       entries: [
         { name: "Standard général Senlis", num: "0344217100", display: "(21) 7100" },
         { name: "Maternité", num: "0344217405", display: "(21) 7405" },

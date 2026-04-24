@@ -572,4 +572,65 @@
       </div>
     `
   }
+  /* ===== GROUPE NUTRITION ===== */
+  {
+    id: 'calorique', icon: '🍽️', title: 'Besoins caloriques — Harris-Benedict',
+    html: `
+      <div style="font-size:0.78rem; color:var(--ide); background:var(--ide-glow); border:1px solid rgba(96,206,234,0.3); border-radius:8px; padding:10px; margin-bottom:12px; font-weight:700;">
+        ⚠️ En réanimation, objectif habituel 20–25 kcal/kg/j (phase aiguë) puis 25–30 kcal/kg/j. Adapter au contexte clinique.
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Sexe</span>
+        <select id="cal_sexe" class="calc-select" onchange="execCalcLive('calorique')">
+          <option value="H">Homme</option>
+          <option value="F">Femme</option>
+        </select>
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Âge (ans)</span>
+        <input type="number" id="cal_age" class="calc-input" placeholder="ex : 52" min="15" max="110" oninput="execCalcLive('calorique')">
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Poids actuel (kg)</span>
+        <input type="number" id="cal_poids" class="calc-input" placeholder="ex : 70" min="30" max="250" step="0.5" oninput="execCalcLive('calorique')">
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Taille (cm)</span>
+        <input type="number" id="cal_taille" class="calc-input" placeholder="ex : 175" min="100" max="220" oninput="execCalcLive('calorique')">
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Facteur d'activité</span>
+        <select id="cal_activite" class="calc-select" onchange="execCalcLive('calorique')">
+          <option value="1.0">1.0 — Alité, sédaté / ventilé immobile</option>
+          <option value="1.1" selected>1.1 — Alité, éveillé (réanimation standard)</option>
+          <option value="1.2">1.2 — Légèrement actif (levé au fauteuil)</option>
+          <option value="1.3">1.3 — Modérément actif (kiné régulière)</option>
+        </select>
+      </div>
+      <div class="calc-form-group">
+        <span class="calc-label">Facteur de stress / agression</span>
+        <select id="cal_stress" class="calc-select" onchange="execCalcLive('calorique')">
+          <option value="1.0">1.0 — Post-op simple, stable</option>
+          <option value="1.1" selected>1.1 — Infection légère / trauma modéré</option>
+          <option value="1.2">1.2 — Sepsis, trauma majeur</option>
+          <option value="1.3">1.3 — Sepsis sévère / défaillance multi-organe</option>
+          <option value="1.5">1.5 — Brûlures étendues (> 20 % SCT)</option>
+          <option value="1.7">1.7 — Brûlures massives / grand polytraumatisé</option>
+        </select>
+      </div>
+      <div class="calc-result-box" id="res_cal_box" style="display:none; flex-direction:column; gap:10px;">
+        <div class="calc-result-title">BESOINS ÉNERGÉTIQUES</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+          <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Métabolisme de base (MB)</span>
+          <span class="calc-result-val" id="res_cal_mb" style="font-size:1.3rem;">--</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+          <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Dépense journalière (DEJ)</span>
+          <span class="calc-result-val" id="res_cal_dej" style="font-size:1.6rem; color:var(--as);">--</span>
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:8px; font-size:0.82rem; line-height:1.9; color:var(--text-muted); font-weight:700;" id="res_cal_detail"></div>
+        <div style="font-size:0.78rem; color:var(--med); font-weight:700; margin-top:2px;" id="res_cal_warn"></div>
+      </div>
+    `
+  },
   ];
