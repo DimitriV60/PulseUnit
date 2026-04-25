@@ -410,6 +410,14 @@
   .settings-action-btn:active { transform: scale(0.98); }
   .settings-action-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; border: 1px solid var(--border); }
 
+  /* Watermark traçable — visible sur toute capture d'écran (non-admin uniquement).
+     Très peu opaque pour ne pas gêner la lecture, mais lisible sur screenshot.
+     pointer-events:none → ne bloque pas l'interaction. */
+  #pu-watermark { position: fixed; inset: 0; z-index: 50; pointer-events: none; user-select: none; -webkit-user-select: none; opacity: 0.06; display: none; overflow: hidden; mix-blend-mode: multiply; }
+  #pu-watermark .pu-wm-row { display: flex; gap: 60px; padding: 30px 0; transform: rotate(-22deg); white-space: nowrap; }
+  #pu-watermark .pu-wm-row span { font-size: 0.85rem; font-weight: 900; color: var(--text); letter-spacing: 0.05em; font-family: var(--font); }
+  body.is-admin #pu-watermark { display: none !important; }
+
   /* ===== PROTOCOLES ===== */
   .proto-list { padding: 15px 20px 60px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .proto-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 14px; }
@@ -881,6 +889,8 @@
 
 </head>
 <body>
+  <!-- Watermark traçable affiché uniquement pour les utilisateurs non-admin connectés -->
+  <div id="pu-watermark" aria-hidden="true"></div>
 
   <header class="header">
     <div class="header-top">
@@ -2552,6 +2562,7 @@
       <button class="auth-btn auth-btn-outline" onclick="showAuthView('register')">Créer mon accès</button>
       <button class="auth-btn-ghost" onclick="showAuthView('forgot')">Code oublié ?</button>
       <button class="auth-btn" style="background:var(--crit); color:#fff;" onclick="showAuthView('admin')">Accès Admin</button>
+      <button id="auth-reload-btn" class="auth-btn-ghost" style="margin-top:8px; font-size:0.75rem;" onclick="reloadAppData()">🔄 Actualiser les données</button>
     </div>
     <!-- VUE INSCRIPTION -->
     <div id="auth-register-view" style="display:none;">

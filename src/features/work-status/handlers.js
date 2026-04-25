@@ -28,6 +28,7 @@ window.checkWorkStatus = function checkWorkStatus() {
   const AUTO_STATES = new Set(['jour', 'nuit', 'formation', 'hs_j', 'hs_n', 'hs']);
   const explicitState = planStates[dateOnly];
   const effectiveState = explicitState || getPlanDefaultState(dateOnly);
+  const planningEmpty = !planStates || Object.keys(planStates).length === 0;
 
   // Ne pas auto-placer si le type planning ne correspond pas à la garde courante
   // (ex: planning='nuit' mais on est en shift jour → attendre l'ouverture de la nuit)
@@ -41,8 +42,8 @@ window.checkWorkStatus = function checkWorkStatus() {
     return;
   }
 
-  // 'travail' (jour de semaine non renseigné) → poser la question
-  if (effectiveState === 'travail') {
+  // 'travail' (jour de semaine non renseigné) OU planning complètement vide → poser la question
+  if (effectiveState === 'travail' || planningEmpty) {
     // Nettoyage des réponses périmées (> 4 jours)
     const cutoffStr = (() => { const d = new Date(); d.setDate(d.getDate() - 4); return d.toISOString().split('T')[0]; })();
     Object.keys(localStorage).forEach(k => {

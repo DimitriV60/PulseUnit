@@ -345,8 +345,32 @@ window.logoutUser = async function logoutUser() {
     showAuthModal();
 };
 
+function _updateWatermark() {
+    const wm = document.getElementById('pu-watermark');
+    if (!wm) return;
+    document.body.classList.toggle('is-admin', !!isAdmin && isAdmin());
+    if (!currentUser || (isAdmin && isAdmin())) {
+        wm.style.display = 'none';
+        wm.innerHTML = '';
+        return;
+    }
+    const dt = new Date();
+    const stamp = `${currentUser.firstName} ${currentUser.lastName} · ${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')} · PulseUnit confidentiel`;
+    let html = '';
+    for (let i = 0; i < 24; i++) {
+        let row = '<div class="pu-wm-row">';
+        for (let j = 0; j < 8; j++) row += `<span>${escapeHTML ? escapeHTML(stamp) : stamp}</span>`;
+        row += '</div>';
+        html += row;
+    }
+    wm.innerHTML = html;
+    wm.style.display = 'block';
+}
+window._updateWatermark = _updateWatermark;
+
 function updateHeaderUser() {
     const el = document.getElementById('header-user-info');
+    _updateWatermark();
     if (!el) return;
     if (currentUser) {
         el.innerHTML = '';
@@ -687,15 +711,50 @@ window.changeMyPin = async function changeMyPin() {
 
 async function loadAuth() {
     if (!AUTH_DOC) return;
-    try {
-        const doc = await AUTH_DOC.get({ source: 'server' });
-        authUsers = (doc.exists && doc.data().users) ? doc.data().users : {};
-        const resDoc = await RESETS_DOC.get({ source: 'server' });
-        resetRequests = (resDoc.exists && resDoc.data().requests) ? resDoc.data().requests : [];
-        if (PRESENCE_DOC) {
-            const presDoc = await PRESENCE_DOC.get({ source: 'server' });
-            onlineUsers = (presDoc.exists && presDoc.data()) ? presDoc.data() : {};
+    // Retry jusqu'à 4 tentatives (1s, 2s, 4s) pour les premiers démarrages où Firebase auth peut être lent
+    const delays = [0, 1000, 2000, 4000];
+    for (let i = 0; i < delays.length; i++) {
+        if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+        try {
+            const doc = await AUTH_DOC.get({ source: 'server' });
+            authUsers = (doc.exists && doc.data().users) ? doc.data().users : {};
+            const resDoc = await RESETS_DOC.get({ source: 'server' });
+            resetRequests = (resDoc.exists && resDoc.data().requests) ? resDoc.data().requests : [];
+            if (PRESENCE_DOC) {
+                const presDoc = await PRESENCE_DOC.get({ source: 'server' });
+                onlineUsers = (presDoc.exists && presDoc.data()) ? presDoc.data() : {};
+            }
+            if (Object.keys(authUsers).length > 0 || i === delays.length - 1) return;
+        } catch (e) {
+            console.warn(`Auth load error (try ${i + 1}/${delays.length}):`, e);
+            if (i === delays.length - 1) return;
         }
-    } catch (e) { console.warn('Auth load error:', e); }
+    }
 }
 window.loadAuth = loadAuth;
+
+window.reloadAppData = async function reloadAppData() {
+    const btn = document.getElementById('auth-reload-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Chargement...'; }
+    await loadAuth();
+    if (window.PULSEUNIT_DOC) {
+        try {
+            const doc = await window.PULSEUNIT_DOC.get({ source: 'server' });
+            if (doc.exists) {
+                const data = doc.data();
+                if (Array.isArray(data.roster)) window.roster = data.roster;
+                if (data.shiftHistory && typeof data.shiftHistory === 'object') window.shiftHistory = data.shiftHistory;
+            }
+        } catch (e) { console.warn('Reload PULSEUNIT_DOC:', e); }
+    }
+    const empty = !authUsers || Object.keys(authUsers).length === 0;
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = empty ? '⚠ Toujours vide — réessayer' : '✓ Données chargées';
+        setTimeout(() => { btn.textContent = 'Actualiser les données'; }, 2000);
+    }
+    if (typeof filterAuthUsers === 'function') {
+        const search = document.getElementById('auth-search-user');
+        if (search) filterAuthUsers(search.value || '');
+    }
+};
