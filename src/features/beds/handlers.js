@@ -55,7 +55,7 @@ window.assignLit = function assignLit(id) {
 
 window.toggleLit = function toggleLit(id, p, e) {
     if (!canEditBeds()) {
-        showToast('\u00C9dition interdite : vous n\'\u00EAtes pas affect\u00E9 \u00E0 cette garde.');
+        showToast('⛔ Édition interdite : ce n’est pas ton secteur.');
         return;
     }
     if (e) e.stopPropagation();
@@ -63,9 +63,10 @@ window.toggleLit = function toggleLit(id, p, e) {
     let h = shiftHistory[currentShiftKey];
     if (!h.assignments[id]) h.assignments[id] = { ide: null, as: null, bmr: false, dialyse: false, crit: false, closed: false };
     let d = h.assignments[id];
-    // Seuls l'IDE et l'AS affectés peuvent modifier l'état si le lit est déjà assigné
-    if ((d.ide || d.as) && currentUser?.id !== d.ide && currentUser?.id !== d.as) {
-        showToast('\u26D4 Seuls l\u2019IDE et l\u2019AS de ce lit peuvent modifier son \u00E9tat');
+    const isTech = h.techIdeId === currentUser?.id;
+    const isAssigned = currentUser?.id === d.ide || currentUser?.id === d.as;
+    if (!isAdmin() && !isTech && !isAssigned) {
+        showToast('⛔ Ce n’est pas ta chambre — seul l’IDE ou l’AS assigné peut modifier ce lit.');
         return;
     }
     d[p] = !d[p];
@@ -73,7 +74,6 @@ window.toggleLit = function toggleLit(id, p, e) {
     renderApp();
     saveData();
 };
-
 window.getAllBedIds = function getAllBedIds() {
     const ids = [];
     CONFIG.forEach(z => z.beds.forEach(n => ids.push(`${z.type}-${n}`)));
