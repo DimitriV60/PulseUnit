@@ -14,8 +14,10 @@
  */
 
 function initShiftData(key) {
-    if (!shiftHistory[key]) shiftHistory[key] = { activeStaffIds: [], techIdeId: null, adminLockUsip: false, techTasks: [], assignments: {}, congratsShown: false };
-    if (shiftHistory[key].adminLockUsip === undefined) shiftHistory[key].adminLockUsip = false;
+    const globalUsipLock = !!shiftHistory._adminLockUsipGlobal;
+    if (!shiftHistory[key]) shiftHistory[key] = { activeStaffIds: [], techIdeId: null, adminLockUsip: globalUsipLock, techTasks: [], assignments: {}, congratsShown: false };
+    // Toujours synchroniser sur l'état global admin (verrou USIP persistant entre gardes)
+    shiftHistory[key].adminLockUsip = globalUsipLock;
     if (shiftHistory[key].medLocked === undefined) shiftHistory[key].medLocked = false;
     if (shiftHistory[key].congratsShown === undefined) shiftHistory[key].congratsShown = false;
     if (!shiftHistory[key].techTasks) shiftHistory[key].techTasks = [];
@@ -328,7 +330,8 @@ window.clearCurrentShift = function clearCurrentShift() {
     shiftHistory[currentShiftKey].activeStaffIds = [];
     shiftHistory[currentShiftKey].assignments = {};
     shiftHistory[currentShiftKey].techIdeId = null;
-    shiftHistory[currentShiftKey].adminLockUsip = false;
+    // adminLockUsip n'est PAS effacé par "Vider la garde" — c'est un verrou global admin
+    shiftHistory[currentShiftKey].adminLockUsip = !!shiftHistory._adminLockUsipGlobal;
     shiftHistory[currentShiftKey].techTasks = [];
     shiftHistory[currentShiftKey].congratsShown = false;
     shiftHistory[currentShiftKey].checklistChambre = {};

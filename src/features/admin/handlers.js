@@ -50,7 +50,7 @@ window.togglePass = function togglePass() {
 };
 
 function updateAdminPanelBtn() {
-    const isLocked = shiftHistory[currentShiftKey]?.adminLockUsip;
+    const isLocked = !!shiftHistory._adminLockUsipGlobal;
     const btn = document.getElementById('admin-usip-btn');
     if (!btn) return;
     if (isLocked) {
@@ -65,7 +65,17 @@ window.updateAdminPanelBtn = updateAdminPanelBtn;
 
 window.toggleAdminUsipLock = function toggleAdminUsipLock() {
     initShiftData(currentShiftKey);
-    shiftHistory[currentShiftKey].adminLockUsip = !shiftHistory[currentShiftKey].adminLockUsip;
+    const newState = !shiftHistory._adminLockUsipGlobal;
+    shiftHistory._adminLockUsipGlobal = newState;
+    // Propage immédiatement sur toutes les gardes existantes pour que la fermeture soit
+    // effective dès l'ouverture d'une autre garde (pas seulement la garde courante).
+    Object.keys(shiftHistory).forEach(k => {
+        if (k.startsWith('_') || k.endsWith('-meds') || k.endsWith('-medsBeds')) return;
+        const sh = shiftHistory[k];
+        if (sh && typeof sh === 'object' && 'adminLockUsip' in sh) {
+            sh.adminLockUsip = newState;
+        }
+    });
     saveData();
     updateAdminPanelBtn();
     renderApp();
