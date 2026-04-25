@@ -107,8 +107,7 @@ window.openBedNote = function openBedNote(bedId) {
     if (!isActive && !isAdmin()) { showToast('⛔ Vous devez être de garde pour laisser une note'); return; }
     const d = h.assignments?.[bedId] || {};
     const isAssigned = d.ide === currentUser.id || d.as === currentUser.id;
-    const isTech = h.techIdeId === currentUser.id;
-    if (!isAssigned && !isTech && !isAdmin()) { showToast('⛔ Vous ne pouvez noter que vos propres lits'); return; }
+    if (!isAssigned && !isAdmin()) { showToast('⛔ Vous ne pouvez noter que les lits où vous êtes affecté'); return; }
     _currentNotesBed = bedId;
     const parts = bedId.split('-');
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;

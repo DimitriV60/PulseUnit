@@ -67,7 +67,11 @@ window.toggleLit = function toggleLit(id, p, e) {
     if (p === 'closed' && d.closed) { d.closed = false; renderApp(); saveData(); return; }
     const isTech = h.techIdeId === currentUser?.id;
     const isAssigned = currentUser?.id === d.ide || currentUser?.id === d.as;
-    if (!isAdmin() && !isTech && !isAssigned) {
+    const isUnassigned = !d.ide && !d.as;
+    const isActive = (h.activeStaffIds || []).includes(currentUser?.id);
+    // Cas spécial : fermer un lit sans IDE/AS assigné est autorisé pour tout actif
+    const canCloseUnassigned = (p === 'closed' && isUnassigned && (isActive || isTech));
+    if (!isAdmin() && !isTech && !isAssigned && !canCloseUnassigned) {
         showToast('⛔ Ce n’est pas ta chambre — seul l’IDE ou l’AS assigné peut modifier ce lit.');
         return;
     }

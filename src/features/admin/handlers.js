@@ -67,12 +67,13 @@ window.toggleAdminUsipLock = function toggleAdminUsipLock() {
     initShiftData(currentShiftKey);
     const newState = !shiftHistory._adminLockUsipGlobal;
     shiftHistory._adminLockUsipGlobal = newState;
-    // Propage immédiatement sur toutes les gardes existantes pour que la fermeture soit
-    // effective dès l'ouverture d'une autre garde (pas seulement la garde courante).
+    // Propage l'état uniquement sur les gardes encore actives (en cours ou à venir).
+    // Les gardes passées (verrouillées) gardent leur état historique tel qu'il était.
     Object.keys(shiftHistory).forEach(k => {
         if (k.startsWith('_') || k.endsWith('-meds') || k.endsWith('-medsBeds')) return;
         const sh = shiftHistory[k];
         if (sh && typeof sh === 'object' && 'adminLockUsip' in sh) {
+            if (typeof isShiftLocked === 'function' && isShiftLocked(k)) return; // garde passée → on ne touche pas
             sh.adminLockUsip = newState;
         }
     });

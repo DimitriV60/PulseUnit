@@ -16,8 +16,13 @@
 function initShiftData(key) {
     const globalUsipLock = !!shiftHistory._adminLockUsipGlobal;
     if (!shiftHistory[key]) shiftHistory[key] = { activeStaffIds: [], techIdeId: null, adminLockUsip: globalUsipLock, techTasks: [], assignments: {}, congratsShown: false };
-    // Toujours synchroniser sur l'état global admin (verrou USIP persistant entre gardes)
-    shiftHistory[key].adminLockUsip = globalUsipLock;
+    // Synchronise sur l'état global UNIQUEMENT pour les gardes en cours / à venir.
+    // Les gardes passées gardent leur état historique (lecture seule).
+    if (typeof isShiftLocked === 'function' && !isShiftLocked(key)) {
+        shiftHistory[key].adminLockUsip = globalUsipLock;
+    } else if (shiftHistory[key].adminLockUsip === undefined) {
+        shiftHistory[key].adminLockUsip = false;
+    }
     if (shiftHistory[key].medLocked === undefined) shiftHistory[key].medLocked = false;
     if (shiftHistory[key].congratsShown === undefined) shiftHistory[key].congratsShown = false;
     if (!shiftHistory[key].techTasks) shiftHistory[key].techTasks = [];
