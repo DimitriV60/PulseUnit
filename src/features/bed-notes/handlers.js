@@ -68,7 +68,6 @@ function _loadNoteSlot(slot) {
         }
     }
     _renderNoteTabsUI();
-    setTimeout(() => textarea.focus(), 50);
 }
 
 window.switchBedNoteTab = function switchBedNoteTab(slot) {

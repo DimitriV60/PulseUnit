@@ -1352,239 +1352,240 @@
   </div>
 
   <div id="tuto-modal">
-    <div class="modal-content" style="max-height:88vh; overflow-y:auto; width:min(400px,93vw); padding:20px;">
+    <div class="modal-content" style="max-height:90vh; overflow-y:auto; width:min(440px,94vw); padding:0; border-radius:18px; overflow:hidden;">
 
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-        <div style="font-size:1.05rem; font-weight:900; color:var(--brand-aqua);">📖 Guide PulseUnit</div>
-        <button onclick="document.getElementById('tuto-modal').style.display='none'" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);line-height:1;">×</button>
+      <!-- HERO -->
+      <div style="background:var(--brand-gradient); padding:22px 22px 18px; color:#fff; position:sticky; top:0; z-index:2;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+          <div>
+            <div style="font-size:1.25rem; font-weight:900; letter-spacing:-0.3px;">📖 Guide PulseUnit</div>
+            <div style="font-size:0.72rem; opacity:0.92; font-weight:700; margin-top:2px;">Réanimation & Soins Critiques · v Alpha</div>
+          </div>
+          <button onclick="document.getElementById('tuto-modal').style.display='none'" style="background:rgba(255,255,255,0.18); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; line-height:1; flex-shrink:0;">×</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+          <span style="background:rgba(255,255,255,0.18); padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;">⚡ Temps réel</span>
+          <span style="background:rgba(255,255,255,0.18); padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;">🔒 Données sécurisées</span>
+          <span style="background:rgba(255,255,255,0.18); padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;">📱 PWA mobile</span>
+        </div>
       </div>
-      <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600; margin-bottom:16px;">Réanimation & Soins Critiques — v Alpha</div>
+
+      <div style="padding:18px 18px 20px;">
+
+      <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; padding:0 4px 12px; line-height:1.5;">
+        Bienvenue. Tout est organisé en sections dépliables. Tape sur une rubrique pour la développer.
+      </div>
 
       <!-- CONNEXION -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">🔑</span> Connexion & Compte
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🔑</span><span style="flex:1;">Connexion & Compte</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">1ère fois</strong> — Créer un compte : prénom, nom, rôle, code à 6 chiffres.
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div><strong style="color:var(--text);">Première connexion</strong> — Crée ton compte : prénom · nom · rôle · code à 6 chiffres.</div>
+          <div><strong style="color:var(--text);">Ensuite</strong> — Recherche ton nom → sélectionne → tape ton code. Coche <em>« Se souvenir »</em> pour 7 jours d'auto-connexion sur cet appareil.</div>
+          <div><strong style="color:var(--text);">Mauvais nom ?</strong> Clique la <span style="color:var(--brand-blue); font-weight:800;">✕</span> à droite pour relancer la recherche.</div>
+          <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0;">
+            <strong style="color:var(--crit);">Code oublié</strong> — « Code oublié ? » envoie une demande à l'admin qui génère un code provisoire (à remplacer dès la 1ère connexion).
           </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Ensuite</strong> — Recherche ton nom → sélectionne → entre ton code. Coche <em>"Se souvenir"</em> pour 3 mois d'auto-connexion.
+          <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0;">
+            <strong style="color:var(--crit);">3 codes faux</strong> = compte bloqué. Déblocage uniquement par l'admin.
           </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Nom sélectionné</strong> — La recherche se masque automatiquement. Utilise la <strong style="color:var(--brand-blue);">croix ✕</strong> à droite du nom si tu t'es trompé.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--crit);">Code oublié ?</strong> — Clique "Code oublié ?" → envoie la demande → l'admin te fournit un code provisoire.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--crit);">Sécurité</strong> — Après <strong>3 codes faux</strong>, le compte est bloqué. Déblocage uniquement par l'administrateur.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--crit);">Connexion Admin</strong> — Bouton rouge <em>Accès Admin</em> → entre le nom <em>admin</em> + mot de passe. L'admin accède à <strong style="color:var(--text);">toutes les fonctionnalités</strong> pour tester et détecter les bugs. Changer le mot de passe via le panneau admin.
-          </div>
+          <div><strong style="color:var(--text);">Accès admin</strong> — Bouton rouge <em>Accès Admin</em> à la connexion. Identifiants distincts du compte personnel.</div>
         </div>
       </details>
 
       <!-- REJOINDRE LA GARDE -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">👥</span> Rejoindre la garde
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">👥</span><span style="flex:1;">Rejoindre la garde</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            À la connexion : <strong style="color:var(--as);">OUI je suis de service</strong> → tu rejoins l'effectif de la garde.<br>
-            <strong style="color:var(--text-muted);">NON</strong> → mode lecture seule.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            Les compteurs <span style="color:var(--ide); font-weight:800;">IDE</span> / <span style="color:var(--as); font-weight:800;">AS</span> se mettent à jour en temps réel. Présence partagée jour ↔ nuit.
-          </div>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div>À la connexion : <strong style="color:var(--as);">OUI je suis de service</strong> → tu rejoins l'effectif. <strong style="color:var(--text-muted);">NON</strong> → mode lecture seule.</div>
+          <div>Les compteurs <span style="color:var(--ide); font-weight:800;">IDE</span> / <span style="color:var(--as); font-weight:800;">AS</span> se mettent à jour en temps réel. Présence partagée jour ↔ nuit.</div>
+          <div style="background:rgba(96,206,234,0.08); border-radius:8px; padding:8px 10px;"><strong style="color:var(--text);">💡 Astuce</strong> — En garde de jour, la <em>nuit à venir</em> apparaît dans la barre des gardes : prépare l'équipe avant 20h.</div>
         </div>
       </details>
 
       <!-- LITS -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">🛏️</span> Assigner les lits
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🛏️</span><span style="flex:1;">Assigner les lits</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">① Tape ton nom</strong> dans EFFECTIF → bandeau orange s'affiche.<br>
-            <strong style="color:var(--text);">② Touche les lits</strong> à attribuer → ils affichent ton nom.<br>
-            <strong style="color:var(--text);">③ ✔ VALIDER</strong> pour confirmer.
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">1</span><div>Tape ton nom dans <strong style="color:var(--text);">EFFECTIF</strong> → un bandeau orange s'affiche.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">2</span><div>Touche les lits à attribuer → ils affichent ton nom.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">3</span><div>Touche <strong style="color:var(--as);">✔ VALIDER</strong> pour confirmer.</div></div>
+          <div style="margin-top:4px; padding:8px 10px; background:rgba(0,0,0,0.04); border-radius:8px; font-size:0.78rem;">
+            <span style="color:var(--bmr); font-weight:900;">B</span> BMR · <span style="color:var(--dialyse); font-weight:900;">D</span> Dialyse · <span style="color:var(--crit); font-weight:900;">!</span> Critique · 🔒 Fermer le lit
           </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; line-height:1.5;">
-            <span style="color:var(--bmr); font-weight:800;">B</span> BMR &nbsp;·&nbsp; <span style="color:var(--dialyse); font-weight:800;">D</span> Dialyse &nbsp;·&nbsp; <span style="color:var(--crit); font-weight:800;">!</span> Critique &nbsp;·&nbsp; 🔒 Fermer le lit
-          </div>
+        </div>
+      </details>
+
+      <!-- NOTES DE LIT -->
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">📝</span><span style="flex:1;">Notes de lit</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
+        </summary>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div><strong style="color:var(--text);">Double-tap</strong> sur une carte de lit pour ouvrir la note.</div>
+          <div><strong style="color:var(--text);">5 emplacements</strong> indépendants par lit (Garde 1 à 5), conservés <strong style="color:var(--text);">7 jours</strong> puis effacés automatiquement.</div>
+          <div>Une note est <strong style="color:var(--text);">privée</strong> : visible uniquement par son auteur. Réservée à l'IDE/AS assigné, à l'IDE Tech et aux médecins de garde.</div>
+          <div>L'<strong style="color:var(--text);">horodatage</strong> de la dernière modification s'affiche en haut de chaque note.</div>
         </div>
       </details>
 
       <!-- MÉDECINS & TECH -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">⚕️</span> Médecins & IDE Tech
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">⚕️</span><span style="flex:1;">Médecins & IDE Tech</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <span style="color:var(--med); font-weight:800;">RÉA 1 ☎ (61) 1862</span> / <span style="color:var(--med); font-weight:800;">RÉA 2 ☎ (61) 1822</span> — Assigne le médecin à son secteur. Seul lui peut modifier ses chambres.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <span style="color:var(--tech); font-weight:800;">IDE TECH</span> — Affecté via sa carte. Un bouton <strong style="color:var(--tech);">📝 Tâches & Traçabilité</strong> apparaît sur la carte TECH : liste des tâches techniques du jour, cochage et traçabilité par garde.
-          </div>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div><span style="color:var(--med); font-weight:900;">RÉA 1 ☎ (61) 1862</span> / <span style="color:var(--med); font-weight:900;">RÉA 2 ☎ (61) 1822</span> — Le médecin gère son secteur. Seul lui modifie ses chambres.</div>
+          <div>Format affichage : <strong style="color:var(--text);">Dr. Prénom N.</strong> (initiale du nom).</div>
+          <div><strong style="color:var(--text);">Cadenas 🔒/🔓</strong> sur les cartes RÉA/USIP : l'admin verrouille l'attribution médicale et son sectoriel pour la garde.</div>
+          <div><span style="color:var(--tech); font-weight:900;">IDE TECH</span> — Bouton <strong style="color:var(--tech);">📝 Tâches & Traçabilité</strong> sur la carte : tâches techniques du jour, cochage par garde, % de progression.</div>
         </div>
       </details>
 
       <!-- CHECKLIST -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">✅</span> Vérification Chambre
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">✅</span><span style="flex:1;">Checklist chambre</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
-          Tape sur le <strong style="color:var(--text);">numéro + barre de progression</strong> sous un lit pour ouvrir la checklist (10 points).<br>
-          Barre <span style="color:var(--med); font-weight:800;">orange</span> = en cours · <span style="color:var(--as); font-weight:800;">verte</span> = complet.<br>
-          <strong style="color:var(--crit);">Réservé aux agents de garde</strong> — inaccessible en mode lecture seule. Sauvegardé par garde.
+        <div style="padding:0 14px 14px; font-size:0.8rem; line-height:1.6; color:var(--text-muted);">
+          Tape sur le <strong style="color:var(--text);">numéro + barre de progression</strong> sous un lit pour dérouler les 10 points (BAVU, alarmes scope, aspiration, oxygène, zéro KT, pression ballonnet…).<br>
+          Barre <span style="color:var(--med); font-weight:900;">orange</span> = en cours · <span style="color:var(--as); font-weight:900;">verte</span> = complète.<br>
+          <strong style="color:var(--crit);">Réservée aux agents assignés au lit.</strong> Sauvegardée par garde.
         </div>
       </details>
 
       <!-- COULEURS -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">🎨</span> Code couleurs
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🎨</span><span style="flex:1;">Code couleurs</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--ide);">■ IDE — Infirmier</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--as);">■ AS — Aide-Soignant</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--tech);">■ TECH — IDE Technique</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--med);">■ MED — Médecin Réa</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--bmr);">⚠ BMR / Isolement</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--dialyse);">💧 Dialyse / CVVH</div>
-          <div style="grid-column:1/-1; background:var(--surface-sec); border-radius:7px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--crit);">⚡ Patient Critique</div>
+        <div style="padding:0 14px 14px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div style="background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--ide); border:1px solid var(--border);">● IDE — Infirmier</div>
+          <div style="background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--as); border:1px solid var(--border);">● AS — Aide-Soignant</div>
+          <div style="background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--tech); border:1px solid var(--border);">● TECH — IDE Technique</div>
+          <div style="background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--med); border:1px solid var(--border);">● MED — Médecin Réa</div>
+          <div style="background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--bmr); border:1px solid var(--border);">⚠ BMR / Isolement</div>
+          <div style="background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--dialyse); border:1px solid var(--border);">💧 Dialyse / CVVH</div>
+          <div style="grid-column:1/-1; background:var(--surface); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:800; color:var(--crit); border:1px solid var(--border);">⚡ Patient Critique</div>
         </div>
       </details>
 
-      <!-- OUTILS -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">🧰</span> Outils (menu ☰)
+      <!-- OUTILS CLINIQUES -->
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🧰</span><span style="flex:1;">Outils cliniques (Menu ☰)</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
-          <div style="padding:4px 2px 2px; font-size:0.7rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted);">Outils cliniques</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📖 <strong style="color:var(--text);">Lexique</strong> — 270+ termes, 14 catégories (+ Application), recherche libre</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📊 <strong style="color:var(--text);">Normes de référence</strong> — 6 tables : Vitaux, GDS, Ventilation, Biologie, Dialyse, Urines</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">📋 <strong style="color:var(--text);">Protocoles</strong> — Cathéter artériel, Thermogard (lecture seule)</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🧮 <strong style="color:var(--text);">Calculateurs</strong> — GCS, RASS, PAM, VT, P/F, Driving Pressure, Diurèse, Besoins caloriques (lambda / réa)…</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🦠 <strong style="color:var(--text);">Pathologies</strong> — 400+ pathologies, 22 systèmes, recherche + filtrage par onglet</div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted);">🫁 <strong style="color:var(--text);">Simulateur Respirateur</strong> — 6 paramètres, 8 scénarios cliniques</div>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:6px; font-size:0.78rem; line-height:1.5; color:var(--text-muted);">
+          <div style="padding:8px 10px; background:var(--surface); border-radius:8px; border:1px solid var(--border);">📖 <strong style="color:var(--text);">Lexique</strong> — 290+ termes, 14 catégories, recherche libre.</div>
+          <div style="padding:8px 10px; background:var(--surface); border-radius:8px; border:1px solid var(--border);">📊 <strong style="color:var(--text);">Normes de référence</strong> — 6 tables (Vitaux, GDS, Ventilation, Bio, Dialyse, Urines).</div>
+          <div style="padding:8px 10px; background:var(--surface); border-radius:8px; border:1px solid var(--border);">📋 <strong style="color:var(--text);">Protocoles</strong> — KTA, Thermogard (lecture seule).</div>
+          <div style="padding:8px 10px; background:var(--surface); border-radius:8px; border:1px solid var(--border);">🧮 <strong style="color:var(--text);">Calculateurs</strong> — GCS, RASS, PAM, P/F, Driving Pressure, Besoins caloriques, EER Citrate…</div>
+          <div style="padding:8px 10px; background:var(--surface); border-radius:8px; border:1px solid var(--border);">🦠 <strong style="color:var(--text);">Pathologies</strong> — 400+ pathologies, 22 systèmes.</div>
+          <div style="padding:8px 10px; background:var(--surface); border-radius:8px; border:1px solid var(--border);">🫁 <strong style="color:var(--text);">Simulateur Respirateur</strong> — 6 paramètres, 8 scénarios cliniques.</div>
+        </div>
+      </details>
+
+      <!-- PROCÉDURES -->
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">💉</span><span style="flex:1;">Procédures & Dilutions</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
+        </summary>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div><strong style="color:var(--text);">Checklists d'actes</strong> — KTA (cathéter artériel), KTC (cathéter central), Intubation oro-trachéale.</div>
+          <div><strong style="color:var(--text);">Table de dilutions</strong> — 15 médicaments d'urgence (Adré, NA, Amio, Atra, Insuline, Hépa, MDZ, Propofol…) avec voies (IVD/PSE/IVL) et conservation.</div>
+          <div><strong style="color:var(--text);">EER Citrate</strong> — Calculateur Prismaflex citrate régional : débits selon poids, arbres décisionnels Ca²⁺ post-filtre / Ca²⁺ ionisé patient, compteur de changements de set.</div>
         </div>
       </details>
 
       <!-- RECHERCHE GLOBALE -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">🔍</span> Recherche globale
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🔍</span><span style="flex:1;">Recherche globale</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
-          Barre de recherche en haut du dashboard (<em>🔍 Recherche — service, terme médical, protocole…</em>).<br>
-          Cherche simultanément dans : <strong style="color:var(--text);">Services & numéros</strong> · <strong style="color:var(--text);">Lexique</strong> · <strong style="color:var(--text);">Protocoles</strong>.<br>
-          Résultats cliquables — ouvre directement le contenu concerné.
+        <div style="padding:0 14px 14px; font-size:0.8rem; line-height:1.6; color:var(--text-muted);">
+          La barre en haut du dashboard interroge en parallèle <strong style="color:var(--text);">Services · Lexique · Protocoles · Pathologies</strong>.<br>
+          Résultats regroupés par origine, cliquables → ouverture directe de la fiche concernée.
         </div>
       </details>
 
       <!-- PLANNING CA -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">📅</span> Planning & Congés Annuels
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">📅</span><span style="flex:1;">Planning & Congés (CA)</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            Menu ☰ → <strong style="color:var(--text);">Planning & Validation CA</strong>. Calendrier annuel personnel pour poser et valider ses congés.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Régime ☀ Jour</strong> ou <strong style="color:var(--text);">☾ Nuit</strong> — le calcul s'adapte (max 21 j consécutifs jour / 22 j nuit, RCN, fractionnement). Coche les <strong style="color:var(--text);">DJF</strong> travaillés pour le calcul du RCV.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Heures supplémentaires</strong> — trois états disponibles : <span style="color:#a855f7; font-weight:800;">HS</span> (générique) · <span style="color:#eab308; font-weight:800;">HSJ</span> (jour) · <span style="color:#818cf8; font-weight:800;">HSN</span> (nuit) — pour distinguer les HS selon la plage horaire. Tous comptent dans les DJF.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            Données sauvegardées <strong style="color:var(--text);">localement</strong> sur l'appareil (non partagées). Bouton ↺ pour réinitialiser l'année.
-          </div>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div>Calendrier annuel personnel : pose tes congés, repos, formations, heures supp.</div>
+          <div><strong style="color:var(--text);">Régime ☀ Jour</strong> ou <strong style="color:var(--text);">☾ Nuit</strong> — calcul automatique (max 21j consécutifs jour / 22j nuit, fractionnement, RCV). Coche les <strong style="color:var(--text);">DJF</strong> travaillés pour le RCV.</div>
+          <div><strong style="color:var(--text);">Heures supp.</strong> : <span style="color:#a855f7; font-weight:800;">HS</span> · <span style="color:#eab308; font-weight:800;">HSJ</span> (jour) · <span style="color:#818cf8; font-weight:800;">HSN</span> (nuit). Toutes comptent dans les DJF.</div>
+          <div style="font-size:0.74rem; opacity:0.85;">Données strictement locales sur l'appareil. Bouton ↺ pour réinitialiser l'année.</div>
         </div>
       </details>
 
       <!-- BOURSE D'ÉCHANGE -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">📅</span> Bourse d'échange
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">↔️</span><span style="flex:1;">Bourse d'échange</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            Menu ☰ → <strong style="color:var(--text);">Bourse d'échange</strong>. Système de permutation de gardes entre collègues, synchronisé en temps réel.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">① Proposer</strong> — Appuyer sur <strong>+</strong>, sélectionner la garde à céder (date + Jour/Nuit) et la garde souhaitée (facultatif).<br>
-            <strong style="color:var(--text);">② Consulter</strong> — Les demandes ouvertes des collègues s'affichent en temps réel.<br>
-            <strong style="color:var(--text);">③ Accepter</strong> — Valide l'échange côté applicatif. La permutation doit ensuite être <strong style="color:var(--text);">confirmée avec le cadre de santé</strong>.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            Connexion obligatoire. Les demandes sont <strong style="color:var(--text);">visibles de tous</strong> les utilisateurs connectés.
-          </div>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div>Permutation de gardes en temps réel entre collègues connectés.</div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">1</span><div><strong style="color:var(--text);">Proposer</strong> — Bouton +, choisis date + Jour/Nuit à céder (souhait optionnel).</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">2</span><div><strong style="color:var(--text);">Consulter</strong> — Les demandes ouvertes apparaissent en direct.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">3</span><div><strong style="color:var(--text);">Accepter</strong> — Validation côté app. À confirmer ensuite avec le cadre.</div></div>
         </div>
       </details>
 
-      <!-- LES SERVICES -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">📞</span> Les Services
+      <!-- SERVICES -->
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">📞</span><span style="flex:1;">Annuaire des Services</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
-          Menu ☰ → <strong style="color:var(--text);">Les Services</strong>. Annuaire interne GHPSO (Creil + Senlis).<br>
-          <strong style="color:var(--text);">📋 Annuaire</strong> — tous les services par catégorie avec badge étage.<br>
-          <strong style="color:var(--text);">🏢 Par étage</strong> — du sous-sol au 7ème étage, entrées directes sans sous-niveaux.<br>
-          Barre de recherche filtre en temps réel. Résultats aussi dans la <strong style="color:var(--text);">recherche globale</strong> du dashboard.
+        <div style="padding:0 14px 14px; font-size:0.8rem; line-height:1.6; color:var(--text-muted);">
+          Annuaire interne GHPSO (Creil + Senlis).<br>
+          <strong style="color:var(--text);">📋 Annuaire</strong> — par catégorie avec badge étage. <strong style="color:var(--text);">🏢 Par étage</strong> — du sous-sol au 7ème.<br>
+          Recherche temps réel · résultats aussi via la recherche globale du dashboard.
         </div>
       </details>
 
       <!-- PARAMÈTRES -->
-      <details style="margin-bottom:7px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">⚙️</span> Paramètres
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">⚙️</span><span style="flex:1;">Paramètres</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:7px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Thème</strong> — 🌗 Auto (☀️ Jour 8h-20h / 🌙 Nuit 20h-8h) · ☀️ Clair forcé · 🌙 Sombre forcé.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Sons</strong> et <strong style="color:var(--text);">Retour haptique</strong> — activables/désactivables indépendamment.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            <strong style="color:var(--text);">Changer mon code</strong> — Ancien code + nouveau code (×2). Actif immédiatement.
-          </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            🧪 <strong style="color:var(--text);">Signaler un bug</strong> (Menu ☰) — Envoi via WhatsApp avec description du problème rencontré.
-          </div>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div><strong style="color:var(--text);">Thème</strong> — 🌗 Auto (☀️ 8h-20h / 🌙 20h-8h) · ☀️ Clair forcé · 🌙 Sombre forcé.</div>
+          <div><strong style="color:var(--text);">Sons</strong> et <strong style="color:var(--text);">Retour haptique</strong> indépendants.</div>
+          <div><strong style="color:var(--text);">Changer mon code</strong> — ancien + nouveau (×2). Actif immédiatement.</div>
+          <div>🧪 <strong style="color:var(--text);">Signaler un bug</strong> — ouvre une conversation WhatsApp pré-remplie.</div>
         </div>
       </details>
 
       <!-- ADMIN -->
-      <details style="margin-bottom:14px; background:var(--pill-bg); border:1px solid var(--border); border-radius:10px; padding:11px;">
-        <summary style="font-weight:900; color:var(--crit); cursor:pointer; outline:none; font-size:0.88rem; list-style:none; display:flex; align-items:center; gap:7px;">
-          <span style="font-size:1rem;">🔒</span> Zone Admin
+      <details style="margin-bottom:14px; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.3); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--crit); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🔒</span><span style="flex:1;">Zone Admin</span><span style="color:var(--crit); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            Accès via <strong style="color:var(--crit);">identifiants admin</strong> — bouton rouge <strong style="color:var(--crit);">Accès Admin</strong> à la connexion ou Menu ☰ → Admin.
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div>Accès via identifiants admin (bouton rouge <strong style="color:var(--crit);">Accès Admin</strong> à la connexion ou Menu ☰ → Admin).</div>
+          <div style="background:var(--surface); border-radius:8px; padding:10px; border:1px solid var(--border); display:flex; flex-direction:column; gap:5px;">
+            <div>👁 Voir qui est <strong style="color:#22c55e;">connecté en direct</strong></div>
+            <div>➕ Créer / 🗑️ Supprimer un compte</div>
+            <div>🔓 Débloquer · 🔒 Verrouiller l'USIP · 🗑️ Vider la garde</div>
+            <div>🔒 Cadenas REA/USIP : figer l'attribution médicale</div>
           </div>
-          <div style="background:var(--surface-sec); border-radius:7px; padding:9px 11px; font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
-            👁 Voir qui est <strong style="color:#22c55e;">connecté en temps réel</strong><br>
-            ➕ Créer / 🗑️ Supprimer n'importe quel compte<br>
-            🔓 Débloquer les comptes verrouillés · 🔒 Verrouiller l'USIP · 🗑️ Vider la garde<br>
-            ⚠️ Session admin = consultation/supervision (pas de modification des attributions de lits)
+          <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0; font-size:0.75rem;">
+            ⚠️ Session admin = consultation / supervision. Pas de modification des attributions de lits.
           </div>
         </div>
       </details>
 
-      <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('tuto-modal').style.display='none'">Compris !</button>
+      <button class="btn-primary" style="width:100%; padding:12px; border-radius:10px; font-size:0.92rem;" onclick="document.getElementById('tuto-modal').style.display='none'">Compris !</button>
+      </div>
     </div>
   </div>
 
