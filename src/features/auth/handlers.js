@@ -358,8 +358,12 @@ window.updateHeaderUser = updateHeaderUser;
 
 window.openAlphaModal = function openAlphaModal() {
     document.getElementById('alpha-modal').style.display = 'flex';
+};
+
+window.openShareInstallModal = function openShareInstallModal() {
+    document.getElementById('share-install-modal').style.display = 'flex';
     if (!_qrGenerated) {
-        const el = document.getElementById('alpha-qrcode');
+        const el = document.getElementById('share-qrcode');
         if (el && typeof QRCode !== 'undefined') {
             el.innerHTML = '';
             new QRCode(el, { text: ALPHA_URL, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
@@ -368,8 +372,16 @@ window.openAlphaModal = function openAlphaModal() {
     }
 };
 
-window.copyAlphaLink = function copyAlphaLink() {
-    const btn = document.getElementById('alpha-copy-btn');
+window.openChangePinModal = function openChangePinModal() {
+    document.getElementById('change-pin-modal').style.display = 'flex';
+    ['chg-old', 'chg-new', 'chg-conf'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+};
+
+window.copyShareLink = function copyShareLink() {
+    const btn = document.getElementById('share-copy-btn');
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(ALPHA_URL).then(() => {
             btn.textContent = '✅ Copié !';
@@ -668,6 +680,8 @@ window.changeMyPin = async function changeMyPin() {
     document.getElementById('chg-old').value = '';
     document.getElementById('chg-new').value = '';
     document.getElementById('chg-conf').value = '';
+    const cm = document.getElementById('change-pin-modal');
+    if (cm) cm.style.display = 'none';
     alert('Code modifié avec succès !');
 };
 

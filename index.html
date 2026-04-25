@@ -405,6 +405,10 @@
   .settings-danger-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
   .btn-danger-soft { width: 100%; padding: 12px; border-radius: 8px; background: rgba(239,68,68,0.07); color: var(--crit); border: 1px solid rgba(239,68,68,0.25); font-weight: 900; font-size: 0.85rem; cursor: pointer; font-family: var(--font); transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
   .btn-danger-soft:hover { background: rgba(239,68,68,0.13); border-color: rgba(239,68,68,0.4); }
+  .settings-action-btn { width: 100%; padding: 12px 14px; border-radius: 12px; background: var(--surface-sec); border: 1px solid var(--border); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 12px; transition: background 0.18s, transform 0.12s; }
+  .settings-action-btn:hover { background: var(--ide-glow); }
+  .settings-action-btn:active { transform: scale(0.98); }
+  .settings-action-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; border: 1px solid var(--border); }
 
   /* ===== PROTOCOLES ===== */
   .proto-list { padding: 15px 20px 60px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -970,18 +974,28 @@
         </label>
       </div>
 
-      <!-- Changer son code -->
-      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Changer mon code</div>
-        <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-old" placeholder="Ancien code (6 chiffres)" style="margin-bottom:8px;">
-        <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-new" placeholder="Nouveau code (6 chiffres)" style="margin-bottom:8px;">
-        <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-conf" placeholder="Confirmer le nouveau code" style="margin-bottom:8px;">
-        <button class="btn-primary" style="width:100%;" onclick="changeMyPin()">Valider le nouveau code</button>
+      <!-- Sous-onglets -->
+      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px; display:flex; flex-direction:column; gap:8px;">
+        <button class="settings-action-btn" onclick="openChangePinModal()">
+          <span class="settings-action-icon">🔑</span>
+          <span style="flex:1; text-align:left;">
+            <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Modifier mon code</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Changer le PIN à 6 chiffres</div>
+          </span>
+          <span style="color:var(--text-muted); font-size:1rem;">›</span>
+        </button>
+        <button class="settings-action-btn" onclick="openShareInstallModal()">
+          <span class="settings-action-icon">📲</span>
+          <span style="flex:1; text-align:left;">
+            <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Partager & Installer</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">QR Code + tuto iPhone/Android</div>
+          </span>
+          <span style="color:var(--text-muted); font-size:1rem;">›</span>
+        </button>
       </div>
 
-      <div class="settings-danger-section">
-        <button class="btn-danger-soft" onclick="document.getElementById('settings-modal').style.display='none'; confirmClearShift();">🗑️ Vider la garde en cours</button>
-        <button class="btn-danger-soft" style="margin-top:8px; color:var(--crit); border-color:rgba(239,68,68,0.25);" onclick="document.getElementById('settings-modal').style.display='none'; openAdmin();">🔒 Accès Admin</button>
+      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
+        <button class="btn-danger-soft" style="color:var(--crit); border-color:rgba(239,68,68,0.25);" onclick="document.getElementById('settings-modal').style.display='none'; openAdmin();">🔒 Accès Admin</button>
       </div>
 
       <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:12px; text-align:center;">
@@ -989,6 +1003,66 @@
       </div>
 
       <button class="btn-primary" style="margin-top:14px;" onclick="document.getElementById('settings-modal').style.display='none'">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Sous-modale : Modifier mon code -->
+  <div id="change-pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+    <div class="modal-content" style="width:min(380px,92vw); padding:22px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <div style="font-size:1.1rem; font-weight:900; color:var(--text);">🔑 Modifier mon code</div>
+        <button onclick="document.getElementById('change-pin-modal').style.display='none'" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:14px;">Saisis ton ancien code puis ton nouveau code (6 chiffres).</div>
+      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-old" placeholder="Ancien code" style="margin-bottom:8px;">
+      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-new" placeholder="Nouveau code" style="margin-bottom:8px;">
+      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-conf" placeholder="Confirmer le nouveau code" style="margin-bottom:14px;">
+      <button class="btn-primary" style="width:100%;" onclick="changeMyPin()">Valider le nouveau code</button>
+    </div>
+  </div>
+
+  <!-- Sous-modale : Partager & Installer -->
+  <div id="share-install-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+    <div class="modal-content" style="width:min(420px,92vw); padding:22px; max-height:90vh; overflow-y:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <div style="font-size:1.1rem; font-weight:900; color:var(--text);">📲 Partager & Installer</div>
+        <button onclick="document.getElementById('share-install-modal').style.display='none'" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+      </div>
+
+      <!-- QR + lien -->
+      <div style="background:var(--surface-sec); border-radius:10px; padding:14px; border:1px solid var(--border); margin-bottom:14px; text-align:center;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Scanne pour partager</div>
+        <div id="share-qrcode" style="display:inline-block; background:#fff; padding:10px; border-radius:8px; margin-bottom:10px;"></div>
+        <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
+          <div id="share-link-text" style="font-size:0.75rem; font-weight:700; color:var(--brand-blue); word-break:break-all; flex:1; -webkit-user-select:text; user-select:text; text-align:left;">https://pulseunit-c9c5c.web.app</div>
+          <button onclick="copyShareLink()" id="share-copy-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; flex-shrink:0;">Copier</button>
+        </div>
+      </div>
+
+      <!-- Tuto installation -->
+      <div style="background:var(--surface-sec); border-radius:10px; padding:14px; border:1px solid var(--border); margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">Installer sur ton téléphone</div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:0.85rem; font-weight:900; color:var(--text); margin-bottom:5px;">🍎 iPhone / iPad (Safari)</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); font-weight:600; line-height:1.6;">
+            1. Ouvre <strong style="color:var(--text);">Safari</strong> → navigue sur le lien<br>
+            2. Touche <strong style="color:var(--text);">Partager</strong> (icône ↑ en bas)<br>
+            3. Sélectionne <strong style="color:var(--text);">Sur l'écran d'accueil</strong><br>
+            4. Confirme avec <strong style="color:var(--text);">Ajouter</strong>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.85rem; font-weight:900; color:var(--text); margin-bottom:5px;">🤖 Android (Chrome)</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); font-weight:600; line-height:1.6;">
+            1. Ouvre <strong style="color:var(--text);">Chrome</strong> → navigue sur le lien<br>
+            2. Touche <strong style="color:var(--text);">⋮ Menu</strong> (3 points en haut à droite)<br>
+            3. Sélectionne <strong style="color:var(--text);">Ajouter à l'écran d'accueil</strong><br>
+            4. Confirme avec <strong style="color:var(--text);">Ajouter</strong>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('share-install-modal').style.display='none'">Fermer</button>
     </div>
   </div>
 
@@ -1213,37 +1287,8 @@
         Signaler un bug via WhatsApp
       </button>
 
-      <!-- QR Code + lien -->
-      <div style="background:var(--surface-sec); border-radius:10px; padding:14px; border:1px solid var(--border); margin-bottom:14px; text-align:center;">
-        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Partager l'accès</div>
-        <div id="alpha-qrcode" style="display:inline-block; background:#fff; padding:10px; border-radius:8px; margin-bottom:10px;"></div>
-        <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
-          <div id="alpha-link-text" style="font-size:0.75rem; font-weight:700; color:var(--brand-blue); word-break:break-all; flex:1; -webkit-user-select:text; user-select:text; text-align:left;">https://pulseunit-c9c5c.web.app</div>
-          <button onclick="copyAlphaLink()" id="alpha-copy-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; flex-shrink:0;">Copier</button>
-        </div>
-      </div>
-
-      <!-- Tuto installation -->
-      <div style="background:var(--surface-sec); border-radius:10px; padding:14px; border:1px solid var(--border); margin-bottom:14px;">
-        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">📲 Installer l'application</div>
-        <div style="margin-bottom:10px;">
-          <div style="font-size:0.8rem; font-weight:900; color:var(--text); margin-bottom:4px;">🍎 iPhone / iPad (Safari)</div>
-          <div style="font-size:0.78rem; color:var(--text-muted); font-weight:600; line-height:1.6;">
-            1. Ouvre <strong style="color:var(--text);">Safari</strong> → navigue sur le lien<br>
-            2. Appuie sur <strong style="color:var(--text);">Partager</strong> (icône ↑ en bas)<br>
-            3. Sélectionne <strong style="color:var(--text);">Sur l'écran d'accueil</strong><br>
-            4. Confirme avec <strong style="color:var(--text);">Ajouter</strong>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:0.8rem; font-weight:900; color:var(--text); margin-bottom:4px;">🤖 Android (Chrome)</div>
-          <div style="font-size:0.78rem; color:var(--text-muted); font-weight:600; line-height:1.6;">
-            1. Ouvre <strong style="color:var(--text);">Chrome</strong> → navigue sur le lien<br>
-            2. Appuie sur <strong style="color:var(--text);">⋮ Menu</strong> (3 points en haut à droite)<br>
-            3. Sélectionne <strong style="color:var(--text);">Ajouter à l'écran d'accueil</strong><br>
-            4. Confirme avec <strong style="color:var(--text);">Ajouter</strong>
-          </div>
-        </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; text-align:center; margin-bottom:14px; line-height:1.5;">
+        💡 Pour partager l'accès ou installer l'app : Menu ☰ → Paramètres → Partager & Installer
       </div>
 
       <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('alpha-modal').style.display='none'">Fermer</button>
