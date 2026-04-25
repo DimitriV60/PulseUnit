@@ -1,18 +1,18 @@
 /**
- * Bed notes — Notes temporaires 72h par lit, visibles uniquement par l'auteur.
- * Stockage localStorage (personnel, non partagé Firestore).
- * Double-tap sur une carte lit → ouvre/édite la note.
- *
- * Dépend de : currentUser, renderApp, showToast, assignLit.
- * Expose sur window : handleBedTap, openBedNote, closeBedNote,
- *   saveBedNote, deleteBedNote, getBedNoteForCurrentUser, switchBedNoteTab.
+ * Bed notes — 3 notes libres par lit (Garde 1 / 2 / 3), 72h TTL.
+ * Stockage localStorage, visible uniquement par l'auteur.
+ * Double-tap carte lit → ouvre la note.
  */
 
 var _lastBedTapTime = {};
 var _currentNotesBed = null;
-var _bedNoteTabKeys = [];
-var _bedNoteActiveTab = 0;
+var _activeNoteSlot = 0;
 const BED_NOTE_TTL = 72 * 60 * 60 * 1000;
+const NOTE_SLOTS = 3;
+
+function _slotKey(slot, bedId) {
+    return 'slot_' + slot + ':' + bedId;
+}
 
 function _getBedNotes() {
     if (!currentUser) return {};
@@ -30,68 +30,43 @@ function _saveBedNotes(notes) {
     localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(notes));
 }
 
-function _getPrev3ShiftKeys(key) {
-    const parts = key.split('-');
-    const toDS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const keys = [key];
-    let d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    let p = parts[3];
-    for (let i = 1; i < 3; i++) {
-        if (p === 'nuit') { p = 'jour'; }
-        else { d = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1); p = 'nuit'; }
-        keys.push(`${toDS(d)}-${p}`);
-    }
-    return keys;
-}
-
-function _renderBedNoteTabs() {
+function _renderNoteTabsUI() {
     const container = document.getElementById('bed-note-tabs');
-    if (!container) return;
+    if (!container || !_currentNotesBed) return;
     const notes = _getBedNotes();
-    const daysArr = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
     let html = '';
-    _bedNoteTabKeys.forEach((key, i) => {
-        const hasNote = !!notes[key + ':' + _currentNotesBed];
-        const kParts = key.split('-');
-        const period = kParts[3] === 'jour' ? 'J' : 'N';
-        const kd = new Date(parseInt(kParts[0]), parseInt(kParts[1]) - 1, parseInt(kParts[2]));
-        const dayLabel = i === 0 ? 'Auj.' : daysArr[kd.getDay()] + ' ' + kd.getDate();
-        const isActive = _bedNoteActiveTab === i;
+    for (let i = 0; i < NOTE_SLOTS; i++) {
+        const hasNote = !!notes[_slotKey(i, _currentNotesBed)];
+        const isActive = _activeNoteSlot === i;
         const dot = hasNote ? ' ●' : '';
-        html += `<button onclick="switchBedNoteTab(${i})" style="padding:6px 14px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : 'var(--text-muted)'}; font-weight:${isActive ? '900' : '700'}; font-size:0.82rem; cursor:pointer; transition:all 0.15s;">${dayLabel} ${period}${dot}</button>`;
-    });
+        html += `<button onclick="switchBedNoteTab(${i})" style="flex:1; padding:8px 4px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : 'var(--text-muted)'}; font-weight:${isActive ? '900' : '700'}; font-size:0.85rem; cursor:pointer; transition:all 0.15s;">Garde ${i + 1}${dot}</button>`;
+    }
     container.innerHTML = html;
 }
 
-function _loadBedNoteTab(idx) {
-    _bedNoteActiveTab = idx;
-    const key = _bedNoteTabKeys[idx];
-    const isCurrentGarde = (key === currentShiftKey);
+function _loadNoteSlot(slot) {
+    _activeNoteSlot = slot;
     const notes = _getBedNotes();
-    const existing = notes[key + ':' + _currentNotesBed];
+    const existing = notes[_slotKey(slot, _currentNotesBed)];
     const textarea = document.getElementById('bed-note-text');
     textarea.value = existing ? existing.text : '';
-    textarea.readOnly = !isCurrentGarde;
-    textarea.style.opacity = isCurrentGarde ? '1' : '0.65';
-    textarea.style.cursor = isCurrentGarde ? '' : 'default';
-    const notice = document.getElementById('bed-note-readonly-notice');
-    if (notice) notice.style.display = isCurrentGarde ? 'none' : 'flex';
-    const saveBtn = document.getElementById('bed-note-save-btn');
-    if (saveBtn) saveBtn.style.display = isCurrentGarde ? '' : 'none';
     const deleteBtn = document.getElementById('bed-note-delete-btn');
-    if (deleteBtn) deleteBtn.style.display = (existing && isCurrentGarde) ? 'block' : 'none';
-    _renderBedNoteTabs();
-    if (isCurrentGarde) setTimeout(() => textarea.focus(), 50);
+    if (deleteBtn) deleteBtn.style.display = existing ? 'block' : 'none';
+    _renderNoteTabsUI();
+    setTimeout(() => textarea.focus(), 50);
 }
 
-window.switchBedNoteTab = function switchBedNoteTab(idx) {
-    _loadBedNoteTab(idx);
+window.switchBedNoteTab = function switchBedNoteTab(slot) {
+    _loadNoteSlot(slot);
 };
 
 window.getBedNoteForCurrentUser = function getBedNoteForCurrentUser(bedId) {
     if (!currentUser) return null;
     const notes = _getBedNotes();
-    return notes[currentShiftKey + ':' + bedId] || null;
+    for (let i = 0; i < NOTE_SLOTS; i++) {
+        if (notes[_slotKey(i, bedId)]) return notes[_slotKey(i, bedId)];
+    }
+    return null;
 };
 
 window.handleBedTap = function handleBedTap(bedId) {
@@ -121,11 +96,10 @@ window.openBedNote = function openBedNote(bedId) {
     const isTech = h.techIdeId === currentUser.id;
     if (!isAssigned && !isTech && !isAdmin()) { showToast('⛔ Vous ne pouvez noter que vos propres lits'); return; }
     _currentNotesBed = bedId;
-    _bedNoteTabKeys = _getPrev3ShiftKeys(currentShiftKey);
     const parts = bedId.split('-');
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
     document.getElementById('bed-note-bed-label').textContent = label;
-    _loadBedNoteTab(0);
+    _loadNoteSlot(_activeNoteSlot);
     document.getElementById('bed-note-modal').style.display = 'flex';
 };
 
@@ -137,21 +111,23 @@ window.closeBedNote = function closeBedNote() {
 window.saveBedNote = function saveBedNote() {
     const text = document.getElementById('bed-note-text').value.trim();
     if (!_currentNotesBed) return;
-    if (_bedNoteActiveTab !== 0) return;
-    if (!text) { deleteBedNote(); return; }
     const notes = _getBedNotes();
-    notes[currentShiftKey + ':' + _currentNotesBed] = { text, createdAt: Date.now() };
+    if (!text) {
+        delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
+    } else {
+        notes[_slotKey(_activeNoteSlot, _currentNotesBed)] = { text, createdAt: Date.now() };
+    }
     _saveBedNotes(notes);
     closeBedNote();
     renderApp();
-    showToast('📝 Note enregistrée — visible 72h');
+    if (text) showToast('📝 Note enregistrée');
 };
 
 window.deleteBedNote = function deleteBedNote() {
-    if (!_currentNotesBed || _bedNoteActiveTab !== 0) return;
+    if (!_currentNotesBed) return;
     const notes = _getBedNotes();
-    delete notes[currentShiftKey + ':' + _currentNotesBed];
+    delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
     _saveBedNotes(notes);
-    closeBedNote();
+    _loadNoteSlot(_activeNoteSlot);
     renderApp();
 };
