@@ -345,32 +345,16 @@ window.logoutUser = async function logoutUser() {
     showAuthModal();
 };
 
-function _updateWatermark() {
-    const wm = document.getElementById('pu-watermark');
-    if (!wm) return;
-    document.body.classList.toggle('is-admin', !!isAdmin && isAdmin());
-    if (!currentUser || (isAdmin && isAdmin())) {
-        wm.style.display = 'none';
-        wm.innerHTML = '';
-        return;
-    }
-    const dt = new Date();
-    const stamp = `${currentUser.firstName} ${currentUser.lastName} · ${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')} · PulseUnit confidentiel`;
-    let html = '';
-    for (let i = 0; i < 24; i++) {
-        let row = '<div class="pu-wm-row">';
-        for (let j = 0; j < 8; j++) row += `<span>${escapeHTML ? escapeHTML(stamp) : stamp}</span>`;
-        row += '</div>';
-        html += row;
-    }
-    wm.innerHTML = html;
-    wm.style.display = 'block';
-}
-window._updateWatermark = _updateWatermark;
+window.checkDataEmptyBanner = function checkDataEmptyBanner() {
+    const banner = document.getElementById('data-empty-banner');
+    if (!banner) return;
+    const noUsers = !window.authUsers || Object.keys(window.authUsers).length === 0;
+    const noRoster = !Array.isArray(window.roster) || window.roster.length === 0;
+    banner.style.display = (noUsers || noRoster) ? 'flex' : 'none';
+};
 
 function updateHeaderUser() {
     const el = document.getElementById('header-user-info');
-    _updateWatermark();
     if (!el) return;
     if (currentUser) {
         el.innerHTML = '';
@@ -734,9 +718,15 @@ async function loadAuth() {
 window.loadAuth = loadAuth;
 
 window.reloadAppData = async function reloadAppData() {
-    const btn = document.getElementById('auth-reload-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Chargement...'; }
+    const btn = document.getElementById('data-reload-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Chargement...'; }
+    // 1. Refait l'auth Firebase si nécessaire (au cas où la connexion anonyme avait échoué au boot)
+    if (window.firebase && firebase.auth && !firebase.auth().currentUser) {
+        try { await firebase.auth().signInAnonymously(); } catch (e) { console.warn('Auth retry:', e); }
+    }
+    // 2. Recharge auth users + presence + resets
     await loadAuth();
+    // 3. Recharge roster + shiftHistory
     if (window.PULSEUNIT_DOC) {
         try {
             const doc = await window.PULSEUNIT_DOC.get({ source: 'server' });
@@ -747,14 +737,20 @@ window.reloadAppData = async function reloadAppData() {
             }
         } catch (e) { console.warn('Reload PULSEUNIT_DOC:', e); }
     }
-    const empty = !authUsers || Object.keys(authUsers).length === 0;
+    const noUsers = !authUsers || Object.keys(authUsers).length === 0;
+    const noRoster = !Array.isArray(window.roster) || window.roster.length === 0;
     if (btn) {
         btn.disabled = false;
-        btn.textContent = empty ? '⚠ Toujours vide — réessayer' : '✓ Données chargées';
-        setTimeout(() => { btn.textContent = 'Actualiser les données'; }, 2000);
+        btn.textContent = (noUsers || noRoster) ? '⚠ Réessayer' : '✓ OK';
+        setTimeout(() => { btn.textContent = '🔄 Recharger'; }, 2500);
     }
+    // 4. Rafraîchir l'écran de connexion s'il est ouvert
     if (typeof filterAuthUsers === 'function') {
         const search = document.getElementById('auth-search-user');
         if (search) filterAuthUsers(search.value || '');
     }
+    // 5. Rafraîchir le dashboard si déjà connecté
+    if (typeof window.renderApp === 'function') window.renderApp();
+    // 6. Mettre à jour la bannière
+    if (typeof window.checkDataEmptyBanner === 'function') window.checkDataEmptyBanner();
 };

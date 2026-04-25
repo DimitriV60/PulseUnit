@@ -13,7 +13,6 @@ let adminSessionActive = false;
 
 function setAdminSession(active) {
     adminSessionActive = !!active;
-    if (typeof window._updateWatermark === 'function') window._updateWatermark();
 }
 
 /** Vrai si une session administrateur est active (indépendante du compte connecté). */

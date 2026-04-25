@@ -141,4 +141,6 @@ window.appInit = async function appInit() {
     updateHeaderUser();
     showAuthModal();
   }
+  // Bannière "données vides" — visible si Firestore n'a rien renvoyé (problème réseau au boot)
+  if (typeof window.checkDataEmptyBanner === 'function') window.checkDataEmptyBanner();
 };
