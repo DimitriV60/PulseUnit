@@ -218,7 +218,7 @@
   .side-menu-header-row { display: flex; justify-content: space-between; align-items: center; }
   .side-menu-header-title { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.3px; }
   .side-menu-header-sub { font-size: 0.72rem; opacity: 0.92; font-weight: 700; margin-top: 3px; }
-  .side-menu-content { padding: 14px 12px 30px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; -webkit-overflow-scrolling: touch; }
+  .side-menu-content { padding: 14px 12px 30px; flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .side-menu-section { padding: 14px 12px 6px; font-size: 0.66rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
   .side-link { display: flex; align-items: center; gap: 12px; padding: 11px 12px; font-size: 0.92rem; color: var(--text); text-decoration: none; font-weight: 700; border-radius: 12px; transition: background 0.18s, transform 0.12s; position: relative; }
   .side-link:active { transform: scale(0.98); }
