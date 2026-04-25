@@ -124,10 +124,9 @@ window.renderApp = function renderApp() {
 
     boardHTML += `
       <div class="zone-header" style="color:var(--text); border-color:var(--border);">GESTION \u00C9QUIPE & POSTES</div>
-      <div class="special-grid" style="align-items: stretch;">
+      <div class="special-grid">
 
-        <div style="display:grid; grid-template-rows: 1fr 1fr; gap:15px; height:100%;">
-          <div class="bed-card effectif-card" style="display:flex; flex-direction:column; justify-content:center; padding:15px; margin:0; min-height:0; border-color:var(--border);">
+          <div class="bed-card effectif-card" style="display:flex; flex-direction:column; justify-content:center; padding:15px; margin:0; border-color:var(--border);">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                   <span style="font-weight:900; font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">R\u00C9A</span>
                   <span style="font-size:0.65rem; font-weight:900; background:var(--surface-sec); padding:3px 8px; border-radius:6px; color:var(--text); border:1px solid var(--border);">${t.rIDE_T}I / ${t.rAS_T}A</span>
@@ -141,7 +140,7 @@ window.renderApp = function renderApp() {
               </div>
           </div>
 
-          <div class="bed-card effectif-card ${t.uAllC ? (h.adminLockUsip ? 'admin-closed' : 'closed') : ''}" style="display:flex; flex-direction:column; justify-content:center; padding:15px; border-color:${t.uAllC ? 'var(--border)' : 'var(--border)'}; margin:0; min-height:0;">
+          <div class="bed-card effectif-card ${t.uAllC ? (h.adminLockUsip ? 'admin-closed' : 'closed') : ''}" style="display:flex; flex-direction:column; justify-content:center; padding:15px; border-color:var(--border); margin:0;">
               ${t.uAllC ? `
               <div class="closed-overlay" style="margin:auto;">
                   ${ICONS.closed}
@@ -160,9 +159,8 @@ window.renderApp = function renderApp() {
               </div>
               `}
           </div>
-        </div>
 
-        <div class="bed-card special-card" style="min-height:0; border-color:var(--border); padding:15px; height:100%; display:flex; flex-direction:column; justify-content:flex-start;">
+          <div class="bed-card special-card" style="border-color:var(--border); padding:15px; display:flex; flex-direction:column; justify-content:flex-start;">
             <div class="bed-header" style="flex-shrink:0; color:var(--text-muted); margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; justify-content:center;">
                 <span class="b-num" style="font-size:0.85rem; font-weight:900; text-transform:uppercase; letter-spacing:1px;">\uD83D\uDCCB EFFECTIF</span>
             </div>
@@ -202,7 +200,7 @@ window.renderApp = function renderApp() {
       </div>`;
     });
 
-    boardHTML += `</div><div class="special-grid">`;
+    // (gardé en une seule grille avec REA1/REA2 pour uniformité visuelle)
 
     const techP = roster.find(r => r.id === h.techIdeId);
 
