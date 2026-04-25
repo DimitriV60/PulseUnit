@@ -63,6 +63,8 @@ window.toggleLit = function toggleLit(id, p, e) {
     let h = shiftHistory[currentShiftKey];
     if (!h.assignments[id]) h.assignments[id] = { ide: null, as: null, bmr: false, dialyse: false, crit: false, closed: false };
     let d = h.assignments[id];
+    // N'importe qui peut rouvrir un lit fermé
+    if (p === 'closed' && d.closed) { d.closed = false; renderApp(); saveData(); return; }
     const isTech = h.techIdeId === currentUser?.id;
     const isAssigned = currentUser?.id === d.ide || currentUser?.id === d.as;
     if (!isAdmin() && !isTech && !isAssigned) {

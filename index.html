@@ -131,7 +131,7 @@
   .sectors-area { display: flex; flex-direction: column; }
   .zone-header { font-size: 1.1rem; font-weight: 900; margin: 0 0 15px; padding-bottom: 5px; border-bottom: 2px solid var(--border); text-transform: uppercase; color: var(--text); }
   .special-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-  .beds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 30px; }
+  .beds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 30px; grid-auto-rows: 145px; }
 
   .bed-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; cursor: pointer; position: relative; min-height: 110px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.2s; }
   .bed-card:hover { border-color: var(--brand-aqua); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
@@ -1143,18 +1143,17 @@
 
   <!-- Modale note temporaire lit (double-tap) -->
   <div id="bed-note-modal" style="z-index:600;">
-    <div class="modal-content" style="width:min(480px,94vw);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <div>
-          <div style="font-size:1.05rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
-          <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-top:2px;">Visible uniquement par vous · Expire après 72h</div>
-        </div>
+    <div class="modal-content" style="width:min(580px,96vw);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="font-size:1.05rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
         <button onclick="closeBedNote()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
       </div>
-      <textarea id="bed-note-text" rows="7" placeholder="Votre note sur ce lit..." style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:140px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.5;"></textarea>
+      <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px;"></div>
+      <div id="bed-note-readonly-notice" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px;">🔒 Lecture seule — garde passée</div>
+      <textarea id="bed-note-text" rows="10" placeholder="Votre note sur ce lit..." style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:200px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
       <div style="display:flex; gap:10px; margin-top:12px;">
         <button id="bed-note-delete-btn" onclick="deleteBedNote()" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
-        <button onclick="saveBedNote()" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
+        <button id="bed-note-save-btn" onclick="saveBedNote()" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
       </div>
     </div>
   </div>
