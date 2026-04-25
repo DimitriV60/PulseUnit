@@ -912,23 +912,23 @@
     </div>
     <div class="side-menu-content">
       <div class="side-menu-section">Outils cliniques</div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();"><span class="side-link-icon">📋</span><span>Protocoles</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openCalculateurs();"><span class="side-link-icon">🧮</span><span>Calculateurs</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();"><span class="side-link-icon">📊</span><span>Normes de référence</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();" style="display:none;"><span class="side-link-icon">🫁</span><span>Simulateur Respirateur</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();"><span class="side-link-icon">📖</span><span>Lexique & Abréviations</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openPathologies();"><span class="side-link-icon">🩺</span><span>Pathologies</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openChecklists();"><span class="side-link-icon">✅</span><span>Checklists procédures</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openDilutions();"><span class="side-link-icon">💊</span><span>Dilutions</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openProtocoles();"><span class="side-link-icon">📋</span><span>Protocoles</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openCalculateurs();"><span class="side-link-icon">🧮</span><span>Calculateurs</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openNormes();"><span class="side-link-icon">📊</span><span>Normes de référence</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openNormesRespi();" style="display:none;"><span class="side-link-icon">🫁</span><span>Simulateur Respirateur</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openLexique();"><span class="side-link-icon">📖</span><span>Lexique & Abréviations</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openPathologies();"><span class="side-link-icon">🩺</span><span>Pathologies</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openChecklists();"><span class="side-link-icon">✅</span><span>Checklists procédures</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openDilutions();"><span class="side-link-icon">💊</span><span>Dilutions</span><span class="side-link-arrow">›</span></a>
       <div class="side-menu-section">Organisation</div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();"><span class="side-link-icon">📅</span><span>Planning & Validation CA</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();"><span class="side-link-icon">↔️</span><span>Bourse d'échange</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openServices();"><span class="side-link-icon">📞</span><span>Les Services</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openPlanningCA();"><span class="side-link-icon">📅</span><span>Planning & Validation CA</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openBourse();"><span class="side-link-icon">↔️</span><span>Bourse d'échange</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openServices();"><span class="side-link-icon">📞</span><span>Les Services</span><span class="side-link-arrow">›</span></a>
       <div style="flex: 1; min-height: 16px;"></div>
       <div class="side-menu-section">Compte</div>
-      <a href="#" class="side-link side-link-accent" onclick="closeSideMenu(); openAlphaModal();"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link side-link-danger" onclick="closeSideMenu(); logoutUser();"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link side-link-accent" onclick="openAlphaModal();"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openSettings();"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link side-link-danger" onclick="closeSideMenu(); logoutUser();" data-keep-menu="false"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
     </div>
   </nav>
 
@@ -1369,7 +1369,7 @@
   </div>
 
   <div id="tuto-modal">
-    <div class="modal-content" style="max-height:90vh; overflow-y:auto; width:min(440px,94vw); padding:0; border-radius:18px; overflow:hidden;">
+    <div class="modal-content" style="width:min(440px,94vw); max-height:90vh; padding:0; border-radius:18px; overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;">
 
       <!-- HERO -->
       <div style="background:var(--brand-gradient); padding:22px 22px 18px; color:#fff; position:sticky; top:0; z-index:2;">
