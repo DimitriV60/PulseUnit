@@ -992,7 +992,7 @@
         <p style="margin:0 0 10px;">Seuls les utilisateurs enregistrés peuvent accéder aux données de garde. L'administrateur dispose d'un accès en lecture globale. Aucune donnée n'est partagée avec des tiers.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Durée de conservation</div>
-        <p style="margin:0 0 10px;">Les données de garde sont conservées le temps d'utilisation de l'application. Les notes de lit s'effacent automatiquement après <strong style="color:var(--text);">72 heures</strong>. Les réponses "travaillez-vous ?" expirent après <strong style="color:var(--text);">4 jours</strong>.</p>
+        <p style="margin:0 0 10px;">Les données de garde sont conservées le temps d'utilisation de l'application. Les notes de lit s'effacent automatiquement après <strong style="color:var(--text);">7 jours</strong>. Les réponses "travaillez-vous ?" expirent après <strong style="color:var(--text);">4 jours</strong>.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Sécurité</div>
         <p style="margin:0 0 10px;">Les codes PIN sont stockés <strong style="color:var(--text);">hachés</strong> (non réversibles). La connexion est sécurisée par HTTPS. Firebase applique des règles de sécurité limitant l'accès aux utilisateurs authentifiés.</p>
@@ -1148,7 +1148,8 @@
         <div style="font-size:1.05rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
         <button onclick="closeBedNote()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
       </div>
-      <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px;"></div>
+      <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;"></div>
+      <div id="bed-note-timestamp" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px;"></div>
       <div id="bed-note-readonly-notice" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px;">🔒 Lecture seule — garde passée</div>
       <textarea id="bed-note-text" rows="10" placeholder="Votre note sur ce lit..." style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:200px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
       <div style="display:flex; gap:10px; margin-top:12px;">

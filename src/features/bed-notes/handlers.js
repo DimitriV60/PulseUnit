@@ -1,5 +1,5 @@
 /**
- * Bed notes — 3 notes libres par lit (Garde 1 / 2 / 3), 72h TTL.
+ * Bed notes — 5 notes libres par lit (Garde 1 à 5), 7 jours TTL.
  * Stockage localStorage, visible uniquement par l'auteur.
  * Double-tap carte lit → ouvre la note.
  */
@@ -7,8 +7,8 @@
 var _lastBedTapTime = {};
 var _currentNotesBed = null;
 var _activeNoteSlot = 0;
-const BED_NOTE_TTL = 72 * 60 * 60 * 1000;
-const NOTE_SLOTS = 3;
+const BED_NOTE_TTL = 7 * 24 * 60 * 60 * 1000;
+const NOTE_SLOTS = 5;
 
 function _slotKey(slot, bedId) {
     return 'slot_' + slot + ':' + bedId;
@@ -52,6 +52,21 @@ function _loadNoteSlot(slot) {
     textarea.value = existing ? existing.text : '';
     const deleteBtn = document.getElementById('bed-note-delete-btn');
     if (deleteBtn) deleteBtn.style.display = existing ? 'block' : 'none';
+    const tsEl = document.getElementById('bed-note-timestamp');
+    if (tsEl) {
+        if (existing) {
+            const ts = existing.updatedAt || existing.createdAt;
+            const dt = new Date(ts);
+            const dd = String(dt.getDate()).padStart(2, '0');
+            const mm = String(dt.getMonth() + 1).padStart(2, '0');
+            const hh = String(dt.getHours()).padStart(2, '0');
+            const mn = String(dt.getMinutes()).padStart(2, '0');
+            tsEl.textContent = `Dernière modification : ${dd}/${mm} à ${hh}h${mn}`;
+            tsEl.style.display = 'block';
+        } else {
+            tsEl.style.display = 'none';
+        }
+    }
     _renderNoteTabsUI();
     setTimeout(() => textarea.focus(), 50);
 }
@@ -115,7 +130,10 @@ window.saveBedNote = function saveBedNote() {
     if (!text) {
         delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
     } else {
-        notes[_slotKey(_activeNoteSlot, _currentNotesBed)] = { text, createdAt: Date.now() };
+        const key = _slotKey(_activeNoteSlot, _currentNotesBed);
+        const prev = notes[key];
+        const now = Date.now();
+        notes[key] = { text, createdAt: prev ? prev.createdAt : now, updatedAt: now };
     }
     _saveBedNotes(notes);
     closeBedNote();

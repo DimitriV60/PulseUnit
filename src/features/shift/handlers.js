@@ -167,7 +167,11 @@ window.initDates = function initDates() {
 
     // Génère 8 gardes en remontant 12h par 12h depuis la garde actuelle
     // Ordre : nuit → jour du même jour → nuit du jour précédent → …
+    // En garde de jour, on affiche aussi la nuit à venir (même date) pour permettre la préparation
     const shifts = [];
+    if (curPeriod === 'jour') {
+        shifts.push({ ds: toDS(curDate), period: 'nuit' });
+    }
     const d = new Date(curDate);
     let period = curPeriod;
     for (let i = 0; i < 8; i++) {
