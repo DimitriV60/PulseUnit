@@ -64,7 +64,7 @@ document.addEventListener('touchend', function(e) {
   updatePlanStats();
 }, { passive: true });
 
-// ── Swipe gauche = retour / fermeture ──────────────────────────────────
+// ── Swipe gauche = retour / fermeture · Swipe droit depuis le bord = ouverture menu ──
 (function() {
   let startX = 0, startY = 0, startTarget = null;
 
@@ -83,6 +83,17 @@ document.addEventListener('touchend', function(e) {
 
     const isVis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none' && el.style.display !== ''; };
     const isHoriz = Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy);
+
+    // Swipe droit depuis le bord gauche (≤ 30px) → ouvre le menu burger
+    if (dx > 60 && Math.abs(dy) < Math.abs(dx) && startX <= 30) {
+      const menu = document.getElementById('side-menu');
+      const menuOpen = menu && menu.style.transform === 'translateX(0)';
+      const anyModalOrViewOpen = ['calc-modal', 'tuto-modal', 'settings-modal', 'admin-login-modal', 'admin-panel-modal', 'bed-note-modal', 'rgpd-modal', 'add-modal', 'normes-view', 'normes-respi-view', 'protocoles-view', 'protocole-detail-view', 'calendrier-conges-view', 'planning-ca-view', 'tasks-view', 'calculateurs-view', 'lexique-view', 'lexique-projet-view', 'securite-view'].some(isVis);
+      if (!menuOpen && !anyModalOrViewOpen && typeof openSideMenu === 'function') {
+        openSideMenu();
+        return;
+      }
+    }
 
     // Navigation gauche/droite dans la vue Normes
     if (isVis('normes-view') && isHoriz) {

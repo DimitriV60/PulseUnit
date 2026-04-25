@@ -212,15 +212,26 @@
   .sticky-banner.show { transform: translateY(0); display: flex; }
   .btn-valider { background: var(--brand-gradient); border: none; color: #ffffff; font-weight: 900; font-size: 1.1rem; padding: 12px 25px; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
 
-  #side-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 300; display: none; opacity: 0; transition: opacity 0.3s; backdrop-filter: blur(3px); }
-  #side-menu { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; background: var(--surface); z-index: 301; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-right: 1px solid var(--border); box-shadow: 5px 0 25px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
-  .side-menu-header { padding: 20px; font-size: 1.2rem; font-weight: 900; border-bottom: 1px solid var(--border); color: var(--text); display: flex; justify-content: space-between; align-items: center; background: var(--pill-bg); }
-  .side-menu-content { padding: 10px 0 40px 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-  .side-link { display: flex; align-items: center; gap: 8px; padding: 11px 18px; font-size: 0.88rem; color: var(--text); text-decoration: none; font-weight: 800; border-bottom: 1px solid var(--border); transition: background 0.2s; }
-  .side-link:hover { background: var(--ide-glow); color: var(--brand-blue); }
-  .side-menu-section { padding: 10px 20px 4px; font-size: 0.68rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border); }
-  .close-menu-btn { background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: color 0.2s; }
-  .close-menu-btn:hover { color: var(--red); }
+  #side-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 300; display: none; opacity: 0; transition: opacity 0.3s; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #side-menu { position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 86vw); background: var(--surface); z-index: 301; transform: translateX(-100%); transition: transform 0.32s cubic-bezier(0.32, 0.72, 0.18, 1); box-shadow: 14px 0 60px rgba(0,0,0,0.25); display: flex; flex-direction: column; border-radius: 0 22px 22px 0; overflow: hidden; }
+  .side-menu-header { padding: 22px 20px 18px; color: #fff; background: var(--brand-gradient); position: relative; }
+  .side-menu-header-row { display: flex; justify-content: space-between; align-items: center; }
+  .side-menu-header-title { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.3px; }
+  .side-menu-header-sub { font-size: 0.72rem; opacity: 0.92; font-weight: 700; margin-top: 3px; }
+  .side-menu-content { padding: 14px 12px 30px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; -webkit-overflow-scrolling: touch; }
+  .side-menu-section { padding: 14px 12px 6px; font-size: 0.66rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+  .side-link { display: flex; align-items: center; gap: 12px; padding: 11px 12px; font-size: 0.92rem; color: var(--text); text-decoration: none; font-weight: 700; border-radius: 12px; transition: background 0.18s, transform 0.12s; position: relative; }
+  .side-link:active { transform: scale(0.98); }
+  .side-link:hover { background: var(--surface-sec); }
+  .side-link-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; background: var(--surface-sec); transition: background 0.18s; }
+  .side-link:hover .side-link-icon { background: var(--ide-glow); }
+  .side-link-arrow { margin-left: auto; color: var(--text-muted); font-size: 0.95rem; opacity: 0.5; }
+  .side-link-danger { color: var(--crit); }
+  .side-link-danger .side-link-icon { background: rgba(239,68,68,0.1); }
+  .side-link-accent { color: var(--brand-aqua); }
+  .side-link-accent .side-link-icon { background: var(--ide-glow); }
+  .close-menu-btn { background: rgba(255,255,255,0.18); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; transition: background 0.2s; }
+  .close-menu-btn:hover { background: rgba(255,255,255,0.3); }
 
   /* VUES FS (Lexique, Calculatrice, Taches) */
   .fs-view { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 400; flex-direction: column; overflow: hidden; }
@@ -891,27 +902,33 @@
   <div id="side-menu-overlay" onclick="closeSideMenu()"></div>
   <nav id="side-menu" role="dialog" aria-modal="true" aria-label="Menu de navigation">
     <div class="side-menu-header">
-      Menu
-      <button class="close-menu-btn" onclick="closeSideMenu()" aria-label="Fermer le menu">×</button>
+      <div class="side-menu-header-row">
+        <div>
+          <div class="side-menu-header-title">PulseUnit</div>
+          <div class="side-menu-header-sub">Réa & Soins critiques</div>
+        </div>
+        <button class="close-menu-btn" onclick="closeSideMenu()" aria-label="Fermer le menu">×</button>
+      </div>
     </div>
     <div class="side-menu-content">
-      <div class="side-menu-section">OUTILS CLINIQUES</div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();">📋 Protocoles</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openCalculateurs();">🧮 Calculateurs</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();">📊 Normes de référence</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();" style="display:none;">🫁 Simulateur Respirateur</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();">📖 Lexique & Abréviations</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openPathologies();">🩺 Pathologies</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openChecklists();">✅ Checklists procédures</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openDilutions();">💊 Dilutions</a>
-      <div class="side-menu-section">ORGANISATION</div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();">📅 Planning & Validation CA</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();">↔️ Bourse d'échange</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openServices();">📞 Les Services</a>
-      <div style="flex: 1; min-height: 20px;"></div>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openAlphaModal();" style="color:var(--brand-aqua);">🧪 Signaler un bug</a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();">⚙️ Paramètres</a>
-      <a href="#" class="side-link" style="border-bottom:none;" onclick="closeSideMenu(); logoutUser();">🚪 Déconnexion</a>
+      <div class="side-menu-section">Outils cliniques</div>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openProtocoles();"><span class="side-link-icon">📋</span><span>Protocoles</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openCalculateurs();"><span class="side-link-icon">🧮</span><span>Calculateurs</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openNormes();"><span class="side-link-icon">📊</span><span>Normes de référence</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openNormesRespi();" style="display:none;"><span class="side-link-icon">🫁</span><span>Simulateur Respirateur</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openLexique();"><span class="side-link-icon">📖</span><span>Lexique & Abréviations</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openPathologies();"><span class="side-link-icon">🩺</span><span>Pathologies</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openChecklists();"><span class="side-link-icon">✅</span><span>Checklists procédures</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openDilutions();"><span class="side-link-icon">💊</span><span>Dilutions</span><span class="side-link-arrow">›</span></a>
+      <div class="side-menu-section">Organisation</div>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openPlanningCA();"><span class="side-link-icon">📅</span><span>Planning & Validation CA</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openBourse();"><span class="side-link-icon">↔️</span><span>Bourse d'échange</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openServices();"><span class="side-link-icon">📞</span><span>Les Services</span><span class="side-link-arrow">›</span></a>
+      <div style="flex: 1; min-height: 16px;"></div>
+      <div class="side-menu-section">Compte</div>
+      <a href="#" class="side-link side-link-accent" onclick="closeSideMenu(); openAlphaModal();"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="closeSideMenu(); openSettings();"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link side-link-danger" onclick="closeSideMenu(); logoutUser();"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
     </div>
   </nav>
 
@@ -1362,11 +1379,6 @@
             <div style="font-size:0.72rem; opacity:0.92; font-weight:700; margin-top:2px;">Réanimation & Soins Critiques · v Alpha</div>
           </div>
           <button onclick="document.getElementById('tuto-modal').style.display='none'" style="background:rgba(255,255,255,0.18); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; line-height:1; flex-shrink:0;">×</button>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
-          <span style="background:rgba(255,255,255,0.18); padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;">⚡ Temps réel</span>
-          <span style="background:rgba(255,255,255,0.18); padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;">🔒 Données sécurisées</span>
-          <span style="background:rgba(255,255,255,0.18); padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;">📱 PWA mobile</span>
         </div>
       </div>
 
