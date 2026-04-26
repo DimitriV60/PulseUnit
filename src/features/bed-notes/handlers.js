@@ -23,11 +23,13 @@ const NOTE_SLOTS = 5;
 const SURVEY_ROWS = [
     { id: 'temp',    label: 'Température',       unit: '°C',       group: 'hemo'  },
     { id: 'ta',      label: 'TA',                unit: 'mmHg',     group: 'hemo'  },
+    { id: 'pam',     label: 'PAM',               unit: 'mmHg',     group: 'hemo'  },
     { id: 'pouls',   label: 'Pouls',             unit: '/min',     group: 'hemo'  },
     { id: 'sat',     label: 'Saturation',        unit: '%',        group: 'hemo'  },
     { id: 'dextro',  label: 'Dextro / Insuline', unit: 'g/L · UI', group: 'hemo'  },
     { id: 'hemocu',  label: 'Hémocu',            unit: 'g/dL',     group: 'hemo'  },
     { id: 'diurese', label: 'Diurèse',           unit: 'ml/h',     group: 'hemo'  },
+    { id: 'eva',     label: 'EVA',               unit: '/10',      group: 'hemo'  },
     { id: 'o2',      label: 'O₂ V/min',          unit: 'L/min',    group: 'venti' },
     { id: 'iot',     label: 'Repère IOT',        unit: 'cm',       group: 'venti' },
     { id: 'vi',      label: 'VI',                unit: 'ml',       group: 'venti' },
@@ -54,7 +56,7 @@ function _dateOnlyFromShiftKey(shiftKey) {
 
 function _shiftTypeFromShiftKey(shiftKey) {
     if (!shiftKey) return 'jour';
-    return shiftKey.includes('-nuit-') ? 'nuit' : 'jour';
+    return shiftKey.includes('-nuit') ? 'nuit' : 'jour';
 }
 
 function _surveyHoursForCurrentShift() {
@@ -206,25 +208,26 @@ function _renderSurveyGridUI() {
     if (!container) return;
     const hours = _surveyHoursForCurrentShift();
     let html = '';
-    html += `<div style="display:grid; grid-template-columns: minmax(110px, 1.4fr) repeat(3, minmax(60px, 1fr)); gap:4px; align-items:center; font-size:0.78rem;">`;
-    // Header
-    html += `<div style="font-weight:800; color:var(--text-muted); padding:6px 4px;">Paramètre</div>`;
+    // Layout fluide : label = 1.1fr, 3 colonnes valeurs = 1fr chacune. min-width:0 partout
+    // pour que les inputs puissent rétrécir sous leur taille intrinsèque sans scroll horizontal.
+    html += `<div style="display:grid; grid-template-columns: minmax(0, 1.1fr) repeat(3, minmax(0, 1fr)); gap:3px; align-items:stretch; width:100%;">`;
+    html += `<div style="font-weight:800; color:var(--text-muted); padding:6px 2px; font-size:0.72rem;">Paramètre</div>`;
     hours.forEach(h => {
-        html += `<div style="font-weight:900; color:var(--brand-aqua); padding:6px 4px; text-align:center;">${h}</div>`;
+        html += `<div style="font-weight:900; color:var(--brand-aqua); padding:6px 2px; text-align:center; font-size:0.78rem;">${h}</div>`;
     });
     let lastGroup = null;
     SURVEY_ROWS.forEach(row => {
         if (lastGroup && lastGroup !== row.group) {
-            html += `<div style="grid-column:1 / -1; height:1px; background:var(--border); margin:4px 0;"></div>`;
+            html += `<div style="grid-column:1 / -1; height:1px; background:var(--border); margin:3px 0;"></div>`;
         }
         lastGroup = row.group;
         const groupColor = row.group === 'venti' ? 'var(--brand-purple, #9b6dff)' : 'var(--text)';
-        html += `<div style="padding:5px 4px; font-weight:700; color:${groupColor}; line-height:1.2;">
-            <div>${row.label}</div>
-            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600;">${row.unit}</div>
+        html += `<div style="padding:4px 2px; font-weight:700; color:${groupColor}; line-height:1.15; min-width:0; overflow:hidden;">
+            <div style="font-size:0.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${row.label} (${row.unit})">${row.label}</div>
+            <div style="font-size:0.62rem; color:var(--text-muted); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${row.unit}</div>
         </div>`;
         for (let c = 0; c < 3; c++) {
-            html += `<input type="text" id="survey-cell-${row.id}-${c}" inputmode="decimal" autocomplete="off" style="width:100%; padding:6px 4px; border-radius:6px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.85rem; font-weight:700; text-align:center; box-sizing:border-box; outline:none; min-width:0;" />`;
+            html += `<input type="text" id="survey-cell-${row.id}-${c}" inputmode="decimal" autocomplete="off" style="width:100%; padding:6px 2px; border-radius:6px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.88rem; font-weight:700; text-align:center; box-sizing:border-box; outline:none; min-width:0;" />`;
         }
     });
     html += `</div>`;

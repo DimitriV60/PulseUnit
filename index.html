@@ -1273,9 +1273,9 @@
       <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; flex-shrink:0;"></div>
       <div id="bed-note-timestamp" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;"></div>
       <div id="bed-note-readonly-notice" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;">🔒 Lecture seule — garde passée</div>
-      <div style="overflow-y:auto; flex:1; padding-right:4px;">
+      <div style="overflow-y:auto; overflow-x:hidden; flex:1; padding-right:2px; min-width:0;">
         <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); margin:6px 0 8px; letter-spacing:0.5px;">📋 SURVEILLANCE HORAIRE</div>
-        <div id="bed-note-survey" style="margin-bottom:14px;"></div>
+        <div id="bed-note-survey" style="margin-bottom:14px; min-width:0;"></div>
         <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); margin:6px 0 8px; letter-spacing:0.5px;">📝 OBSERVATIONS</div>
         <textarea id="bed-note-text" rows="6" placeholder="Transmissions, événements, traitements..." style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:120px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
       </div>
@@ -1526,7 +1526,7 @@
           <div><strong style="color:var(--text);">Continuité de garde</strong> : la note apparaît sur les cartes lit dès sa création et reste visible les jours suivants jusqu'au TTL — jamais avant la création.</div>
           <div>Chaque note contient deux sections :
             <ul style="margin:4px 0 0 16px; padding:0;">
-              <li><strong style="color:var(--brand-aqua);">📋 Surveillance horaire</strong> — grille 18 paramètres (TA, pouls, sat, dextro, hémocu, diurèse + ventilation : VI, Ve, FIO₂, FR, PEP, Pp, Pt, AI…) × 3 créneaux. Horaires adaptés au shift : <strong>10h/14h/18h</strong> en jour, <strong>22h/02h/06h</strong> en nuit.</li>
+              <li><strong style="color:var(--brand-aqua);">📋 Surveillance horaire</strong> — grille 20 paramètres (TA, PAM, pouls, sat, dextro, hémocu, diurèse, EVA + ventilation : VI, Ve, FIO₂, FR, PEP, Pp, Pt, AI…) × 3 créneaux. Horaires adaptés au shift : <strong>10h/14h/18h</strong> en jour, <strong>22h/02h/06h</strong> en nuit.</li>
               <li><strong style="color:var(--brand-aqua);">📝 Observations</strong> — texte libre pour transmissions, événements, traitements en cours.</li>
             </ul>
           </div>
