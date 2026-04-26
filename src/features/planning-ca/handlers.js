@@ -51,6 +51,42 @@ function _readFileAsBase64(file) {
     });
 }
 
+// Compresse l'image à max 2000px (long côté), JPEG qualité 0.85.
+// Une photo Android 12 MP brute (5-10 MB) → ~200-400 KB après compression.
+// Évite les "Failed to fetch" liés à un POST trop lourd sur réseau mobile.
+function _compressImage(file, maxDim = 2000, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+                const ratio = Math.min(maxDim / width, maxDim / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const idx = dataUrl.indexOf(',');
+            resolve({
+                base64: idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl,
+                mimeType: 'image/jpeg',
+                bytes: idx >= 0 ? Math.round((dataUrl.length - idx) * 0.75) : 0
+            });
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Image illisible'));
+        };
+        img.src = url;
+    });
+}
+
 window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     const input = ev && ev.target ? ev.target : document.getElementById('plan-scan-input');
     const file = input && input.files && input.files[0];
@@ -67,16 +103,16 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
         return;
     }
     _scanInProgress = true;
-    showToast('📷 Lecture de la photo...');
+    showToast('📷 Compression de la photo...');
     try {
-        const imageBase64 = await _readFileAsBase64(file);
+        const compressed = await _compressImage(file);
         showToast('🤖 Extraction du planning...');
         const resp = await fetch(SCAN_WORKER_URL, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
-                imageBase64,
-                mimeType: file.type || 'image/jpeg',
+                imageBase64: compressed.base64,
+                mimeType: compressed.mimeType,
                 firstName: currentUser.firstName,
                 lastName: currentUser.lastName,
                 year: planYear,
