@@ -2,15 +2,16 @@
  * Bed notes — 5 notes par lit (Garde 1 à 5), 7 jours TTL.
  * Clé : slot_X:bedId — bed-scopée, persistante jusqu'au TTL.
  *
- * Structure d'une note :
- *   { text: string, survey: { rowId: [c1, c2, c3] }, createdAt, updatedAt }
- *   - text       : observations / transmissions libres (champ historique, préservé)
- *   - survey     : grille de surveillance horaire (paramètres × 3 créneaux)
+ * Deux niveaux de visibilité :
+ *   - text (observations) : PRIVÉ par utilisateur — bedNotesData[userId][slotKey]
+ *   - survey (surveillance horaire) : PARTAGÉ entre les agents assignés au lit
+ *     bedNotesData['__shared_survey__'][bedId]['slot_X'] = { survey, createdAt,
+ *     updatedAt, lastEditorId }
  *
- * Affichage : la note apparaît sur les cartes lit dès la date de création
- * et tous les jours suivants (continuité de garde), jamais avant.
- * Stockage Firestore (BEDNOTES_DOC) + cache localStorage offline.
- * Sync multi-appareils via onSnapshot. Visible uniquement par l'auteur.
+ * Sync Firestore (BEDNOTES_DOC) + cache localStorage offline.
+ * Snapshot temps réel multi-appareils. Continuité forward : la note apparaît
+ * sur la carte lit dès la date de création et tous les jours suivants
+ * (createdAt ≤ shiftDate), jamais avant.
  * Double-tap carte lit → ouvre la note.
  */
 
@@ -19,6 +20,7 @@ var _currentNotesBed = null;
 var _activeNoteSlot = 0;
 const BED_NOTE_TTL = 7 * 24 * 60 * 60 * 1000;
 const NOTE_SLOTS = 5;
+const SHARED_KEY = '__shared_survey__';
 
 const SURVEY_ROWS = [
     { id: 'temp',    label: 'Température',       unit: '°C',       group: 'hemo'  },
@@ -81,10 +83,9 @@ function _isSurveyEmpty(survey) {
     return !Object.values(survey).some(arr => Array.isArray(arr) && arr.some(v => (v || '').toString().trim() !== ''));
 }
 
-function _isNoteEmpty(n) {
+function _isTextOnlyNoteEmpty(n) {
     if (!n) return true;
-    const hasText = (n.text || '').trim() !== '';
-    return !hasText && _isSurveyEmpty(n.survey);
+    return (n.text || '').trim() === '';
 }
 
 function _migrateLegacyKeys(notes) {
@@ -118,6 +119,107 @@ function _pruneExpired(notes) {
     return notes;
 }
 
+function _pruneExpiredShared(shared) {
+    const cutoff = Date.now() - BED_NOTE_TTL;
+    Object.keys(shared).forEach(bedId => {
+        const slots = shared[bedId];
+        Object.keys(slots).forEach(slotKey => {
+            if ((slots[slotKey].createdAt || 0) < cutoff) delete slots[slotKey];
+        });
+        if (Object.keys(slots).length === 0) delete shared[bedId];
+    });
+    return shared;
+}
+
+// --- Survey partagé ----------------------------------------------------------
+
+function _getSharedAll() {
+    if (!window.bedNotesData) window.bedNotesData = {};
+    if (!window.bedNotesData[SHARED_KEY]) window.bedNotesData[SHARED_KEY] = {};
+    return _pruneExpiredShared(window.bedNotesData[SHARED_KEY]);
+}
+
+function _getSharedSurvey(bedId, slot) {
+    const all = _getSharedAll();
+    const bed = all[bedId];
+    if (!bed) return null;
+    return bed['slot_' + slot] || null;
+}
+
+function _persistSharedAll(shared) {
+    if (!window.bedNotesData) window.bedNotesData = {};
+    window.bedNotesData[SHARED_KEY] = shared;
+    try { localStorage.setItem('pu_bn_shared', JSON.stringify(shared)); } catch (e) {}
+    if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
+        window._bedNotesSavePending = true;
+        BEDNOTES_DOC.set({ [SHARED_KEY]: shared }, { merge: true })
+            .then(() => { window._bedNotesSavePending = false; })
+            .catch(e => { window._bedNotesSavePending = false; console.warn('Bed shared survey sync error', e); });
+    }
+}
+
+function _saveSharedSurvey(bedId, slot, survey, prevCreatedAt) {
+    if (!currentUser) return;
+    const all = _getSharedAll();
+    if (!all[bedId]) all[bedId] = {};
+    const slotKey = 'slot_' + slot;
+    if (_isSurveyEmpty(survey)) {
+        delete all[bedId][slotKey];
+        if (Object.keys(all[bedId]).length === 0) delete all[bedId];
+    } else {
+        const now = Date.now();
+        all[bedId][slotKey] = {
+            survey,
+            createdAt: prevCreatedAt || now,
+            updatedAt: now,
+            lastEditorId: currentUser.id
+        };
+    }
+    _persistSharedAll(all);
+}
+
+// --- Migration des survey privés vers le partagé ----------------------------
+
+function _migratePrivateSurveysToShared(userNotes) {
+    const shared = _getSharedAll();
+    let userChanged = false;
+    let sharedChanged = false;
+    Object.keys(userNotes).forEach(k => {
+        const n = userNotes[k];
+        if (!n || !n.survey || _isSurveyEmpty(n.survey)) return;
+        // Extraire bedId depuis la clé slot_X:bedId
+        const parts = k.split(':');
+        if (parts.length !== 2 || !parts[0].startsWith('slot_')) return;
+        const slotIdx = parts[0].slice(5); // après 'slot_'
+        const bedId = parts[1];
+        if (!shared[bedId]) shared[bedId] = {};
+        const slotKey = 'slot_' + slotIdx;
+        const existingShared = shared[bedId][slotKey];
+        const incomingTs = n.updatedAt || n.createdAt || 0;
+        const existingTs = existingShared ? (existingShared.updatedAt || existingShared.createdAt || 0) : 0;
+        if (!existingShared || incomingTs > existingTs) {
+            shared[bedId][slotKey] = {
+                survey: n.survey,
+                createdAt: existingShared ? existingShared.createdAt : (n.createdAt || Date.now()),
+                updatedAt: incomingTs || Date.now(),
+                lastEditorId: currentUser ? currentUser.id : null
+            };
+            sharedChanged = true;
+        }
+        // Retire le survey du privé pour éviter doublon
+        delete n.survey;
+        // Si la note privée n'a plus de texte non plus, la supprimer
+        if (_isTextOnlyNoteEmpty(n)) {
+            delete userNotes[k];
+        }
+        userChanged = true;
+    });
+    if (sharedChanged) _persistSharedAll(shared);
+    return userChanged;
+}
+
+// --- Notes utilisateur (texte uniquement après migration) -------------------
+
 function _getBedNotes() {
     if (!currentUser) return {};
     let notes = (window.bedNotesData && window.bedNotesData[currentUser.id]) ? { ...window.bedNotesData[currentUser.id] } : null;
@@ -128,7 +230,9 @@ function _getBedNotes() {
         } catch (e) { notes = {}; }
     }
     const mig = _migrateLegacyKeys(notes);
-    if (mig.changed) {
+    let dirty = mig.changed;
+    if (_migratePrivateSurveysToShared(mig.notes)) dirty = true;
+    if (dirty) {
         window.bedNotesData[currentUser.id] = mig.notes;
         try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(mig.notes)); } catch (e) {}
         if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
@@ -162,6 +266,9 @@ window.loadBedNotes = async function loadBedNotes() {
             if (currentUser && window.bedNotesData[currentUser.id]) {
                 try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(window.bedNotesData[currentUser.id])); } catch (e) {}
             }
+            if (window.bedNotesData[SHARED_KEY]) {
+                try { localStorage.setItem('pu_bn_shared', JSON.stringify(window.bedNotesData[SHARED_KEY])); } catch (e) {}
+            }
         }
     } catch (e) { console.warn('loadBedNotes error', e); }
 };
@@ -172,6 +279,9 @@ window.applyBedNotesSnapshot = function applyBedNotesSnapshot(data) {
     if (currentUser && data[currentUser.id]) {
         try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(data[currentUser.id])); } catch (e) {}
     }
+    if (data[SHARED_KEY]) {
+        try { localStorage.setItem('pu_bn_shared', JSON.stringify(data[SHARED_KEY])); } catch (e) {}
+    }
     if (_currentNotesBed) {
         _renderNoteTabsUI();
         const notes = _getBedNotes();
@@ -180,13 +290,24 @@ window.applyBedNotesSnapshot = function applyBedNotesSnapshot(data) {
         if (textarea && document.activeElement !== textarea) {
             textarea.value = existing ? (existing.text || '') : '';
         }
-        // Survey : ne pas écraser si un input est focus (édition en cours)
         const ae = document.activeElement;
         const inSurvey = ae && ae.id && ae.id.startsWith('survey-cell-');
-        if (!inSurvey) _populateSurveyValues(existing ? existing.survey : null);
+        if (!inSurvey) {
+            const sharedSlot = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
+            _populateSurveyValues(sharedSlot ? sharedSlot.survey : null);
+            _renderSurveyMetaUI(sharedSlot);
+        }
     }
     if (typeof renderApp === 'function') renderApp();
 };
+
+function _slotHasContent(slotIdx, bedId, userNotes) {
+    const own = userNotes[_slotKey(slotIdx, bedId)];
+    if (own && !_isTextOnlyNoteEmpty(own)) return true;
+    const shared = _getSharedSurvey(bedId, slotIdx);
+    if (shared && !_isSurveyEmpty(shared.survey)) return true;
+    return false;
+}
 
 function _renderNoteTabsUI() {
     const container = document.getElementById('bed-note-tabs');
@@ -194,8 +315,7 @@ function _renderNoteTabsUI() {
     const notes = _getBedNotes();
     let html = '';
     for (let i = 0; i < NOTE_SLOTS; i++) {
-        const n = notes[_slotKey(i, _currentNotesBed)];
-        const hasNote = !!n && !_isNoteEmpty(n);
+        const hasNote = _slotHasContent(i, _currentNotesBed, notes);
         const isActive = _activeNoteSlot === i;
         const dot = hasNote ? ' ●' : '';
         html += `<button onclick="switchBedNoteTab(${i})" style="flex:1; padding:8px 4px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : 'var(--text-muted)'}; font-weight:${isActive ? '900' : '700'}; font-size:0.85rem; cursor:pointer; transition:all 0.15s;">Garde ${i + 1}${dot}</button>`;
@@ -208,8 +328,6 @@ function _renderSurveyGridUI() {
     if (!container) return;
     const hours = _surveyHoursForCurrentShift();
     let html = '';
-    // Layout fluide : label = 1.1fr, 3 colonnes valeurs = 1fr chacune. min-width:0 partout
-    // pour que les inputs puissent rétrécir sous leur taille intrinsèque sans scroll horizontal.
     html += `<div style="display:grid; grid-template-columns: minmax(0, 1.1fr) repeat(3, minmax(0, 1fr)); gap:3px; align-items:stretch; width:100%;">`;
     html += `<div style="font-weight:800; color:var(--text-muted); padding:6px 2px; font-size:0.72rem;">Paramètre</div>`;
     hours.forEach(h => {
@@ -232,6 +350,31 @@ function _renderSurveyGridUI() {
     });
     html += `</div>`;
     container.innerHTML = html;
+}
+
+function _renderSurveyMetaUI(sharedSlot) {
+    const el = document.getElementById('bed-note-survey-meta');
+    if (!el) return;
+    if (!sharedSlot || _isSurveyEmpty(sharedSlot.survey)) {
+        el.style.display = 'none';
+        el.textContent = '';
+        return;
+    }
+    const ts = sharedSlot.updatedAt || sharedSlot.createdAt;
+    const dt = new Date(ts);
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const hh = String(dt.getHours()).padStart(2, '0');
+    const mn = String(dt.getMinutes()).padStart(2, '0');
+    let editorLabel = '—';
+    const editorId = sharedSlot.lastEditorId;
+    if (editorId && typeof roster !== 'undefined' && Array.isArray(roster)) {
+        const p = roster.find(r => r.id === editorId);
+        if (p) editorLabel = `${p.firstName} ${(p.lastName || '').charAt(0)}.`;
+        else if (currentUser && currentUser.id === editorId) editorLabel = 'vous';
+    }
+    el.textContent = `🤝 Partagé — dernière modif. par ${editorLabel} le ${dd}/${mm} à ${hh}h${mn}`;
+    el.style.display = 'block';
 }
 
 function _populateSurveyValues(survey) {
@@ -264,21 +407,24 @@ function _loadNoteSlot(slot) {
     _activeNoteSlot = slot;
     const notes = _getBedNotes();
     const existing = notes[_slotKey(slot, _currentNotesBed)];
+    const sharedSlot = _getSharedSurvey(_currentNotesBed, slot);
     const textarea = document.getElementById('bed-note-text');
     if (textarea) textarea.value = existing ? (existing.text || '') : '';
-    _populateSurveyValues(existing ? existing.survey : null);
+    _populateSurveyValues(sharedSlot ? sharedSlot.survey : null);
+    _renderSurveyMetaUI(sharedSlot);
+    const hasAny = _slotHasContent(slot, _currentNotesBed, notes);
     const deleteBtn = document.getElementById('bed-note-delete-btn');
-    if (deleteBtn) deleteBtn.style.display = (existing && !_isNoteEmpty(existing)) ? 'block' : 'none';
+    if (deleteBtn) deleteBtn.style.display = hasAny ? 'block' : 'none';
     const tsEl = document.getElementById('bed-note-timestamp');
     if (tsEl) {
-        if (existing) {
-            const ts = existing.updatedAt || existing.createdAt;
+        const ts = existing ? (existing.updatedAt || existing.createdAt) : null;
+        if (ts) {
             const dt = new Date(ts);
             const dd = String(dt.getDate()).padStart(2, '0');
             const mm = String(dt.getMonth() + 1).padStart(2, '0');
             const hh = String(dt.getHours()).padStart(2, '0');
             const mn = String(dt.getMinutes()).padStart(2, '0');
-            tsEl.textContent = `Dernière modification : ${dd}/${mm} à ${hh}h${mn}`;
+            tsEl.textContent = `Observations modifiées le ${dd}/${mm} à ${hh}h${mn}`;
             tsEl.style.display = 'block';
         } else {
             tsEl.style.display = 'none';
@@ -291,16 +437,21 @@ window.switchBedNoteTab = function switchBedNoteTab(slot) {
     _loadNoteSlot(slot);
 };
 
-window.getBedNoteForCurrentUser = function getBedNoteForCurrentUser(bedId, dateOnly) {
+window.getBedNoteForCurrentUser = function getBedNoteForCurrentUser(bedId, dateOnly, canSeeShared) {
     if (!currentUser) return null;
     const date = dateOnly || _dateOnlyFromShiftKey(typeof currentShiftKey !== 'undefined' ? currentShiftKey : null);
     const notes = _getBedNotes();
     for (let i = 0; i < NOTE_SLOTS; i++) {
-        const n = notes[_slotKey(i, bedId)];
-        if (!n || _isNoteEmpty(n)) continue;
-        // Continuité forward : la note s'affiche dès sa date de création et pour tous les jours suivants.
-        if (date && _dateOnlyFromTimestamp(n.createdAt) > date) continue;
-        return n;
+        const own = notes[_slotKey(i, bedId)];
+        if (own && !_isTextOnlyNoteEmpty(own)) {
+            if (!date || _dateOnlyFromTimestamp(own.createdAt) <= date) return own;
+        }
+        if (canSeeShared) {
+            const shared = _getSharedSurvey(bedId, i);
+            if (shared && !_isSurveyEmpty(shared.survey)) {
+                if (!date || _dateOnlyFromTimestamp(shared.createdAt) <= date) return shared;
+            }
+        }
     }
     return null;
 };
@@ -348,27 +499,33 @@ window.saveBedNote = function saveBedNote() {
     const text = document.getElementById('bed-note-text').value.trim();
     const survey = _readSurveyValuesFromUI();
     if (!_currentNotesBed) return;
+    // 1. Texte privé
     const notes = _getBedNotes();
     const key = _slotKey(_activeNoteSlot, _currentNotesBed);
-    const candidate = { text, survey };
-    if (_isNoteEmpty(candidate)) {
+    if (text === '') {
         delete notes[key];
     } else {
         const prev = notes[key];
         const now = Date.now();
-        notes[key] = { text, survey, createdAt: prev ? prev.createdAt : now, updatedAt: now };
+        notes[key] = { text, createdAt: prev ? prev.createdAt : now, updatedAt: now };
     }
     _saveBedNotes(notes);
+    // 2. Survey partagé
+    const prevShared = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
+    _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
     closeBedNote();
     renderApp();
-    if (!_isNoteEmpty(candidate)) showToast('📝 Note enregistrée');
+    if (text !== '' || !_isSurveyEmpty(survey)) showToast('📝 Note enregistrée');
 };
 
 window.deleteBedNote = function deleteBedNote() {
     if (!_currentNotesBed) return;
+    // Texte privé
     const notes = _getBedNotes();
     delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
     _saveBedNotes(notes);
+    // Survey partagé
+    _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, {}, null);
     _loadNoteSlot(_activeNoteSlot);
     renderApp();
 };
