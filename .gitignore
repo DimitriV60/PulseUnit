@@ -1,0 +1,3 @@
+# Local backups (gardés en local, pas versionnés)
+index.backup.*.html
+changelog.md
