@@ -290,7 +290,7 @@ window.renderApp = function renderApp() {
                     const _pct = Math.round((_done / _total) * 100);
                     const _stCl = _done === _total ? 'done' : _done > 0 ? 'partial' : 'empty';
                     const _scoreTxt = _stCl === 'done' ? '\u2713 OK' : `${_done}/${_total}`;
-                    const _myNote = typeof getBedNoteForCurrentUser === 'function' ? getBedNoteForCurrentUser(id) : null;
+                    const _myNote = typeof getBedNoteForCurrentUser === 'function' ? getBedNoteForCurrentUser(id, dateOnly) : null;
                     const _noteDot = _myNote ? `<div style="position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--brand-aqua);box-shadow:0 0 4px var(--brand-aqua);" title="Ma note"></div>` : '';
                     return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;" onclick="handleBedTap('${id}')">
               ${_noteDot}
