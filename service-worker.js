@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulseunit-v4';
+const CACHE_NAME = 'pulseunit-v5';
 const FILES_TO_CACHE = [
   '/manifest.json',
   '/icon-192.png',
@@ -22,6 +22,12 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Cross-origin (ex : Cloudflare Worker scanPlanning, Firestore, Gemini) :
+  // ne pas intercepter — laisser le navigateur gérer nativement.
+  // Sinon le SW peut casser les POST avec body (ex : "Failed to fetch" sur PWA).
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+
   // index.html : toujours récupérer la dernière version depuis le réseau
   // → mise à jour automatique sans vider le cache
   if (e.request.destination === 'document') {
