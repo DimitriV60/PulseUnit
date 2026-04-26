@@ -34,7 +34,7 @@ function savePlanData() {
 // --- Scan planning par photo ------------------------------------------------
 
 // URL du Cloudflare Worker (à remplacer après déploiement, cf worker/SETUP.md)
-const SCAN_WORKER_URL = 'https://pulseunit-scan.PASTE-YOUR-CF-SUBDOMAIN.workers.dev';
+const SCAN_WORKER_URL = 'https://pulseunit-scan.dimitri-valentin.workers.dev';
 
 let _scanInProgress = false;
 
