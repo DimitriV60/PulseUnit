@@ -1610,6 +1610,50 @@
         </div>
       </details>
 
+      <!-- NOTIFICATIONS -->
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">🔔</span><span style="flex:1;">Notifications</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
+        </summary>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div>La <strong style="color:var(--text);">cloche 🔔</strong> en haut à droite affiche un <span style="color:var(--crit); font-weight:800;">badge rouge</span> avec le nombre de notifs non lues. Tape dessus pour ouvrir le centre de notifs.</div>
+          <div><strong style="color:var(--text);">Tu reçois une notif quand :</strong></div>
+          <div style="background:var(--surface); border-radius:8px; padding:10px; border:1px solid var(--border); display:flex; flex-direction:column; gap:5px; font-size:0.75rem;">
+            <div>🔄 <strong style="color:var(--text);">Bourse</strong> — nouvelle annonce, proposition reçue, échange accepté</div>
+            <div>💬 <strong style="color:var(--text);">Message</strong> — un collègue t'écrit en privé</div>
+            <div>⏰ <strong style="color:var(--text);">Garde</strong> — rappel à 8h05 + 8h20 (jour) / 20h05 + 20h20 (nuit) si pas positionné</div>
+            <div>🔑 <strong style="color:var(--text);">Reset PIN</strong> — uniquement pour l'admin</div>
+          </div>
+          <div style="border-left:3px solid var(--brand-aqua); padding:6px 10px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0;">
+            <strong style="color:var(--text);">📲 Notif système (app fermée)</strong> — Au 1er login, accepte la demande <em>Activer les notifications ?</em>. Tu seras alerté avec son + vibration même quand l'app est fermée. Si tu as refusé, ré-active depuis le centre de notifs (bouton bleu en bas).
+          </div>
+          <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0; font-size:0.75rem;">
+            <strong style="color:var(--crit);">iPhone</strong> — les notifs système ne marchent que si tu installes PulseUnit sur l'écran d'accueil (Safari → Partager → <em>Sur l'écran d'accueil</em>).
+          </div>
+          <div><strong style="color:var(--text);">Gérer</strong> — Tape une notif pour la marquer lue, <span style="color:var(--crit); font-weight:800;">×</span> pour supprimer. Boutons <em>Tout lu</em> et <em>Effacer</em> en haut.</div>
+        </div>
+      </details>
+
+      <!-- MESSAGES -->
+      <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
+        <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
+          <span style="font-size:1.05rem;">💬</span><span style="flex:1;">Messages internes</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
+        </summary>
+        <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
+          <div>Conversations privées <strong style="color:var(--text);">1-à-1</strong> avec n'importe quel collègue de l'équipe. Sync temps réel multi-appareils.</div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">1</span><div>Menu ☰ → <strong style="color:var(--text);">💬 Messages</strong>.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">2</span><div>Cherche un nom dans la barre <em>🔍 Chercher un collègue</em>, ou tape une conversation existante.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">3</span><div>Tape ton message → <strong style="color:var(--brand-aqua);">➤</strong> ou Entrée pour envoyer.</div></div>
+          <div style="background:var(--surface); border-radius:8px; padding:10px; border:1px solid var(--border); font-size:0.75rem;">
+            <div><strong style="color:var(--text);">Accusés de lecture</strong> — <span style="color:var(--brand-aqua);">✓</span> envoyé · <span style="color:var(--brand-aqua);">✓✓</span> lu par le destinataire</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Suppression</strong> — survole un de tes messages → croix rouge. Bouton 🗑️ en haut pour effacer toute la conv (visible des deux côtés).</div>
+          </div>
+          <div style="border-left:3px solid var(--brand-aqua); padding:6px 10px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0;">
+            <strong style="color:var(--text);">Persistance</strong> — Les messages restent à vie tant qu'ils ne sont pas supprimés. Pastille bleue dans la liste = nouveau message non lu.
+          </div>
+        </div>
+      </details>
+
       <!-- SERVICES -->
       <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
         <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
