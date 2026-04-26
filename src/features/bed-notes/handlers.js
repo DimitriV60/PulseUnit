@@ -1,6 +1,12 @@
 /**
- * Bed notes — 5 notes libres par lit (Garde 1 à 5), 7 jours TTL.
+ * Bed notes — 5 notes par lit (Garde 1 à 5), 7 jours TTL.
  * Clé : slot_X:bedId — bed-scopée, persistante jusqu'au TTL.
+ *
+ * Structure d'une note :
+ *   { text: string, survey: { rowId: [c1, c2, c3] }, createdAt, updatedAt }
+ *   - text       : observations / transmissions libres (champ historique, préservé)
+ *   - survey     : grille de surveillance horaire (paramètres × 3 créneaux)
+ *
  * Affichage : la note apparaît sur les cartes lit dès la date de création
  * et tous les jours suivants (continuité de garde), jamais avant.
  * Stockage Firestore (BEDNOTES_DOC) + cache localStorage offline.
@@ -14,12 +20,46 @@ var _activeNoteSlot = 0;
 const BED_NOTE_TTL = 7 * 24 * 60 * 60 * 1000;
 const NOTE_SLOTS = 5;
 
+const SURVEY_ROWS = [
+    { id: 'temp',    label: 'Température',       unit: '°C',       group: 'hemo'  },
+    { id: 'ta',      label: 'TA',                unit: 'mmHg',     group: 'hemo'  },
+    { id: 'pouls',   label: 'Pouls',             unit: '/min',     group: 'hemo'  },
+    { id: 'sat',     label: 'Saturation',        unit: '%',        group: 'hemo'  },
+    { id: 'dextro',  label: 'Dextro / Insuline', unit: 'g/L · UI', group: 'hemo'  },
+    { id: 'hemocu',  label: 'Hémocu',            unit: 'g/dL',     group: 'hemo'  },
+    { id: 'diurese', label: 'Diurèse',           unit: 'ml/h',     group: 'hemo'  },
+    { id: 'o2',      label: 'O₂ V/min',          unit: 'L/min',    group: 'venti' },
+    { id: 'iot',     label: 'Repère IOT',        unit: 'cm',       group: 'venti' },
+    { id: 'vi',      label: 'VI',                unit: 'ml',       group: 'venti' },
+    { id: 've',      label: 'Ve',                unit: 'ml',       group: 'venti' },
+    { id: 'vm',      label: 'Vm',                unit: 'L/min',    group: 'venti' },
+    { id: 'fio2',    label: 'FIO₂',              unit: '%',        group: 'venti' },
+    { id: 'fr',      label: 'FR',                unit: '/min',     group: 'venti' },
+    { id: 'pep',     label: 'Pep',               unit: 'cmH₂O',    group: 'venti' },
+    { id: 'pp',      label: 'Pp',                unit: 'cmH₂O',    group: 'venti' },
+    { id: 'pt',      label: 'Pt',                unit: 'cmH₂O',    group: 'venti' },
+    { id: 'ai',      label: 'AI',                unit: 'cmH₂O',    group: 'venti' }
+];
+
+const SURVEY_HOURS_JOUR = ['10h', '14h', '18h'];
+const SURVEY_HOURS_NUIT = ['22h', '02h', '06h'];
+
 window.bedNotesData = {};
 window._bedNotesSavePending = false;
 
 function _dateOnlyFromShiftKey(shiftKey) {
     if (!shiftKey) return null;
     return shiftKey.split('-').slice(0, 3).join('-');
+}
+
+function _shiftTypeFromShiftKey(shiftKey) {
+    if (!shiftKey) return 'jour';
+    return shiftKey.includes('-nuit-') ? 'nuit' : 'jour';
+}
+
+function _surveyHoursForCurrentShift() {
+    const t = _shiftTypeFromShiftKey(typeof currentShiftKey !== 'undefined' ? currentShiftKey : null);
+    return t === 'nuit' ? SURVEY_HOURS_NUIT : SURVEY_HOURS_JOUR;
 }
 
 function _dateOnlyFromTimestamp(ts) {
@@ -32,6 +72,17 @@ function _dateOnlyFromTimestamp(ts) {
 
 function _slotKey(slot, bedId) {
     return 'slot_' + slot + ':' + bedId;
+}
+
+function _isSurveyEmpty(survey) {
+    if (!survey || typeof survey !== 'object') return true;
+    return !Object.values(survey).some(arr => Array.isArray(arr) && arr.some(v => (v || '').toString().trim() !== ''));
+}
+
+function _isNoteEmpty(n) {
+    if (!n) return true;
+    const hasText = (n.text || '').trim() !== '';
+    return !hasText && _isSurveyEmpty(n.survey);
 }
 
 function _migrateLegacyKeys(notes) {
@@ -125,8 +176,12 @@ window.applyBedNotesSnapshot = function applyBedNotesSnapshot(data) {
         const existing = notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
         const textarea = document.getElementById('bed-note-text');
         if (textarea && document.activeElement !== textarea) {
-            textarea.value = existing ? existing.text : '';
+            textarea.value = existing ? (existing.text || '') : '';
         }
+        // Survey : ne pas écraser si un input est focus (édition en cours)
+        const ae = document.activeElement;
+        const inSurvey = ae && ae.id && ae.id.startsWith('survey-cell-');
+        if (!inSurvey) _populateSurveyValues(existing ? existing.survey : null);
     }
     if (typeof renderApp === 'function') renderApp();
 };
@@ -137,7 +192,8 @@ function _renderNoteTabsUI() {
     const notes = _getBedNotes();
     let html = '';
     for (let i = 0; i < NOTE_SLOTS; i++) {
-        const hasNote = !!notes[_slotKey(i, _currentNotesBed)];
+        const n = notes[_slotKey(i, _currentNotesBed)];
+        const hasNote = !!n && !_isNoteEmpty(n);
         const isActive = _activeNoteSlot === i;
         const dot = hasNote ? ' ●' : '';
         html += `<button onclick="switchBedNoteTab(${i})" style="flex:1; padding:8px 4px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : 'var(--text-muted)'}; font-weight:${isActive ? '900' : '700'}; font-size:0.85rem; cursor:pointer; transition:all 0.15s;">Garde ${i + 1}${dot}</button>`;
@@ -145,14 +201,71 @@ function _renderNoteTabsUI() {
     container.innerHTML = html;
 }
 
+function _renderSurveyGridUI() {
+    const container = document.getElementById('bed-note-survey');
+    if (!container) return;
+    const hours = _surveyHoursForCurrentShift();
+    let html = '';
+    html += `<div style="display:grid; grid-template-columns: minmax(110px, 1.4fr) repeat(3, minmax(60px, 1fr)); gap:4px; align-items:center; font-size:0.78rem;">`;
+    // Header
+    html += `<div style="font-weight:800; color:var(--text-muted); padding:6px 4px;">Paramètre</div>`;
+    hours.forEach(h => {
+        html += `<div style="font-weight:900; color:var(--brand-aqua); padding:6px 4px; text-align:center;">${h}</div>`;
+    });
+    let lastGroup = null;
+    SURVEY_ROWS.forEach(row => {
+        if (lastGroup && lastGroup !== row.group) {
+            html += `<div style="grid-column:1 / -1; height:1px; background:var(--border); margin:4px 0;"></div>`;
+        }
+        lastGroup = row.group;
+        const groupColor = row.group === 'venti' ? 'var(--brand-purple, #9b6dff)' : 'var(--text)';
+        html += `<div style="padding:5px 4px; font-weight:700; color:${groupColor}; line-height:1.2;">
+            <div>${row.label}</div>
+            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:600;">${row.unit}</div>
+        </div>`;
+        for (let c = 0; c < 3; c++) {
+            html += `<input type="text" id="survey-cell-${row.id}-${c}" inputmode="decimal" autocomplete="off" style="width:100%; padding:6px 4px; border-radius:6px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.85rem; font-weight:700; text-align:center; box-sizing:border-box; outline:none; min-width:0;" />`;
+        }
+    });
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function _populateSurveyValues(survey) {
+    SURVEY_ROWS.forEach(row => {
+        const vals = (survey && Array.isArray(survey[row.id])) ? survey[row.id] : ['', '', ''];
+        for (let c = 0; c < 3; c++) {
+            const el = document.getElementById('survey-cell-' + row.id + '-' + c);
+            if (el && document.activeElement !== el) el.value = vals[c] || '';
+        }
+    });
+}
+
+function _readSurveyValuesFromUI() {
+    const survey = {};
+    SURVEY_ROWS.forEach(row => {
+        const cells = [];
+        let any = false;
+        for (let c = 0; c < 3; c++) {
+            const el = document.getElementById('survey-cell-' + row.id + '-' + c);
+            const v = el ? (el.value || '').trim() : '';
+            if (v !== '') any = true;
+            cells.push(v);
+        }
+        if (any) survey[row.id] = cells;
+    });
+    return survey;
+}
+
 function _loadNoteSlot(slot) {
     _activeNoteSlot = slot;
     const notes = _getBedNotes();
     const existing = notes[_slotKey(slot, _currentNotesBed)];
     const textarea = document.getElementById('bed-note-text');
-    textarea.value = existing ? existing.text : '';
+    if (textarea) textarea.value = existing ? (existing.text || '') : '';
+    _populateSurveyValues(existing ? existing.survey : null);
     const deleteBtn = document.getElementById('bed-note-delete-btn');
-    if (deleteBtn) deleteBtn.style.display = existing ? 'block' : 'none';
+    if (deleteBtn) deleteBtn.style.display = (existing && !_isNoteEmpty(existing)) ? 'block' : 'none';
     const tsEl = document.getElementById('bed-note-timestamp');
     if (tsEl) {
         if (existing) {
@@ -181,7 +294,7 @@ window.getBedNoteForCurrentUser = function getBedNoteForCurrentUser(bedId, dateO
     const notes = _getBedNotes();
     for (let i = 0; i < NOTE_SLOTS; i++) {
         const n = notes[_slotKey(i, bedId)];
-        if (!n) continue;
+        if (!n || _isNoteEmpty(n)) continue;
         // Continuité forward : la note s'affiche dès sa date de création et pour tous les jours suivants.
         if (date && _dateOnlyFromTimestamp(n.createdAt) > date) continue;
         return n;
@@ -218,6 +331,7 @@ window.openBedNote = function openBedNote(bedId) {
     const parts = bedId.split('-');
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
     document.getElementById('bed-note-bed-label').textContent = label;
+    _renderSurveyGridUI();
     _loadNoteSlot(_activeNoteSlot);
     document.getElementById('bed-note-modal').style.display = 'flex';
 };
@@ -229,20 +343,22 @@ window.closeBedNote = function closeBedNote() {
 
 window.saveBedNote = function saveBedNote() {
     const text = document.getElementById('bed-note-text').value.trim();
+    const survey = _readSurveyValuesFromUI();
     if (!_currentNotesBed) return;
     const notes = _getBedNotes();
     const key = _slotKey(_activeNoteSlot, _currentNotesBed);
-    if (!text) {
+    const candidate = { text, survey };
+    if (_isNoteEmpty(candidate)) {
         delete notes[key];
     } else {
         const prev = notes[key];
         const now = Date.now();
-        notes[key] = { text, createdAt: prev ? prev.createdAt : now, updatedAt: now };
+        notes[key] = { text, survey, createdAt: prev ? prev.createdAt : now, updatedAt: now };
     }
     _saveBedNotes(notes);
     closeBedNote();
     renderApp();
-    if (text) showToast('📝 Note enregistrée');
+    if (!_isNoteEmpty(candidate)) showToast('📝 Note enregistrée');
 };
 
 window.deleteBedNote = function deleteBedNote() {

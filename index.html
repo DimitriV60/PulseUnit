@@ -1265,16 +1265,21 @@
 
   <!-- Modale note temporaire lit (double-tap) -->
   <div id="bed-note-modal" style="z-index:600;">
-    <div class="modal-content" style="width:min(580px,96vw);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <div class="modal-content" style="width:min(620px,96vw); max-height:92vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-shrink:0;">
         <div style="font-size:1.05rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
         <button onclick="closeBedNote()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
       </div>
-      <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;"></div>
-      <div id="bed-note-timestamp" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px;"></div>
-      <div id="bed-note-readonly-notice" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px;">🔒 Lecture seule — garde passée</div>
-      <textarea id="bed-note-text" rows="10" placeholder="Votre note sur ce lit..." style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:200px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
-      <div style="display:flex; gap:10px; margin-top:12px;">
+      <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; flex-shrink:0;"></div>
+      <div id="bed-note-timestamp" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;"></div>
+      <div id="bed-note-readonly-notice" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;">🔒 Lecture seule — garde passée</div>
+      <div style="overflow-y:auto; flex:1; padding-right:4px;">
+        <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); margin:6px 0 8px; letter-spacing:0.5px;">📋 SURVEILLANCE HORAIRE</div>
+        <div id="bed-note-survey" style="margin-bottom:14px;"></div>
+        <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); margin:6px 0 8px; letter-spacing:0.5px;">📝 OBSERVATIONS</div>
+        <textarea id="bed-note-text" rows="6" placeholder="Transmissions, événements, traitements..." style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:120px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px; flex-shrink:0;">
         <button id="bed-note-delete-btn" onclick="deleteBedNote()" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
         <button id="bed-note-save-btn" onclick="saveBedNote()" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
       </div>
@@ -1518,6 +1523,13 @@
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
           <div><strong style="color:var(--text);">Double-tap</strong> sur une carte de lit pour ouvrir la note.</div>
           <div><strong style="color:var(--text);">5 emplacements</strong> indépendants par lit (Garde 1 à 5), conservés <strong style="color:var(--text);">7 jours</strong> puis effacés automatiquement.</div>
+          <div><strong style="color:var(--text);">Continuité de garde</strong> : la note apparaît sur les cartes lit dès sa création et reste visible les jours suivants jusqu'au TTL — jamais avant la création.</div>
+          <div>Chaque note contient deux sections :
+            <ul style="margin:4px 0 0 16px; padding:0;">
+              <li><strong style="color:var(--brand-aqua);">📋 Surveillance horaire</strong> — grille 18 paramètres (TA, pouls, sat, dextro, hémocu, diurèse + ventilation : VI, Ve, FIO₂, FR, PEP, Pp, Pt, AI…) × 3 créneaux. Horaires adaptés au shift : <strong>10h/14h/18h</strong> en jour, <strong>22h/02h/06h</strong> en nuit.</li>
+              <li><strong style="color:var(--brand-aqua);">📝 Observations</strong> — texte libre pour transmissions, événements, traitements en cours.</li>
+            </ul>
+          </div>
           <div>Une note est <strong style="color:var(--text);">privée</strong> : visible uniquement par son auteur. Réservée à l'IDE/AS assigné, à l'IDE Tech et aux médecins de garde.</div>
           <div>L'<strong style="color:var(--text);">horodatage</strong> de la dernière modification s'affiche en haut de chaque note.</div>
         </div>
