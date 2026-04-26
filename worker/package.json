@@ -1,0 +1,13 @@
+{
+  "name": "pulseunit-scan-worker",
+  "private": true,
+  "description": "Cloudflare Worker — proxy Gemini Flash 2.0 pour scan planning PulseUnit",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

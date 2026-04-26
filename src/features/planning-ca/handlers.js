@@ -33,6 +33,9 @@ function savePlanData() {
 
 // --- Scan planning par photo ------------------------------------------------
 
+// URL du Cloudflare Worker (à remplacer après déploiement, cf worker/SETUP.md)
+const SCAN_WORKER_URL = 'https://pulseunit-scan.PASTE-YOUR-CF-SUBDOMAIN.workers.dev';
+
 let _scanInProgress = false;
 
 function _readFileAsBase64(file) {
@@ -55,8 +58,8 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     if (!file) return;
     if (_scanInProgress) { showToast('⏳ Scan déjà en cours...'); return; }
     if (!currentUser) { showToast('Connectez-vous pour scanner'); return; }
-    if (typeof firebase === 'undefined' || !firebase.functions) {
-        showToast('⛔ Module scan indisponible (SDK Functions manquant)');
+    if (SCAN_WORKER_URL.includes('PASTE-YOUR')) {
+        showToast('⛔ Worker non configuré (cf worker/SETUP.md)');
         return;
     }
     if (file.size > 8 * 1024 * 1024) {
@@ -67,17 +70,29 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     showToast('📷 Lecture de la photo...');
     try {
         const imageBase64 = await _readFileAsBase64(file);
-        const callable = firebase.app().functions('europe-west1').httpsCallable('scanPlanning');
         showToast('🤖 Extraction du planning...');
-        const result = await callable({
-            imageBase64,
-            mimeType: file.type || 'image/jpeg',
-            firstName: currentUser.firstName,
-            lastName: currentUser.lastName,
-            year: planYear,
-            month: null
+        const resp = await fetch(SCAN_WORKER_URL, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                imageBase64,
+                mimeType: file.type || 'image/jpeg',
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                year: planYear,
+                month: null
+            })
         });
-        const data = result && result.data ? result.data : {};
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+            const msg = data && data.error === 'rate_limit' ? '⏳ Service saturé, réessayez dans 1 minute'
+                       : data && data.error === 'image_too_large' ? '⛔ Image trop lourde'
+                       : data && data.error === 'origin_forbidden' ? '⛔ Origine non autorisée'
+                       : `⛔ Erreur ${resp.status}`;
+            showToast(msg);
+            _scanInProgress = false;
+            return;
+        }
         if (!data.found) {
             showToast('⚠️ ' + (data.reason || 'Ligne non identifiée sur la photo'));
             _scanInProgress = false;

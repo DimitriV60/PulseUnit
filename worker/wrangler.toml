@@ -1,0 +1,11 @@
+name = "pulseunit-scan"
+main = "src/worker.js"
+compatibility_date = "2024-12-01"
+workers_dev = true
+
+# Limites — Cloudflare Workers free tier :
+#   - 100 000 requêtes/jour
+#   - 10 ms CPU/req (les attentes réseau ne comptent pas)
+#   - 128 MB RAM
+[limits]
+cpu_ms = 50
