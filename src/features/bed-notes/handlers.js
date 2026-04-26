@@ -41,8 +41,9 @@ const SURVEY_ROWS = [
     { id: 'fr',      label: 'FR',                unit: '/min',     group: 'venti' },
     { id: 'pep',     label: 'Pep',               unit: 'cmH₂O',    group: 'venti' },
     { id: 'pp',      label: 'Pp',                unit: 'cmH₂O',    group: 'venti' },
-    { id: 'pt',      label: 'Pt',                unit: 'cmH₂O',    group: 'venti' },
-    { id: 'ai',      label: 'AI',                unit: 'cmH₂O',    group: 'venti' }
+    { id: 'pt',      label: 'Pcrête',            unit: 'cmH₂O',    group: 'venti' },
+    { id: 'ai',      label: 'AI',                unit: 'cmH₂O',    group: 'venti' },
+    { id: 'no',      label: 'NO',                unit: 'ppm',      group: 'venti' }
 ];
 
 const SURVEY_HOURS_JOUR = ['10h', '14h', '18h'];
