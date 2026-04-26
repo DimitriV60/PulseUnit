@@ -1087,25 +1087,43 @@
       <div style="font-size:0.78rem; font-weight:700; line-height:1.8; color:var(--text-muted);">
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Données collectées</div>
-        <p style="margin:0 0 10px;">PulseUnit collecte uniquement les données nécessaires au fonctionnement de l'application : identifiant, prénom, rôle professionnel, code PIN chiffré, et les données de garde (assignations, checklist, planning).</p>
+        <p style="margin:0 0 10px;">PulseUnit collecte uniquement les données nécessaires à son fonctionnement :</p>
+        <ul style="margin:0 0 10px 18px; padding:0;">
+          <li><strong style="color:var(--text);">Compte</strong> — identifiant, prénom, nom, rôle professionnel, code PIN haché (SHA-256, non réversible).</li>
+          <li><strong style="color:var(--text);">Garde</strong> — affectation aux lits, checklists, tâches IDE Tech, présence en ligne.</li>
+          <li><strong style="color:var(--text);">Planning personnel</strong> — états jour/nuit/CA/RH/RCV/HS/formation/maladie pour le calendrier individuel.</li>
+          <li><strong style="color:var(--text);">Bourse d'échange</strong> — annonces de permutation de gardes (date offerte/souhaitée, note libre).</li>
+          <li><strong style="color:var(--text);">Notes de lit</strong> — texte libre par lit, 5 emplacements par utilisateur, 7 jours.</li>
+          <li><strong style="color:var(--text);">Messages internes</strong> — conversations privées 1-à-1 entre utilisateurs (texte, horodatage, accusé de lecture).</li>
+          <li><strong style="color:var(--text);">Notifications</strong> — flux des alertes par utilisateur (titre, corps, type, lien d'action).</li>
+        </ul>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Stockage des données</div>
-        <p style="margin:0 0 10px;">Les données sont stockées dans <strong style="color:var(--text);">Firebase Firestore</strong> (Google Cloud, région Europe-West) et dans le <strong style="color:var(--text);">localStorage</strong> de votre appareil. Les notes personnelles de lit sont exclusivement locales (jamais transmises).</p>
+        <p style="margin:0 0 10px;">Les données sont stockées dans <strong style="color:var(--text);">Firebase Firestore</strong> (Google Cloud Platform, région <em>europe-west</em>, hébergement UE) et mises en cache dans le <strong style="color:var(--text);">localStorage</strong> de votre navigateur pour le mode offline. Les notes de lit, le planning et les messages sont synchronisés entre vos appareils via Firestore. Aucun fichier audio, image ou pièce jointe n'est transmis.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Accès aux données</div>
-        <p style="margin:0 0 10px;">Seuls les utilisateurs enregistrés peuvent accéder aux données de garde. L'administrateur dispose d'un accès en lecture globale. Aucune donnée n'est partagée avec des tiers.</p>
+        <p style="margin:0 0 10px;">L'accès est restreint aux utilisateurs authentifiés via les <em>Firestore Security Rules</em> (<code>request.auth != null</code>, auth anonyme Firebase). Les notes de lit et messages privés ne sont visibles que par leurs auteurs/destinataires. L'administrateur dispose d'un accès en lecture globale pour la supervision (gestion des comptes, déblocage, reset PIN). <strong style="color:var(--text);">Aucune donnée n'est partagée avec des tiers ni revendue.</strong></p>
+
+        <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Notifications & Web Push</div>
+        <p style="margin:0 0 10px;">Si vous activez les notifications système, l'autorisation est gérée localement par votre navigateur (<em>Notification API + Service Worker</em>). PulseUnit n'envoie <strong style="color:var(--text);">aucun token vers un serveur tiers</strong> (pas de Firebase Cloud Messaging dans la version actuelle). Les notifs sont déclenchées localement à partir des données Firestore que votre appareil reçoit. Vous pouvez révoquer l'autorisation à tout moment dans les paramètres du navigateur.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Durée de conservation</div>
-        <p style="margin:0 0 10px;">Les données de garde sont conservées le temps d'utilisation de l'application. Les notes de lit s'effacent automatiquement après <strong style="color:var(--text);">7 jours</strong>. Les réponses "travaillez-vous ?" expirent après <strong style="color:var(--text);">4 jours</strong>.</p>
+        <ul style="margin:0 0 10px 18px; padding:0;">
+          <li><strong style="color:var(--text);">Notes de lit</strong> — 7 jours (purge automatique côté client).</li>
+          <li><strong style="color:var(--text);">Notifications</strong> — 30 jours (purge automatique).</li>
+          <li><strong style="color:var(--text);">Réponses "travaillez-vous ?"</strong> — 4 jours.</li>
+          <li><strong style="color:var(--text);">Messages internes</strong> — persistants à vie tant qu'ils ne sont pas supprimés manuellement par leur expéditeur ou destinataire.</li>
+          <li><strong style="color:var(--text);">Données de garde, planning, compte</strong> — conservés le temps d'utilisation de l'application. Suppression sur demande via l'administrateur.</li>
+        </ul>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Sécurité</div>
-        <p style="margin:0 0 10px;">Les codes PIN sont stockés <strong style="color:var(--text);">hachés</strong> (non réversibles). La connexion est sécurisée par HTTPS. Firebase applique des règles de sécurité limitant l'accès aux utilisateurs authentifiés.</p>
+        <p style="margin:0 0 10px;">Codes PIN <strong style="color:var(--text);">hachés SHA-256</strong> côté navigateur avant envoi (jamais en clair). Connexion HTTPS. Content-Security-Policy en place. Compte bloqué après 3 codes erronés (déblocage admin). Service Worker en cache <em>network-first</em> pour <code>index.html</code> (mises à jour automatiques).</p>
 
-        <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Vos droits (RGPD art. 13-14)</div>
-        <p style="margin:0 0 10px;">Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour exercer ces droits, contactez l'administrateur de l'application. Aucune décision automatisée ni profilage n'est effectué.</p>
+        <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Vos droits (RGPD art. 13-14-15-16-17)</div>
+        <p style="margin:0 0 10px;">Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition. Pour exercer ces droits, contactez l'administrateur de l'application qui supprimera votre compte et toutes les données associées (notes, messages, planning, notifications) dans les meilleurs délais. <strong style="color:var(--text);">Aucune décision automatisée ni profilage</strong> n'est effectué.</p>
 
-        <div style="font-size:0.72rem; font-weight:900; color:var(--med); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Important</div>
-        <p style="margin:0;">PulseUnit est un outil d'organisation interne. <strong style="color:var(--text);">Ne saisissez jamais d'informations patient nominatives</strong> dans cette application.</p>
+        <div style="font-size:0.72rem; font-weight:900; color:var(--med); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">⚠️ Important — Données patient</div>
+        <p style="margin:0;">PulseUnit est un outil d'organisation d'équipe. <strong style="color:var(--text);">Ne saisissez JAMAIS d'informations patient nominatives</strong> (nom, prénom, date de naissance, NIP, diagnostic identifiant) dans les notes de lit, les messages internes ou les annonces de bourse. L'application n'est pas un dossier patient et n'est pas conforme aux exigences <em>HDS</em> (Hébergeur de Données de Santé).</p>
       </div>
 
       <button class="btn-primary" style="margin-top:18px;" onclick="document.getElementById('rgpd-modal').style.display='none'">Fermer</button>
