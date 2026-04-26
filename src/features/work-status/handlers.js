@@ -21,8 +21,13 @@ window.checkWorkStatus = function checkWorkStatus() {
                        || meds.includes(currentUser.id);
   if (isAlreadyActive) return;
 
+  // Cache uniquement les "oui" : si l'utilisateur a déjà confirmé travailler, isAlreadyActive l'a intercepté.
+  // Si l'utilisateur a répondu "non" (mode lecture), on re-pose la question à chaque ouverture
+  // pour qu'un nouveau collègue puisse rejoindre la garde même après avoir cliqué non par erreur.
   const wsKey = `pu_ws_${currentShiftKey}_${currentUser.id}`;
-  if (localStorage.getItem(wsKey) !== null) return;
+  // Nettoyage rétrocompatible : on supprime les anciennes valeurs "0" qui bloquaient la modale
+  if (localStorage.getItem(wsKey) === '0') localStorage.removeItem(wsKey);
+  if (localStorage.getItem(wsKey) === '1') return;
 
   // États planning → assignation automatique silencieuse
   const AUTO_STATES = new Set(['jour', 'nuit', 'formation', 'hs_j', 'hs_n', 'hs']);
@@ -65,8 +70,10 @@ window.handleWorkChoice = function handleWorkChoice(isWorking) {
   if (modal) modal.style.display = 'none';
   if (!currentUser) return;
 
-  // Mémoriser la réponse pour cette garde (évite de redemander)
-  localStorage.setItem(`pu_ws_${currentShiftKey}_${currentUser.id}`, isWorking ? '1' : '0');
+  // Mémoriser uniquement les "oui" — les "non" doivent permettre une nouvelle proposition à la prochaine ouverture
+  if (isWorking) {
+    localStorage.setItem(`pu_ws_${currentShiftKey}_${currentUser.id}`, '1');
+  }
 
   if (isWorking) {
     const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');

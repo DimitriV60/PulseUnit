@@ -10,6 +10,7 @@
  *   - PRESENCE_DOC      (pulseunit/presence — utilisateurs en ligne)
  *   - SWAP_DOC          (pulseunit/swaps   — bourse d'échanges de gardes)
  *   - PLANS_DOC         (pulseunit/plans   — planning personnel par user)
+ *   - BEDNOTES_DOC     (pulseunit/bednotes — notes de lit par user, sync multi-appareils)
  */
 
 window.FIREBASE_CONFIG = {
@@ -28,6 +29,7 @@ window.RESETS_DOC = null;
 window.PRESENCE_DOC = null;
 window.SWAP_DOC = null;
 window.PLANS_DOC = null;
+window.BEDNOTES_DOC = null;
 window.ADMIN_PASS_HASH_REMOTE = null;
 
 // Promesse résolue quand l'auth anonyme Firebase est prête.
@@ -44,6 +46,7 @@ if (window.FIREBASE_CONFIG.apiKey !== 'VOTRE_API_KEY') {
     window.PRESENCE_DOC  = window.db.collection('pulseunit').doc('presence');
     window.SWAP_DOC      = window.db.collection('pulseunit').doc('swaps');
     window.PLANS_DOC     = window.db.collection('pulseunit').doc('plans');
+    window.BEDNOTES_DOC  = window.db.collection('pulseunit').doc('bednotes');
 
     // Auth anonyme — satisfait les Firestore Security Rules (request.auth != null)
     window._authReady = new Promise(resolve => {

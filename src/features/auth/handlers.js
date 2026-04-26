@@ -196,6 +196,8 @@ window.registerUser = async function registerUser() {
     startPresenceHeartbeat();
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
+    await loadUserPlan(rosterId);
+    if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
     renderApp();
     showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
     checkWorkStatus();
@@ -281,6 +283,7 @@ window.loginUser = async function loginUser() {
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     await loadUserPlan(userId);
+    if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
     renderApp();
     checkWorkStatus();
 };
@@ -726,7 +729,9 @@ window.reloadAppData = async function reloadAppData() {
     }
     // 2. Recharge auth users + presence + resets
     await loadAuth();
-    // 3. Recharge roster + shiftHistory
+    // 3. Recharge bed notes (sync multi-appareils)
+    if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
+    // 3b. Recharge roster + shiftHistory
     if (window.PULSEUNIT_DOC) {
         try {
             const doc = await window.PULSEUNIT_DOC.get({ source: 'server' });

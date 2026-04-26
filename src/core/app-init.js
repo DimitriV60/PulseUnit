@@ -99,6 +99,14 @@ window.appInit = async function appInit() {
       }, err => console.warn('PulseUnit: Plans hors ligne', err));
     }
 
+    // Écoute notes de lit (sync multi-appareils)
+    if (BEDNOTES_DOC) {
+      BEDNOTES_DOC.onSnapshot(doc => {
+        if (window._bedNotesSavePending || doc.metadata.hasPendingWrites || !doc.exists) return;
+        if (typeof window.applyBedNotesSnapshot === 'function') window.applyBedNotesSnapshot(doc.data());
+      }, err => console.warn('PulseUnit: BedNotes hors ligne', err));
+    }
+
     // Écoute bourse d'échange
     if (SWAP_DOC) {
       SWAP_DOC.onSnapshot(doc => {
@@ -125,6 +133,7 @@ window.appInit = async function appInit() {
       const pv = document.getElementById('planning-ca-view');
       if (pv && pv.style.display !== 'none') renderPlanCalendrier();
     });
+    if (typeof window.loadBedNotes === 'function') window.loadBedNotes().then(() => renderApp());
   } else if (currentUser && authUsers[currentUser.id]) {
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
@@ -134,6 +143,7 @@ window.appInit = async function appInit() {
       const pv = document.getElementById('planning-ca-view');
       if (pv && pv.style.display !== 'none') renderPlanCalendrier();
     });
+    if (typeof window.loadBedNotes === 'function') window.loadBedNotes().then(() => renderApp());
   } else {
     currentUser = null;
     setAdminSession(false);

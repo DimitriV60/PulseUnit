@@ -1,6 +1,7 @@
 /**
  * Bed notes — 5 notes libres par lit (Garde 1 à 5), 7 jours TTL.
- * Stockage localStorage, visible uniquement par l'auteur.
+ * Stockage Firestore (BEDNOTES_DOC) + cache localStorage offline.
+ * Sync multi-appareils via onSnapshot. Visible uniquement par l'auteur.
  * Double-tap carte lit → ouvre la note.
  */
 
@@ -10,25 +11,73 @@ var _activeNoteSlot = 0;
 const BED_NOTE_TTL = 7 * 24 * 60 * 60 * 1000;
 const NOTE_SLOTS = 5;
 
+window.bedNotesData = {};
+window._bedNotesSavePending = false;
+
 function _slotKey(slot, bedId) {
     return 'slot_' + slot + ':' + bedId;
 }
 
+function _pruneExpired(notes) {
+    const cutoff = Date.now() - BED_NOTE_TTL;
+    Object.keys(notes).forEach(k => { if (notes[k].createdAt < cutoff) delete notes[k]; });
+    return notes;
+}
+
 function _getBedNotes() {
     if (!currentUser) return {};
-    try {
-        const raw = localStorage.getItem('pu_bn_' + currentUser.id);
-        const notes = raw ? JSON.parse(raw) : {};
-        const cutoff = Date.now() - BED_NOTE_TTL;
-        Object.keys(notes).forEach(k => { if (notes[k].createdAt < cutoff) delete notes[k]; });
-        return notes;
-    } catch (e) { return {}; }
+    let notes = (window.bedNotesData && window.bedNotesData[currentUser.id]) ? { ...window.bedNotesData[currentUser.id] } : null;
+    if (!notes) {
+        try {
+            const raw = localStorage.getItem('pu_bn_' + currentUser.id);
+            notes = raw ? JSON.parse(raw) : {};
+        } catch (e) { notes = {}; }
+    }
+    return _pruneExpired(notes);
 }
 
 function _saveBedNotes(notes) {
     if (!currentUser) return;
-    localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(notes));
+    window.bedNotesData[currentUser.id] = notes;
+    try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(notes)); } catch (e) {}
+    if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
+        window._bedNotesSavePending = true;
+        BEDNOTES_DOC.set({ [currentUser.id]: notes }, { merge: true })
+            .then(() => { window._bedNotesSavePending = false; })
+            .catch(e => { window._bedNotesSavePending = false; console.warn('Bed notes sync error', e); });
+    }
 }
+
+window.loadBedNotes = async function loadBedNotes() {
+    if (typeof BEDNOTES_DOC === 'undefined' || !BEDNOTES_DOC) return;
+    try {
+        const doc = await BEDNOTES_DOC.get({ source: 'server' });
+        if (doc.exists && doc.data()) {
+            window.bedNotesData = doc.data();
+            if (currentUser && window.bedNotesData[currentUser.id]) {
+                try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(window.bedNotesData[currentUser.id])); } catch (e) {}
+            }
+        }
+    } catch (e) { console.warn('loadBedNotes error', e); }
+};
+
+window.applyBedNotesSnapshot = function applyBedNotesSnapshot(data) {
+    if (!data) return;
+    window.bedNotesData = data;
+    if (currentUser && data[currentUser.id]) {
+        try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(data[currentUser.id])); } catch (e) {}
+    }
+    if (_currentNotesBed) {
+        _renderNoteTabsUI();
+        const notes = _getBedNotes();
+        const existing = notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
+        const textarea = document.getElementById('bed-note-text');
+        if (textarea && document.activeElement !== textarea) {
+            textarea.value = existing ? existing.text : '';
+        }
+    }
+    if (typeof renderApp === 'function') renderApp();
+};
 
 function _renderNoteTabsUI() {
     const container = document.getElementById('bed-note-tabs');
