@@ -17,6 +17,10 @@ window.toggleMedBed = function toggleMedBed(bedKey, docIndex) {
     if (!currentUser) return;
     initShiftData(currentShiftKey);
     if (isShiftLocked(currentShiftKey)) return;
+    if (shiftHistory[currentShiftKey].medLocked && !isAdmin()) {
+        showToast('🔒 Cartes réa verrouillées par l\'admin');
+        return;
+    }
     if (!isOnCurrentShift()) {
         showToast('\u26D4 Vous n\'\u00EAtes pas affect\u00E9 \u00E0 cette garde');
         return;
@@ -183,13 +187,13 @@ window.renderApp = function renderApp() {
 
     [0, 1].forEach(i => {
         const m = roster.find(r => r.id === ms[i]);
-        let grid = `<div class="med-beds-selector" style="${locked ? 'opacity:0.6; pointer-events:none;' : ''}">`;
+        const medEditable = !locked && (!h.medLocked || isAdmin());
+        let grid = `<div class="med-beds-selector" style="${!medEditable ? 'opacity:0.6; pointer-events:none;' : ''}">`;
         reaBedsList.forEach(n => {
             const isActive = mBeds[n] === i ? 'active' : '';
             grid += `<div class="med-bed-btn ${isActive}" onclick="toggleMedBed('${n}', ${i})">${n}</div>`;
         });
         grid += `</div>`;
-        const medEditable = !locked && !h.medLocked;
         const _lockBtn = isAdmin()
             ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>`
             : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`;
@@ -245,7 +249,8 @@ window.renderApp = function renderApp() {
     </div>`;
 
     const m2 = roster.find(r => r.id === ms[2]);
-    let uGrid = `<div class="med-beds-selector" style="${locked ? 'opacity:0.6; pointer-events:none;' : ''}">`;
+    const usipMedEditable = !locked && (!h.medLocked || isAdmin());
+    let uGrid = `<div class="med-beds-selector" style="${!usipMedEditable ? 'opacity:0.6; pointer-events:none;' : ''}">`;
     [1, 2, 3, 4, 5].forEach(n => {
         const isActive = mBeds['usip-' + n] === 2 ? 'active' : '';
         uGrid += `<div class="med-bed-btn ${isActive}" onclick="toggleMedBed('usip-${n}', 2)">${n}</div>`;
@@ -264,7 +269,7 @@ window.renderApp = function renderApp() {
         ${uPhone ? `<a href="tel:${uPhoneNum}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${uPhone}</a>` : ''}
       </div>
       ${uGrid}
-      ${m2 ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m2.firstName)} ${escapeHTML(m2.lastName.charAt(0)).toUpperCase()}. ${locked ? '' : `<span class="remove-btn" onclick="clearShift(2,'med')">\u00D7</span>`}</div>` : `<div class="search-box">${locked ? '---' : `<input type="text" id="search-med-2" class="special-input" placeholder="\uD83D\uDD0D Nom Doc..." oninput="doSearch('med-2',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-2"></div>`}</div>`}
+      ${m2 ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m2.firstName)} ${escapeHTML(m2.lastName.charAt(0)).toUpperCase()}. ${usipMedEditable ? `<span class="remove-btn" onclick="clearShift(2,'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${usipMedEditable ? `<input type="text" id="search-med-2" class="special-input" placeholder="\uD83D\uDD0D Nom Doc..." oninput="doSearch('med-2',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-2"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
       `}
     </div>`;
 

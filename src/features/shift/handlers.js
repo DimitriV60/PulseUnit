@@ -320,6 +320,10 @@ window.createNewStaff = function createNewStaff() {
 window.clearShift = function clearShift(id, type) {
     initShiftData(currentShiftKey);
     if (isShiftLocked(currentShiftKey)) return;
+    if (type === 'med' && shiftHistory[currentShiftKey].medLocked && !isAdmin()) {
+        showToast('🔒 Cartes réa verrouillées par l\'admin');
+        return;
+    }
     if (type === 'tech') shiftHistory[currentShiftKey].techIdeId = null;
     else if (type === 'med') {
         const dO = currentShiftKey.split('-').slice(0, 3).join('-');
