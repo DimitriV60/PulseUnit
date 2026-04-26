@@ -1265,7 +1265,7 @@
 
   <!-- Modale note temporaire lit (double-tap) -->
   <div id="bed-note-modal" style="z-index:600;">
-    <div class="modal-content" style="width:min(620px,96vw); max-height:92vh; display:flex; flex-direction:column;">
+    <div class="modal-content" style="width:min(620px,96vw); max-height:92vh; display:flex; flex-direction:column; position:relative;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-shrink:0;">
         <div style="font-size:1.05rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
         <button onclick="closeBedNote()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
@@ -1290,6 +1290,8 @@
         <button id="bed-note-delete-btn" onclick="deleteBedNote()" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
         <button id="bed-note-save-btn" onclick="saveBedNote()" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
       </div>
+      <!-- Overlay chooser de suppression -->
+      <div id="bed-note-delete-chooser" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.92); border-radius:14px; flex-direction:column; align-items:stretch; justify-content:center; padding:24px; gap:10px; z-index:10;"></div>
     </div>
   </div>
 

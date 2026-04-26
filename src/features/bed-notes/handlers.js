@@ -521,14 +521,56 @@ window.saveBedNote = function saveBedNote() {
 
 window.deleteBedNote = function deleteBedNote() {
     if (!_currentNotesBed) return;
-    if (typeof confirm === 'function' && !confirm('Supprimer définitivement cette note (texte privé + grille partagée) ?')) return;
-    // Texte privé
+    _renderDeleteChooserUI();
+    const el = document.getElementById('bed-note-delete-chooser');
+    if (el) el.style.display = 'flex';
+};
+
+window.cancelDeleteBedNote = function cancelDeleteBedNote() {
+    const el = document.getElementById('bed-note-delete-chooser');
+    if (el) el.style.display = 'none';
+};
+
+function _renderDeleteChooserUI() {
+    const el = document.getElementById('bed-note-delete-chooser');
+    if (!el || !_currentNotesBed) return;
     const notes = _getBedNotes();
-    delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
-    _saveBedNotes(notes);
-    // Survey partagé
-    _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, {}, null);
-    closeBedNote();
+    const own = notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
+    const hasText = own && !_isTextOnlyNoteEmpty(own);
+    const sharedSlot = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
+    const hasSurvey = sharedSlot && !_isSurveyEmpty(sharedSlot.survey);
+    let html = `<div style="font-weight:900; color:var(--text); font-size:1rem; margin-bottom:14px; text-align:center;">Que supprimer ?</div>`;
+    if (hasText) {
+        html += `<button onclick="confirmDeleteBedNote('text')" style="padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; text-align:left;">📝 Observations privées <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(visible par vous seul)</span></button>`;
+    }
+    if (hasSurvey) {
+        html += `<button onclick="confirmDeleteBedNote('survey')" style="padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; text-align:left;">📋 Surveillance partagée <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(IDE + AS)</span></button>`;
+    }
+    if (hasText && hasSurvey) {
+        html += `<button onclick="confirmDeleteBedNote('both')" style="padding:12px; border-radius:10px; border:1px solid var(--crit); background:var(--crit); color:white; font-weight:900; cursor:pointer;">🗑️ Tout supprimer</button>`;
+    }
+    if (!hasText && !hasSurvey) {
+        html += `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:8px;">Rien à supprimer dans cette garde.</div>`;
+    }
+    html += `<button onclick="cancelDeleteBedNote()" style="padding:10px; border-radius:10px; border:none; background:transparent; color:var(--text-muted); font-weight:700; cursor:pointer; margin-top:6px;">Annuler</button>`;
+    el.innerHTML = html;
+}
+
+window.confirmDeleteBedNote = function confirmDeleteBedNote(scope) {
+    if (!_currentNotesBed) return;
+    if (scope === 'text' || scope === 'both') {
+        const notes = _getBedNotes();
+        delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
+        _saveBedNotes(notes);
+    }
+    if (scope === 'survey' || scope === 'both') {
+        _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, {}, null);
+    }
+    cancelDeleteBedNote();
+    _loadNoteSlot(_activeNoteSlot);
     renderApp();
-    showToast('🗑️ Note supprimée');
+    const msg = scope === 'text'   ? '🗑️ Observations supprimées'
+              : scope === 'survey' ? '🗑️ Surveillance supprimée'
+              : '🗑️ Note supprimée (texte + surveillance)';
+    showToast(msg);
 };
