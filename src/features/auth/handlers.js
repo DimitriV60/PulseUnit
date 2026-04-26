@@ -198,6 +198,10 @@ window.registerUser = async function registerUser() {
     updateHeaderUser();
     await loadUserPlan(rosterId);
     if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
+    if (typeof window.loadNotifs === 'function') await window.loadNotifs();
+    if (typeof window.loadMessages === 'function') await window.loadMessages();
+    if (typeof window.startShiftReminderLoop === 'function') window.startShiftReminderLoop();
+    if (typeof window.maybePromptNotifPermission === 'function') window.maybePromptNotifPermission();
     renderApp();
     showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
     checkWorkStatus();
@@ -284,6 +288,10 @@ window.loginUser = async function loginUser() {
     updateHeaderUser();
     await loadUserPlan(userId);
     if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
+    if (typeof window.loadNotifs === 'function') await window.loadNotifs();
+    if (typeof window.loadMessages === 'function') await window.loadMessages();
+    if (typeof window.startShiftReminderLoop === 'function') window.startShiftReminderLoop();
+    if (typeof window.maybePromptNotifPermission === 'function') window.maybePromptNotifPermission();
     renderApp();
     checkWorkStatus();
 };
@@ -306,6 +314,7 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
         }
         document.getElementById('auth-modal').style.display = 'none';
         updateHeaderUser();
+        if (typeof window.loadNotifs === 'function') await window.loadNotifs();
         renderApp();
         updateAdminPanelBtn();
         renderAdminResets();
@@ -364,6 +373,7 @@ function updateHeaderUser() {
     } else {
         el.innerHTML = `<button class="header-btn outline" onclick="showAuthModal()" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
     }
+    if (typeof window.renderNotifsBell === 'function') window.renderNotifsBell();
 }
 window.updateHeaderUser = updateHeaderUser;
 
@@ -465,6 +475,13 @@ window.sendResetRequest = async function sendResetRequest() {
         requestedAt: new Date().toISOString(), status: 'pending'
     });
     if (RESETS_DOC) await RESETS_DOC.set({ requests: resetRequests });
+    // Notifier l'admin (compte admin_view)
+    if (typeof window.pushNotif === 'function') {
+        window.pushNotif('admin_view', 'reset',
+            `🔑 Demande de reset PIN — ${user.firstName} ${user.lastName.toUpperCase()}`,
+            `${(user.role || 'ide').toUpperCase()} demande un code provisoire. Cliquez pour ouvrir le panneau admin.`,
+            { kind: 'openAdminResets' });
+    }
     showAuthView('login');
     alert('Demande envoyée.\nL\'administrateur va vous fournir un code provisoire.');
 };

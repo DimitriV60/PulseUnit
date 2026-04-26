@@ -183,6 +183,17 @@ window.submitSwapRequest = async function submitSwapRequest() {
         if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
         swapRequests = updated; window.renderBourseList();
         showToast('✅ Demande publiée');
+        // Notifier tous les agents du roster (sauf l'auteur)
+        if (typeof window.pushNotifToMany === 'function' && Array.isArray(roster)) {
+            const targets = roster.filter(r => r.id !== currentUser.id).map(r => r.id);
+            const wantedTxt = req.wantedType === 'date'
+                ? `${req.wantedShift === 'jour' ? 'Jour' : (req.wantedShift === 'nuit' ? 'Nuit' : 'Indif.')} le ${req.wantedDate}`
+                : 'Indifférent';
+            window.pushNotifToMany(targets, 'bourse',
+                `🔄 Nouvelle annonce — ${req.userName}`,
+                `Cède ${req.offeredShift === 'jour' ? 'Jour' : 'Nuit'} ${req.offeredDate} • Recherche : ${wantedTxt}`,
+                { kind: 'openBourse' });
+        }
     } catch(e) { showToast('Erreur de connexion'); }
 };
 
@@ -223,6 +234,14 @@ window.submitPropose = async function() {
         if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
         swapRequests = updated; window.renderBourseList();
         showToast('✅ Proposition envoyée');
+        // Notifier l'auteur de l'annonce
+        const original = swapRequests.find(r => r.id === _propReqId);
+        if (original && typeof window.pushNotif === 'function') {
+            window.pushNotif(original.userId, 'bourse',
+                `🔄 Proposition reçue — ${currentUser.firstName} ${currentUser.lastName}`,
+                `Propose ${propShift === 'jour' ? 'Jour' : 'Nuit'} le ${_propDate} en échange de votre garde`,
+                { kind: 'openBourse' });
+        }
     } catch(e) { showToast('Erreur de connexion'); }
 };
 
@@ -238,6 +257,13 @@ window.acceptSwap = async function acceptSwap(id) {
         if (SWAP_DOC) await SWAP_DOC.set({ requests: updated }, { merge: false });
         swapRequests = updated; window.renderBourseList();
         showToast('✅ Échange confirmé — à valider avec le cadre');
+        // Notifier le proposeur que l'échange a été accepté
+        if (r.proposedBy && typeof window.pushNotif === 'function') {
+            window.pushNotif(r.proposedBy, 'bourse',
+                `✅ Échange accepté — ${currentUser.firstName} ${currentUser.lastName}`,
+                `Votre proposition pour la garde du ${r.offeredDate} a été confirmée. À valider avec le cadre.`,
+                { kind: 'openBourse' });
+        }
     } catch(e) { showToast('Erreur de connexion'); }
 };
 window.declineProposal = async function(id) {

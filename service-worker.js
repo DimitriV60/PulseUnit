@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulseunit-v2';
+const CACHE_NAME = 'pulseunit-v3';
 const FILES_TO_CACHE = [
   '/manifest.json',
   '/icon-192.png',
@@ -34,4 +34,21 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
+});
+
+// Click sur notif système → focus/ouvre l'app
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const data = e.notification.data || {};
+  e.waitUntil((async () => {
+    const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    let client = allClients.find(c => c.url.includes(self.location.origin));
+    if (client) {
+      await client.focus();
+      // Envoyer message au client pour gérer l'action ciblée
+      try { client.postMessage({ type: 'notif-click', data }); } catch (err) {}
+    } else {
+      await clients.openWindow('/');
+    }
+  })());
 });

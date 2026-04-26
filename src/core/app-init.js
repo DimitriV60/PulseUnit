@@ -107,6 +107,22 @@ window.appInit = async function appInit() {
       }, err => console.warn('PulseUnit: BedNotes hors ligne', err));
     }
 
+    // Écoute centre de notifications (sync multi-appareils + push)
+    if (NOTIFS_DOC) {
+      NOTIFS_DOC.onSnapshot(doc => {
+        if (window._notifsSavePending || doc.metadata.hasPendingWrites || !doc.exists) return;
+        if (typeof window.applyNotifsSnapshot === 'function') window.applyNotifsSnapshot(doc.data());
+      }, err => console.warn('PulseUnit: Notifs hors ligne', err));
+    }
+
+    // Écoute messages internes (sync multi-appareils + notif sur réception)
+    if (MESSAGES_DOC) {
+      MESSAGES_DOC.onSnapshot(doc => {
+        if (window._messagesSavePending || doc.metadata.hasPendingWrites || !doc.exists) return;
+        if (typeof window.applyMessagesSnapshot === 'function') window.applyMessagesSnapshot(doc.data());
+      }, err => console.warn('PulseUnit: Messages hors ligne', err));
+    }
+
     // Écoute bourse d'échange
     if (SWAP_DOC) {
       SWAP_DOC.onSnapshot(doc => {
@@ -134,6 +150,10 @@ window.appInit = async function appInit() {
       if (pv && pv.style.display !== 'none') renderPlanCalendrier();
     });
     if (typeof window.loadBedNotes === 'function') window.loadBedNotes().then(() => renderApp());
+    if (typeof window.loadNotifs === 'function') window.loadNotifs();
+    if (typeof window.loadMessages === 'function') window.loadMessages();
+    if (typeof window.startShiftReminderLoop === 'function') window.startShiftReminderLoop();
+    if (typeof window.maybePromptNotifPermission === 'function') window.maybePromptNotifPermission();
   } else if (currentUser && authUsers[currentUser.id]) {
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
@@ -144,6 +164,10 @@ window.appInit = async function appInit() {
       if (pv && pv.style.display !== 'none') renderPlanCalendrier();
     });
     if (typeof window.loadBedNotes === 'function') window.loadBedNotes().then(() => renderApp());
+    if (typeof window.loadNotifs === 'function') window.loadNotifs();
+    if (typeof window.loadMessages === 'function') window.loadMessages();
+    if (typeof window.startShiftReminderLoop === 'function') window.startShiftReminderLoop();
+    if (typeof window.maybePromptNotifPermission === 'function') window.maybePromptNotifPermission();
   } else {
     currentUser = null;
     setAdminSession(false);
