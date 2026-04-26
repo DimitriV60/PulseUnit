@@ -31,6 +31,111 @@ function savePlanData() {
     }
 }
 
+// --- Scan planning par photo ------------------------------------------------
+
+let _scanInProgress = false;
+
+function _readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result;
+            const idx = result.indexOf(',');
+            resolve(idx >= 0 ? result.slice(idx + 1) : result);
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
+window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
+    const input = ev && ev.target ? ev.target : document.getElementById('plan-scan-input');
+    const file = input && input.files && input.files[0];
+    if (input) input.value = '';
+    if (!file) return;
+    if (_scanInProgress) { showToast('⏳ Scan déjà en cours...'); return; }
+    if (!currentUser) { showToast('Connectez-vous pour scanner'); return; }
+    if (typeof firebase === 'undefined' || !firebase.functions) {
+        showToast('⛔ Module scan indisponible (SDK Functions manquant)');
+        return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+        showToast('⛔ Image trop volumineuse (max 8 Mo)');
+        return;
+    }
+    _scanInProgress = true;
+    showToast('📷 Lecture de la photo...');
+    try {
+        const imageBase64 = await _readFileAsBase64(file);
+        const callable = firebase.app().functions('europe-west1').httpsCallable('scanPlanning');
+        showToast('🤖 Extraction du planning...');
+        const result = await callable({
+            imageBase64,
+            mimeType: file.type || 'image/jpeg',
+            firstName: currentUser.firstName,
+            lastName: currentUser.lastName,
+            year: planYear,
+            month: null
+        });
+        const data = result && result.data ? result.data : {};
+        if (!data.found) {
+            showToast('⚠️ ' + (data.reason || 'Ligne non identifiée sur la photo'));
+            _scanInProgress = false;
+            return;
+        }
+        _applyScannedPlan(data.states || {}, data.count || 0);
+    } catch (e) {
+        console.warn('scanPlanning error', e);
+        const msg = e && e.message ? e.message : 'Erreur de scan';
+        showToast('⛔ ' + msg);
+    }
+    _scanInProgress = false;
+};
+
+function _applyScannedPlan(scanned, count) {
+    if (!scanned || count === 0) {
+        showToast('Aucune donnée à importer');
+        return;
+    }
+    // Snapshot pour undo
+    const snapshot = JSON.parse(JSON.stringify(planStates));
+    let added = 0, skipped = 0;
+    for (const [date, state] of Object.entries(scanned)) {
+        if (planStates[date] !== undefined) { skipped++; continue; }
+        planStates[date] = state;
+        added++;
+    }
+    savePlanData();
+    if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
+    else if (typeof updatePlanStats === 'function') updatePlanStats();
+    _showScanUndoToast(added, skipped, snapshot);
+}
+
+function _showScanUndoToast(added, skipped, snapshot) {
+    const wrap = document.getElementById('plan-scan-undo');
+    if (!wrap) {
+        const el = document.createElement('div');
+        el.id = 'plan-scan-undo';
+        el.style.cssText = 'position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:9999; background:var(--surface); border:1px solid var(--brand-aqua); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:14px; box-shadow:0 4px 16px rgba(0,0,0,0.35); font-weight:800; color:var(--text); font-size:0.88rem;';
+        document.body.appendChild(el);
+    }
+    const root = document.getElementById('plan-scan-undo');
+    const skippedTxt = skipped > 0 ? ` · ${skipped} ignoré${skipped > 1 ? 's' : ''} (déjà saisis)` : '';
+    root.innerHTML = `<span>✅ ${added} jour${added > 1 ? 's' : ''} importé${added > 1 ? 's' : ''}${skippedTxt}</span>
+        <button id="plan-scan-undo-btn" style="background:var(--brand-aqua); color:#000; border:none; border-radius:8px; padding:7px 12px; font-weight:900; cursor:pointer; font-size:0.82rem;">Annuler</button>`;
+    root.style.display = 'flex';
+    let timer = setTimeout(() => { root.style.display = 'none'; }, 15000);
+    document.getElementById('plan-scan-undo-btn').onclick = () => {
+        clearTimeout(timer);
+        planStates = snapshot;
+        savePlanData();
+        if (typeof renderPlanCalendar === 'function') renderPlanCalendar();
+        else if (typeof updatePlanStats === 'function') updatePlanStats();
+        root.style.display = 'none';
+        showToast('↩️ Import annulé');
+    };
+}
+
 async function loadUserPlan(userId) {
     if (typeof PLANS_DOC === 'undefined' || !PLANS_DOC || !userId) return;
     try {
