@@ -496,9 +496,10 @@ window.closeBedNote = function closeBedNote() {
 };
 
 window.saveBedNote = function saveBedNote() {
+    if (!_currentNotesBed) return;
     const text = document.getElementById('bed-note-text').value.trim();
     const survey = _readSurveyValuesFromUI();
-    if (!_currentNotesBed) return;
+    const hasContent = text !== '' || !_isSurveyEmpty(survey);
     // 1. Texte privé
     const notes = _getBedNotes();
     const key = _slotKey(_activeNoteSlot, _currentNotesBed);
@@ -515,17 +516,19 @@ window.saveBedNote = function saveBedNote() {
     _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
     closeBedNote();
     renderApp();
-    if (text !== '' || !_isSurveyEmpty(survey)) showToast('📝 Note enregistrée');
+    showToast(hasContent ? '📝 Note enregistrée' : '🧹 Note vidée');
 };
 
 window.deleteBedNote = function deleteBedNote() {
     if (!_currentNotesBed) return;
+    if (typeof confirm === 'function' && !confirm('Supprimer définitivement cette note (texte privé + grille partagée) ?')) return;
     // Texte privé
     const notes = _getBedNotes();
     delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
     _saveBedNotes(notes);
     // Survey partagé
     _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, {}, null);
-    _loadNoteSlot(_activeNoteSlot);
+    closeBedNote();
     renderApp();
+    showToast('🗑️ Note supprimée');
 };
