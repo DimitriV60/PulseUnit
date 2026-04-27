@@ -9,3 +9,7 @@ workers_dev = true
 #   - 128 MB RAM
 [limits]
 cpu_ms = 50
+
+# Workers AI binding — donne accès à env.AI dans le code
+[ai]
+binding = "AI"

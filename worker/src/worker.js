@@ -1,19 +1,21 @@
 /**
  * Cloudflare Worker — PulseUnit Scan Planning.
  *
- * POST /  body JSON : { imageBase64, mimeType, firstName, lastName, year, month? }
- * → appelle Google Gemini 2.0 Flash en vision
+ * POST /  body JSON : { imageBase64, firstName, lastName, year, month? }
+ * → appelle Cloudflare Workers AI (Llama 3.2 11B Vision Instruct)
  * → retourne { found, states: { 'YYYY-MM-DD': stateId }, count, dropped } ou { found:false, reason }
  *
  * Sécurité :
- *  - Origin allowlist (Pulseunit Firebase Hosting + localhost dev)
- *  - Clé GEMINI_API_KEY en Cloudflare Worker secret (pas de fuite client)
- *  - Retry exponentiel + jitter sur 429/503 pour absorber les pics
+ *  - Origin allowlist tolérante (Firebase Hosting + sous-domaines pulseunit*)
+ *  - Aucune clé API externe — le binding AI est natif Cloudflare
  *
- * Quotas Gemini Flash 2.0 free tier :
- *  - 15 RPM (rate limit) — absorbé par retry
- *  - 1 500 RPD — largement suffisant pour 100 agents × 1 scan/mois
- *  - 1M tokens/min input — limit théorique non atteint
+ * Free tier Cloudflare Workers AI :
+ *  - 10 000 neurones/jour (≈ 1 000-3 000 invocations vision)
+ *  - 100 agents × 1 scan/mois ≈ 100 invocations/mois → <1% du quota
+ *  - Aucun lien Google → plus de 429 Gemini possible
+ *
+ * Setup requis dans Cloudflare dashboard (Worker Settings → Bindings) :
+ *   ajouter une "Workers AI" binding nommée "AI"
  */
 
 const ALLOWED_ORIGINS = [
@@ -105,71 +107,38 @@ function jsonResponse(data, status, origin) {
   });
 }
 
-async function callGeminiWithRetry({ apiKey, systemPrompt, userPrompt, imageBase64, mimeType, attempt = 0 }) {
-  const MAX_ATTEMPTS = 2;
-  // gemini-2.0-flash-lite : meilleur free tier disponible (30 RPM, 1500 RPD)
-  // et capacités vision suffisantes pour OCR de planning hospitalier.
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+async function callVisionAI({ env, systemPrompt, userPrompt, imageBase64 }) {
+  // Cloudflare Workers AI — modèle vision Llama 3.2 11B
+  // Free tier : 10 000 neurones/jour (≈ 1 000-3 000 invocations selon taille image)
+  // Aucune clé API externe, aucun lien Google → plus de 429
+  if (!env.AI) {
+    return { error: 'ai_binding_missing', message: 'Liaison AI non configurée dans ce Worker' };
+  }
+  // Convertit base64 → Uint8Array (Workers AI accepte tableau d'octets)
+  const binary = atob(imageBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
   let resp;
   try {
-    resp = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{
-          role: 'user',
-          parts: [
-            { inlineData: { mimeType, data: imageBase64 } },
-            { text: userPrompt }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.0,
-          responseMimeType: 'application/json',
-          maxOutputTokens: 4096
-        }
-      })
+    resp = await env.AI.run('@cf/meta/llama-3.2-11b-vision-instruct', {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt }
+      ],
+      image: Array.from(bytes),
+      max_tokens: 4096,
+      temperature: 0.0
     });
   } catch (e) {
-    return { error: 'network', message: String(e && e.message || e) };
+    return { error: 'workers_ai_error', message: String(e && e.message || e) };
   }
 
-  if ((resp.status === 429 || resp.status === 503) && attempt < MAX_ATTEMPTS - 1) {
-    const baseDelay = 1500 * Math.pow(2, attempt); // 1.5s, 3s, 6s
-    const jitter = Math.random() * 2000;
-    await new Promise(r => setTimeout(r, baseDelay + jitter));
-    return callGeminiWithRetry({ apiKey, systemPrompt, userPrompt, imageBase64, mimeType, attempt: attempt + 1 });
+  // Réponse Workers AI : { response: "..." } ou { result: { response: "..." } }
+  const text = (resp && (resp.response || (resp.result && resp.result.response))) || '';
+  if (!text) {
+    return { error: 'empty_response', message: 'Réponse Vision vide', body: JSON.stringify(resp).slice(0, 400) };
   }
-
-  if (!resp.ok) {
-    const errBody = await resp.text().catch(() => '');
-    let parsedMsg = '';
-    let quotaInfo = '';
-    try {
-      const j = JSON.parse(errBody);
-      parsedMsg = (j && j.error && (j.error.message || j.error.status)) || '';
-      // Extrait le quota précis qui a sauté (RPM vs RPD vs autre)
-      const details = (j && j.error && j.error.details) || [];
-      for (const d of details) {
-        if (d['@type'] && d['@type'].includes('QuotaFailure')) {
-          const v = (d.violations && d.violations[0]) || {};
-          if (v.quotaId) quotaInfo = v.quotaId;
-        }
-      }
-    } catch (e) { parsedMsg = errBody.slice(0, 200); }
-    const fullMsg = quotaInfo ? `${parsedMsg} [${quotaInfo}]` : parsedMsg;
-    return { error: 'gemini_error', status: resp.status, message: fullMsg, body: errBody.slice(0, 400) };
-  }
-
-  let data;
-  try { data = await resp.json(); }
-  catch (e) { return { error: 'unparsable_json' }; }
-
-  const text = data && data.candidates && data.candidates[0]
-    && data.candidates[0].content && data.candidates[0].content.parts
-    && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-  if (!text) return { error: 'empty_response' };
   return { text };
 }
 
@@ -185,15 +154,11 @@ export default {
     if (request.method !== 'POST') {
       return jsonResponse({ error: 'method_not_allowed' }, 405, origin);
     }
-    if (!env.GEMINI_API_KEY) {
-      return jsonResponse({ error: 'server_misconfigured', detail: 'GEMINI_API_KEY missing' }, 500, origin);
-    }
-
     let body;
     try { body = await request.json(); }
     catch (e) { return jsonResponse({ error: 'invalid_json' }, 400, origin); }
 
-    const { imageBase64, mimeType, firstName, lastName, year, month } = body || {};
+    const { imageBase64, firstName, lastName, year, month } = body || {};
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return jsonResponse({ error: 'missing_image' }, 400, origin);
     }
@@ -208,24 +173,21 @@ export default {
 
 Contexte temporel : ${month && year ? `mois ${month}/${year}` : `année ${year || new Date().getFullYear()}`}. Si la photo couvre un mois différent, déduis-le des en-têtes de colonnes.
 
-Extrais uniquement la ligne de cet agent. Retourne le JSON strict.`;
+Extrais uniquement la ligne de cet agent. Retourne le JSON strict (et rien d'autre).`;
 
-    const result = await callGeminiWithRetry({
-      apiKey: env.GEMINI_API_KEY,
+    const result = await callVisionAI({
+      env,
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
-      imageBase64,
-      mimeType: mimeType || 'image/jpeg'
+      imageBase64
     });
 
     if (result.error) {
-      const status = result.error === 'rate_limit' ? 429 : 502;
       return jsonResponse({
         error: result.error,
-        status: result.status,
         message: result.message || 'Service Vision indisponible',
         body: result.body
-      }, status, origin);
+      }, 502, origin);
     }
 
     let parsed;
