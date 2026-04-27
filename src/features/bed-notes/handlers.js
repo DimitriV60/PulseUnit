@@ -20,7 +20,8 @@ var _currentNotesBed = null;
 var _activeNoteSlot = 0;
 const BED_NOTE_TTL = 7 * 24 * 60 * 60 * 1000;
 const NOTE_SLOTS = 5;
-const SHARED_KEY = '__shared_survey__';
+const SHARED_KEY = 'sharedSurvey';
+const LEGACY_SHARED_KEYS = ['__shared_survey__']; // anciennes versions — Firestore rejette __.*__
 
 const SURVEY_ROWS = [
     { id: 'temp',    label: 'Température',       unit: '°C',       group: 'hemo'  },
@@ -134,8 +135,34 @@ function _pruneExpiredShared(shared) {
 
 // --- Survey partagé ----------------------------------------------------------
 
+function _migrateLegacySharedKeys() {
+    if (!window.bedNotesData) return false;
+    let migrated = false;
+    LEGACY_SHARED_KEYS.forEach(legacy => {
+        const old = window.bedNotesData[legacy];
+        if (!old || typeof old !== 'object') return;
+        if (!window.bedNotesData[SHARED_KEY]) window.bedNotesData[SHARED_KEY] = {};
+        const cur = window.bedNotesData[SHARED_KEY];
+        for (const [bedId, slots] of Object.entries(old)) {
+            if (!cur[bedId]) cur[bedId] = {};
+            for (const [slotKey, data] of Object.entries(slots)) {
+                const existing = cur[bedId][slotKey];
+                const incTs = (data && data.updatedAt) || (data && data.createdAt) || 0;
+                const exTs = existing ? ((existing.updatedAt) || (existing.createdAt) || 0) : 0;
+                if (!existing || incTs > exTs) cur[bedId][slotKey] = data;
+            }
+        }
+        delete window.bedNotesData[legacy];
+        migrated = true;
+    });
+    return migrated;
+}
+
 function _getSharedAll() {
     if (!window.bedNotesData) window.bedNotesData = {};
+    if (_migrateLegacySharedKeys()) {
+        try { localStorage.setItem('pu_bn_shared', JSON.stringify(window.bedNotesData[SHARED_KEY] || {})); } catch (e) {}
+    }
     if (!window.bedNotesData[SHARED_KEY]) window.bedNotesData[SHARED_KEY] = {};
     return _pruneExpiredShared(window.bedNotesData[SHARED_KEY]);
 }
@@ -500,11 +527,13 @@ window.saveBedNote = function saveBedNote() {
     if (!_currentNotesBed) return;
     const text = document.getElementById('bed-note-text').value.trim();
     const survey = _readSurveyValuesFromUI();
-    const hasContent = text !== '' || !_isSurveyEmpty(survey);
+    const hasText = text !== '';
+    const hasSurvey = !_isSurveyEmpty(survey);
+    const surveyCount = Object.values(survey).reduce((n, arr) => n + arr.filter(v => (v || '').toString().trim() !== '').length, 0);
     // 1. Texte privé
     const notes = _getBedNotes();
     const key = _slotKey(_activeNoteSlot, _currentNotesBed);
-    if (text === '') {
+    if (!hasText) {
         delete notes[key];
     } else {
         const prev = notes[key];
@@ -517,7 +546,12 @@ window.saveBedNote = function saveBedNote() {
     _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
     closeBedNote();
     renderApp();
-    showToast(hasContent ? '📝 Note enregistrée' : '🧹 Note vidée');
+    let msg;
+    if (hasText && hasSurvey) msg = `✅ Enregistré — 📝 obs. + 📋 ${surveyCount} valeur${surveyCount > 1 ? 's' : ''}`;
+    else if (hasSurvey) msg = `✅ 📋 Surveillance enregistrée (${surveyCount} valeur${surveyCount > 1 ? 's' : ''})`;
+    else if (hasText) msg = '✅ 📝 Observations enregistrées';
+    else msg = '🧹 Note vidée';
+    showToast(msg);
 };
 
 window.deleteBedNote = function deleteBedNote() {
