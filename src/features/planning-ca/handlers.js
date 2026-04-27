@@ -137,8 +137,11 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
         _applyScannedPlan(data.states || {}, data.count || 0);
     } catch (e) {
         console.warn('scanPlanning error', e);
+        const name = e && e.name ? e.name : '';
         const msg = e && e.message ? e.message : 'Erreur de scan';
-        showToast('⛔ ' + msg);
+        const online = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? navigator.onLine : true;
+        const detail = name ? ` (${name}${online ? '' : ' • offline'})` : '';
+        showToast('⛔ ' + msg + detail);
     }
     _scanInProgress = false;
 };
