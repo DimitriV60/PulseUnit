@@ -94,7 +94,9 @@ function jsonResponse(data, status, origin) {
 
 async function callGeminiWithRetry({ apiKey, systemPrompt, userPrompt, imageBase64, mimeType, attempt = 0 }) {
   const MAX_ATTEMPTS = 4;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  // gemini-1.5-flash : free tier le plus permissif en pratique (15 RPM stable,
+  // contre quotas plus serrés observés sur gemini-2.0-flash selon les comptes).
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   let resp;
   try {
     resp = await fetch(url, {
