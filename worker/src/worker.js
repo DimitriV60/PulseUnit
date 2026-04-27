@@ -129,7 +129,12 @@ async function callGeminiWithRetry({ apiKey, systemPrompt, userPrompt, imageBase
 
   if (!resp.ok) {
     const errBody = await resp.text().catch(() => '');
-    return { error: 'gemini_error', status: resp.status, body: errBody.slice(0, 400) };
+    let parsedMsg = '';
+    try {
+      const j = JSON.parse(errBody);
+      parsedMsg = (j && j.error && (j.error.message || j.error.status)) || '';
+    } catch (e) { parsedMsg = errBody.slice(0, 200); }
+    return { error: 'gemini_error', status: resp.status, message: parsedMsg, body: errBody.slice(0, 400) };
   }
 
   let data;
@@ -190,7 +195,12 @@ Extrais uniquement la ligne de cet agent. Retourne le JSON strict.`;
 
     if (result.error) {
       const status = result.error === 'rate_limit' ? 429 : 502;
-      return jsonResponse({ error: result.error, message: result.message || 'Service Vision indisponible' }, status, origin);
+      return jsonResponse({
+        error: result.error,
+        status: result.status,
+        message: result.message || 'Service Vision indisponible',
+        body: result.body
+      }, status, origin);
     }
 
     let parsed;
