@@ -145,11 +145,21 @@ async function callGeminiWithRetry({ apiKey, systemPrompt, userPrompt, imageBase
   if (!resp.ok) {
     const errBody = await resp.text().catch(() => '');
     let parsedMsg = '';
+    let quotaInfo = '';
     try {
       const j = JSON.parse(errBody);
       parsedMsg = (j && j.error && (j.error.message || j.error.status)) || '';
+      // Extrait le quota précis qui a sauté (RPM vs RPD vs autre)
+      const details = (j && j.error && j.error.details) || [];
+      for (const d of details) {
+        if (d['@type'] && d['@type'].includes('QuotaFailure')) {
+          const v = (d.violations && d.violations[0]) || {};
+          if (v.quotaId) quotaInfo = v.quotaId;
+        }
+      }
     } catch (e) { parsedMsg = errBody.slice(0, 200); }
-    return { error: 'gemini_error', status: resp.status, message: parsedMsg, body: errBody.slice(0, 400) };
+    const fullMsg = quotaInfo ? `${parsedMsg} [${quotaInfo}]` : parsedMsg;
+    return { error: 'gemini_error', status: resp.status, message: fullMsg, body: errBody.slice(0, 400) };
   }
 
   let data;
