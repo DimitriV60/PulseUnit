@@ -139,10 +139,15 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
         });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
-            const msg = data && data.error === 'rate_limit' ? '⏳ Service saturé, réessayez dans 1 minute'
-                       : data && data.error === 'image_too_large' ? '⛔ Image trop lourde'
-                       : data && data.error === 'origin_forbidden' ? '⛔ Origine non autorisée'
-                       : `⛔ Erreur ${resp.status}`;
+            const errCode = data && data.error;
+            const errMsg = data && data.message;
+            const errStatus = data && data.status;
+            const msg = errCode === 'rate_limit' ? '⏳ Service saturé, réessayez dans 1 minute'
+                       : errCode === 'image_too_large' ? '⛔ Image trop lourde'
+                       : errCode === 'origin_forbidden' ? '⛔ Origine non autorisée'
+                       : errCode === 'gemini_error' ? `⛔ Vision API ${errStatus || ''}: ${(errMsg || '').slice(0, 80)}`
+                       : errCode === 'unparsable_response' ? '⛔ Réponse Vision illisible'
+                       : `⛔ Erreur ${resp.status}${errCode ? ' · ' + errCode : ''}`;
             showToast(msg);
             _scanInProgress = false;
             return;
