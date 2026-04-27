@@ -144,7 +144,7 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
             const errStatus = data && data.status;
             const msg = errCode === 'rate_limit' ? '⏳ Service saturé, réessayez dans 1 minute'
                        : errCode === 'image_too_large' ? '⛔ Image trop lourde'
-                       : errCode === 'origin_forbidden' ? '⛔ Origine non autorisée'
+                       : errCode === 'origin_forbidden' ? `⛔ Origine refusée: ${(data && data.received) || '?'}`
                        : errCode === 'gemini_error' ? `⛔ Vision API ${errStatus || ''}: ${(errMsg || '').slice(0, 80)}`
                        : errCode === 'unparsable_response' ? '⛔ Réponse Vision illisible'
                        : `⛔ Erreur ${resp.status}${errCode ? ' · ' + errCode : ''}`;

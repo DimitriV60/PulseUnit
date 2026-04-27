@@ -24,6 +24,19 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5000'
 ];
 
+// Patterns regex tolérants — couvre les sous-domaines Firebase (preview channels,
+// alias) et un éventuel domaine custom contenant "pulseunit"
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/pulseunit-c9c5c--[\w-]+\.web\.app$/i,  // preview channels Firebase
+  /^https:\/\/[\w-]*pulseunit[\w-]*\.(web\.app|firebaseapp\.com)$/i
+];
+
+function _isOriginAllowed(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  return ALLOWED_ORIGIN_PATTERNS.some(re => re.test(origin));
+}
+
 const VALID_STATES = [
   'jour', 'nuit', 'ca', 'can1', 'rcn', 'rh', 'hs', 'hs_j', 'hs_n', 'rc',
   'formation', 'ferie', 'maladie', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'travail'
@@ -75,7 +88,7 @@ Si la photo est illisible ou ce n'est pas un planning :
 Aucune autre clé, aucun texte hors JSON.`;
 
 function corsHeaders(origin) {
-  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : 'null';
+  const allowed = _isOriginAllowed(origin) ? origin : 'null';
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -156,8 +169,8 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders(origin) });
     }
-    if (!ALLOWED_ORIGINS.includes(origin)) {
-      return jsonResponse({ error: 'origin_forbidden' }, 403, origin);
+    if (!_isOriginAllowed(origin)) {
+      return jsonResponse({ error: 'origin_forbidden', received: origin || '(empty)' }, 403, origin);
     }
     if (request.method !== 'POST') {
       return jsonResponse({ error: 'method_not_allowed' }, 405, origin);
