@@ -544,8 +544,9 @@ window.saveBedNote = function saveBedNote() {
     // 2. Survey partagé
     const prevShared = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
     _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
-    closeBedNote();
-    renderApp();
+    // Refresh in-place sans fermer le modal — l'utilisateur reste dans la note
+    _loadNoteSlot(_activeNoteSlot);
+    if (typeof renderApp === 'function') renderApp();
     let msg;
     if (hasText && hasSurvey) msg = `✅ Enregistré — 📝 obs. + 📋 ${surveyCount} valeur${surveyCount > 1 ? 's' : ''}`;
     else if (hasSurvey) msg = `✅ 📋 Surveillance enregistrée (${surveyCount} valeur${surveyCount > 1 ? 's' : ''})`;

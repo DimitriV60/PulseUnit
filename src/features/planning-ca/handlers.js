@@ -103,16 +103,34 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
         return;
     }
     _scanInProgress = true;
-    showToast('📷 Compression de la photo...');
+    showToast('📷 Préparation de la photo...');
+    let imageBase64, mimeType;
     try {
         const compressed = await _compressImage(file);
+        imageBase64 = compressed.base64;
+        mimeType = compressed.mimeType;
+    } catch (e) {
+        // Fallback : envoie l'image brute si la compression Canvas échoue
+        // (HEIC sur certains Android, ou formats exotiques)
+        console.warn('compress failed, falling back to raw', e);
+        try {
+            imageBase64 = await _readFileAsBase64(file);
+            mimeType = file.type || 'image/jpeg';
+        } catch (e2) {
+            showToast('⛔ Impossible de lire l\'image (format ?)');
+            _scanInProgress = false;
+            return;
+        }
+    }
+    try {
         showToast('🤖 Extraction du planning...');
         const resp = await fetch(SCAN_WORKER_URL, {
             method: 'POST',
+            mode: 'cors',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
-                imageBase64: compressed.base64,
-                mimeType: compressed.mimeType,
+                imageBase64,
+                mimeType,
                 firstName: currentUser.firstName,
                 lastName: currentUser.lastName,
                 year: planYear,
