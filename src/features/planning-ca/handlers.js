@@ -19,14 +19,16 @@
 let planYear   = new Date().getFullYear();
 let planRegime = localStorage.getItem('pulseunit_plan_regime') || 'jour';
 let planStates = JSON.parse(localStorage.getItem('pulseunit_plan_states') || '{}');
+let planLabels = JSON.parse(localStorage.getItem('pulseunit_plan_labels') || '{}');
 let planLockedMonths = new Set(JSON.parse(localStorage.getItem('pulseunit_plan_locked') || '[]'));
 function savePlanLocked() { localStorage.setItem('pulseunit_plan_locked', JSON.stringify([...planLockedMonths])); }
 
 function savePlanData() {
     localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
+    localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
     localStorage.setItem('pulseunit_plan_regime', planRegime);
     if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser) {
-        PLANS_DOC.set({ [currentUser.id]: { states: planStates, regime: planRegime } }, { merge: true })
+        PLANS_DOC.set({ [currentUser.id]: { states: planStates, labels: planLabels, regime: planRegime } }, { merge: true })
             .catch(e => console.warn('Plan sync error', e));
     }
 }
@@ -157,7 +159,7 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
             _scanInProgress = false;
             return;
         }
-        _applyScannedPlan(data.states || {}, data.count || 0);
+        _applyScannedPlan(data.states || {}, data.count || 0, data.labels || {});
     } catch (e) {
         console.warn('scanPlanning error', e);
         const name = e && e.name ? e.name : '';
@@ -169,17 +171,18 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     _scanInProgress = false;
 };
 
-function _applyScannedPlan(scanned, count) {
+function _applyScannedPlan(scanned, count, labels) {
     if (!scanned || count === 0) {
         showToast('Aucune donnée à importer');
         return;
     }
-    // Snapshot pour undo
-    const snapshot = JSON.parse(JSON.stringify(planStates));
+    // Snapshot pour undo (states + labels)
+    const snapshot = { states: JSON.parse(JSON.stringify(planStates)), labels: JSON.parse(JSON.stringify(planLabels)) };
     let added = 0, skipped = 0;
     for (const [date, state] of Object.entries(scanned)) {
         if (planStates[date] !== undefined) { skipped++; continue; }
         planStates[date] = state;
+        if (labels && labels[date]) planLabels[date] = labels[date];
         added++;
     }
     savePlanData();
@@ -204,7 +207,8 @@ function _showScanUndoToast(added, skipped, snapshot) {
     let timer = setTimeout(() => { root.style.display = 'none'; }, 15000);
     document.getElementById('plan-scan-undo-btn').onclick = () => {
         clearTimeout(timer);
-        planStates = snapshot;
+        planStates = snapshot.states || snapshot;
+        planLabels = snapshot.labels || {};
         savePlanData();
         if (typeof renderPlanCalendar === 'function') renderPlanCalendar();
         else if (typeof updatePlanStats === 'function') updatePlanStats();
@@ -223,6 +227,10 @@ async function loadUserPlan(userId) {
         if (userPlan.states && typeof userPlan.states === 'object') {
             planStates = userPlan.states;
             localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
+        }
+        if (userPlan.labels && typeof userPlan.labels === 'object') {
+            planLabels = userPlan.labels;
+            localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
         }
         if (userPlan.regime) {
             planRegime = userPlan.regime;
@@ -254,8 +262,9 @@ function getPlanDayState(dateStr) {
     return getPlanDefaultState(dateStr);
 }
 
-function planDayHTML(dayNum, state) {
-    const lbl = window.PLAN_LABELS[state];
+function planDayHTML(dayNum, state, dateStr) {
+    const customLbl = dateStr && planLabels[dateStr];
+    const lbl = customLbl || window.PLAN_LABELS[state];
     if (!lbl) return String(dayNum);
     return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
 }
@@ -270,7 +279,7 @@ function refreshPlanCell(dateStr) {
     if (!cell) return;
     const st = getPlanDayState(dateStr);
     cell.className = 'plan-day p-' + st;
-    cell.innerHTML  = planDayHTML(parseInt(dateStr.split('-')[2]), st);
+    cell.innerHTML  = planDayHTML(parseInt(dateStr.split('-')[2]), st, dateStr);
 }
 
 window.cyclePlanDay = function cyclePlanDay(dateStr) {
@@ -290,6 +299,8 @@ window.cyclePlanDay = function cyclePlanDay(dateStr) {
         if (shouldRevert) { delete planStates[dateStr]; next = getPlanDayState(dateStr); }
         else planStates[dateStr] = next;
     }
+    // Tout cyclage manuel invalide le label scanné Digihops (numéro de séquence)
+    if (planLabels[dateStr]) delete planLabels[dateStr];
     savePlanData();
 
     refreshPlanCell(dateStr);
@@ -534,7 +545,7 @@ function renderPlanMonth(year, month) {
     for (let d = 1; d <= nbJ; d++) {
         const str = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const st  = getPlanDayState(str);
-        html += `<div class="plan-day p-${st}" id="plan-d-${str}"${locked ? '' : ` onclick="cyclePlanDay('${str}')" ontouchstart="planCellTouchStart('${str}',event)"`}>${planDayHTML(d, st)}</div>`;
+        html += `<div class="plan-day p-${st}" id="plan-d-${str}"${locked ? '' : ` onclick="cyclePlanDay('${str}')" ontouchstart="planCellTouchStart('${str}',event)"`}>${planDayHTML(d, st, str)}</div>`;
     }
     html += '</div></div>';
     return html;

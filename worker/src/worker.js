@@ -44,62 +44,61 @@ const VALID_STATES = [
   'formation', 'ferie', 'maladie', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'travail'
 ];
 
-const SYSTEM_PROMPT = `Tu es un assistant qui extrait le planning personnel d'un agent hospitalier (réanimation GHPSO Creil) à partir d'une photo ou capture d'écran.
+const SYSTEM_PROMPT = `Tu extrais le planning personnel d'un agent hospitalier (réa GHPSO Creil) depuis une capture Digihops mobile.
 
-L'image montre LE planning de l'utilisateur (jamais ceux des autres). Aucun nom à matcher — extrais simplement tous les jours visibles avec leur état correspondant.
+L'image montre LE planning de l'utilisateur connecté (calendrier mensuel ou liste). Aucun nom à matcher.
 
-Sources possibles : capture d'écran Digihops (vue calendrier ou liste), tableau papier zoomé, photo de planning imprimé.
+RÈGLE CRITIQUE — balayage systématique :
+Pour CHAQUE jour numéroté visible dans le calendrier (du 1 au 28/30/31), examine la cellule sous le numéro. Si elle contient un texte ou un horaire, ajoute une entrée. N'omets aucun jour. Les cellules vides ne sont pas ajoutées, mais doivent être vérifiées une à une.
 
-Codes courts utilisés : J, N, CA, RC, RCV, HP, HS, HSJ, HSN, FO, AM, JF, ou vide. Digihops peut aussi afficher des libellés longs (Jour, Nuit, Congé, Repos, Récup, Formation, Maladie, etc.) — les mapper au code court équivalent.
+RÈGLE NUMÉROTATION (très importante) :
+Les CA sont souvent NUMÉROTÉS dans Digihops avec un espace + chiffre (ex. "CA 1", "CA 2", "CA-HP 1", "CA-HP 2"). Ce chiffre est juste un numéro d'ordre dans la séquence de CA, à IGNORER pour le mapping.
+- "CA 1", "CA 2", "CA 3"... → ca (jamais can1 — pas de compteur N-1 ici)
+- "CA-HP 1", "CA-HP 2", "CA-HP 3"... → ca_hp (jamais ca_hpn1)
+À l'inverse, un TIRET + 1 (sans espace) signifie le compteur N-1 :
+- "CA-1" → can1
+- "CA-HP-1" → ca_hpn1
+- "HP-1" → hpn1
 
-Format Digihops mobile (calendrier mensuel) — mapping critique :
-- "R.C." (texte noir) → rc
-- "R.H." (texte noir) → rh
-- "RCN" (parfois suivi d'un compteur _N_) → rcn
-- Cellule sur fond ROSE/SAUMON avec horaires "20:00 / 08:00" → nuit (NE JAMAIS OMETTRE — chaque cellule rose visible doit apparaître dans le résultat)
-- Cellule sur fond rose avec "08:00 / 20:00" → jour
-- Cellule blanche/vide → ne pas inclure
-
-IMPORTANT : balaye SYSTEMATIQUEMENT toutes les semaines de haut en bas et toutes les colonnes de gauche à droite. Vérifie chaque cellule. Une cellule rose oubliée = bug critique (l'agent rate une garde dans son planning final).
-
-Mapping des codes Digihops/papier vers les états PulseUnit (gérer toutes les variantes : tiret, espace, point, point-virgule, suffixes _N_, accents) :
-
-| Code Digihops (toutes variantes) | État interne |
-|---|---|
-| J, JOUR, "08:00 / 20:00" sur fond rose | jour |
-| N, NUIT, "20:00 / 08:00" sur fond rose | nuit |
-| CA, C.A., CONGÉ, CONGE | ca |
-| CA-1, CAN1, CA-N1, CA N-1 | can1 |
-| CA-HP, CA HP, CAHP | ca_hp *(CA financé par HP — code dédié)* |
-| CA-HP1, CA-HP-1, CAHP1, CA-HPN1 | ca_hpn1 *(CA-HP avec compteur N-1)* |
-| RC, R.C., RECUP | rc |
-| RCN, R.C.N., RCN_N_ (suffixe compteur ignoré) | rcn |
-| RH, R.H., REPOS HEBDO | rh |
-| HS, H.S. | hs |
-| HSJ, HS-J, HS J | hs_j |
-| HSN, HS-N, HS N | hs_n |
-| HP, H.P. | hp |
-| HP-1, HPN1, HP-N1, HP1 | hpn1 |
-| RCV, R.C.V. | rcv |
-| RCV-1, RCVN1, RCV-N1 | rcvn1 |
-| FR, FRAC, F.R. | frac |
-| FR-1, FRN1, FRAC-1 | fracn1 |
-| FO, FORM, FORMATION | formation |
-| AM, MAL, MALADIE | maladie |
-| JF, JOUR FÉRIÉ, FÉRIÉ, FERIE | ferie |
-| (cellule vide, blanche, ou —) | (ne pas inclure) |
-
-Règles complémentaires :
-- Tout code combiné "CA-quelque chose" qui n'est pas explicitement listé ci-dessus → mapper sur ca
-- Distinguer CA-HP (ca_hp) de CA simple (ca) — le suffixe HP indique un financement par solde HP, c'est une information importante à conserver
-- Si un suffixe numérique "_N_" ou "_16_" suit le code, l'ignorer (c'est un compteur d'heures)
-- En cas de doute entre 2 codes proches (ex. R.C. vs R.H.), zoomer mentalement et vérifier la lettre finale
+Mapping codes → état JSON :
+- "20:00 / 08:00" (cellule rose saumon) → nuit
+- "08:00 / 20:00" (cellule rose saumon) → jour
+- R.C. ou RC → rc
+- R.H. ou RH → rh
+- RCN (avec ou sans suffixe _16_/_N_) → rcn
+- CA, CA 1, CA 2, CA 3... → ca
+- CA-1 ou CAN1 → can1
+- CA-HP, CAHP, CA-HP 1, CA-HP 2... → ca_hp
+- CA-HP-1 ou CA-HPN1 → ca_hpn1
+- HP, HP 1, HP 2... → hp
+- HP-1 ou HPN1 → hpn1
+- HS, HS 1, HS 2... → hs
+- HSJ → hs_j
+- HSN → hs_n
+- RCV, RCV 1, RCV 2... → rcv
+- RCV-1 ou RCVN1 → rcvn1
+- FR, FRAC, FR 1, FR 2... → frac
+- FR-1 ou FRN1 → fracn1
+- FO ou FORM → formation
+- AM ou MAL → maladie
+- JF ou FERIÉ → ferie
+- vide ou — → ne pas inclure
 
 Réponds UNIQUEMENT avec un JSON strict de cette forme :
 {
   "found": true,
-  "states": { "YYYY-MM-DD": "jour", "YYYY-MM-DD": "nuit" }
+  "states": { "YYYY-MM-DD": "ca_hp", ... },
+  "labels": { "YYYY-MM-DD": "CA-HP 1", ... }
 }
+
+Le champ "labels" doit contenir le texte EXACT lu sur le planning (avec le numéro de séquence si présent), uniquement pour les codes "comptables" : CA, CA-1, CA-HP, CA-HP-1, HP, HP-1, RCV, RCV-1, HS, FR, FR-1. Pour les autres états (jour, nuit, rh, rc, rcn, ferie, etc.), N'AJOUTE PAS d'entrée dans "labels".
+
+Exemples :
+- Cellule "CA 5" → states[date]="ca", labels[date]="CA 5"
+- Cellule "CA-HP 2" → states[date]="ca_hp", labels[date]="CA-HP 2"
+- Cellule "HP-1 3" → states[date]="hpn1", labels[date]="HP-1 3"
+- Cellule "20:00 / 08:00" → states[date]="nuit" (PAS d'entrée labels)
+- Cellule "R.C." → states[date]="rc" (PAS d'entrée labels)
 
 Si la photo est illisible ou ne contient aucune information de planning exploitable :
 { "found": false, "reason": "Image non exploitable comme planning" }
@@ -238,11 +237,20 @@ Extrais tous les jours visibles avec leur état. Retourne le JSON strict (et rie
     }
 
     const cleanStates = {};
+    const cleanLabels = {};
     let dropped = 0;
     for (const [date, state] of Object.entries(parsed.states || {})) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { dropped++; continue; }
       if (!VALID_STATES.includes(state)) { dropped++; continue; }
       cleanStates[date] = state;
+    }
+    // Conserve uniquement les labels associés à un état comptable validé
+    const COUNTABLE_STATES = new Set(['ca', 'can1', 'ca_hp', 'ca_hpn1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'hs', 'hs_j', 'hs_n', 'frac', 'fracn1']);
+    for (const [date, label] of Object.entries(parsed.labels || {})) {
+      if (!cleanStates[date]) continue;
+      if (!COUNTABLE_STATES.has(cleanStates[date])) continue;
+      if (typeof label !== 'string') continue;
+      cleanLabels[date] = label.trim().slice(0, 16);
     }
 
     // Règle métier GHPSO réa : un RC qui suit immédiatement une nuit
@@ -265,6 +273,7 @@ Extrais tous les jours visibles avec leur état. Retourne le JSON strict (et rie
     return jsonResponse({
       found: true,
       states: cleanStates,
+      labels: cleanLabels,
       count: Object.keys(cleanStates).length,
       dropped,
       promotedToRcn
