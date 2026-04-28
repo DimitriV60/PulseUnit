@@ -598,6 +598,22 @@ window.resetPlanningCA = function resetPlanningCA() {
     const y = String(planYear);
     Object.keys(planStates).forEach(k => { if (k.startsWith(y)) delete planStates[k]; });
     Object.keys(planLabels).forEach(k => { if (k.startsWith(y)) delete planLabels[k]; });
+    // Suppression explicite Firestore : pour chaque mois de l'année, on delete()
+    // les sous-clés. Plus sûr que l'update() global qui peut être annulé par un
+    // listener concurrent ou un cache obsolète côté client.
+    if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser && firebase && firebase.firestore) {
+        const D = firebase.firestore.FieldValue.delete();
+        const updates = {};
+        for (let mm = 1; mm <= 12; mm++) {
+            const nbDays = new Date(parseInt(y), mm, 0).getDate();
+            for (let d = 1; d <= nbDays; d++) {
+                const ds = `${y}-${String(mm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                updates[`${currentUser.id}.states.${ds}`] = D;
+                updates[`${currentUser.id}.labels.${ds}`] = D;
+            }
+        }
+        PLANS_DOC.update(updates).catch(e => console.warn('Plan year delete sync error', e));
+    }
     savePlanData();
     renderPlanCalendrier();
 };
@@ -667,6 +683,20 @@ window.resetPlanMonth = function(mKey) {
     if (!confirm('Effacer le mois ' + mKey + ' ?')) return;
     Object.keys(planStates).forEach(k => { if (k.startsWith(mKey)) delete planStates[k]; });
     Object.keys(planLabels).forEach(k => { if (k.startsWith(mKey)) delete planLabels[k]; });
+    // Suppression explicite des dotted-paths en Firestore — protège contre le cache PWA
+    // où l'ancien savePlanData() avec set({merge:true}) a pu laisser des entrées orphelines.
+    if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser && firebase && firebase.firestore) {
+        const D = firebase.firestore.FieldValue.delete();
+        const updates = {};
+        const yyyy = parseInt(mKey.slice(0,4)), mm = parseInt(mKey.slice(5,7));
+        const nbDays = new Date(yyyy, mm, 0).getDate();
+        for (let d = 1; d <= nbDays; d++) {
+            const ds = `${mKey}-${String(d).padStart(2,'0')}`;
+            updates[`${currentUser.id}.states.${ds}`] = D;
+            updates[`${currentUser.id}.labels.${ds}`] = D;
+        }
+        PLANS_DOC.update(updates).catch(e => console.warn('Plan month delete sync error', e));
+    }
     savePlanData();
     renderPlanCalendrier();
 };
