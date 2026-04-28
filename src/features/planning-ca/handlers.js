@@ -276,7 +276,7 @@ function refreshPlanCell(dateStr) {
 window.cyclePlanDay = function cyclePlanDay(dateStr) {
     const cur      = getPlanDayState(dateStr);
     const defState = getPlanDefaultState(dateStr);
-    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'hs_j', 'hs_n', 'rc', 'formation'];
+    const cycle = ['travail', 'jour', 'nuit', 'ca', 'can1', 'ca_hp', 'ca_hpn1', 'hp', 'hpn1', 'rcv', 'rcvn1', 'frac', 'fracn1', 'maladie', 'rh', 'hs', 'hs_j', 'hs_n', 'rc', 'formation'];
     const idx   = cycle.indexOf(cur);
     let next;
 

@@ -3,12 +3,9 @@ main = "src/worker.js"
 compatibility_date = "2024-12-01"
 workers_dev = true
 
-# Limites — Cloudflare Workers free tier :
-#   - 100 000 requêtes/jour
-#   - 10 ms CPU/req (les attentes réseau ne comptent pas)
-#   - 128 MB RAM
-[limits]
-cpu_ms = 50
+# Limites Cloudflare Workers free tier :
+#   - 100 000 requêtes/jour, 10 ms CPU/req, 128 MB RAM
+# (la section [limits] custom requiert un plan payant — laissée par défaut)
 
 # Workers AI binding — donne accès à env.AI dans le code
 [ai]
