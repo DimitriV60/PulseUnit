@@ -88,17 +88,40 @@ function _renderAnnuaire(data, q, escapeHTML) {
     return { html, total };
 }
 
-/* ── Vue PAR ÉTAGE : regroupement plat par étage ── */
-function _renderParEtage(data, q, escapeHTML) {
-    const FLOOR_ORDER = ['Sous-sol', 'RDC / Sous-sol', 'RDC', 'Étage 1', 'Étage 1 / 2', 'Étage 2', 'Étages 2 à 6', 'Étage 3', 'Étage 4', 'Étage 5', 'Étage 6', 'Étage 7', '—'];
-    const FLOOR_ICON  = { 'RDC': '🚪', 'RDC / Sous-sol': '🚪', 'Sous-sol': '⬇️', 'Étage 1': '1️⃣', 'Étage 1 / 2': '1️⃣', 'Étage 2': '2️⃣', 'Étages 2 à 6': '📊', 'Étage 3': '3️⃣', 'Étage 4': '4️⃣', 'Étage 5': '5️⃣', 'Étage 6': '6️⃣', 'Étage 7': '7️⃣', '—': '📍' };
+/* ── Vue PAR ÉTAGE : regroupement strict -1, 0, 1, 2, 3, 4, 5, 6, 7 ── */
+// Mappe le champ texte floor (libre) vers un étage canonique numérique.
+// Les ranges ("Étages 2 à 6", "Étages 4-5") sont assignés à leur premier étage cité.
+// Les valeurs "Étage administratif" / "—" / vides tombent dans un bucket "Transverse".
+function _normalizeFloor(text) {
+    if (!text || text === '—') return { id: 99, num: null, label: 'Transverse / Non spécifié', icon: '📍' };
+    const t = String(text).toLowerCase();
+    if (t.includes('administratif')) return { id: 99, num: null, label: 'Administration', icon: '🗂️' };
+    // Sous-sol seul
+    if (t.includes('sous-sol') && !t.includes('rdc')) return { id: -1, num: -1, label: 'Sous-sol (−1)', icon: '⬇️' };
+    // RDC + Sous-sol → on classe en RDC (0) puisque RDC est le label primaire
+    if (t.includes('rdc')) return { id: 0, num: 0, label: 'RDC (0)', icon: '🚪' };
+    // Range "Étages 2 à 6" / "Étages 4-5" → premier étage cité
+    const range = t.match(/étages?\s*(\d)\s*(?:à|-|et|à)\s*(\d)/);
+    if (range) {
+        const n = parseInt(range[1], 10);
+        return { id: n, num: n, label: `Étage ${n}`, icon: ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣'][n - 1] || '🏢' };
+    }
+    // Étage simple "Étage 1", "Étage 1 / 2"
+    const single = t.match(/étage\s*(\d)/);
+    if (single) {
+        const n = parseInt(single[1], 10);
+        return { id: n, num: n, label: `Étage ${n}`, icon: ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣'][n - 1] || '🏢' };
+    }
+    return { id: 99, num: null, label: text, icon: '📍' };
+}
 
-    // Collect entries by (site+floor)
+function _renderParEtage(data, q, escapeHTML) {
+    // Collecte par (site + étage canonique)
     const map = new Map();
     data.forEach(section => {
-        const floor = section.floor || '—';
-        const key   = section.site + '|' + floor;
-        if (!map.has(key)) map.set(key, { site: section.site, floor, entries: [] });
+        const norm = _normalizeFloor(section.floor);
+        const key  = section.site + '|' + norm.id;
+        if (!map.has(key)) map.set(key, { site: section.site, norm, entries: [] });
         section.entries.forEach(e => {
             if (!q
                 || e.name.toLowerCase().includes(q)
@@ -111,30 +134,28 @@ function _renderParEtage(data, q, escapeHTML) {
         });
     });
 
-    // Sort by site (Creil first) then floor order
+    // Tri : Creil d'abord, puis étage croissant strict (-1 → 0 → 1 → 2 → ... → 7 → 99)
     const sorted = [...map.values()]
         .filter(g => g.entries.length)
         .sort((a, b) => {
             if (a.site !== b.site) return a.site === 'Creil' ? -1 : 1;
-            const ra = FLOOR_ORDER.indexOf(a.floor);
-            const rb = FLOOR_ORDER.indexOf(b.floor);
-            return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
+            return a.norm.id - b.norm.id;
         });
 
     let html = '';
     let total = 0;
     let lastSite = null;
-    sorted.forEach(({ site, floor, entries }) => {
+    sorted.forEach(({ site, norm, entries }) => {
         total += entries.length;
         if (site !== lastSite) {
             lastSite = site;
             html += `<div style="font-size:0.68rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin:${html ? '24px' : '0'} 0 10px;">📍 ${escapeHTML(site)}</div>`;
         }
-        const icon = FLOOR_ICON[floor] || '🏢';
         html += `<div style="margin-bottom:18px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px 12px; background:var(--surface-sec); border-radius:10px; border:1px solid var(--border);">
-            <span style="font-size:1rem;">${icon}</span>
-            <span style="font-size:0.88rem; font-weight:900; color:var(--text);">${escapeHTML(floor)}</span>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:10px 14px; background:var(--surface-sec); border-radius:10px; border:1px solid var(--border);">
+            <span style="font-size:1.1rem;">${norm.icon}</span>
+            <span style="font-size:0.92rem; font-weight:900; color:var(--text);">${escapeHTML(norm.label)}</span>
+            <span style="margin-left:auto; font-size:0.7rem; font-weight:700; color:var(--text-muted);">${entries.length}</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:6px;">`;
         entries.forEach(e => { html += _entryRow(e, escapeHTML, false); });
