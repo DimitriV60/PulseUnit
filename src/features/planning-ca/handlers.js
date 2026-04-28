@@ -178,20 +178,21 @@ function _applyScannedPlan(scanned, count, labels) {
     }
     // Snapshot pour undo (states + labels)
     const snapshot = { states: JSON.parse(JSON.stringify(planStates)), labels: JSON.parse(JSON.stringify(planLabels)) };
-    let added = 0, skipped = 0;
+    let added = 0, replaced = 0;
     for (const [date, state] of Object.entries(scanned)) {
-        if (planStates[date] !== undefined) { skipped++; continue; }
+        if (planStates[date] !== undefined && planStates[date] !== state) replaced++;
+        else if (planStates[date] === undefined) added++;
         planStates[date] = state;
         if (labels && labels[date]) planLabels[date] = labels[date];
-        added++;
+        else delete planLabels[date];
     }
     savePlanData();
     if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
     else if (typeof updatePlanStats === 'function') updatePlanStats();
-    _showScanUndoToast(added, skipped, snapshot);
+    _showScanUndoToast(added, replaced, snapshot);
 }
 
-function _showScanUndoToast(added, skipped, snapshot) {
+function _showScanUndoToast(added, replaced, snapshot) {
     const wrap = document.getElementById('plan-scan-undo');
     if (!wrap) {
         const el = document.createElement('div');
@@ -200,8 +201,8 @@ function _showScanUndoToast(added, skipped, snapshot) {
         document.body.appendChild(el);
     }
     const root = document.getElementById('plan-scan-undo');
-    const skippedTxt = skipped > 0 ? ` · ${skipped} ignoré${skipped > 1 ? 's' : ''} (déjà saisis)` : '';
-    root.innerHTML = `<span>✅ ${added} jour${added > 1 ? 's' : ''} importé${added > 1 ? 's' : ''}${skippedTxt}</span>
+    const replacedTxt = replaced > 0 ? ` · ${replaced} remplacé${replaced > 1 ? 's' : ''}` : '';
+    root.innerHTML = `<span>✅ ${added} ajouté${added > 1 ? 's' : ''}${replacedTxt}</span>
         <button id="plan-scan-undo-btn" style="background:var(--brand-aqua); color:#000; border:none; border-radius:8px; padding:7px 12px; font-weight:900; cursor:pointer; font-size:0.82rem;">Annuler</button>`;
     root.style.display = 'flex';
     let timer = setTimeout(() => { root.style.display = 'none'; }, 15000);
