@@ -112,6 +112,17 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
         showToast('⛔ Image trop volumineuse (max 8 Mo)');
         return;
     }
+    // Demande le mois cible pour éviter que le modèle confonde
+    // (Digihops affiche parfois des jours du mois précédent/suivant en grisé)
+    const today = new Date();
+    const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const monthInput = prompt('Mois du planning à scanner (format AAAA-MM) :', defaultMonth);
+    if (!monthInput) return;
+    const m = monthInput.match(/^(\d{4})-(\d{1,2})$/);
+    if (!m) { showToast('⛔ Format invalide. Exemple : 2026-02'); return; }
+    const targetYear = parseInt(m[1]);
+    const targetMonth = parseInt(m[2]);
+    if (targetMonth < 1 || targetMonth > 12) { showToast('⛔ Mois entre 1 et 12'); return; }
     _scanInProgress = true;
     showToast('📷 Préparation de la photo...');
     let imageBase64, mimeType;
@@ -143,8 +154,8 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
                 mimeType,
                 firstName: currentUser.firstName,
                 lastName: currentUser.lastName,
-                year: planYear,
-                month: null
+                year: targetYear,
+                month: targetMonth
             })
         });
         const data = await resp.json().catch(() => ({}));

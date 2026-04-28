@@ -205,9 +205,9 @@ export default {
       return jsonResponse({ error: 'image_too_large' }, 413, origin);
     }
 
-    const userPrompt = `Contexte temporel : ${month && year ? `mois ${month}/${year}` : `année ${year || new Date().getFullYear()}`}. Si la photo couvre un mois différent, déduis-le des en-têtes ou de la date affichée.
+    const userPrompt = `Mois cible IMPÉRATIF : ${String(month).padStart(2,'0')}/${year}. Toutes les dates retournées DOIVENT être au format ${year}-${String(month).padStart(2,'0')}-DD (uniquement ce mois). Ignore les jours grisés du mois précédent ou suivant qui peuvent apparaître en marge du calendrier Digihops.
 
-Extrais tous les jours visibles avec leur état. Retourne le JSON strict (et rien d'autre).`;
+Extrais tous les jours du mois cible visibles avec leur état. Retourne le JSON strict (et rien d'autre).`;
 
     const result = await callVisionAI({
       env,
@@ -239,9 +239,12 @@ Extrais tous les jours visibles avec leur état. Retourne le JSON strict (et rie
     const cleanStates = {};
     const cleanLabels = {};
     let dropped = 0;
+    // Filtre strict mois cible si fourni : on ne garde que les dates qui matchent year-month
+    const targetPrefix = (year && month) ? `${year}-${String(month).padStart(2,'0')}-` : null;
     for (const [date, state] of Object.entries(parsed.states || {})) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { dropped++; continue; }
       if (!VALID_STATES.includes(state)) { dropped++; continue; }
+      if (targetPrefix && !date.startsWith(targetPrefix)) { dropped++; continue; }
       cleanStates[date] = state;
     }
     // Conserve uniquement les labels associés à un état comptable validé
