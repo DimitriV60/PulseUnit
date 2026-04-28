@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulseunit-v7';
+const CACHE_NAME = 'pulseunit-v8';
 const FILES_TO_CACHE = [
   '/manifest.json',
   '/icon-192.png',

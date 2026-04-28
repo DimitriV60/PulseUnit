@@ -41,6 +41,46 @@ function savePlanData() {
     }
 }
 
+// Modale "roulette" mois/année avant scan — sur mobile, <select> natif = picker roulette iOS / liste Android
+function _askScanMonthYear() {
+    return new Promise((resolve) => {
+        const today = new Date();
+        const curY = today.getFullYear();
+        const curM = today.getMonth() + 1;
+        const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        const years = [];
+        for (let y = curY - 2; y <= curY + 1; y++) years.push(y);
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+        overlay.innerHTML = `
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; min-width:280px; max-width:90vw;">
+                <h3 style="margin:0 0 14px; color:var(--text); font-size:1rem; font-weight:900; text-align:center;">📅 Mois du planning à scanner</h3>
+                <div style="display:flex; gap:10px; margin-bottom:14px;">
+                    <select id="scan-month-pick" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:1rem; font-weight:700;">
+                        ${months.map((m,i) => `<option value="${i+1}" ${i+1===curM?'selected':''}>${m}</option>`).join('')}
+                    </select>
+                    <select id="scan-year-pick" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:1rem; font-weight:700;">
+                        ${years.map(y => `<option value="${y}" ${y===curY?'selected':''}>${y}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button id="scan-month-cancel" style="flex:1; padding:11px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-weight:800; font-size:0.88rem; cursor:pointer;">Annuler</button>
+                    <button id="scan-month-ok" style="flex:1; padding:11px; border-radius:8px; border:none; background:var(--brand-aqua); color:#fff; font-weight:900; font-size:0.88rem; cursor:pointer;">Scanner</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const cleanup = (val) => { overlay.remove(); resolve(val); };
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(null); });
+        document.getElementById('scan-month-cancel').onclick = () => cleanup(null);
+        document.getElementById('scan-month-ok').onclick = () => {
+            const m = parseInt(document.getElementById('scan-month-pick').value);
+            const y = parseInt(document.getElementById('scan-year-pick').value);
+            cleanup({ year: y, month: m });
+        };
+    });
+}
+
 // --- Scan planning par photo ------------------------------------------------
 
 // URL du Cloudflare Worker (à remplacer après déploiement, cf worker/SETUP.md)
@@ -112,17 +152,11 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
         showToast('⛔ Image trop volumineuse (max 8 Mo)');
         return;
     }
-    // Demande le mois cible pour éviter que le modèle confonde
-    // (Digihops affiche parfois des jours du mois précédent/suivant en grisé)
-    const today = new Date();
-    const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    const monthInput = prompt('Mois du planning à scanner (format AAAA-MM) :', defaultMonth);
-    if (!monthInput) return;
-    const m = monthInput.match(/^(\d{4})-(\d{1,2})$/);
-    if (!m) { showToast('⛔ Format invalide. Exemple : 2026-02'); return; }
-    const targetYear = parseInt(m[1]);
-    const targetMonth = parseInt(m[2]);
-    if (targetMonth < 1 || targetMonth > 12) { showToast('⛔ Mois entre 1 et 12'); return; }
+    // Demande le mois cible via une modale avec selects natifs (roulette mobile)
+    const target = await _askScanMonthYear();
+    if (!target) return;
+    const targetYear = target.year;
+    const targetMonth = target.month;
     _scanInProgress = true;
     showToast('📷 Préparation de la photo...');
     let imageBase64, mimeType;
