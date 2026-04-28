@@ -28,8 +28,16 @@ function savePlanData() {
     localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
     localStorage.setItem('pulseunit_plan_regime', planRegime);
     if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser) {
-        PLANS_DOC.set({ [currentUser.id]: { states: planStates, labels: planLabels, regime: planRegime } }, { merge: true })
-            .catch(e => console.warn('Plan sync error', e));
+        // update() avec dotted-path REMPLACE la valeur entière (pas de merge sur les sous-maps),
+        // contrairement à set({merge:true}) qui fusionne — sinon les dates supprimées localement
+        // reviennent au prochain load car Firestore les conserve.
+        const userPlan = { states: planStates, labels: planLabels, regime: planRegime };
+        PLANS_DOC.update({ [currentUser.id]: userPlan })
+            .catch(() => {
+                // Doc inexistant → fallback set merge pour le créer
+                PLANS_DOC.set({ [currentUser.id]: userPlan }, { merge: true })
+                    .catch(e => console.warn('Plan sync error', e));
+            });
     }
 }
 
@@ -578,6 +586,7 @@ window.resetPlanningCA = function resetPlanningCA() {
     if (!confirm('Effacer tout le planning pour ' + planYear + ' ?')) return;
     const y = String(planYear);
     Object.keys(planStates).forEach(k => { if (k.startsWith(y)) delete planStates[k]; });
+    Object.keys(planLabels).forEach(k => { if (k.startsWith(y)) delete planLabels[k]; });
     savePlanData();
     renderPlanCalendrier();
 };
@@ -646,6 +655,7 @@ function initPlanSoldesUI() {
 window.resetPlanMonth = function(mKey) {
     if (!confirm('Effacer le mois ' + mKey + ' ?')) return;
     Object.keys(planStates).forEach(k => { if (k.startsWith(mKey)) delete planStates[k]; });
+    Object.keys(planLabels).forEach(k => { if (k.startsWith(mKey)) delete planLabels[k]; });
     savePlanData();
     renderPlanCalendrier();
 };
