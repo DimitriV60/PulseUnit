@@ -357,9 +357,33 @@ function getPlanDayState(dateStr) {
     return getPlanDefaultState(dateStr);
 }
 
+// Numérotation auto des CA non labellisés — recalculé à chaque renderPlanCalendrier
+let _caNumberCache = { year: null, map: {} };
+function _rebuildCANumberCache(year) {
+    const buckets = { ca: [], can1: [], ca_hp: [], ca_hpn1: [] };
+    for (const [d, st] of Object.entries(planStates)) {
+        if (!d.startsWith(String(year) + '-')) continue;
+        if (buckets[st]) buckets[st].push(d);
+    }
+    const map = {};
+    Object.keys(buckets).forEach(bk => {
+        buckets[bk].sort();
+        buckets[bk].forEach((d, i) => { map[d] = i + 1; });
+    });
+    _caNumberCache = { year, map };
+}
+
 function planDayHTML(dayNum, state, dateStr) {
     const customLbl = dateStr && planLabels[dateStr];
-    const lbl = customLbl || window.PLAN_LABELS[state];
+    let lbl = customLbl;
+    if (!lbl) {
+        lbl = window.PLAN_LABELS[state];
+        // Auto-numéro pour CA / CA-1 / CA-HP / CA-HP-1 (suffixe au label de base)
+        if ((state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1') && lbl) {
+            const n = _caNumberCache.map[dateStr];
+            if (n) lbl = lbl + ' ' + n;
+        }
+    }
     if (!lbl) return String(dayNum);
     return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
 }
@@ -652,6 +676,7 @@ function renderPlanCalendrier() {
     document.getElementById('plan-year-label').textContent = planYear;
     const rcnLeg = document.getElementById('plan-legend-rcn');
     if (rcnLeg) rcnLeg.style.display = planRegime === 'nuit' ? 'inline' : 'none';
+    _rebuildCANumberCache(planYear);
     let html = '';
     for (let m = 0; m < 12; m++) html += renderPlanMonth(planYear, m);
     document.getElementById('plan-scroll').innerHTML = html;
@@ -987,10 +1012,10 @@ function _suiviProfileLabel(t) {
 }
 
 function _suiviTotalCAEntitled() {
-    // Capital théorique CA = 25 + bonus HS + bonus Frac + soldes N-1 reportés
+    // Capital CA année courante = 25 + bonus HS + bonus Frac (les reliquats N-1
+    // sont affichés à part dans la ligne "reliquat" de la card CA).
     const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0 };
-    const caN1 = (planSoldes && planSoldes.caN1) || 0;
-    return 25 + caN1 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
+    return 25 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
 }
 
 window.renderSuiviRH = function renderSuiviRH() {
@@ -1040,10 +1065,22 @@ window.renderSuiviRH = function renderSuiviRH() {
             bar.style.width = pct + '%';
         }
     }
-    _setCard('ca',   (postes.ca || 0) + (postes.can1 || 0), caTotal);
-    _setCard('cahp', (postes.ca_hp || 0) + (postes.ca_hpn1 || 0), caHpTotal);
+    // CA / CA-HP : compteurs séparés courant vs N-1 (reliquat).
+    _setCard('ca',   postes.ca || 0,    caTotal);
+    _setCard('cahp', postes.ca_hp || 0, caHpTotal);
     _setCard('frac', (postes.frac || 0) + (postes.fracn1 || 0), fracTotal);
     _setCard('rcv',  (postes.rcv || 0) + (postes.rcvn1 || 0), rcvTotal, { notEligible: !rcvEligible });
+    // Lignes "reliquat N-1" sous CA et CA-HP — visibles seulement si > 0
+    function _setN1(prefix, n) {
+        const line = document.getElementById('suivi-' + prefix + '-n1-line');
+        const val  = document.getElementById('suivi-' + prefix + '-n1');
+        const yr   = document.getElementById('suivi-' + prefix + '-n1-year');
+        if (line) line.style.display = n > 0 ? 'block' : 'none';
+        if (val)  val.textContent = String(n);
+        if (yr)   yr.textContent = String(year - 1);
+    }
+    _setN1('ca',   postes.can1 || 0);
+    _setN1('cahp', postes.ca_hpn1 || 0);
     const rcvCard = document.getElementById('suivi-card-rcv');
     if (rcvCard) rcvCard.classList.toggle('is-disabled', !rcvEligible);
     const rcvRestWrap = document.getElementById('suivi-rcv-rest-wrap');

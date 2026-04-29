@@ -546,6 +546,8 @@
   .suivi-card-rest strong { color:var(--brand-aqua); }
   .suivi-card-rest.is-over strong { color:var(--crit); }
   .suivi-card-rest.not-eligible { font-style:italic; color:var(--text-muted); }
+  .suivi-card-n1 { margin-top:6px; padding-top:6px; border-top:1px dashed var(--border); font-size:0.7rem; font-weight:700; color:var(--text-muted); text-align:center; }
+  .suivi-card-n1 strong { color:var(--brand-aqua); font-weight:900; }
 
   .suivi-transmission { display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
   .suivi-transmission-icon { font-size:1.6rem; flex-shrink:0; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:rgba(64,206,234,0.14); }
