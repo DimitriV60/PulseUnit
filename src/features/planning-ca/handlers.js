@@ -233,18 +233,56 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     _scanInProgress = false;
 };
 
-// Règle FPH : tout CA tombant entre le 1er janvier et le 31 mars est un
-// reliquat de l'année N-1 (les agents ont jusqu'au 31/03 pour poser les CA
-// non pris l'année précédente). Sur Digihops, la numérotation reprend la
-// séquence N-1 (ex: CA 22, 23, 24, 25 en janvier = fin de séquence 2025).
-// → ca → can1, ca_hp → ca_hpn1
+// Détection N-1 par label scanné Digihops :
+// On parcourt chronologiquement la famille CA. Tant qu'on n'a pas vu de
+// label numéroté "CA 1" (ex: "CA 22, 23, 24, 25" en janvier = suite de N-1),
+// les CA sont des reliquats N-1 (state=can1 / ca_hpn1). Dès qu'on rencontre
+// "CA 1", on bascule sur l'année courante (state=ca / ca_hp) pour cette date
+// et toutes les suivantes.
+//
+// Fallback (aucun label numéroté présent dans la famille) : règle calendaire
+// jan-mars = N-1 (cas du clic manuel sans scan).
+//
 // Visuellement : même couleur verte, libellé "CA + numéro scanné" — la
 // distinction N-1 n'apparaît que dans les compteurs Suivi RH et soldes.
-function _normalizeCAYearN1(dateStr, state, _label) {
-    if (state !== 'ca' && state !== 'ca_hp') return state;
-    const month = parseInt(dateStr.slice(5, 7), 10);
-    if (!month || month > 3) return state;
-    return state === 'ca' ? 'can1' : 'ca_hpn1';
+function _normalizeCAFamilyByLabel(year) {
+    const yearKey = String(year) + '-';
+
+    function processFamily(currentState, n1State) {
+        const dates = Object.keys(planStates)
+            .filter(d => d.startsWith(yearKey))
+            .filter(d => planStates[d] === currentState || planStates[d] === n1State)
+            .sort();
+        if (dates.length === 0) return 0;
+
+        // Cherche la date la plus tôt portant un label "<…> 1"
+        let startDate = null;
+        for (const d of dates) {
+            const lbl = planLabels[d];
+            if (!lbl) continue;
+            const m = String(lbl).match(/(\d+)\s*$/);
+            if (m && parseInt(m[1], 10) === 1) { startDate = d; break; }
+        }
+
+        let changed = 0;
+        if (startDate) {
+            // Avant startDate → N-1 ; à partir de startDate → année courante
+            for (const d of dates) {
+                const target = (d < startDate) ? n1State : currentState;
+                if (planStates[d] !== target) { planStates[d] = target; changed++; }
+            }
+        } else {
+            // Aucun "CA 1" trouvé : fallback calendaire jan-mars = N-1
+            for (const d of dates) {
+                const month = parseInt(d.slice(5, 7), 10);
+                const target = (month >= 1 && month <= 3) ? n1State : currentState;
+                if (planStates[d] !== target) { planStates[d] = target; changed++; }
+            }
+        }
+        return changed;
+    }
+
+    return processFamily('ca', 'can1') + processFamily('ca_hp', 'ca_hpn1');
 }
 
 function _applyScannedPlan(scanned, count, labels) {
@@ -257,13 +295,14 @@ function _applyScannedPlan(scanned, count, labels) {
     let added = 0, replaced = 0;
     for (const [date, state] of Object.entries(scanned)) {
         const lbl = labels && labels[date] ? labels[date] : null;
-        const finalState = _normalizeCAYearN1(date, state, lbl);
-        if (planStates[date] !== undefined && planStates[date] !== finalState) replaced++;
+        if (planStates[date] !== undefined && planStates[date] !== state) replaced++;
         else if (planStates[date] === undefined) added++;
-        planStates[date] = finalState;
+        planStates[date] = state;
         if (lbl) planLabels[date] = lbl;
         else delete planLabels[date];
     }
+    // Normalisation N-1 par label scanné (règle "CA 1" — voir _normalizeCAFamilyByLabel)
+    _normalizeCAFamilyByLabel(planYear);
     savePlanData();
     if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
     else if (typeof updatePlanStats === 'function') updatePlanStats();
@@ -311,13 +350,8 @@ async function loadUserPlan(userId) {
             planLabels = userPlan.labels;
             localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
         }
-        // Normalisation rétroactive : tout CA jan-mars → can1 / ca_hpn1
-        let _changed = 0;
-        for (const [d, st] of Object.entries(planStates)) {
-            const lbl = planLabels[d];
-            const norm = _normalizeCAYearN1(d, st, lbl);
-            if (norm !== st) { planStates[d] = norm; _changed++; }
-        }
+        // Normalisation N-1 par label scanné (rétroactif au chargement)
+        const _changed = _normalizeCAFamilyByLabel(planYear);
         if (_changed > 0) {
             localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
             localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
