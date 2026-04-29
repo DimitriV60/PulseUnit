@@ -1349,8 +1349,16 @@ window.renderSuiviRH = function renderSuiviRH() {
         const off = recap.daysOff || {};
         const dimanches = (recap.weekendDaysWorked && recap.weekendDaysWorked.dimanches) || 0;
         const totalRealized = recap.totalRealizedHours || 0;
+        const totalTheoretical = recap.totalTheoreticalHours || 0;
         const totalWorkedDays = (dw.jour || 0) + (dw.nuit || 0) + (dw.hs_j || 0) + (dw.hs_n || 0) + (dw.formation || 0);
         const dow = recap.workedByDow || { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 };
+        const yearN1 = year - 1;
+        // Construit deux lignes par catégorie (courant / N-1) ; la ligne N-1 est masquée si =0
+        const _congeRow = (label, cur, n1) => {
+            const main = `<div class="suivi-recap-row"><span>${label}</span><strong>${cur}</strong></div>`;
+            if (!n1) return main;
+            return main + `<div class="suivi-recap-row is-sub"><span>↳ reliquat ${yearN1}</span><strong>${n1}</strong></div>`;
+        };
 
         recapGrid.innerHTML = `
             <div class="suivi-recap-block">
@@ -1367,11 +1375,11 @@ window.renderSuiviRH = function renderSuiviRH() {
             <div class="suivi-recap-block">
                 <div class="suivi-recap-block-title">Congés posés</div>
                 <div class="suivi-recap-rows">
-                    <div class="suivi-recap-row"><span>CA</span><strong>${(postes.ca || 0) + (postes.can1 || 0)}</strong></div>
-                    <div class="suivi-recap-row"><span>CA-HP</span><strong>${(postes.ca_hp || 0) + (postes.ca_hpn1 || 0)}</strong></div>
-                    <div class="suivi-recap-row"><span>Fractionné (FR)</span><strong>${(postes.frac || 0) + (postes.fracn1 || 0)}</strong></div>
-                    <div class="suivi-recap-row"><span>RCV</span><strong>${(postes.rcv || 0) + (postes.rcvn1 || 0)}</strong></div>
-                    <div class="suivi-recap-row"><span>HP</span><strong>${(postes.hp || 0) + (postes.hpn1 || 0)}</strong></div>
+                    ${_congeRow('CA',           postes.ca   || 0, postes.can1    || 0)}
+                    ${_congeRow('CA-HP',        postes.ca_hp|| 0, postes.ca_hpn1 || 0)}
+                    ${_congeRow('Fractionné (FR)', postes.frac|| 0, postes.fracn1  || 0)}
+                    ${_congeRow('RCV',          postes.rcv  || 0, postes.rcvn1   || 0)}
+                    ${_congeRow('HP',           postes.hp   || 0, postes.hpn1    || 0)}
                 </div>
             </div>
             <div class="suivi-recap-block">
@@ -1389,7 +1397,7 @@ window.renderSuiviRH = function renderSuiviRH() {
                 <div class="suivi-recap-rows">
                     <div class="suivi-recap-row"><span>Fériés travaillés</span><strong>${recap.feriesWorked || 0}</strong></div>
                     <div class="suivi-recap-row is-total"><span>Dimanches travaillés (prime)</span><strong>${dimanches}</strong></div>
-                    <div class="suivi-recap-row"><span>Total heures réalisées</span><strong>${E.formatHours(totalRealized)}</strong></div>
+                    <div class="suivi-recap-row"><span>Heures réalisées / théoriques</span><strong>${E.formatHours(totalRealized)} / ${E.formatHours(totalTheoretical)}</strong></div>
                 </div>
             </div>
             <div class="suivi-recap-block suivi-recap-block-wide">
