@@ -49,22 +49,22 @@
 <body>
   <div id="data-empty-banner" role="status">
     <span style="flex:1;">⚠️ Données non chargées (réseau lent ou problème de connexion).</span>
-    <button id="data-reload-btn" onclick="reloadAppData()">🔄 Recharger</button>
+    <button id="data-reload-btn" data-action="reloadAppData">🔄 Recharger</button>
   </div>
 
   <header class="header">
     <div class="header-top">
       <div class="header-left">
-        <button class="menu-btn" onclick="openSideMenu()" aria-label="Ouvrir le menu" aria-expanded="false" id="menu-toggle-btn">☰</button>
+        <button class="menu-btn" data-action="openSideMenu" aria-label="Ouvrir le menu" aria-expanded="false" id="menu-toggle-btn">☰</button>
         <h1>Pulse<span>Unit</span></h1>
       </div>
       <div class="header-actions" style="display:flex; align-items:center; gap:6px;">
         <div id="header-user-info" style="display:flex; align-items:center; gap:6px;"></div>
-        <button id="notif-bell-btn" onclick="openNotifsCenter()" aria-label="Notifications" style="position:relative; background:var(--pill-bg); border:1px solid var(--border); border-radius:6px; height:32px; width:36px; padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.05rem; color:var(--text);">
+        <button id="notif-bell-btn" data-action="openNotifsCenter" aria-label="Notifications" style="position:relative; background:var(--pill-bg); border:1px solid var(--border); border-radius:6px; height:32px; width:36px; padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.05rem; color:var(--text);">
           🔔
           <span id="notif-bell-badge" style="display:none; position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:var(--crit); color:#fff; font-size:0.65rem; font-weight:900; align-items:center; justify-content:center; line-height:1; box-sizing:border-box;">0</span>
         </button>
-        <button class="header-btn tuto" onclick="document.getElementById('tuto-modal').style.display='flex'">Guide</button>
+        <button class="header-btn tuto" data-action="show:tuto-modal">Guide</button>
       </div>
     </div>
     <div id="locked-banner">🔒 GARDE TERMINÉE - LECTURE SEULE</div>
@@ -77,7 +77,7 @@
     <div class="shift-nav" id="shift-nav"></div>
   </header>
 
-  <div id="side-menu-overlay" onclick="closeSideMenu()"></div>
+  <div id="side-menu-overlay" data-action="closeSideMenu"></div>
   <nav id="side-menu" role="dialog" aria-modal="true" aria-label="Menu de navigation">
     <div class="side-menu-header">
       <div class="side-menu-header-row">
@@ -85,30 +85,30 @@
           <div class="side-menu-header-title">PulseUnit</div>
           <div class="side-menu-header-sub">Réa & Soins critiques</div>
         </div>
-        <button class="close-menu-btn" onclick="closeSideMenu()" aria-label="Fermer le menu">×</button>
+        <button class="close-menu-btn" data-action="closeSideMenu" aria-label="Fermer le menu">×</button>
       </div>
     </div>
     <div class="side-menu-content">
       <div class="side-menu-section">Outils cliniques</div>
-      <a href="#" class="side-link" onclick="openProtocoles();"><span class="side-link-icon">📋</span><span>Protocoles</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openCalculateurs();"><span class="side-link-icon">🧮</span><span>Calculateurs</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openNormes();"><span class="side-link-icon">📊</span><span>Normes de référence</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openNormesRespi();" style="display:none;"><span class="side-link-icon">🫁</span><span>Simulateur Respirateur</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openLexique();"><span class="side-link-icon">📖</span><span>Lexique & Abréviations</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openPathologies();"><span class="side-link-icon">🩺</span><span>Pathologies</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openChecklists();"><span class="side-link-icon">✅</span><span>Checklists procédures</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openDilutions();"><span class="side-link-icon">💊</span><span>Dilutions</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openProtocoles"><span class="side-link-icon">📋</span><span>Protocoles</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openCalculateurs"><span class="side-link-icon">🧮</span><span>Calculateurs</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openNormes"><span class="side-link-icon">📊</span><span>Normes de référence</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openNormesRespi" style="display:none;"><span class="side-link-icon">🫁</span><span>Simulateur Respirateur</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openLexique"><span class="side-link-icon">📖</span><span>Lexique & Abréviations</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openPathologies"><span class="side-link-icon">🩺</span><span>Pathologies</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openChecklists"><span class="side-link-icon">✅</span><span>Checklists procédures</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openDilutions"><span class="side-link-icon">💊</span><span>Dilutions</span><span class="side-link-arrow">›</span></a>
       <div class="side-menu-section">Organisation</div>
-      <a href="#" class="side-link" onclick="openPlanningCA();"><span class="side-link-icon">📅</span><span>Planning</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openBourse();"><span class="side-link-icon">↔️</span><span>Bourse d'échange</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openServices();"><span class="side-link-icon">📞</span><span>Les Services</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="closeSideMenu(); openMessages();"><span class="side-link-icon">💬</span><span>Messages</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openPlanningCA"><span class="side-link-icon">📅</span><span>Planning</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openBourse"><span class="side-link-icon">↔️</span><span>Bourse d'échange</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openServices"><span class="side-link-icon">📞</span><span>Les Services</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="closeSideMenu;openMessages"><span class="side-link-icon">💬</span><span>Messages</span><span class="side-link-arrow">›</span></a>
       <div style="flex: 1; min-height: 16px;"></div>
       <div class="side-menu-section">Compte</div>
-      <a href="#" class="side-link side-link-accent" onclick="openAlphaModal();"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openProfile();"><span class="side-link-icon">👤</span><span>Mon profil</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" onclick="openSettings();"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link side-link-danger" onclick="closeSideMenu(); logoutUser();" data-keep-menu="false"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link side-link-accent" data-action="openAlphaModal"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openProfile"><span class="side-link-icon">👤</span><span>Mon profil</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openSettings"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link side-link-danger" data-action="closeSideMenu;logoutUser" data-keep-menu="false"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
     </div>
   </nav>
 
@@ -122,9 +122,9 @@
           <span id="theme-desc-modal">Automatique (☀️ Jour / 🌙 Nuit selon l'heure)</span>
         </div>
         <div style="display:flex; gap:6px; width:100%;">
-          <button id="theme-btn-auto"  onclick="setTheme('auto')"  style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌗 Auto</button>
-          <button id="theme-btn-light" onclick="setTheme('light')" style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">☀️ Clair</button>
-          <button id="theme-btn-dark"  onclick="setTheme('dark')"  style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌙 Sombre</button>
+          <button id="theme-btn-auto"  data-action="setTheme:auto"  style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌗 Auto</button>
+          <button id="theme-btn-light" data-action="setTheme:light" style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">☀️ Clair</button>
+          <button id="theme-btn-dark"  data-action="setTheme:dark"  style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌙 Sombre</button>
         </div>
       </div>
 
@@ -152,7 +152,7 @@
 
       <!-- Sous-onglets -->
       <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px; display:flex; flex-direction:column; gap:8px;">
-        <button class="settings-action-btn" onclick="openChangePinModal()">
+        <button class="settings-action-btn" data-action="openChangePinModal">
           <span class="settings-action-icon">🔑</span>
           <span style="flex:1; text-align:left;">
             <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Modifier mon code</div>
@@ -160,7 +160,7 @@
           </span>
           <span style="color:var(--text-muted); font-size:1rem;">›</span>
         </button>
-        <button class="settings-action-btn" onclick="openShareInstallModal()">
+        <button class="settings-action-btn" data-action="openShareInstallModal">
           <span class="settings-action-icon">📲</span>
           <span style="flex:1; text-align:left;">
             <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Partager & Installer</div>
@@ -171,14 +171,14 @@
       </div>
 
       <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-        <button class="btn-danger-soft" style="color:var(--crit); border-color:rgba(239,68,68,0.25);" onclick="document.getElementById('settings-modal').style.display='none'; openAdmin();">🔒 Accès Admin</button>
+        <button class="btn-danger-soft" style="color:var(--crit); border-color:rgba(239,68,68,0.25);" data-action="hide:settings-modal;openAdmin">🔒 Accès Admin</button>
       </div>
 
       <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:12px; text-align:center;">
-        <button onclick="document.getElementById('settings-modal').style.display='none'; openRGPD();" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; font-weight:700; font-family:var(--font); cursor:pointer; text-decoration:underline;">🔒 Confidentialité & RGPD</button>
+        <button data-action="hide:settings-modal;openRGPD" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; font-weight:700; font-family:var(--font); cursor:pointer; text-decoration:underline;">🔒 Confidentialité & RGPD</button>
       </div>
 
-      <button class="btn-primary" style="margin-top:14px;" onclick="document.getElementById('settings-modal').style.display='none'">Fermer</button>
+      <button class="btn-primary" style="margin-top:14px;" data-action="hide:settings-modal">Fermer</button>
     </div>
   </div>
 
@@ -187,7 +187,7 @@
     <div class="modal-content" style="width:min(440px,94vw); padding:22px; max-height:92vh; overflow-y:auto;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
         <div style="font-size:1.15rem; font-weight:900; color:var(--text);">👤 Mon profil</div>
-        <button onclick="closeProfile()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+        <button data-action="closeProfile" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
       <div style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-bottom:14px;">Le type d'agent détermine le calcul des heures théoriques mensuelles (Guide DRH GHPSO 2014).</div>
 
@@ -241,7 +241,7 @@
         <div id="profile-type-help" style="margin-top:10px; font-size:0.74rem; color:var(--text-muted); font-weight:700; line-height:1.4; padding:8px 10px; background:var(--surface-sec); border-radius:8px; border-left:3px solid var(--brand-aqua);"></div>
       </div>
 
-      <button class="btn-primary" style="width:100%;" onclick="closeProfile()">Fermer</button>
+      <button class="btn-primary" style="width:100%;" data-action="closeProfile">Fermer</button>
     </div>
   </div>
 
@@ -250,13 +250,13 @@
     <div class="modal-content" style="width:min(380px,92vw); padding:22px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
         <div style="font-size:1.1rem; font-weight:900; color:var(--text);">🔑 Modifier mon code</div>
-        <button onclick="document.getElementById('change-pin-modal').style.display='none'" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+        <button data-action="hide:change-pin-modal" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
       <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:14px;">Saisis ton ancien code puis ton nouveau code (6 chiffres).</div>
       <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-old" placeholder="Ancien code" style="margin-bottom:8px;">
       <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-new" placeholder="Nouveau code" style="margin-bottom:8px;">
       <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-conf" placeholder="Confirmer le nouveau code" style="margin-bottom:14px;">
-      <button class="btn-primary" style="width:100%;" onclick="changeMyPin()">Valider le nouveau code</button>
+      <button class="btn-primary" style="width:100%;" data-action="changeMyPin">Valider le nouveau code</button>
     </div>
   </div>
 
@@ -265,7 +265,7 @@
     <div class="modal-content" style="width:min(420px,92vw); padding:22px; max-height:90vh; overflow-y:auto;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
         <div style="font-size:1.1rem; font-weight:900; color:var(--text);">📲 Partager & Installer</div>
-        <button onclick="document.getElementById('share-install-modal').style.display='none'" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+        <button data-action="hide:share-install-modal" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
 
       <!-- QR + lien -->
@@ -274,7 +274,7 @@
         <div id="share-qrcode" style="display:inline-block; background:#fff; padding:10px; border-radius:8px; margin-bottom:10px;"></div>
         <div style="display:flex; gap:8px; align-items:center; justify-content:center;">
           <div id="share-link-text" style="font-size:0.75rem; font-weight:700; color:var(--brand-blue); word-break:break-all; flex:1; -webkit-user-select:text; user-select:text; text-align:left;">https://pulseunit-c9c5c.web.app</div>
-          <button onclick="copyShareLink()" id="share-copy-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; flex-shrink:0;">Copier</button>
+          <button data-action="copyShareLink" id="share-copy-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:0.75rem; font-weight:800; cursor:pointer; flex-shrink:0;">Copier</button>
         </div>
       </div>
 
@@ -301,7 +301,7 @@
         </div>
       </div>
 
-      <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('share-install-modal').style.display='none'">Fermer</button>
+      <button class="btn-primary" style="width:100%; padding:11px;" data-action="hide:share-install-modal">Fermer</button>
     </div>
   </div>
 
@@ -352,7 +352,7 @@
         <p style="margin:0;">PulseUnit est un outil d'organisation d'équipe. <strong style="color:var(--text);">Ne saisissez JAMAIS d'informations patient nominatives</strong> (nom, prénom, date de naissance, NIP, diagnostic identifiant) dans les notes de lit, les messages internes ou les annonces de bourse. L'application n'est pas un dossier patient et n'est pas conforme aux exigences <em>HDS</em> (Hébergeur de Données de Santé).</p>
       </div>
 
-      <button class="btn-primary" style="margin-top:18px;" onclick="document.getElementById('rgpd-modal').style.display='none'">Fermer</button>
+      <button class="btn-primary" style="margin-top:18px;" data-action="hide:rgpd-modal">Fermer</button>
     </div>
   </div>
 
@@ -363,12 +363,12 @@
       
       <div style="position:relative; margin-bottom:15px;">
         <input type="password" id="admin-pass" placeholder="Mot de passe" style="width:100%; padding:10px; padding-right:40px; background:var(--input-bg); border:1px solid var(--border); color:var(--text); border-radius:6px; font-family:var(--font); font-weight:600;" autocomplete="off">
-        <button id="toggle-pass-btn" type="button" onclick="togglePass()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted);">👁️</button>
+        <button id="toggle-pass-btn" type="button" data-action="togglePass" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted);">👁️</button>
       </div>
 
       <div style="display:flex; gap:8px;">
-        <button class="header-btn outline" style="flex:1; padding:10px; height:auto;" onclick="document.getElementById('admin-login-modal').style.display='none'">Annuler</button>
-        <button class="btn-primary" style="flex:1; padding:10px;" onclick="checkAdmin()">Valider</button>
+        <button class="header-btn outline" style="flex:1; padding:10px; height:auto;" data-action="hide:admin-login-modal">Annuler</button>
+        <button class="btn-primary" style="flex:1; padding:10px;" data-action="checkAdmin">Valider</button>
       </div>
     </div>
   </div>
@@ -411,24 +411,24 @@
             <input id="admin-new-lastname" type="text" placeholder="NOM" style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box;">
           </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
-            <button onclick="adminSelectNewRole('ide')" id="admin-role-ide" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
-            <button onclick="adminSelectNewRole('as')"  id="admin-role-as"  class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--as);  opacity:0.4; transition:opacity 0.15s;">AS</button>
-            <button onclick="adminSelectNewRole('med')" id="admin-role-med" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--med); opacity:0.4; transition:opacity 0.15s;">MED</button>
+            <button data-action="adminSelectNewRole:ide" id="admin-role-ide" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--ide); opacity:0.4; transition:opacity 0.15s;">IDE</button>
+            <button data-action="adminSelectNewRole:as"  id="admin-role-as"  class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--as);  opacity:0.4; transition:opacity 0.15s;">AS</button>
+            <button data-action="adminSelectNewRole:med" id="admin-role-med" class="btn-primary" style="flex:1; padding:6px 4px; font-size:0.72rem; background:var(--med); opacity:0.4; transition:opacity 0.15s;">MED</button>
           </div>
           <input id="admin-new-pin" type="text" inputmode="numeric" maxlength="6" placeholder="Code PIN à 6 chiffres" style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
-          <button onclick="adminCreateUser()" class="btn-primary" style="width:100%; padding:9px; font-size:0.82rem;">Créer le compte</button>
+          <button data-action="adminCreateUser" class="btn-primary" style="width:100%; padding:9px; font-size:0.82rem;">Créer le compte</button>
         </div>
 
         <!-- Bouton ouvrir la liste des comptes -->
-        <button onclick="openAdminUsersList()" class="btn-primary" style="width:100%; padding:10px; font-size:0.82rem; background:var(--brand-blue);">
+        <button data-action="openAdminUsersList" class="btn-primary" style="width:100%; padding:10px; font-size:0.82rem; background:var(--brand-blue);">
           👥 Voir tous les comptes
         </button>
       </div>
 
       <hr style="border-color:var(--border); margin-bottom:15px;">
-      <button class="btn-primary" id="admin-usip-btn" style="background:var(--crit); margin-bottom:10px; transition:all 0.2s;" onclick="toggleAdminUsipLock()">🔒 Verrouiller USIP</button>
-      <button class="btn-primary" style="background:var(--text-muted); margin-bottom:10px; color:#fff;" onclick="document.getElementById('admin-panel-modal').style.display='none'; confirmClearShift();">🗑️ Vider garde</button>
-      <button class="btn-primary" style="background:transparent; border:1px solid var(--crit); color:var(--crit); margin-bottom:15px;" onclick="hardResetApp()">⚠️ Réparer l'App</button>
+      <button class="btn-primary" id="admin-usip-btn" style="background:var(--crit); margin-bottom:10px; transition:all 0.2s;" data-action="toggleAdminUsipLock">🔒 Verrouiller USIP</button>
+      <button class="btn-primary" style="background:var(--text-muted); margin-bottom:10px; color:#fff;" data-action="hide:admin-panel-modal;confirmClearShift">🗑️ Vider garde</button>
+      <button class="btn-primary" style="background:transparent; border:1px solid var(--crit); color:var(--crit); margin-bottom:15px;" data-action="hardResetApp">⚠️ Réparer l'App</button>
 
       <hr style="border-color:var(--border); margin-bottom:15px;">
       <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase;">Changer le mot de passe admin</div>
@@ -438,9 +438,9 @@
         style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
       <input id="admin-conf-pass" type="password" placeholder="Confirmer le nouveau mot de passe" autocomplete="off"
         style="width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:8px;">
-      <button onclick="changeAdminPassword()" class="btn-primary" style="width:100%; margin-bottom:15px;">Valider le nouveau mot de passe</button>
+      <button data-action="changeAdminPassword" class="btn-primary" style="width:100%; margin-bottom:15px;">Valider le nouveau mot de passe</button>
 
-      <button class="header-btn outline" style="width:100%; padding:10px; height:auto;" onclick="document.getElementById('admin-panel-modal').style.display='none'">Fermer</button>
+      <button class="header-btn outline" style="width:100%; padding:10px; height:auto;" data-action="hide:admin-panel-modal">Fermer</button>
     </div>
   </div>
 
@@ -452,7 +452,7 @@
           <div style="font-size:1rem; font-weight:900; color:var(--text);">👥 Tous les comptes</div>
           <div id="admin-users-count" style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;"></div>
         </div>
-        <button onclick="document.getElementById('admin-users-modal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+        <button data-action="hide:admin-users-modal" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
       <input type="text" id="admin-users-search" placeholder="🔍 Rechercher un nom…" oninput="renderAdminUsers()" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:12px;">
       <div id="admin-users-container"></div>
@@ -468,8 +468,8 @@
         Cet agent travaille-t-il/elle encore sur cette garde ?
       </p>
       <div style="display:flex; gap:10px;">
-        <button class="header-btn outline" style="flex:1; padding:11px; height:auto; font-size:0.82rem;" onclick="keepAgent()">Oui, il/elle travaille</button>
-        <button class="btn-primary" style="flex:1; background:var(--crit); padding:11px; font-size:0.82rem;" onclick="removeAgent()">Non, retirer</button>
+        <button class="header-btn outline" style="flex:1; padding:11px; height:auto; font-size:0.82rem;" data-action="keepAgent">Oui, il/elle travaille</button>
+        <button class="btn-primary" style="flex:1; background:var(--crit); padding:11px; font-size:0.82rem;" data-action="removeAgent">Non, retirer</button>
       </div>
     </div>
   </div>
@@ -483,8 +483,8 @@
         Cette action va effacer tous les soignants et l'attribution des lits. <strong style="color:var(--crit)">C'est irréversible !</strong>
       </p>
       <div style="display:flex; gap:10px;">
-        <button class="header-btn outline" style="flex:1; padding:12px; height:auto;" onclick="document.getElementById('confirm-clear-modal').style.display='none'">Annuler</button>
-        <button class="btn-primary" style="flex:1; background:var(--crit); padding:12px;" onclick="executeClearShift()">Vider</button>
+        <button class="header-btn outline" style="flex:1; padding:12px; height:auto;" data-action="hide:confirm-clear-modal">Annuler</button>
+        <button class="btn-primary" style="flex:1; background:var(--crit); padding:12px;" data-action="executeClearShift">Vider</button>
       </div>
     </div>
   </div>
@@ -494,7 +494,7 @@
     <div class="modal-content" style="width:min(620px,96vw); max-height:92vh; display:flex; flex-direction:column; position:relative;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-shrink:0;">
         <div style="font-size:1.05rem; font-weight:900; color:var(--text);">📝 Note — Lit <span id="bed-note-bed-label"></span></div>
-        <button onclick="closeBedNote()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
+        <button data-action="closeBedNote" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">×</button>
       </div>
       <div id="bed-note-tabs" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; flex-shrink:0;"></div>
       <div id="bed-note-timestamp" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;"></div>
@@ -513,8 +513,8 @@
         <textarea id="bed-note-text" rows="6" placeholder="Transmissions, événements, traitements (visibles par vous seul)..." style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:120px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
       </div>
       <div style="display:flex; gap:10px; margin-top:12px; flex-shrink:0;">
-        <button id="bed-note-delete-btn" onclick="deleteBedNote()" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
-        <button id="bed-note-save-btn" onclick="saveBedNote()" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
+        <button id="bed-note-delete-btn" data-action="deleteBedNote" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
+        <button id="bed-note-save-btn" data-action="saveBedNote" class="btn-primary" style="flex:1; padding:10px;">Enregistrer</button>
       </div>
       <!-- Overlay chooser de suppression -->
       <div id="bed-note-delete-chooser" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.92); border-radius:14px; flex-direction:column; align-items:stretch; justify-content:center; padding:24px; gap:10px; z-index:10;"></div>
@@ -526,7 +526,7 @@
       <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉</div>
       <h3 style="margin-bottom:15px; color:var(--as); font-weight: 900;">SUPER TRAVAIL !</h3>
       <p id="congrats-msg" style="color:var(--text); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; font-weight: 700;"></p>
-      <button class="btn-primary" style="background:var(--as); width:100%; padding:12px;" onclick="document.getElementById('congrats-modal').style.display='none'">Génial !</button>
+      <button class="btn-primary" style="background:var(--as); width:100%; padding:12px;" data-action="hide:congrats-modal">Génial !</button>
     </div>
   </div>
 
@@ -553,7 +553,7 @@
       </div>
 
       <!-- Bouton WhatsApp -->
-      <button onclick="sendWhatsAppBug()" style="width:100%; padding:12px; border-radius:10px; border:none; background:#25d366; color:#fff; font-size:0.9rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;">
+      <button data-action="sendWhatsAppBug" style="width:100%; padding:12px; border-radius:10px; border:none; background:#25d366; color:#fff; font-size:0.9rem; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Signaler un bug via WhatsApp
       </button>
@@ -562,7 +562,7 @@
         💡 Pour partager l'accès ou installer l'app : Menu ☰ → Paramètres → Partager & Installer
       </div>
 
-      <button class="btn-primary" style="width:100%; padding:11px;" onclick="document.getElementById('alpha-modal').style.display='none'">Fermer</button>
+      <button class="btn-primary" style="width:100%; padding:11px;" data-action="hide:alpha-modal">Fermer</button>
     </div>
   </div>
 
@@ -571,7 +571,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeChecklist()">←</button>
+          <button class="fs-back" data-action="closeChecklist">←</button>
           <h2 style="font-size:1.3rem; font-weight:900; color:var(--text); margin:0;">✅ Vérification Chambre</h2>
         </div>
         <div class="cl-header-pill" id="cl-shift-label">
@@ -593,7 +593,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeLexique()">←</button>
+          <button class="fs-back" data-action="closeLexique">←</button>
           <h2 style="font-size:1.4rem; font-weight:900; color:var(--text); margin:0;">📖 Lexique & Abréviations</h2>
         </div>
       </div>
@@ -611,7 +611,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeCalculateurs()">←</button>
+          <button class="fs-back" data-action="closeCalculateurs">←</button>
           <h2 style="font-size:1.4rem; font-weight:900; color:var(--text); margin:0;">🧮 Calculateurs</h2>
         </div>
       </div>
@@ -630,7 +630,7 @@
     <div class="calc-modal-content">
       <div class="calc-modal-header">
         <span id="calc-modal-title">Titre</span>
-        <button class="close-menu-btn" style="font-size:1.5rem;" onclick="closeCalcModal()">×</button>
+        <button class="close-menu-btn" style="font-size:1.5rem;" data-action="closeCalcModal">×</button>
       </div>
       <div class="calc-modal-body" id="calc-modal-body"></div>
     </div>
@@ -640,7 +640,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeTasks()">←</button>
+          <button class="fs-back" data-action="closeTasks">←</button>
           <h2 style="font-size:1.4rem; font-weight:900; color:var(--text); margin:0;" id="tasks-title">📝 Tâches & Traçabilité</h2>
         </div>
       </div>
@@ -664,7 +664,7 @@
 
   <div id="sticky-banner" class="sticky-banner">
     <div id="sticky-text" style="flex:1; font-size:1.4rem; font-weight:900;"></div>
-    <button class="btn-valider" onclick="clearSelection()">✔ VALIDER</button>
+    <button class="btn-valider" data-action="clearSelection">✔ VALIDER</button>
   </div>
 
   <div id="add-modal">
@@ -678,8 +678,8 @@
         <option value="med">Médecin Réanimateur</option>
       </select>
       <div style="display:flex; gap:8px;">
-        <button class="header-btn outline" style="flex:1; padding:10px; height:auto;" onclick="document.getElementById('add-modal').style.display='none'; document.getElementById('new-firstname').value=''; document.getElementById('new-lastname').value='';">Annuler</button>
-        <button class="btn-primary" style="flex:1;" onclick="createNewStaff()">Créer</button>
+        <button class="header-btn outline" style="flex:1; padding:10px; height:auto;" data-action="hide:add-modal;setVal:new-firstname;setVal:new-lastname">Annuler</button>
+        <button class="btn-primary" style="flex:1;" data-action="createNewStaff">Créer</button>
       </div>
     </div>
   </div>
@@ -694,7 +694,7 @@
             <div style="font-size:1.25rem; font-weight:900; letter-spacing:-0.3px;">📖 Guide PulseUnit</div>
             <div style="font-size:0.72rem; opacity:0.92; font-weight:700; margin-top:2px;">Réanimation & Soins Critiques · v Alpha</div>
           </div>
-          <button onclick="document.getElementById('tuto-modal').style.display='none'" style="background:rgba(255,255,255,0.18); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; line-height:1; flex-shrink:0;">×</button>
+          <button data-action="hide:tuto-modal" style="background:rgba(255,255,255,0.18); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; line-height:1; flex-shrink:0;">×</button>
         </div>
       </div>
 
@@ -966,7 +966,7 @@
         </div>
       </details>
 
-      <button class="btn-primary" style="width:100%; padding:12px; border-radius:10px; font-size:0.92rem;" onclick="document.getElementById('tuto-modal').style.display='none'">Compris !</button>
+      <button class="btn-primary" style="width:100%; padding:12px; border-radius:10px; font-size:0.92rem;" data-action="hide:tuto-modal">Compris !</button>
       </div>
     </div>
   </div>
@@ -975,6 +975,8 @@
 <script src="src/core/state.js"></script>
 <!-- Helpers transverses — chargé en premier (escapeHTML, triggerHaptic, playSound) -->
 <script src="src/core/helpers.js"></script>
+<!-- Event delegation — remplace les onclick inline (CSP-friendly) -->
+<script src="src/core/event-delegation.js"></script>
 
 <!-- Données extraites (architecture feature-based) — voir ANNUAIRE.md -->
 <script src="src/features/lexique/data.js"></script>
@@ -1029,7 +1031,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeProtocoles()">←</button>
+          <button class="fs-back" data-action="closeProtocoles">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">📋 Protocoles</h2>
             <div class="fs-subtitle">Réanimation & Soins Critiques</div>
@@ -1045,7 +1047,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeProtocoleDetail()">←</button>
+          <button class="fs-back" data-action="closeProtocoleDetail">←</button>
           <div>
             <h2 id="proto-detail-title" style="font-size:1rem; font-weight:900; color:var(--text); margin:0;"></h2>
             <div id="proto-detail-ref" class="fs-subtitle"></div>
@@ -1062,21 +1064,21 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeCalendrierConges()">←</button>
+          <button class="fs-back" data-action="closeCalendrierConges">←</button>
           <div>
             <h2 style="font-size:1rem; font-weight:900; color:var(--text); margin:0;">📅 Simulateur Congés</h2>
             <div class="fs-subtitle">Hors Saison &amp; Fractionnement — Décret 2002-8</div>
           </div>
         </div>
-        <button class="cal-reset-btn" onclick="resetCalendrier()">↺ Effacer</button>
+        <button class="cal-reset-btn" data-action="resetCalendrier">↺ Effacer</button>
       </div>
     </div>
 
     <!-- Navigation année -->
     <div class="cal-year-nav">
-      <button class="cal-year-btn" onclick="changeCalYear(-1)">‹</button>
+      <button class="cal-year-btn" data-action="changeCalYear:-1">‹</button>
       <span class="cal-year-label" id="cal-year-label">2026</span>
-      <button class="cal-year-btn" onclick="changeCalYear(+1)">›</button>
+      <button class="cal-year-btn" data-action="changeCalYear:1">›</button>
     </div>
 
     <!-- Légende -->
@@ -1091,9 +1093,9 @@
     
     <!-- Sélecteur de régime de travail -->
     <div class="cal-regime-bar" id="cal-regime-bar">
-      <button class="cal-regime-btn" id="rbtn-fixes"    onclick="setCalRegime('fixes')">🔒 Repos fixes<br><span style="font-weight:600;">&lt;10 DJF/an</span></button>
-      <button class="cal-regime-btn" id="rbtn-variable" onclick="setCalRegime('variable')">🔄 Repos variable<br><span style="font-weight:600;">≥10 DJF/an</span></button>
-      <button class="cal-regime-btn" id="rbtn-nuit"     onclick="setCalRegime('nuit')">🌙 Nuit exclusive<br><span style="font-weight:600;">≥90% nuit</span></button>
+      <button class="cal-regime-btn" id="rbtn-fixes"    data-action="setCalRegime:fixes">🔒 Repos fixes<br><span style="font-weight:600;">&lt;10 DJF/an</span></button>
+      <button class="cal-regime-btn" id="rbtn-variable" data-action="setCalRegime:variable">🔄 Repos variable<br><span style="font-weight:600;">≥10 DJF/an</span></button>
+      <button class="cal-regime-btn" id="rbtn-nuit"     data-action="setCalRegime:nuit">🌙 Nuit exclusive<br><span style="font-weight:600;">≥90% nuit</span></button>
     </div>
 
     <div class="cal-scroll" id="cal-scroll"></div>
@@ -1141,28 +1143,28 @@
 
     <!-- En-tête compact -->
     <div class="plan-topbar">
-      <button class="fs-back" onclick="closePlanningCA()">←</button>
+      <button class="fs-back" data-action="closePlanningCA">←</button>
       <span class="plan-title">Planning CA</span>
       <div class="plan-year-inline">
-        <button class="plan-yr-btn" onclick="changePlanYear(-1)">‹</button>
+        <button class="plan-yr-btn" data-action="changePlanYear:-1">‹</button>
         <span class="plan-yr-lbl" id="plan-year-label">2026</span>
-        <button class="plan-yr-btn" onclick="changePlanYear(+1)">›</button>
+        <button class="plan-yr-btn" data-action="changePlanYear:1">›</button>
       </div>
-      <button class="plan-reset-btn" onclick="document.getElementById('plan-scan-input').click()" title="Scanner mon planning">📷</button>
-      <button class="plan-reset-btn" onclick="resetPlanningCA()" title="Effacer l'année">↺</button>
+      <button class="plan-reset-btn" data-action="clickById:plan-scan-input" title="Scanner mon planning">📷</button>
+      <button class="plan-reset-btn" data-action="resetPlanningCA" title="Effacer l'année">↺</button>
       <input type="file" id="plan-scan-input" accept="image/*" style="display:none;" onchange="scanPlanningPhoto(event)">
     </div>
 
     <!-- Onglets : Calendrier | Suivi RH -->
     <div class="plan-tabs">
-      <button id="plan-tab-btn-calendar" class="plan-tab-btn is-active" onclick="switchPlanTab('calendar')">📅 Calendrier</button>
-      <button id="plan-tab-btn-suivi" class="plan-tab-btn" onclick="switchPlanTab('suivi')">📊 Suivi RH</button>
+      <button id="plan-tab-btn-calendar" class="plan-tab-btn is-active" data-action="switchPlanTab:calendar">📅 Calendrier</button>
+      <button id="plan-tab-btn-suivi" class="plan-tab-btn" data-action="switchPlanTab:suivi">📊 Suivi RH</button>
     </div>
 
     <div id="plan-tab-calendar" class="plan-tab-content">
 
     <!-- Légende collapsible -->
-    <div class="plan-legend-toggle" onclick="togglePlanLegend()">
+    <div class="plan-legend-toggle" data-action="togglePlanLegend">
       <span>Légende couleurs</span>
       <span id="plan-legend-arrow">▾</span>
     </div>
@@ -1190,7 +1192,7 @@
 
     <!-- Soldes & Reports -->
     <div class="plan-soldes">
-      <div class="plan-soldes-title" onclick="togglePlanSoldes()">
+      <div class="plan-soldes-title" data-action="togglePlanSoldes">
         <span>Soldes & Reports</span>
         <span id="plan-soldes-toggle">▾</span>
       </div>
@@ -1286,7 +1288,7 @@
             <span class="plan-solde-unit">j</span>
             <span id="solde-hs_j-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
             <span id="solde-hs_j-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-            <button class="plan-report-btn" onclick="reportSolde('hsj','hsjN1','solde-hsj-n1')" title="Reporter le solde vers N-1">→ N-1</button>
+            <button class="plan-report-btn" data-action="reportSolde:hsj,hsjN1,solde-hsj-n1" title="Reporter le solde vers N-1">→ N-1</button>
           </div>
         </div>
         <div class="plan-solde-row">
@@ -1303,7 +1305,7 @@
             <span class="plan-solde-unit">j</span>
             <span id="solde-hs_n-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
             <span id="solde-hs_n-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-            <button class="plan-report-btn" onclick="reportSolde('hsn','hsnN1','solde-hsn-n1')" title="Reporter le solde vers N-1">→ N-1</button>
+            <button class="plan-report-btn" data-action="reportSolde:hsn,hsnN1,solde-hsn-n1" title="Reporter le solde vers N-1">→ N-1</button>
           </div>
         </div>
         <div class="plan-solde-row">
@@ -1320,7 +1322,7 @@
             <span class="plan-solde-unit">j</span>
             <span id="solde-rc-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
             <span id="solde-rc-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-            <button class="plan-report-btn" onclick="reportSolde('rc','rcN1','solde-rc-n1')" title="Reporter le solde vers N-1">→ N-1</button>
+            <button class="plan-report-btn" data-action="reportSolde:rc,rcN1,solde-rc-n1" title="Reporter le solde vers N-1">→ N-1</button>
           </div>
         </div>
         <div class="plan-solde-total-bar">
@@ -1391,8 +1393,8 @@
           </div>
         </div>
         <div class="suivi-banner-actions">
-          <button class="suivi-btn-secondary" onclick="openProfile()" title="Modifier le profil">⚙️ Profil</button>
-          <button class="suivi-btn-primary" onclick="exportSuiviRHPdf()" title="Exporter récap PDF">📄 PDF</button>
+          <button class="suivi-btn-secondary" data-action="openProfile" title="Modifier le profil">⚙️ Profil</button>
+          <button class="suivi-btn-primary" data-action="exportSuiviRHPdf" title="Exporter récap PDF">📄 PDF</button>
         </div>
       </div>
 
@@ -1460,7 +1462,7 @@
 
       <!-- Tableau débit/crédit mensuel (style Digihops) -->
       <div class="suivi-section-title">Débit / Crédit Digihops</div>
-      <div id="suivi-debit-source" class="suivi-debit-source">🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" onclick="document.getElementById('plan-scan-dc-input').click()" title="Importer le tableau Digihops par photo">📷 Importer</button></div>
+      <div id="suivi-debit-source" class="suivi-debit-source">🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" data-action="clickById:plan-scan-dc-input" title="Importer le tableau Digihops par photo">📷 Importer</button></div>
       <input type="file" id="plan-scan-dc-input" accept="image/*" style="display:none;" onchange="scanDebitCreditPhoto(event)">
       <div class="suivi-debit-table">
         <div class="suivi-debit-summary">
@@ -1498,7 +1500,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeNormes()">←</button>
+          <button class="fs-back" data-action="closeNormes">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">📊 Normes de référence</h2>
             <div class="fs-subtitle" style="margin-top:2px;">Réanimation adulte — valeurs seuils à jour</div>
@@ -1520,7 +1522,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="document.getElementById('lexique-projet-view').style.display='none';">←</button>
+          <button class="fs-back" data-action="hide:lexique-projet-view">←</button>
           <div>
             <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">🔤 Lexique de l'app</h2>
             <div class="fs-subtitle" style="margin-top:2px;">Termes, fonctions et architecture de PulseUnit</div>
@@ -1532,7 +1534,7 @@
 
       <!-- Rôles soignants -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('lp-roles')">
+        <div class="projet-section-header" data-action="toggleProjetSection:lp-roles">
           <span class="projet-section-icon">👥</span>
           <span class="projet-section-title">Rôles soignants</span>
           <span class="projet-section-chev" id="chev-lp-roles">›</span>
@@ -1547,7 +1549,7 @@
 
       <!-- Modules de l'app -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('lp-modules')">
+        <div class="projet-section-header" data-action="toggleProjetSection:lp-modules">
           <span class="projet-section-icon">📦</span>
           <span class="projet-section-title">Modules de l'application</span>
           <span class="projet-section-chev" id="chev-lp-modules">›</span>
@@ -1567,7 +1569,7 @@
 
       <!-- Termes techniques -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('lp-tech')">
+        <div class="projet-section-header" data-action="toggleProjetSection:lp-tech">
           <span class="projet-section-icon">⚙️</span>
           <span class="projet-section-title">Termes techniques du code</span>
           <span class="projet-section-chev" id="chev-lp-tech">›</span>
@@ -1588,7 +1590,7 @@
 
       <!-- Clés localStorage -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('lp-storage')">
+        <div class="projet-section-header" data-action="toggleProjetSection:lp-storage">
           <span class="projet-section-icon">💾</span>
           <span class="projet-section-title">Données sauvegardées (localStorage)</span>
           <span class="projet-section-chev" id="chev-lp-storage">›</span>
@@ -1605,7 +1607,7 @@
 
       <!-- Abréviations code -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('lp-abrev')">
+        <div class="projet-section-header" data-action="toggleProjetSection:lp-abrev">
           <span class="projet-section-icon">📝</span>
           <span class="projet-section-title">Abréviations du code source</span>
           <span class="projet-section-chev" id="chev-lp-abrev">›</span>
@@ -1631,7 +1633,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="document.getElementById('securite-view').style.display='none';">←</button>
+          <button class="fs-back" data-action="hide:securite-view">←</button>
           <div>
             <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">🔐 Sécurité & Données</h2>
             <div class="fs-subtitle" style="margin-top:2px;">État de sécurité de l'application</div>
@@ -1649,7 +1651,7 @@
 
       <!-- Authentification -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('sec-auth')">
+        <div class="projet-section-header" data-action="toggleProjetSection:sec-auth">
           <span class="projet-section-icon">🔑</span>
           <span class="projet-section-title">Authentification Admin</span>
           <span class="projet-section-chev" id="chev-sec-auth">›</span>
@@ -1666,7 +1668,7 @@
 
       <!-- Protection XSS -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('sec-xss')">
+        <div class="projet-section-header" data-action="toggleProjetSection:sec-xss">
           <span class="projet-section-icon">🛡️</span>
           <span class="projet-section-title">Protection injections XSS</span>
           <span class="projet-section-chev" id="chev-sec-xss">›</span>
@@ -1683,7 +1685,7 @@
 
       <!-- Données stockées -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('sec-data')">
+        <div class="projet-section-header" data-action="toggleProjetSection:sec-data">
           <span class="projet-section-icon">💾</span>
           <span class="projet-section-title">Données stockées</span>
           <span class="projet-section-chev" id="chev-sec-data">›</span>
@@ -1704,7 +1706,7 @@
 
       <!-- Corrections appliquées -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('sec-corrections')">
+        <div class="projet-section-header" data-action="toggleProjetSection:sec-corrections">
           <span class="projet-section-icon">🔧</span>
           <span class="projet-section-title">Corrections appliquées</span>
           <span class="projet-section-chev" id="chev-sec-corrections">›</span>
@@ -1724,7 +1726,7 @@
 
       <!-- Points futurs -->
       <div class="projet-section">
-        <div class="projet-section-header" onclick="toggleProjetSection('sec-todo')">
+        <div class="projet-section-header" data-action="toggleProjetSection:sec-todo">
           <span class="projet-section-icon">🗓️</span>
           <span class="projet-section-title">À faire — Versions futures</span>
           <span class="projet-section-chev" id="chev-sec-todo">›</span>
@@ -1747,7 +1749,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeServices()">←</button>
+          <button class="fs-back" data-action="closeServices">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">📞 Les Services</h2>
             <div class="fs-subtitle">Annuaire interne GHPSO</div>
@@ -1759,8 +1761,8 @@
           style="width:100%; box-sizing:border-box; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
       </div>
       <div style="padding:0 16px 12px; display:flex; gap:8px;">
-        <button id="svc-tab-annuaire" onclick="setServicesTab('annuaire')" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Annuaire</button>
-        <button id="svc-tab-etage" onclick="setServicesTab('etage')" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">🏢 Par étage</button>
+        <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Annuaire</button>
+        <button id="svc-tab-etage" data-action="setServicesTab:etage" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">🏢 Par étage</button>
       </div>
     </div>
     <div style="padding:12px 16px 24px; max-width:700px; margin:0 auto; width:100%; box-sizing:border-box; overflow-y:auto; flex:1;">
@@ -1774,18 +1776,18 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeChecklists()">←</button>
+          <button class="fs-back" data-action="closeChecklists">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">✅ Checklists procédures</h2>
             <div class="fs-subtitle">KTA · KTC · Intubation</div>
           </div>
         </div>
-        <button id="cl-reset-btn" onclick="resetChecklist()" style="background:var(--surface-sec); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">↺ Reset</button>
+        <button id="cl-reset-btn" data-action="resetChecklist" style="background:var(--surface-sec); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">↺ Reset</button>
       </div>
       <div style="padding:0 16px 10px; display:flex; gap:8px;">
-        <button id="cl-tab-kta"        onclick="setChecklistTab('kta')"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTA</button>
-        <button id="cl-tab-ktc"        onclick="setChecklistTab('ktc')"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTC</button>
-        <button id="cl-tab-intubation" onclick="setChecklistTab('intubation')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Intubation</button>
+        <button id="cl-tab-kta"        data-action="setChecklistTab:kta"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTA</button>
+        <button id="cl-tab-ktc"        data-action="setChecklistTab:ktc"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTC</button>
+        <button id="cl-tab-intubation" data-action="setChecklistTab:intubation" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Intubation</button>
       </div>
     </div>
     <div id="checklists-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
@@ -1796,7 +1798,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closeDilutions()">←</button>
+          <button class="fs-back" data-action="closeDilutions">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">💊 Dilutions</h2>
             <div class="fs-subtitle">Table de dilution GHPSO</div>
@@ -1815,7 +1817,7 @@
     <div class="fs-header">
       <div class="fs-topbar">
         <div class="fs-title-group">
-          <button class="fs-back" onclick="closePathologies()">←</button>
+          <button class="fs-back" data-action="closePathologies">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">🩺 Pathologies</h2>
             <div class="fs-subtitle">Référentiel clinique par système — définitions</div>
@@ -1827,8 +1829,8 @@
           style="width:100%; box-sizing:border-box; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
       </div>
       <div style="padding:0 16px 12px; display:flex; gap:8px;">
-        <button id="patho-tab-all" onclick="setPathoTab('all')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Toutes</button>
-        <button id="patho-tab-rea" onclick="setPathoTab('rea')" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">🏥 Réanimation</button>
+        <button id="patho-tab-all" data-action="setPathoTab:all" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Toutes</button>
+        <button id="patho-tab-rea" data-action="setPathoTab:rea" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">🏥 Réanimation</button>
       </div>
     </div>
     <div style="padding:12px 20px 20px; max-width:700px; margin:0 auto; width:100%; overflow-y:auto; flex:1;">
@@ -1842,7 +1844,7 @@
     <!-- HEADER COMPACT -->
     <div class="rv-header">
       <div class="rv-header-top">
-        <button class="fs-back" onclick="closeNormesRespi()" style="margin-right:10px;">←</button>
+        <button class="fs-back" data-action="closeNormesRespi" style="margin-right:10px;">←</button>
         <span class="rv-title">🫁 Simulateur Respirateur
           <span class="rv-alarm" id="rv-alarm-status" style="margin-left:10px;">● OK</span>
         </span>
@@ -1850,10 +1852,10 @@
           style="background:rgba(59,130,246,0.2);color:#38bdf8;">PC-AC</div>
       </div>
       <div class="rv-mode-pills">
-        <div class="rv-mode-pill active" id="rv-mode-PC"   onclick="setRespiMode('PC')">PC-AC</div>
-        <div class="rv-mode-pill"        id="rv-mode-VC"   onclick="setRespiMode('VC')">VC-CMV</div>
-        <div class="rv-mode-pill"        id="rv-mode-VSAI" onclick="setRespiMode('VSAI')">VS-AI</div>
-        <div class="rv-mode-pill"        id="rv-mode-VNI"  onclick="setRespiMode('VNI')">VNI</div>
+        <div class="rv-mode-pill active" id="rv-mode-PC"   data-action="setRespiMode:PC">PC-AC</div>
+        <div class="rv-mode-pill"        id="rv-mode-VC"   data-action="setRespiMode:VC">VC-CMV</div>
+        <div class="rv-mode-pill"        id="rv-mode-VSAI" data-action="setRespiMode:VSAI">VS-AI</div>
+        <div class="rv-mode-pill"        id="rv-mode-VNI"  data-action="setRespiMode:VNI">VNI</div>
       </div>
     </div>
 
@@ -1880,37 +1882,37 @@
 
     <!-- CHIPS VALEURS — bande horizontale compacte -->
     <div class="rv-params">
-      <div class="rv-param-chip" onclick="openRvModal('pcrete')">
+      <div class="rv-param-chip" data-action="openRvModal:pcrete">
         <div class="rv-param-name">P crête</div>
         <div class="rv-param-val" id="rv-p-pcrete" style="color:#f59e0b;">--</div>
         <div class="rv-param-unit">cmH₂O</div>
       </div>
-      <div class="rv-param-chip" onclick="openRvModal('pplat')">
+      <div class="rv-param-chip" data-action="openRvModal:pplat">
         <div class="rv-param-name">P plat</div>
         <div class="rv-param-val" id="rv-p-pplat" style="color:#a78bfa;">--</div>
         <div class="rv-param-unit">cmH₂O</div>
       </div>
-      <div class="rv-param-chip" onclick="openRvModal('vt')">
+      <div class="rv-param-chip" data-action="openRvModal:vt">
         <div class="rv-param-name">VTe</div>
         <div class="rv-param-val" id="rv-p-vt" style="color:#38bdf8;">--</div>
         <div class="rv-param-unit">mL</div>
       </div>
-      <div class="rv-param-chip" onclick="openRvModal('peep')">
+      <div class="rv-param-chip" data-action="openRvModal:peep">
         <div class="rv-param-name">PEEP</div>
         <div class="rv-param-val" id="rv-p-peep" style="color:#22c55e;">--</div>
         <div class="rv-param-unit">cmH₂O</div>
       </div>
-      <div class="rv-param-chip" onclick="openRvModal('comp')">
+      <div class="rv-param-chip" data-action="openRvModal:comp">
         <div class="rv-param-name">Compl.</div>
         <div class="rv-param-val" id="rv-p-comp" style="color:#fb923c;">--</div>
         <div class="rv-param-unit">mL/cmH₂O</div>
       </div>
-      <div class="rv-param-chip" onclick="openRvModal('res')">
+      <div class="rv-param-chip" data-action="openRvModal:res">
         <div class="rv-param-name">Rés.</div>
         <div class="rv-param-val" id="rv-p-res" style="color:#94a3b8;">--</div>
         <div class="rv-param-unit">cmH₂O/L/s</div>
       </div>
-      <div class="rv-param-chip" onclick="openRvModal('dp')"
+      <div class="rv-param-chip" data-action="openRvModal:dp"
         style="border-right:none; background:rgba(249,115,22,0.06);">
         <div class="rv-param-name">ΔP drive</div>
         <div class="rv-param-val" id="rv-p-dp" style="color:#f97316; font-size:1.3rem;">--</div>
@@ -1920,27 +1922,27 @@
 
     <!-- CONTRÔLES BAS -->
     <div class="rv-controls">
-      <div class="rv-ctrl-btn" onclick="openRvModal('fio2')">
+      <div class="rv-ctrl-btn" data-action="openRvModal:fio2">
         <div class="rv-ctrl-name">FiO₂</div>
         <div class="rv-ctrl-val" id="rv-c-fio2">--</div>
         <div class="rv-ctrl-unit">%</div>
       </div>
-      <div class="rv-ctrl-btn" onclick="openRvModal('fr')">
+      <div class="rv-ctrl-btn" data-action="openRvModal:fr">
         <div class="rv-ctrl-name">FR</div>
         <div class="rv-ctrl-val" id="rv-c-fr">--</div>
         <div class="rv-ctrl-unit">/min</div>
       </div>
-      <div class="rv-ctrl-btn" id="ctrl-vt" onclick="openRvModal('vt')">
+      <div class="rv-ctrl-btn" id="ctrl-vt" data-action="openRvModal:vt">
         <div class="rv-ctrl-name">VT</div>
         <div class="rv-ctrl-val" id="rv-c-vt">--</div>
         <div class="rv-ctrl-unit">mL</div>
       </div>
-      <div class="rv-ctrl-btn" id="ctrl-pcabove" onclick="openRvModal('pcabove')">
+      <div class="rv-ctrl-btn" id="ctrl-pcabove" data-action="openRvModal:pcabove">
         <div class="rv-ctrl-name">PC▲PEEP</div>
         <div class="rv-ctrl-val" id="rv-c-pcabove">--</div>
         <div class="rv-ctrl-unit">cmH₂O</div>
       </div>
-      <div class="rv-ctrl-btn" onclick="openRvModal('peep')">
+      <div class="rv-ctrl-btn" data-action="openRvModal:peep">
         <div class="rv-ctrl-name">PEEP</div>
         <div class="rv-ctrl-val" id="rv-c-peep">--</div>
         <div class="rv-ctrl-unit">cmH₂O</div>
@@ -1968,7 +1970,7 @@
       </div>
       <div class="rv-modal-minmax" id="rv-modal-minmax"></div>
       <div class="rv-modal-ana" id="rv-modal-ana"></div>
-      <button class="rv-modal-close" onclick="closeRvModal()">VALIDER</button>
+      <button class="rv-modal-close" data-action="closeRvModal">VALIDER</button>
     </div>
   </div>
 
@@ -1979,7 +1981,7 @@
     <div id="msg-list-view" style="display:flex; flex-direction:column; flex:1; min-height:0;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--pill-bg);">
         <div style="font-weight:900; font-size:1rem; color:var(--text);">💬 Messages</div>
-        <button onclick="closeMessages()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 6px; line-height:1;">×</button>
+        <button data-action="closeMessages" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 6px; line-height:1;">×</button>
       </div>
       <div style="padding:10px 14px; border-bottom:1px solid var(--border);">
         <input type="text" id="msg-new-search" placeholder="🔍 Chercher un collègue pour démarrer..." oninput="renderConvList()" style="width:100%; box-sizing:border-box; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; outline:none;">
@@ -1992,7 +1994,7 @@
       <div id="msg-conv-body" style="flex:1; overflow-y:auto; padding:14px; background:var(--surface); min-height:0;"></div>
       <div style="display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--border); background:var(--pill-bg);">
         <input type="text" id="msg-input" placeholder="Écrire un message..." onkeydown="handleMsgInputKey(event)" style="flex:1; padding:10px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; outline:none;">
-        <button onclick="submitCurrentMessage()" id="msg-send-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:20px; padding:0 18px; font-weight:900; cursor:pointer; font-size:0.88rem;">➤</button>
+        <button data-action="submitCurrentMessage" id="msg-send-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:20px; padding:0 18px; font-weight:900; cursor:pointer; font-size:0.88rem;">➤</button>
       </div>
     </div>
   </div>
@@ -2004,14 +2006,14 @@
     <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--pill-bg);">
       <div style="font-weight:900; font-size:1rem; color:var(--text);">🔔 Notifications</div>
       <div style="display:flex; gap:6px;">
-        <button onclick="markAllNotifsRead()" style="background:none; border:1px solid var(--border); border-radius:6px; padding:5px 9px; font-size:0.7rem; font-weight:800; color:var(--text-muted); cursor:pointer;">Tout lu</button>
-        <button onclick="clearAllNotifs()" style="background:none; border:1px solid var(--crit); border-radius:6px; padding:5px 9px; font-size:0.7rem; font-weight:800; color:var(--crit); cursor:pointer;">Effacer</button>
-        <button onclick="closeNotifsCenter()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 6px; line-height:1;">×</button>
+        <button data-action="markAllNotifsRead" style="background:none; border:1px solid var(--border); border-radius:6px; padding:5px 9px; font-size:0.7rem; font-weight:800; color:var(--text-muted); cursor:pointer;">Tout lu</button>
+        <button data-action="clearAllNotifs" style="background:none; border:1px solid var(--crit); border-radius:6px; padding:5px 9px; font-size:0.7rem; font-weight:800; color:var(--crit); cursor:pointer;">Effacer</button>
+        <button data-action="closeNotifsCenter" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 6px; line-height:1;">×</button>
       </div>
     </div>
     <div id="notifs-list" style="flex:1; overflow-y:auto; padding:12px 14px;"></div>
     <div style="padding:10px 14px; border-top:1px solid var(--border); background:var(--pill-bg); font-size:0.7rem; color:var(--text-muted); text-align:center;">
-      <button onclick="requestNotifPermission()" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:6px; padding:7px 14px; font-size:0.75rem; font-weight:800; cursor:pointer;">🔔 Activer les notifications système</button>
+      <button data-action="requestNotifPermission" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:6px; padding:7px 14px; font-size:0.75rem; font-weight:800; cursor:pointer;">🔔 Activer les notifications système</button>
     </div>
   </div>
 </div>
@@ -2022,8 +2024,8 @@
     <h2 id="work-title">Bonjour !</h2>
     <p id="work-desc">Travaillez-vous sur la garde actuelle ?</p>
     <div class="work-btns">
-      <button class="btn-primary" onclick="handleWorkChoice(true)">✓ Oui, je travaille</button>
-      <button class="header-btn outline" style="width:100%; padding:12px; height:auto;" onclick="handleWorkChoice(false)">👁 Non, consultation</button>
+      <button class="btn-primary" data-action="handleWorkChoice:true">✓ Oui, je travaille</button>
+      <button class="header-btn outline" style="width:100%; padding:12px; height:auto;" data-action="handleWorkChoice:false">👁 Non, consultation</button>
     </div>
   </div>
 </div>
@@ -2042,7 +2044,7 @@
       <div id="auth-user-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
       <div id="auth-selected-user" style="display:none; align-items:center; justify-content:space-between; gap:10px; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);">
         <span id="auth-selected-user-text"></span>
-        <button type="button" onclick="clearSelectedAuthUser()" style="background:none; border:none; color:var(--brand-blue); font-size:1.2rem; cursor:pointer; line-height:1;">✕</button>
+        <button type="button" data-action="clearSelectedAuthUser" style="background:none; border:none; color:var(--brand-blue); font-size:1.2rem; cursor:pointer; line-height:1;">✕</button>
       </div>
       <label for="auth-pin" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Code à 6 chiffres</label>
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="off" aria-label="Code PIN à 6 chiffres">
@@ -2050,10 +2052,10 @@
         <input type="checkbox" id="auth-remember" style="width:16px; height:16px; cursor:pointer;">
         Se souvenir de moi <span style="color:var(--text-muted); font-weight:600;">(connexion automatique 3 mois)</span>
       </label>
-      <button class="auth-btn auth-btn-primary" onclick="loginUser()">Se connecter</button>
-      <button class="auth-btn auth-btn-outline" onclick="showAuthView('register')">Créer mon accès</button>
-      <button class="auth-btn-ghost" onclick="showAuthView('forgot')">Code oublié ?</button>
-      <button class="auth-btn" style="background:var(--crit); color:#fff;" onclick="showAuthView('admin')">Accès Admin</button>
+      <button class="auth-btn auth-btn-primary" data-action="loginUser">Se connecter</button>
+      <button class="auth-btn auth-btn-outline" data-action="showAuthView:register">Créer mon accès</button>
+      <button class="auth-btn-ghost" data-action="showAuthView:forgot">Code oublié ?</button>
+      <button class="auth-btn" style="background:var(--crit); color:#fff;" data-action="showAuthView:admin">Accès Admin</button>
     </div>
     <!-- VUE INSCRIPTION -->
     <div id="auth-register-view" style="display:none;">
@@ -2063,15 +2065,15 @@
       <input class="auth-input" type="text" id="reg-lastname" placeholder="Nom" autocomplete="off">
       <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">Votre rôle</div>
       <div class="auth-role-grid">
-        <button class="auth-role-btn" data-role="ide" onclick="selectRole('ide')">💉 IDE</button>
-        <button class="auth-role-btn" data-role="as" onclick="selectRole('as')">🩺 AS</button>
-        <button class="auth-role-btn" data-role="med" onclick="selectRole('med')">👨‍⚕️ Médecin</button>
+        <button class="auth-role-btn" data-role="ide" data-action="selectRole:ide">💉 IDE</button>
+        <button class="auth-role-btn" data-role="as" data-action="selectRole:as">🩺 AS</button>
+        <button class="auth-role-btn" data-role="med" data-action="selectRole:med">👨‍⚕️ Médecin</button>
       </div>
       <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">Code à 6 chiffres</div>
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin" placeholder="••••••" autocomplete="new-password">
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin2" placeholder="Confirmer le code" autocomplete="new-password">
-      <button class="auth-btn auth-btn-primary" onclick="registerUser()">Créer mon accès</button>
-      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
+      <button class="auth-btn auth-btn-primary" data-action="registerUser">Créer mon accès</button>
+      <button class="auth-btn-ghost" data-action="showAuthView:login">← Retour</button>
     </div>
     <!-- VUE MOT DE PASSE OUBLIÉ -->
     <div id="auth-forgot-view" style="display:none;">
@@ -2081,8 +2083,8 @@
       <input type="hidden" id="forgot-select-user" value="">
       <div id="forgot-user-list" style="max-height:130px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
       <div id="forgot-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>
-      <button class="auth-btn auth-btn-primary" onclick="sendResetRequest()">Envoyer la demande</button>
-      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
+      <button class="auth-btn auth-btn-primary" data-action="sendResetRequest">Envoyer la demande</button>
+      <button class="auth-btn-ghost" data-action="showAuthView:login">← Retour</button>
     </div>
     <!-- VUE ADMIN -->
     <div id="auth-admin-view" style="display:none;">
@@ -2090,8 +2092,8 @@
       <div class="auth-sub">Lecture globale + panneau admin (sans modifier les attributions)</div>
       <input class="auth-input" type="text" id="auth-admin-user" placeholder="Identifiant admin" autocomplete="off">
       <input class="auth-input" type="password" id="auth-admin-pass" placeholder="Mot de passe admin" autocomplete="off">
-      <button class="auth-btn auth-btn-primary" onclick="loginAdminFromAuth()">Se connecter en admin</button>
-      <button class="auth-btn-ghost" onclick="showAuthView('login')">← Retour</button>
+      <button class="auth-btn auth-btn-primary" data-action="loginAdminFromAuth">Se connecter en admin</button>
+      <button class="auth-btn-ghost" data-action="showAuthView:login">← Retour</button>
     </div>
   </div>
 </div>
@@ -2103,7 +2105,7 @@
     <div class="auth-sub">Définissez votre nouveau code à 6 chiffres</div>
     <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="change-pin-new" placeholder="Nouveau code" autocomplete="new-password">
     <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="change-pin-confirm" placeholder="Confirmer" autocomplete="new-password">
-    <button class="auth-btn auth-btn-primary" onclick="changeTempPin()">Valider mon nouveau code</button>
+    <button class="auth-btn auth-btn-primary" data-action="changeTempPin">Valider mon nouveau code</button>
   </div>
 </div>
 
@@ -2112,13 +2114,13 @@
   <div class="fs-header">
     <div class="fs-topbar">
       <div class="fs-title-group">
-        <button class="fs-back" onclick="closeBourse()">←</button>
+        <button class="fs-back" data-action="closeBourse">←</button>
         <div>
           <h2 style="font-size:1.1rem;font-weight:900;color:var(--text);margin:0;">↔️ Bourse d'échange</h2>
           <div class="fs-subtitle" id="bourse-subtitle">Demandes de permutation de gardes</div>
         </div>
       </div>
-      <button class="fs-action-btn" id="bourse-add-btn" onclick="openBourseCreate()" style="display:none;">+</button>
+      <button class="fs-action-btn" id="bourse-add-btn" data-action="openBourseCreate" style="display:none;">+</button>
     </div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:12px 16px 80px;" id="bourse-list"></div>
@@ -2135,23 +2137,23 @@
 
     <div class="bourse-form-lbl" style="margin-top:14px;">Je veux en échange</div>
     <div class="bourse-shift-row" style="gap:8px;">
-      <button class="swap-want-btn active" data-val="indiff" onclick="selectWantedType(this)">🔄 Indiff.</button>
-      <button class="swap-want-btn" data-val="date" onclick="selectWantedType(this)">📅 Date précise</button>
+      <button class="swap-want-btn active" data-val="indiff" data-action="selectWantedType:$el">🔄 Indiff.</button>
+      <button class="swap-want-btn" data-val="date" data-action="selectWantedType:$el">📅 Date précise</button>
     </div>
     <div id="bourse-wanted-cal-wrap" style="display:none;margin-top:8px;">
       <div id="bourse-wanted-cal" class="bourse-cal-wrap"></div>
       <div class="bourse-shift-row" style="gap:8px;margin-top:8px;">
-        <button class="swap-want-btn active" data-val="jour" id="btn-want-jour" onclick="selectWantedShift(this)">☀️ Jour</button>
-        <button class="swap-want-btn" data-val="nuit" id="btn-want-nuit" onclick="selectWantedShift(this)">🌙 Nuit</button>
-        <button class="swap-want-btn" data-val="indiff_date" id="btn-want-indiff-date" onclick="selectWantedShift(this)">🔄 Indiff.</button>
+        <button class="swap-want-btn active" data-val="jour" id="btn-want-jour" data-action="selectWantedShift:$el">☀️ Jour</button>
+        <button class="swap-want-btn" data-val="nuit" id="btn-want-nuit" data-action="selectWantedShift:$el">🌙 Nuit</button>
+        <button class="swap-want-btn" data-val="indiff_date" id="btn-want-indiff-date" data-action="selectWantedShift:$el">🔄 Indiff.</button>
       </div>
     </div>
 
     <div class="bourse-form-lbl">Note <span style="font-weight:400;text-transform:none;">(optionnel, 200 car. max)</span></div>
     <textarea id="swap-note" class="bourse-input" rows="2" maxlength="200" placeholder="Ex : raison familiale, weekend..."></textarea>
 
-    <button class="bourse-submit-btn" onclick="submitSwapRequest()">Publier la demande</button>
-    <button class="bourse-cancel-btn" onclick="closeBourseCreate()">Annuler</button>
+    <button class="bourse-submit-btn" data-action="submitSwapRequest">Publier la demande</button>
+    <button class="bourse-cancel-btn" data-action="closeBourseCreate">Annuler</button>
   </div>
 </div>
 
@@ -2161,8 +2163,8 @@
     <h3 style="margin:0 0 4px;color:var(--text);font-weight:900;">Ma garde à proposer</h3>
     <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">Sélectionnez la garde que vous proposez en échange.</div>
     <div id="bourse-propose-cal" class="bourse-cal-wrap"></div>
-    <button class="bourse-submit-btn" style="margin-top:14px;" onclick="submitPropose()">Envoyer la proposition</button>
-    <button class="bourse-cancel-btn" onclick="closeBoursePropose()">Annuler</button>
+    <button class="bourse-submit-btn" style="margin-top:14px;" data-action="submitPropose">Envoyer la proposition</button>
+    <button class="bourse-cancel-btn" data-action="closeBoursePropose">Annuler</button>
   </div>
 </div>
 
