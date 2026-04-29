@@ -588,21 +588,31 @@
   .suivi-transmission-formula { font-size:0.78rem; color:var(--text-muted); font-weight:700; }
   .suivi-transmission-total { font-size:1.1rem; font-weight:900; color:var(--brand-aqua); margin-top:1px; }
 
+  .suivi-debit-source { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 11px; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:0.74rem; color:var(--text-muted); font-weight:700; margin-bottom:8px; }
+  .suivi-debit-source.is-imported { border-color:rgba(64,206,234,0.5); background:rgba(64,206,234,0.06); color:var(--text); }
+  .suivi-debit-source strong { color:var(--text); font-weight:900; }
+  .suivi-debit-source button { margin-left:auto; padding:4px 9px; border-radius:6px; font-family:var(--font); font-weight:900; font-size:0.7rem; cursor:pointer; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); }
+  .suivi-debit-source button.suivi-source-import { background:var(--brand-aqua); color:#fff; border-color:var(--brand-aqua); }
+  .suivi-debit-source button:active { transform:scale(0.96); }
+
   .suivi-debit-table { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
   .suivi-debit-summary { display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--border); }
   .suivi-debit-summary-cell { background:var(--surface); padding:9px 8px; display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center; }
   .suivi-debit-summary-label { font-size:0.66rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; }
-  .suivi-debit-summary-val { font-size:0.92rem; font-weight:900; color:var(--text); }
+  .suivi-debit-summary-val { font-size:0.92rem; font-weight:900; color:var(--text); font-variant-numeric:tabular-nums; }
   .suivi-debit-summary-val.is-positive { color:#10b981; }
   .suivi-debit-summary-val.is-negative { color:var(--crit); }
-  .suivi-debit-grid { padding:6px 0; }
-  .suivi-debit-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:8px 12px; align-items:center; border-bottom:1px dashed var(--border); }
+  .suivi-debit-grid { padding:0; }
+  .suivi-debit-thead { display:grid; grid-template-columns:1fr 1fr 1.1fr 1fr; gap:6px; padding:8px 10px; background:var(--surface-sec); border-bottom:1px solid var(--border); font-size:0.62rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; }
+  .suivi-debit-thead span { text-align:center; }
+  .suivi-debit-thead span:first-child { text-align:left; }
+  .suivi-debit-row { display:grid; grid-template-columns:1fr 1fr 1.1fr 1fr; gap:6px; padding:9px 10px; align-items:center; border-bottom:1px dashed var(--border); }
   .suivi-debit-row:last-child { border-bottom:none; }
-  .suivi-debit-row-month { font-size:0.82rem; font-weight:800; color:var(--text); }
-  .suivi-debit-row-dc, .suivi-debit-row-cumul { font-size:0.78rem; font-weight:900; text-align:right; font-variant-numeric:tabular-nums; color:var(--text); }
+  .suivi-debit-row-month { font-size:0.8rem; font-weight:800; color:var(--text); }
+  .suivi-debit-row-dc, .suivi-debit-row-cumul, .suivi-debit-row-rtt { font-size:0.78rem; font-weight:900; text-align:center; font-variant-numeric:tabular-nums; color:var(--text); }
   .suivi-debit-row-dc.is-positive, .suivi-debit-row-cumul.is-positive { color:#10b981; }
   .suivi-debit-row-dc.is-negative, .suivi-debit-row-cumul.is-negative { color:var(--crit); }
-  .suivi-debit-row-cumul { color:var(--text-muted); }
+  .suivi-debit-row-rtt { color:var(--text-muted); }
 
   .suivi-consec { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; }
   .suivi-consec-empty { padding:14px; text-align:center; font-size:0.82rem; color:var(--text-muted); font-weight:700; }
@@ -2391,19 +2401,21 @@
       </div>
 
       <!-- Tableau débit/crédit mensuel (style Digihops) -->
-      <div class="suivi-section-title">Débit / Crédit mensuel</div>
+      <div class="suivi-section-title">Débit / Crédit Digihops</div>
+      <div id="suivi-debit-source" class="suivi-debit-source">🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" onclick="document.getElementById('plan-scan-dc-input').click()" title="Importer le tableau Digihops par photo">📷 Importer</button></div>
+      <input type="file" id="plan-scan-dc-input" accept="image/*" style="display:none;" onchange="scanDebitCreditPhoto(event)">
       <div class="suivi-debit-table">
         <div class="suivi-debit-summary">
           <div class="suivi-debit-summary-cell">
-            <span class="suivi-debit-summary-label">Théoriques</span>
+            <span class="suivi-debit-summary-label" id="suivi-theo-label">Théoriques</span>
             <span class="suivi-debit-summary-val" id="suivi-theo-total">—</span>
           </div>
           <div class="suivi-debit-summary-cell">
-            <span class="suivi-debit-summary-label">Réalisées</span>
+            <span class="suivi-debit-summary-label" id="suivi-real-label">Réalisées</span>
             <span class="suivi-debit-summary-val" id="suivi-real-total">—</span>
           </div>
           <div class="suivi-debit-summary-cell">
-            <span class="suivi-debit-summary-label">Solde annuel</span>
+            <span class="suivi-debit-summary-label" id="suivi-dc-label">Solde annuel</span>
             <span class="suivi-debit-summary-val" id="suivi-dc-total">—</span>
           </div>
         </div>

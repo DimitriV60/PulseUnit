@@ -21,7 +21,11 @@ let planRegime = localStorage.getItem('pulseunit_plan_regime') || 'jour';
 let planStates = JSON.parse(localStorage.getItem('pulseunit_plan_states') || '{}');
 let planLabels = JSON.parse(localStorage.getItem('pulseunit_plan_labels') || '{}');
 let planLockedMonths = new Set(JSON.parse(localStorage.getItem('pulseunit_plan_locked') || '[]'));
+// Tableaux Débit/Crédit importés depuis Digihops par photo, indexés par année.
+// Forme : { '2026': { months: {1:{dc:'03h45',cumul:'-17h39',rtt:'00h00'}, ...}, importedAt: epoch } }
+let planDebitCredit = JSON.parse(localStorage.getItem('pulseunit_plan_debit_credit') || '{}');
 function savePlanLocked() { localStorage.setItem('pulseunit_plan_locked', JSON.stringify([...planLockedMonths])); }
+function savePlanDebitCredit() { localStorage.setItem('pulseunit_plan_debit_credit', JSON.stringify(planDebitCredit)); }
 
 function savePlanData() {
     localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
@@ -289,6 +293,10 @@ async function loadUserPlan(userId) {
         if (userPlan.regime) {
             planRegime = userPlan.regime;
             localStorage.setItem('pulseunit_plan_regime', planRegime);
+        }
+        if (userPlan.debitCredit && typeof userPlan.debitCredit === 'object') {
+            planDebitCredit = userPlan.debitCredit;
+            savePlanDebitCredit();
         }
     } catch(e) { console.warn('loadUserPlan error', e); }
 }
@@ -744,6 +752,135 @@ window.closePlanningCA = function closePlanningCA() {
 };
 
 // ============================================================================
+// Import du tableau Débit/Crédit Digihops par photo
+// ============================================================================
+
+let _scanDcInProgress = false;
+
+window.scanDebitCreditPhoto = async function scanDebitCreditPhoto(ev) {
+    const input = ev && ev.target ? ev.target : document.getElementById('plan-scan-dc-input');
+    const file = input && input.files && input.files[0];
+    if (input) input.value = '';
+    if (!file) return;
+    if (_scanDcInProgress) { showToast('⏳ Import déjà en cours...'); return; }
+    if (!currentUser) { showToast('Connectez-vous pour importer'); return; }
+    if (file.size > 8 * 1024 * 1024) { showToast('⛔ Image trop volumineuse (max 8 Mo)'); return; }
+
+    _scanDcInProgress = true;
+    showToast('📷 Préparation de la photo...');
+    let imageBase64, mimeType;
+    try {
+        const compressed = await _compressImage(file);
+        imageBase64 = compressed.base64;
+        mimeType = compressed.mimeType;
+    } catch (e) {
+        try {
+            imageBase64 = await _readFileAsBase64(file);
+            mimeType = file.type || 'image/jpeg';
+        } catch (e2) {
+            showToast('⛔ Impossible de lire l\'image');
+            _scanDcInProgress = false;
+            return;
+        }
+    }
+    try {
+        showToast('🤖 Extraction du tableau...');
+        const resp = await fetch(SCAN_WORKER_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                imageBase64,
+                mimeType,
+                kind: 'debit-credit',
+                year: planYear
+            })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+            const msg = (data && data.error) ? `⛔ ${data.error}` : `⛔ Erreur ${resp.status}`;
+            showToast(msg);
+            _scanDcInProgress = false;
+            return;
+        }
+        if (!data.found) {
+            showToast('⚠️ ' + (data.reason || 'Tableau non identifié'));
+            _scanDcInProgress = false;
+            return;
+        }
+        const yr = String(data.year || planYear);
+        const months = data.months || {};
+        const nb = Object.keys(months).length;
+        if (nb === 0) {
+            showToast('⚠️ Aucun mois extrait');
+            _scanDcInProgress = false;
+            return;
+        }
+        // Snapshot pour undo
+        const snapshot = JSON.parse(JSON.stringify(planDebitCredit));
+        planDebitCredit[yr] = { months, importedAt: Date.now() };
+        savePlanDebitCredit();
+        // Sync Firestore (sous-doc utilisateur — dotted-path)
+        if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser) {
+            const path = `${currentUser.id}.debitCredit.${yr}`;
+            PLANS_DOC.update({ [path]: planDebitCredit[yr] })
+                .catch(() => {
+                    PLANS_DOC.set({ [currentUser.id]: { debitCredit: { [yr]: planDebitCredit[yr] } } }, { merge: true })
+                        .catch(e => console.warn('Plan DC sync error', e));
+                });
+        }
+        if (typeof renderSuiviRH === 'function') renderSuiviRH();
+        _showDcUndoToast(nb, yr, snapshot);
+    } catch (e) {
+        console.warn('scanDebitCredit error', e);
+        showToast('⛔ ' + (e && e.message || 'Erreur de scan'));
+    }
+    _scanDcInProgress = false;
+};
+
+function _showDcUndoToast(nb, year, snapshot) {
+    let root = document.getElementById('plan-scan-dc-undo');
+    if (!root) {
+        const el = document.createElement('div');
+        el.id = 'plan-scan-dc-undo';
+        el.style.cssText = 'position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:9999; background:var(--surface); border:1px solid var(--brand-aqua); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:14px; box-shadow:0 4px 16px rgba(0,0,0,0.35); font-weight:800; color:var(--text); font-size:0.88rem;';
+        document.body.appendChild(el);
+        root = el;
+    }
+    root.innerHTML = `<span>📷 ${nb} mois importé${nb > 1 ? 's' : ''} (${year})</span>
+        <button id="plan-scan-dc-undo-btn" style="background:var(--brand-aqua); color:#000; border:none; border-radius:8px; padding:7px 12px; font-weight:900; cursor:pointer; font-size:0.82rem;">Annuler</button>`;
+    root.style.display = 'flex';
+    let timer = setTimeout(() => { root.style.display = 'none'; }, 15000);
+    document.getElementById('plan-scan-dc-undo-btn').onclick = () => {
+        clearTimeout(timer);
+        planDebitCredit = snapshot || {};
+        savePlanDebitCredit();
+        if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser) {
+            PLANS_DOC.update({ [`${currentUser.id}.debitCredit`]: planDebitCredit })
+                .catch(e => console.warn('Plan DC undo sync error', e));
+        }
+        if (typeof renderSuiviRH === 'function') renderSuiviRH();
+        root.style.display = 'none';
+        showToast('↩️ Import annulé');
+    };
+}
+
+window.clearImportedDebitCredit = function clearImportedDebitCredit() {
+    const yr = String(planYear);
+    if (!planDebitCredit[yr]) return;
+    if (!confirm(`Supprimer les valeurs Digihops importées pour ${yr} ? Le calcul automatique reprendra.`)) return;
+    delete planDebitCredit[yr];
+    savePlanDebitCredit();
+    if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser && firebase && firebase.firestore) {
+        const D = firebase.firestore.FieldValue.delete();
+        PLANS_DOC.update({ [`${currentUser.id}.debitCredit.${yr}`]: D })
+            .catch(e => console.warn('Plan DC clear sync error', e));
+    }
+    if (typeof renderSuiviRH === 'function') renderSuiviRH();
+    showToast('✅ Valeurs supprimées — calcul auto rétabli');
+};
+
+// ============================================================================
 // Onglets Calendrier / Suivi RH
 // ============================================================================
 
@@ -763,6 +900,46 @@ window.switchPlanTab = function switchPlanTab(name) {
 // ============================================================================
 // Suivi RH — moteur de rendu
 // ============================================================================
+
+// Helpers pour le format Digihops "HHhMM" (signe optionnel)
+function _parseDigihopsHours(s) {
+    if (typeof s !== 'string') return 0;
+    const t = s.trim().replace(/−/g, '-').replace(/\s+/g, '');
+    const m = t.match(/^([+-]?)(\d{1,3})[hH:](\d{1,2})$/);
+    if (!m) return 0;
+    const sign = m[1] === '-' ? -1 : 1;
+    return sign * (parseInt(m[2], 10) + parseInt(m[3], 10) / 60);
+}
+function _formatDigihopsHours(decimal) {
+    if (!isFinite(decimal)) return '00h00';
+    const sign = decimal < 0 ? '-' : '';
+    const abs = Math.abs(decimal);
+    const h = Math.floor(abs);
+    const mm = Math.round((abs - h) * 60);
+    const finalH = mm === 60 ? h + 1 : h;
+    const finalM = mm === 60 ? 0 : mm;
+    return `${sign}${String(finalH).padStart(2,'0')}h${String(finalM).padStart(2,'0')}`;
+}
+function _lastMonthDataDC(months) {
+    let last = null;
+    for (let m = 1; m <= 12; m++) {
+        if (months[m]) last = months[m];
+    }
+    return last;
+}
+function _sumDcStrings(months) {
+    let total = 0;
+    for (let m = 1; m <= 12; m++) {
+        if (months[m] && months[m].dc) total += _parseDigihopsHours(months[m].dc);
+    }
+    return { decimal: total, formatted: _formatDigihopsHours(total) };
+}
+function _setDebitSummaryLabels(l1, l2, l3) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('suivi-theo-label', l1);
+    set('suivi-real-label', l2);
+    set('suivi-dc-label', l3);
+}
 
 function _suiviProfileType() {
     // Source de vérité : window.userProfile.agentType (cf. profile/handlers.js)
@@ -839,58 +1016,150 @@ window.renderSuiviRH = function renderSuiviRH() {
     const rcvRestWrap = document.getElementById('suivi-rcv-rest-wrap');
     if (rcvRestWrap && !rcvEligible) rcvRestWrap.innerHTML = '<em>Non éligible (&lt;20 DJF)</em>';
 
-    // Transmissions
-    const transm = E.transmissionHours(year, planStates);
-    setText('suivi-transm-formula', `${transm.gardes} gardes × 0h25`);
-    setText('suivi-transm-total', transm.formatted || '—');
+    // Transmissions cumulées jusqu'à aujourd'hui (pas année complète — futur exclu)
+    // Règle métier : la transmission est due UNE FOIS la garde réalisée, donc on
+    // ne compte que les gardes passées (date <= aujourd'hui).
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const TRANSM_STATES = new Set(['jour', 'nuit', 'hs_j', 'hs_n']);
+    let transmGardes = 0;
+    if (year === today.getFullYear()) {
+        for (const [date, st] of Object.entries(planStates)) {
+            if (date.slice(0, 4) !== String(year)) continue;
+            if (date > todayStr) continue;
+            if (TRANSM_STATES.has(st)) transmGardes++;
+        }
+        setText('suivi-transm-formula', `${transmGardes} gardes × 0h25 (jusqu'au ${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')})`);
+    } else if (year < today.getFullYear()) {
+        // Année passée → toute l'année comptée
+        for (const [date, st] of Object.entries(planStates)) {
+            if (date.slice(0, 4) !== String(year)) continue;
+            if (TRANSM_STATES.has(st)) transmGardes++;
+        }
+        setText('suivi-transm-formula', `${transmGardes} gardes × 0h25 (année ${year} clôturée)`);
+    } else {
+        // Année future → rien réalisé encore
+        setText('suivi-transm-formula', `0 gardes × 0h25 (année ${year} pas commencée)`);
+    }
+    const transmDecimal = transmGardes * 0.25;
+    setText('suivi-transm-total', _formatDigihopsHours(transmDecimal));
 
-    // Tableau débit/crédit mensuel
-    const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile);
+    // Tableau débit/crédit mensuel — priorité aux valeurs importées Digihops
     const recap = E.yearlyRecap(year, planStates, fer, profile);
     const fmt = (h) => E.formatHours(h);
-    const sign = (h) => h > 0.005 ? 'is-positive' : (h < -0.005 ? 'is-negative' : '');
+    const signFromHours = (h) => h > 0.005 ? 'is-positive' : (h < -0.005 ? 'is-negative' : '');
+    const signFromStr = (s) => {
+        if (!s) return '';
+        const t = String(s).trim();
+        if (t.startsWith('-') && !/^-?00h00$/.test(t)) return 'is-negative';
+        if (/^[+]?[0-9]/.test(t) && !/^[+]?00h00$/.test(t)) return 'is-positive';
+        return '';
+    };
 
-    const theoTotal = recap.totalTheoreticalHours || 0;
-    const realTotal = recap.totalRealizedHours || 0;
-    const dcTotal = recap.totalDebitCredit || 0;
-    setText('suivi-theo-total', fmt(theoTotal));
-    setText('suivi-real-total', fmt(realTotal));
-    const dcEl = document.getElementById('suivi-dc-total');
-    if (dcEl) {
-        dcEl.textContent = fmt(dcTotal);
-        dcEl.classList.remove('is-positive', 'is-negative');
-        if (sign(dcTotal)) dcEl.classList.add(sign(dcTotal));
+    const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const importedDc = planDebitCredit[String(year)];
+    const isImported = !!(importedDc && importedDc.months && Object.keys(importedDc.months).length > 0);
+
+    // Banner source : Digihops (importé) ou calcul auto
+    const sourceEl = document.getElementById('suivi-debit-source');
+    if (sourceEl) {
+        if (isImported) {
+            const dt = importedDc.importedAt ? new Date(importedDc.importedAt) : null;
+            const dtStr = dt ? `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} à ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}` : '';
+            sourceEl.innerHTML = `📷 <strong>Source : Digihops</strong> · importé le ${dtStr} <button class="suivi-source-clear" onclick="clearImportedDebitCredit()" title="Repasser en calcul auto">↺ Recalcul auto</button>`;
+            sourceEl.classList.add('is-imported');
+        } else {
+            sourceEl.innerHTML = `🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" onclick="document.getElementById('plan-scan-dc-input').click()" title="Importer le tableau Digihops par photo">📷 Importer</button>`;
+            sourceEl.classList.remove('is-imported');
+        }
     }
 
+    // Sommaire haut tableau
+    const dcTotal = recap.totalDebitCredit || 0;
+    const theoEl = document.getElementById('suivi-theo-total');
+    const realEl = document.getElementById('suivi-real-total');
+    const dcEl = document.getElementById('suivi-dc-total');
+
+    if (isImported) {
+        // En mode importé : on n'a que dc/cumul/rtt — on remplit le sommaire avec les valeurs
+        // Digihops cohérentes (cumul de décembre = solde annuel, somme dc = total mouvements, RTT du dernier mois)
+        const last = _lastMonthDataDC(importedDc.months);
+        const sumDC = _sumDcStrings(importedDc.months);
+        if (theoEl) { theoEl.textContent = sumDC.formatted; theoEl.title = 'Somme des débits/crédits mensuels'; theoEl.classList.remove('is-positive','is-negative'); if (signFromStr(sumDC.formatted)) theoEl.classList.add(signFromStr(sumDC.formatted)); }
+        if (realEl) { realEl.textContent = last ? last.rtt : '00h00'; realEl.title = 'Cumul Reste RTT (dernier mois renseigné)'; realEl.classList.remove('is-positive','is-negative'); }
+        if (dcEl)   { dcEl.textContent = last ? last.cumul : '00h00'; dcEl.title = 'Cumul fin d\'année (dernier mois renseigné)'; dcEl.classList.remove('is-positive','is-negative'); if (last && signFromStr(last.cumul)) dcEl.classList.add(signFromStr(last.cumul)); }
+        // Renomme aussi les libellés
+        _setDebitSummaryLabels('Mouvements', 'Reste RTT', 'Cumul');
+    } else {
+        const theoTotal = recap.totalTheoreticalHours || 0;
+        const realTotal = recap.totalRealizedHours || 0;
+        if (theoEl) { theoEl.textContent = fmt(theoTotal); theoEl.title = 'Heures théoriques annuelles (calcul)'; theoEl.classList.remove('is-positive','is-negative'); }
+        if (realEl) { realEl.textContent = fmt(realTotal); realEl.title = 'Heures réalisées (calcul)'; realEl.classList.remove('is-positive','is-negative'); }
+        if (dcEl)   { dcEl.textContent = fmt(dcTotal); dcEl.title = 'Solde annuel'; dcEl.classList.remove('is-positive','is-negative'); if (signFromHours(dcTotal)) dcEl.classList.add(signFromHours(dcTotal)); }
+        _setDebitSummaryLabels('Théoriques', 'Réalisées', 'Solde annuel');
+    }
+
+    // Tableau 12 lignes — 4 colonnes Digihops (Mois | Débit/crédit | Cumul DC | Cumul Reste RTT)
     const grid = document.getElementById('suivi-debit-grid');
     if (grid) {
-        grid.innerHTML = dcTable.map(row => {
-            const dcCls = sign(row.debitCredit);
-            const cuCls = sign(row.cumul);
-            return `<div class="suivi-debit-row">
-                <span class="suivi-debit-row-month">${row.monthName || row.monthLabel || ''}</span>
-                <span class="suivi-debit-row-dc ${dcCls}">${fmt(row.debitCredit)}</span>
-                <span class="suivi-debit-row-cumul ${cuCls}">${fmt(row.cumul)}</span>
+        let rowsHtml = `<div class="suivi-debit-thead">
+            <span>Mois</span>
+            <span>Débit/crédit</span>
+            <span>Cumul Débit/crédit</span>
+            <span>Cumul Reste RTT</span>
+        </div>`;
+        for (let mo = 0; mo < 12; mo++) {
+            const monthIdx = mo + 1;
+            let dcStr = '', cumulStr = '', rttStr = '00h00', dcCls = '', cumulCls = '';
+            if (isImported && importedDc.months[monthIdx]) {
+                const r = importedDc.months[monthIdx];
+                dcStr = r.dc || '00h00';
+                cumulStr = r.cumul || '00h00';
+                rttStr = r.rtt || '00h00';
+                dcCls = signFromStr(dcStr);
+                cumulCls = signFromStr(cumulStr);
+            } else if (!isImported) {
+                const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile);
+                const row = dcTable[mo] || {};
+                dcStr = fmt(row.debitCredit);
+                cumulStr = fmt(row.cumul);
+                rttStr = '—';
+                dcCls = signFromHours(row.debitCredit);
+                cumulCls = signFromHours(row.cumul);
+            } else {
+                dcStr = '—'; cumulStr = '—'; rttStr = '—';
+            }
+            rowsHtml += `<div class="suivi-debit-row">
+                <span class="suivi-debit-row-month">${monthNames[mo]}</span>
+                <span class="suivi-debit-row-dc ${dcCls}">${dcStr}</span>
+                <span class="suivi-debit-row-cumul ${cumulCls}">${cumulStr}</span>
+                <span class="suivi-debit-row-rtt">${rttStr}</span>
             </div>`;
-        }).join('');
+        }
+        grid.innerHTML = rowsHtml;
     }
 
-    // CA consécutifs
+    // CA consécutifs — règle GHPSO (Guide DRH 2014) confirmée par usage interne :
+    //   21 jours consécutifs max pour agents de jour (jour-fixe / alterné)
+    //   22 jours consécutifs max pour agents de nuit (nuit-fixe)
+    // Référence FPH : Décret 2002-8 du 4 janvier 2002 art. 4 (congés annuels FPH)
+    // + Loi 86-33 (fonction publique hospitalière) — durée fixée localement.
     const consec = E.consecutiveCAPeriods(year, planStates, fer);
+    const caLimit = (profile === 'nuit-fixe') ? 22 : 21;
     const consecEl = document.getElementById('suivi-consec');
     if (consecEl) {
         if (!consec || consec.length === 0) {
-            consecEl.innerHTML = '<div class="suivi-consec-empty">Aucune période de CA pour cette année.</div>';
+            consecEl.innerHTML = `<div class="suivi-consec-empty">Aucune période de CA pour ${year}. Limite : ${caLimit} jours consécutifs (${profile === 'nuit-fixe' ? 'nuit fixe' : 'jour / alterné'}).</div>`;
         } else {
             consecEl.innerHTML = consec.map(p => {
                 const len = p.lengthCalendarDays || p.lengthDays || 0;
-                const overLimit = p.exceedsLimit || len > 31;
-                const warn = !overLimit && len >= 22;
+                const overLimit = len > caLimit;
+                const warn = !overLimit && len >= caLimit - 2;
                 const cls = overLimit ? 'is-over' : (warn ? 'is-warn' : '');
-                const tag = overLimit ? '⚠️ Dépasse 31 jours' : (warn ? '⚠️ Proche limite' : '');
+                const tag = overLimit ? `⚠️ Dépasse ${caLimit}j (limite ${profile === 'nuit-fixe' ? 'nuit' : 'jour'})` : (warn ? `⚠️ Proche limite ${caLimit}j` : '');
                 return `<div class="suivi-consec-row ${cls}">
                     <span class="suivi-consec-dates">${p.start} → ${p.end}${tag ? ' · ' + tag : ''}</span>
-                    <span class="suivi-consec-len">${len} j</span>
+                    <span class="suivi-consec-len">${len}/${caLimit} j</span>
                 </div>`;
             }).join('');
         }
