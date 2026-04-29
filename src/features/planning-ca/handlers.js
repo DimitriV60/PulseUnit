@@ -1105,6 +1105,16 @@ window.renderSuiviRH = function renderSuiviRH() {
     const profile = _suiviProfileType();
     const fer = (typeof getJoursFeries === 'function') ? getJoursFeries(year) : new Set();
 
+    // Tout le tableau de bord est arrêté à la date du jour pour l'année courante
+    // (compteurs posés, heures théoriques/réalisées, débit/crédit, CA consécutifs).
+    // Année passée → pas de bornage. Année future → bornage à 31/12 année-1 = tout 0.
+    const _today = new Date();
+    const _todayStr = `${_today.getFullYear()}-${String(_today.getMonth()+1).padStart(2,'0')}-${String(_today.getDate()).padStart(2,'0')}`;
+    let untilDate;
+    if (year === _today.getFullYear()) untilDate = _todayStr;
+    else if (year < _today.getFullYear()) untilDate = undefined; // année close → tout
+    else untilDate = `${year-1}-12-31`; // année future → rien encore réalisé
+
     // Bandeau identité
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     if (currentUser) {
@@ -1115,11 +1125,14 @@ window.renderSuiviRH = function renderSuiviRH() {
         setText('suivi-role', '—');
     }
     setText('suivi-profile-type', _suiviProfileLabel(profile));
-    setText('suivi-year-lbl', year);
-    setText('suivi-cards-year-lbl', year);
+    const _yearSuffix = (year === _today.getFullYear())
+        ? ` · arrêté au ${String(_today.getDate()).padStart(2,'0')}/${String(_today.getMonth()+1).padStart(2,'0')}/${_today.getFullYear()}`
+        : (year < _today.getFullYear() ? ' · année close' : ' · année à venir');
+    setText('suivi-year-lbl', year + _yearSuffix);
+    setText('suivi-cards-year-lbl', year + _yearSuffix);
 
     // Compteurs CA / CA-HP / Frac / RCV
-    const postes = E.soldesPostes(year, planStates);
+    const postes = E.soldesPostes(year, planStates, untilDate);
     const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0, rcvBonus:0, djfCount:0 };
     const caTotal   = _suiviTotalCAEntitled();              // 25 strict
     const caHpTotal = stats.hsBonus || 0;                   // 0/1/2 auto (Décret 2002-8)
@@ -1198,7 +1211,7 @@ window.renderSuiviRH = function renderSuiviRH() {
     setText('suivi-transm-total', _formatDigihopsHours(transmDecimal));
 
     // Tableau débit/crédit mensuel — priorité aux valeurs importées Digihops
-    const recap = E.yearlyRecap(year, planStates, fer, profile);
+    const recap = E.yearlyRecap(year, planStates, fer, profile, untilDate);
     const fmt = (h) => E.formatHours(h);
     const signFromHours = (h) => h > 0.005 ? 'is-positive' : (h < -0.005 ? 'is-negative' : '');
     const signFromStr = (s) => {
@@ -1272,7 +1285,7 @@ window.renderSuiviRH = function renderSuiviRH() {
                 dcCls = signFromStr(dcStr);
                 cumulCls = signFromStr(cumulStr);
             } else if (!isImported) {
-                const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile);
+                const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile, untilDate);
                 const row = dcTable[mo] || {};
                 dcStr = fmt(row.debitCredit);
                 cumulStr = fmt(row.cumul);
@@ -1305,7 +1318,7 @@ window.renderSuiviRH = function renderSuiviRH() {
         const [y, mo, d] = ds.split('-');
         return (d && mo && y) ? `${d}/${mo}/${y}` : ds;
     };
-    const consec = E.consecutiveCAPeriods(year, planStates, fer);
+    const consec = E.consecutiveCAPeriods(year, planStates, fer, untilDate);
     const consecEl = document.getElementById('suivi-consec');
     if (consecEl) {
         if (!consec || consec.length === 0) {
@@ -1412,10 +1425,17 @@ window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
     const year = planYear;
     const profile = _suiviProfileType();
     const fer = (typeof getJoursFeries === 'function') ? getJoursFeries(year) : new Set();
-    const recapEng = E.yearlyRecap(year, planStates, fer, profile);
-    const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile);
-    const consec = E.consecutiveCAPeriods(year, planStates, fer);
-    const postes = E.soldesPostes(year, planStates);
+    // Bornage à aujourd'hui pour l'année courante (cohérent avec l'écran Suivi RH).
+    const _today = new Date();
+    const _todayStr = `${_today.getFullYear()}-${String(_today.getMonth()+1).padStart(2,'0')}-${String(_today.getDate()).padStart(2,'0')}`;
+    let untilDate;
+    if (year === _today.getFullYear()) untilDate = _todayStr;
+    else if (year < _today.getFullYear()) untilDate = undefined;
+    else untilDate = `${year-1}-12-31`;
+    const recapEng = E.yearlyRecap(year, planStates, fer, profile, untilDate);
+    const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile, untilDate);
+    const consec = E.consecutiveCAPeriods(year, planStates, fer, untilDate);
+    const postes = E.soldesPostes(year, planStates, untilDate);
 
     // Adapter : engine output → shape attendue par PdfExport (counts, totalTheoretical, etc.)
     const dw = recapEng.daysWorked || {};
