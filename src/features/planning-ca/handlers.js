@@ -248,58 +248,56 @@ function _normalizeCAYearN1(dateStr, state, label) {
     return state === 'ca' ? 'can1' : 'ca_hpn1';
 }
 
-// Heuristique surplus : si le total de CA `ca` dans l'année dépasse le capital
-// annuel (25 + bonus HS + bonus Frac), le surplus chronologique en jan-mars
-// est nécessairement du reliquat N-1 — on promeut ca → can1 en partant des
-// dates les plus anciennes. Idem pour ca_hp si total dépasse soldeHP+soldeHPN1.
+// Heuristique surplus / report : promeut les `ca` les plus anciens (jan-mars)
+// vers `can1` quand on dépasse le capital annuel courant. Deux cas combinés :
+//   1. Si planSoldes.caN1 est saisi (ex: 4), on promeut les 4 premiers ca chrono.
+//   2. Si total ca > capital annuel (25 + bonus), on promeut le surplus.
+// Idem ca_hp → ca_hpn1 (avec planSoldes.hpn1 ou surplus vs HP+HPN1 saisis).
 function _autoPromoteCAByOverflow(year) {
     const yearKey = String(year) + '-';
     let promoted = 0;
-    // CA standard : capital = 25 + bonus
     const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0 };
-    const caLimit = 25 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
+    const caCapital = 25 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
+    const caN1Solde = (planSoldes && planSoldes.caN1) || 0;
     const cas = [];
     for (const [d, st] of Object.entries(planStates)) {
         if (!d.startsWith(yearKey)) continue;
         if (st === 'ca') cas.push(d);
     }
     cas.sort();
-    if (cas.length > caLimit) {
-        const surplus = cas.length - caLimit;
-        for (let i = 0; i < surplus; i++) {
-            const d = cas[i];
-            if (parseInt(d.slice(5, 7), 10) > 3) break;
-            planStates[d] = 'can1';
-            // Adapter le préfixe du label scanné si présent (numéro conservé)
-            if (planLabels[d]) {
-                const m = String(planLabels[d]).match(/(\d+)\s*$/);
-                if (m) planLabels[d] = (window.PLAN_LABELS.can1 || 'CA-1') + ' ' + m[1];
-            }
-            promoted++;
+    // Nb à promouvoir = max(surplus capital, solde N-1 déclaré)
+    const surplusCa = Math.max(0, cas.length - caCapital);
+    const promoteCount = Math.max(surplusCa, Math.min(caN1Solde, cas.length));
+    for (let i = 0; i < promoteCount; i++) {
+        const d = cas[i];
+        if (parseInt(d.slice(5, 7), 10) > 3) break;
+        planStates[d] = 'can1';
+        if (planLabels[d]) {
+            const m = String(planLabels[d]).match(/(\d+)\s*$/);
+            if (m) planLabels[d] = (window.PLAN_LABELS.can1 || 'CA-1') + ' ' + m[1];
         }
+        promoted++;
     }
-    // CA-HP : capital = soldes HP + HPN1 saisis
-    const hpLimit = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
-    if (hpLimit > 0) {
-        const cahps = [];
-        for (const [d, st] of Object.entries(planStates)) {
-            if (!d.startsWith(yearKey)) continue;
-            if (st === 'ca_hp') cahps.push(d);
+    // CA-HP : capital = soldes HP + HPN1
+    const hpCapital = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
+    const hpn1Solde = (planSoldes && planSoldes.hpn1) || 0;
+    const cahps = [];
+    for (const [d, st] of Object.entries(planStates)) {
+        if (!d.startsWith(yearKey)) continue;
+        if (st === 'ca_hp') cahps.push(d);
+    }
+    cahps.sort();
+    const surplusHp = Math.max(0, cahps.length - hpCapital);
+    const promoteHpCount = Math.max(surplusHp, Math.min(hpn1Solde, cahps.length));
+    for (let i = 0; i < promoteHpCount; i++) {
+        const d = cahps[i];
+        if (parseInt(d.slice(5, 7), 10) > 3) break;
+        planStates[d] = 'ca_hpn1';
+        if (planLabels[d]) {
+            const m = String(planLabels[d]).match(/(\d+)\s*$/);
+            if (m) planLabels[d] = (window.PLAN_LABELS.ca_hpn1 || 'CA-HP1') + ' ' + m[1];
         }
-        cahps.sort();
-        if (cahps.length > hpLimit) {
-            const surplus = cahps.length - hpLimit;
-            for (let i = 0; i < surplus; i++) {
-                const d = cahps[i];
-                if (parseInt(d.slice(5, 7), 10) > 3) break;
-                planStates[d] = 'ca_hpn1';
-                if (planLabels[d]) {
-                    const m = String(planLabels[d]).match(/(\d+)\s*$/);
-                    if (m) planLabels[d] = (window.PLAN_LABELS.ca_hpn1 || 'CA-HP1') + ' ' + m[1];
-                }
-                promoted++;
-            }
-        }
+        promoted++;
     }
     return promoted;
 }
@@ -773,7 +771,16 @@ let planSoldes = (() => {
 function savePlanSoldes() { try { localStorage.setItem('pulseunit_plan_soldes', JSON.stringify(planSoldes)); } catch(e){} }
 
 window.updatePlanSolde = function(field, val) {
-    planSoldes[field] = val; savePlanSoldes(); updatePlanStats();
+    planSoldes[field] = val; savePlanSoldes();
+    // Si on change un solde N-1, déclenche la promotion auto (puis save + render)
+    if (field === 'caN1' || field === 'hpn1') {
+        const n = _autoPromoteCAByOverflow(planYear);
+        if (n > 0) {
+            savePlanData();
+            if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
+        }
+    }
+    updatePlanStats();
 };
 window.reportSolde = function(fromKey, toKey, inputId) {
     planSoldes[toKey] = planSoldes[fromKey] || 0;
