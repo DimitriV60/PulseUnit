@@ -1349,7 +1349,12 @@ window.renderSuiviRH = function renderSuiviRH() {
         const off = recap.daysOff || {};
         const dimanches = (recap.weekendDaysWorked && recap.weekendDaysWorked.dimanches) || 0;
         const totalRealized = recap.totalRealizedHours || 0;
-        const totalTheoretical = recap.totalTheoreticalHours || 0;
+        // Théorique = dotation annuelle contractuelle selon profil (1582h jour/alterné,
+        // 1482h nuit-fixe). C'est la cible annuelle pleine, pas le prorata à aujourd'hui :
+        // l'agent voit ainsi son écart cumulé vs son contrat de l'année.
+        const totalTheoretical = (typeof E.annualTheoreticalHours === 'function')
+            ? E.annualTheoreticalHours(profile)
+            : (recap.totalTheoreticalHours || 0);
         const totalWorkedDays = (dw.jour || 0) + (dw.nuit || 0) + (dw.hs_j || 0) + (dw.hs_n || 0) + (dw.formation || 0);
         const dow = recap.workedByDow || { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 };
         const yearN1 = year - 1;
