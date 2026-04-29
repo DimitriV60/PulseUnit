@@ -17,34 +17,53 @@
     // ── State ────────────────────────────────────────────────────────────────
     window.userProfile = { ...DEFAULT_PROFILE };
 
+    // Clé localStorage par utilisateur ; fallback "_global" si l'auth n'a pas encore
+    // peuplé currentUser au moment de la sauvegarde (rare mais possible).
+    const LS_FALLBACK = 'pulseunit_user_profile_global';
     function _lsKey() {
-        return currentUser && currentUser.id ? `pulseunit_user_profile_${currentUser.id}` : null;
+        return currentUser && currentUser.id ? `pulseunit_user_profile_${currentUser.id}` : LS_FALLBACK;
     }
 
     function _loadFromLocal() {
-        const k = _lsKey(); if (!k) return;
-        try {
-            const stored = JSON.parse(localStorage.getItem(k) || 'null');
-            if (stored && stored.agentType) window.userProfile = { ...DEFAULT_PROFILE, ...stored };
-        } catch(e) { /* ignore */ }
+        const keys = [_lsKey(), LS_FALLBACK];
+        for (const k of keys) {
+            if (!k) continue;
+            try {
+                const stored = JSON.parse(localStorage.getItem(k) || 'null');
+                if (stored && stored.agentType) {
+                    window.userProfile = { ...DEFAULT_PROFILE, ...stored };
+                    return;
+                }
+            } catch(e) { /* ignore */ }
+        }
     }
 
     function _saveLocal() {
-        const k = _lsKey(); if (!k) return;
-        try { localStorage.setItem(k, JSON.stringify(window.userProfile)); } catch(e) { /* ignore */ }
+        const k = _lsKey();
+        try {
+            localStorage.setItem(k, JSON.stringify(window.userProfile));
+            // Toujours alimenter aussi la clé fallback (= dernière valeur saisie),
+            // utile en cas de currentUser non encore peuplé au prochain chargement.
+            localStorage.setItem(LS_FALLBACK, JSON.stringify(window.userProfile));
+        } catch(e) { console.warn('[profile] save local error', e); }
     }
 
     function _saveFirestore() {
-        if (typeof PLANS_DOC === 'undefined' || !PLANS_DOC || !currentUser) return;
-        // Pose le profil dans le sous-doc utilisateur (à côté de states/labels/regime)
-        // update() pour ne pas écraser les autres champs si le doc existe déjà
+        if (typeof PLANS_DOC === 'undefined' || !PLANS_DOC) {
+            console.warn('[profile] Firestore indisponible — sauvegarde locale uniquement');
+            return;
+        }
+        if (!currentUser || !currentUser.id) {
+            console.warn('[profile] currentUser absent — sauvegarde Firestore reportée');
+            return;
+        }
         const path = `${currentUser.id}.profile`;
         PLANS_DOC.update({ [path]: window.userProfile })
             .catch(() => {
                 // Doc inexistant → fallback set merge
-                PLANS_DOC.set({ [currentUser.id]: { profile: window.userProfile } }, { merge: true })
-                    .catch(e => console.warn('Profile sync error', e));
-            });
+                return PLANS_DOC.set({ [currentUser.id]: { profile: window.userProfile } }, { merge: true });
+            })
+            .catch(e => console.warn('[profile] Firestore sync error', e));
     }
 
     // ── API publique ─────────────────────────────────────────────────────────
@@ -84,14 +103,18 @@
     };
 
     window.setAgentType = function setAgentType(t) {
-        if (!['jour-fixe', 'nuit-fixe', 'alterne'].includes(t)) return;
+        if (!['jour-fixe', 'nuit-fixe', 'alterne'].includes(t)) {
+            console.warn('[profile] setAgentType — type invalide :', t);
+            return;
+        }
         window.userProfile.agentType = t;
         saveUserProfile();
         _refreshProfileUI();
         // Si le module planning est ouvert, forcer un recalcul des stats
         if (typeof updatePlanStats === 'function') updatePlanStats();
         if (typeof renderSuiviRH === 'function') renderSuiviRH();
-        if (typeof showToast === 'function') showToast('✅ Profil enregistré');
+        if (typeof showToast === 'function') showToast('✅ Profil enregistré : ' + t);
+        console.log('[profile] setAgentType →', t);
     };
 
     window.openProfile = function openProfile() {
