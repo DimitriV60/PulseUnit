@@ -117,13 +117,16 @@
             if (nameEl) nameEl.textContent = '—';
             if (roleEl) roleEl.textContent = '—';
         }
-        // Type d'agent (radios)
+        // Type d'agent (cartes radio + radio caché pour la sémantique)
         const t = getProfileAgentType();
         ['jour-fixe', 'nuit-fixe', 'alterne'].forEach(opt => {
             const el = document.getElementById(`profile-type-${opt}`);
             if (el) el.checked = (t === opt);
             const card = document.getElementById(`profile-type-card-${opt}`);
-            if (card) card.classList.toggle('is-active', t === opt);
+            if (card) {
+                card.classList.toggle('is-active', t === opt);
+                card.setAttribute('aria-checked', t === opt ? 'true' : 'false');
+            }
         });
         // Texte d'aide selon le type
         const help = document.getElementById('profile-type-help');

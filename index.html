@@ -210,33 +210,33 @@
       <div style="margin-bottom:14px;">
         <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Type d'agent</div>
         <div style="display:flex; flex-direction:column; gap:8px;">
-          <label id="profile-type-card-jour-fixe" class="profile-type-card" for="profile-type-jour-fixe">
-            <input type="radio" name="profile-type" id="profile-type-jour-fixe" value="jour-fixe" onchange="setAgentType('jour-fixe')" style="position:absolute; opacity:0;">
+          <div id="profile-type-card-jour-fixe" class="profile-type-card" data-action="setAgentType:jour-fixe" role="radio" tabindex="0" aria-checked="false">
+            <input type="radio" name="profile-type" id="profile-type-jour-fixe" value="jour-fixe" tabindex="-1" aria-hidden="true" style="position:absolute; opacity:0; pointer-events:none;">
             <span class="profile-type-icon">☀️</span>
             <span class="profile-type-text">
               <span class="profile-type-title">Jour fixe</span>
               <span class="profile-type-sub">35h hebdo · repos fixes</span>
             </span>
             <span class="profile-type-check">✓</span>
-          </label>
-          <label id="profile-type-card-nuit-fixe" class="profile-type-card" for="profile-type-nuit-fixe">
-            <input type="radio" name="profile-type" id="profile-type-nuit-fixe" value="nuit-fixe" onchange="setAgentType('nuit-fixe')" style="position:absolute; opacity:0;">
+          </div>
+          <div id="profile-type-card-nuit-fixe" class="profile-type-card" data-action="setAgentType:nuit-fixe" role="radio" tabindex="0" aria-checked="false">
+            <input type="radio" name="profile-type" id="profile-type-nuit-fixe" value="nuit-fixe" tabindex="-1" aria-hidden="true" style="position:absolute; opacity:0; pointer-events:none;">
             <span class="profile-type-icon">🌙</span>
             <span class="profile-type-text">
               <span class="profile-type-title">Nuit fixe</span>
               <span class="profile-type-sub">32h30 hebdo · ≥90% nuit</span>
             </span>
             <span class="profile-type-check">✓</span>
-          </label>
-          <label id="profile-type-card-alterne" class="profile-type-card" for="profile-type-alterne">
-            <input type="radio" name="profile-type" id="profile-type-alterne" value="alterne" onchange="setAgentType('alterne')" style="position:absolute; opacity:0;">
+          </div>
+          <div id="profile-type-card-alterne" class="profile-type-card" data-action="setAgentType:alterne" role="radio" tabindex="0" aria-checked="false">
+            <input type="radio" name="profile-type" id="profile-type-alterne" value="alterne" tabindex="-1" aria-hidden="true" style="position:absolute; opacity:0; pointer-events:none;">
             <span class="profile-type-icon">🔄</span>
             <span class="profile-type-text">
               <span class="profile-type-title">Alterné</span>
               <span class="profile-type-sub">Jour + nuit · base 35h</span>
             </span>
             <span class="profile-type-check">✓</span>
-          </label>
+          </div>
         </div>
         <div id="profile-type-help" style="margin-top:10px; font-size:0.74rem; color:var(--text-muted); font-weight:700; line-height:1.4; padding:8px 10px; background:var(--surface-sec); border-radius:8px; border-left:3px solid var(--brand-aqua);"></div>
       </div>
