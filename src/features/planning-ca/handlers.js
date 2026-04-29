@@ -233,18 +233,23 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     _scanInProgress = false;
 };
 
-// Règle Digihops/FPH : un CA labellisé ≥25 et tombant avant le 31 mars est un
-// reliquat de l'année N-1 (les CA recommencent à 1 sur la nouvelle année).
-// → ca → can1, ca_hp → ca_hpn1.
+// Règle Digihops/FPH : tout CA tombant entre le 1er janvier et le 31 mars est
+// par défaut un reliquat de l'année N-1 (les agents ont jusqu'au 31/03 pour
+// poser les CA non pris l'année précédente).
+// → ca → can1, ca_hp → ca_hpn1
+// EXCEPTION : si le label scanné contient un numéro 1-24, on considère que c'est
+// déjà un CA de l'année courante (Digihops les renumérote dès le 1er janvier).
 function _normalizeCAYearN1(dateStr, state, label) {
     if (state !== 'ca' && state !== 'ca_hp') return state;
-    if (!label) return state;
     const month = parseInt(dateStr.slice(5, 7), 10);
     if (!month || month > 3) return state;
-    const m = String(label).match(/(\d+)\s*$/);
-    if (!m) return state;
-    const n = parseInt(m[1], 10);
-    if (!Number.isFinite(n) || n < 25) return state;
+    if (label) {
+        const m = String(label).match(/(\d+)\s*$/);
+        if (m) {
+            const n = parseInt(m[1], 10);
+            if (Number.isFinite(n) && n >= 1 && n < 25) return state; // 1-24 = année courante
+        }
+    }
     return state === 'ca' ? 'can1' : 'ca_hpn1';
 }
 
@@ -417,9 +422,39 @@ function getPlanDayState(dateStr) {
     return getPlanDefaultState(dateStr);
 }
 
+// Numérotation auto (1, 2, 3...) pour les CA sans numéro dans le label scanné.
+// Recalculé à chaque renderPlanCalendrier sur l'année active.
+let _caNumberCache = { year: null, map: {} };
+function _rebuildCANumberCache(year) {
+    const buckets = { ca: [], can1: [], ca_hp: [], ca_hpn1: [] };
+    for (const [d, st] of Object.entries(planStates)) {
+        if (!d.startsWith(String(year) + '-')) continue;
+        if (buckets[st]) buckets[st].push(d);
+    }
+    const map = {};
+    Object.keys(buckets).forEach(bk => {
+        buckets[bk].sort();
+        buckets[bk].forEach((d, i) => { map[d] = i + 1; });
+    });
+    _caNumberCache = { year, map };
+}
+
 function planDayHTML(dayNum, state, dateStr) {
     const customLbl = dateStr && planLabels[dateStr];
-    const lbl = customLbl || window.PLAN_LABELS[state];
+    const prefix = window.PLAN_LABELS[state];
+    let lbl;
+    if (customLbl) {
+        // Numéro extrait du label scanné, préfixe synchronisé avec l'état actuel
+        // (un CA promu en CA-1 garde son numéro mais voit son préfixe rebrandé).
+        const m = String(customLbl).match(/(\d+)\s*$/);
+        lbl = (m && prefix) ? (prefix + ' ' + m[1]) : customLbl;
+    } else {
+        lbl = prefix;
+        if ((state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1') && prefix) {
+            const n = _caNumberCache.map[dateStr];
+            if (n) lbl = prefix + ' ' + n;
+        }
+    }
     if (!lbl) return String(dayNum);
     return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
 }
@@ -722,6 +757,7 @@ function renderPlanCalendrier() {
     document.getElementById('plan-year-label').textContent = planYear;
     const rcnLeg = document.getElementById('plan-legend-rcn');
     if (rcnLeg) rcnLeg.style.display = planRegime === 'nuit' ? 'inline' : 'none';
+    _rebuildCANumberCache(planYear);
     let html = '';
     for (let m = 0; m < 12; m++) html += renderPlanMonth(planYear, m);
     document.getElementById('plan-scroll').innerHTML = html;
