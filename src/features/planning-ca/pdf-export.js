@@ -405,8 +405,13 @@
       return y + 8;
     }
 
+    var fmtFR = function (ds) {
+      if (!ds || typeof ds !== 'string') return _safe(ds);
+      var parts = ds.split('-');
+      return (parts.length === 3) ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : _safe(ds);
+    };
     var rows = arr.map(function (p) {
-      return [_safe(p.start), _safe(p.end), _safe(p.days)];
+      return [fmtFR(p.start), fmtFR(p.end), _safe(p.days)];
     });
 
     doc.autoTable({

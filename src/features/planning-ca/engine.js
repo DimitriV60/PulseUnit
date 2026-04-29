@@ -69,8 +69,15 @@
     // États comptés comme jour travaillé (pour féries travaillés / WE travaillés)
     const WORKED_STATES = new Set(['jour', 'nuit', 'hs', 'hs_j', 'hs_n', 'formation']);
 
-    // États qui constituent une période de CA continue
-    const CA_STATES = new Set(['ca', 'can1', 'ca_hp', 'ca_hpn1', 'frac', 'fracn1']);
+    // États qui constituent une période de CA continue (toutes formes de congés
+    // annuels : CA, CA-HP, Fractionné, HP). Le RCV n'est PAS inclus car ce n'est
+    // pas un CA au sens du Décret 84-972 art. 5.
+    const CA_STATES = new Set([
+        'ca', 'can1',
+        'ca_hp', 'ca_hpn1',
+        'frac', 'fracn1',
+        'hp', 'hpn1'
+    ]);
 
     // États neutres dans une période de CA (n'interrompent pas, allongent calendarDays)
     const CA_NEUTRAL_STATES = new Set(['rh', 'rc', 'rcn']);

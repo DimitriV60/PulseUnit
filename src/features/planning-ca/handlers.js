@@ -1297,8 +1297,14 @@ window.renderSuiviRH = function renderSuiviRH() {
     //     applicable à la FPH par renvoi (Loi 86-33 + Décret 2002-8). Au-delà = illégal.
     //   Préconisation locale GHPSO : 21j (jour-fixe / alterné) ou 22j (nuit-fixe) — non bloquante,
     //     règle interne du service. Au-delà = légal mais hors préconisation interne.
+    //   Périodes : toutes formes de CA (ca/can1/ca_hp/ca_hpn1/frac/fracn1/hp/hpn1).
     const LEGAL_LIMIT = 31;
     const localLimit = (profile === 'nuit-fixe') ? 22 : 21;
+    const fmtFR = (ds) => {
+        if (!ds || typeof ds !== 'string') return ds;
+        const [y, mo, d] = ds.split('-');
+        return (d && mo && y) ? `${d}/${mo}/${y}` : ds;
+    };
     const consec = E.consecutiveCAPeriods(year, planStates, fer);
     const consecEl = document.getElementById('suivi-consec');
     if (consecEl) {
@@ -1314,7 +1320,7 @@ window.renderSuiviRH = function renderSuiviRH() {
                     ? `⛔ Dépasse la limite légale ${LEGAL_LIMIT}j (Décret 84-972)`
                     : (overLocal ? `⚠️ Au-delà de la préconisation interne ${localLimit}j (légal jusqu'à ${LEGAL_LIMIT}j)` : '');
                 return `<div class="suivi-consec-row ${cls}">
-                    <span class="suivi-consec-dates">${p.start} → ${p.end}${tag ? ' · ' + tag : ''}</span>
+                    <span class="suivi-consec-dates">${fmtFR(p.start)} → ${fmtFR(p.end)}${tag ? ' · ' + tag : ''}</span>
                     <span class="suivi-consec-len">${len}/${LEGAL_LIMIT} j</span>
                 </div>`;
             }).join('');
