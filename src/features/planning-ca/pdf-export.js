@@ -116,6 +116,7 @@
     return sign + (hh < 10 ? '0' + hh : hh) + 'h' + (mm < 10 ? '0' + mm : mm);
   }
 
+  // Format "HHhMM" identique à _formatDigihopsHours côté UI Suivi RH.
   function _fmtTransmission(gardes) {
     var totalMin = (gardes || 0) * 25;
     var hh = Math.floor(totalMin / 60);

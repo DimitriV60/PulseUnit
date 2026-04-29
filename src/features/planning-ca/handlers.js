@@ -406,18 +406,26 @@ function getPlanDayState(dateStr) {
 
 // Numérotation auto (1, 2, 3...) pour les CA sans numéro dans le label scanné.
 // Recalculé à chaque renderPlanCalendrier sur l'année active.
+// Familles fusionnées :
+//   - CA + reliquat N-1 (ca / can1) → une seule série continue chronologique.
+//     Évite le saut "CA 20 → CA 1" quand on bascule N-1 vers année courante.
+//   - CA-HP + reliquat (ca_hp / ca_hpn1) → idem.
 let _caNumberCache = { year: null, map: {} };
 function _rebuildCANumberCache(year) {
-    const buckets = { ca: [], can1: [], ca_hp: [], ca_hpn1: [] };
-    for (const [d, st] of Object.entries(planStates)) {
-        if (!d.startsWith(String(year) + '-')) continue;
-        if (buckets[st]) buckets[st].push(d);
-    }
+    const families = [
+        ['ca', 'can1'],         // famille CA fusionnée
+        ['ca_hp', 'ca_hpn1']    // famille CA-HP fusionnée
+    ];
     const map = {};
-    Object.keys(buckets).forEach(bk => {
-        buckets[bk].sort();
-        buckets[bk].forEach((d, i) => { map[d] = i + 1; });
-    });
+    for (const fam of families) {
+        const dates = [];
+        for (const [d, st] of Object.entries(planStates)) {
+            if (!d.startsWith(String(year) + '-')) continue;
+            if (fam.indexOf(st) !== -1) dates.push(d);
+        }
+        dates.sort();
+        dates.forEach((d, i) => { map[d] = i + 1; });
+    }
     _caNumberCache = { year, map };
 }
 
@@ -1105,15 +1113,20 @@ window.renderSuiviRH = function renderSuiviRH() {
     const profile = _suiviProfileType();
     const fer = (typeof getJoursFeries === 'function') ? getJoursFeries(year) : new Set();
 
-    // Tout le tableau de bord est arrêté à la date du jour pour l'année courante
-    // (compteurs posés, heures théoriques/réalisées, débit/crédit, CA consécutifs).
-    // Année passée → pas de bornage. Année future → bornage à 31/12 année-1 = tout 0.
+    // Bornage temporel : pour l'année courante seulement.
+    //  - untilDate (= aujourd'hui) → heures réalisées/théoriques, transmissions, jours
+    //    travaillés/repos (réalité observée).
+    //  - PAS de bornage → compteurs CA/CA-HP/Frac/RCV posés et CA consécutifs : on
+    //    veut voir l'ensemble du planning de l'année (CA déjà posés dans le futur
+    //    inclus) pour suivre la consommation du capital et anticiper les alertes.
+    // Année passée → pas de bornage du tout. Année future → bornage à 31/12 N-1 = tout 0
+    // côté heures, mais compteurs posés affichent quand même les CA planifiés.
     const _today = new Date();
     const _todayStr = `${_today.getFullYear()}-${String(_today.getMonth()+1).padStart(2,'0')}-${String(_today.getDate()).padStart(2,'0')}`;
     let untilDate;
     if (year === _today.getFullYear()) untilDate = _todayStr;
-    else if (year < _today.getFullYear()) untilDate = undefined; // année close → tout
-    else untilDate = `${year-1}-12-31`; // année future → rien encore réalisé
+    else if (year < _today.getFullYear()) untilDate = undefined;
+    else untilDate = `${year-1}-12-31`;
 
     // Bandeau identité
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -1125,14 +1138,17 @@ window.renderSuiviRH = function renderSuiviRH() {
         setText('suivi-role', '—');
     }
     setText('suivi-profile-type', _suiviProfileLabel(profile));
+    // Bandeau du haut : précise le bornage temporel pour heures/transmissions/etc.
     const _yearSuffix = (year === _today.getFullYear())
-        ? ` · arrêté au ${String(_today.getDate()).padStart(2,'0')}/${String(_today.getMonth()+1).padStart(2,'0')}/${_today.getFullYear()}`
+        ? ` · heures arrêtées au ${String(_today.getDate()).padStart(2,'0')}/${String(_today.getMonth()+1).padStart(2,'0')}/${_today.getFullYear()}`
         : (year < _today.getFullYear() ? ' · année close' : ' · année à venir');
     setText('suivi-year-lbl', year + _yearSuffix);
-    setText('suivi-cards-year-lbl', year + _yearSuffix);
+    // Compteurs CA : pas de suffixe (vision capital annuel complet)
+    setText('suivi-cards-year-lbl', year);
 
-    // Compteurs CA / CA-HP / Frac / RCV
-    const postes = E.soldesPostes(year, planStates, untilDate);
+    // Compteurs CA / CA-HP / Frac / RCV — sur l'ensemble du planning annuel
+    // (pas borné à aujourd'hui : on veut voir le capital consommé sur toute l'année).
+    const postes = E.soldesPostes(year, planStates);
     const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0, rcvBonus:0, djfCount:0 };
     const caTotal   = _suiviTotalCAEntitled();              // 25 strict
     const caHpTotal = stats.hsBonus || 0;                   // 0/1/2 auto (Décret 2002-8)
@@ -1318,7 +1334,9 @@ window.renderSuiviRH = function renderSuiviRH() {
         const [y, mo, d] = ds.split('-');
         return (d && mo && y) ? `${d}/${mo}/${y}` : ds;
     };
-    const consec = E.consecutiveCAPeriods(year, planStates, fer, untilDate);
+    // CA consécutifs sur l'ensemble du planning : on veut anticiper les périodes
+    // futures qui dépassent la limite légale 31j (alerte projective).
+    const consec = E.consecutiveCAPeriods(year, planStates, fer);
     const consecEl = document.getElementById('suivi-consec');
     if (consecEl) {
         if (!consec || consec.length === 0) {
@@ -1447,8 +1465,9 @@ window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
     else untilDate = `${year-1}-12-31`;
     const recapEng = E.yearlyRecap(year, planStates, fer, profile, untilDate);
     const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile, untilDate);
-    const consec = E.consecutiveCAPeriods(year, planStates, fer, untilDate);
-    const postes = E.soldesPostes(year, planStates, untilDate);
+    // Compteurs CA + CA consécutifs : sur le planning annuel entier (pas bornés)
+    const consec = E.consecutiveCAPeriods(year, planStates, fer);
+    const postes = E.soldesPostes(year, planStates);
 
     // Adapter : engine output → shape attendue par PdfExport (counts, totalTheoretical, etc.)
     const dw = recapEng.daysWorked || {};
