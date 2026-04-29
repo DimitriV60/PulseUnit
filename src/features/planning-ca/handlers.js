@@ -233,56 +233,69 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     _scanInProgress = false;
 };
 
-// Détection N-1 par label scanné Digihops :
-// On parcourt chronologiquement la famille CA. Tant qu'on n'a pas vu de
-// label numéroté "CA 1" (ex: "CA 22, 23, 24, 25" en janvier = suite de N-1),
-// les CA sont des reliquats N-1 (state=can1 / ca_hpn1). Dès qu'on rencontre
-// "CA 1", on bascule sur l'année courante (state=ca / ca_hp) pour cette date
-// et toutes les suivantes.
+// Détection N-1 selon famille de CA :
+//   • Famille CA  (ca / can1)         : détection par label scanné Digihops.
+//     On parcourt chronologiquement. Tant qu'on n'a pas vu un label numéroté
+//     "CA 1" (ex: "CA 22, 23, 24, 25" en janvier = suite de N-1), les CA sont
+//     des reliquats N-1 (state=can1). Dès qu'on rencontre "CA 1", on bascule
+//     sur l'année courante (state=ca) pour cette date et toutes les suivantes.
+//     Fallback (aucun label numéroté trouvé) : règle calendaire jan-mars = N-1.
 //
-// Fallback (aucun label numéroté présent dans la famille) : règle calendaire
-// jan-mars = N-1 (cas du clic manuel sans scan).
+//   • Famille CA-HP (ca_hp / ca_hpn1) : règle calendaire stricte. Tout CA-HP
+//     posé avant le 1er mai (mois 1 à 4) est un reliquat N-1 (ca_hpn1) ;
+//     à partir du 1er mai, c'est l'année courante (ca_hp).
 //
 // Visuellement : même couleur verte, libellé "CA + numéro scanné" — la
 // distinction N-1 n'apparaît que dans les compteurs Suivi RH et soldes.
 function _normalizeCAFamilyByLabel(year) {
     const yearKey = String(year) + '-';
+    let totalChanged = 0;
 
-    function processFamily(currentState, n1State) {
+    // ── Famille CA : détection par label "CA 1" + fallback jan-mars ───────
+    {
         const dates = Object.keys(planStates)
             .filter(d => d.startsWith(yearKey))
-            .filter(d => planStates[d] === currentState || planStates[d] === n1State)
+            .filter(d => planStates[d] === 'ca' || planStates[d] === 'can1')
             .sort();
-        if (dates.length === 0) return 0;
 
-        // Cherche la date la plus tôt portant un label "<…> 1"
-        let startDate = null;
-        for (const d of dates) {
-            const lbl = planLabels[d];
-            if (!lbl) continue;
-            const m = String(lbl).match(/(\d+)\s*$/);
-            if (m && parseInt(m[1], 10) === 1) { startDate = d; break; }
-        }
-
-        let changed = 0;
-        if (startDate) {
-            // Avant startDate → N-1 ; à partir de startDate → année courante
+        if (dates.length > 0) {
+            let startDate = null;
             for (const d of dates) {
-                const target = (d < startDate) ? n1State : currentState;
-                if (planStates[d] !== target) { planStates[d] = target; changed++; }
+                const lbl = planLabels[d];
+                if (!lbl) continue;
+                const m = String(lbl).match(/(\d+)\s*$/);
+                if (m && parseInt(m[1], 10) === 1) { startDate = d; break; }
             }
-        } else {
-            // Aucun "CA 1" trouvé : fallback calendaire jan-mars = N-1
-            for (const d of dates) {
-                const month = parseInt(d.slice(5, 7), 10);
-                const target = (month >= 1 && month <= 3) ? n1State : currentState;
-                if (planStates[d] !== target) { planStates[d] = target; changed++; }
+
+            if (startDate) {
+                for (const d of dates) {
+                    const target = (d < startDate) ? 'can1' : 'ca';
+                    if (planStates[d] !== target) { planStates[d] = target; totalChanged++; }
+                }
+            } else {
+                for (const d of dates) {
+                    const month = parseInt(d.slice(5, 7), 10);
+                    const target = (month >= 1 && month <= 3) ? 'can1' : 'ca';
+                    if (planStates[d] !== target) { planStates[d] = target; totalChanged++; }
+                }
             }
         }
-        return changed;
     }
 
-    return processFamily('ca', 'can1') + processFamily('ca_hp', 'ca_hpn1');
+    // ── Famille CA-HP : règle calendaire stricte (avant 1er mai = N-1) ────
+    {
+        const dates = Object.keys(planStates)
+            .filter(d => d.startsWith(yearKey))
+            .filter(d => planStates[d] === 'ca_hp' || planStates[d] === 'ca_hpn1');
+
+        for (const d of dates) {
+            const month = parseInt(d.slice(5, 7), 10);
+            const target = (month >= 1 && month <= 4) ? 'ca_hpn1' : 'ca_hp';
+            if (planStates[d] !== target) { planStates[d] = target; totalChanged++; }
+        }
+    }
+
+    return totalChanged;
 }
 
 function _applyScannedPlan(scanned, count, labels) {
