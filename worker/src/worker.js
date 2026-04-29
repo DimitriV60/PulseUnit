@@ -273,6 +273,24 @@ Extrais tous les jours du mois cible visibles avec leur état. Retourne le JSON 
     cleanLabels[date] = label.trim().slice(0, 16);
   }
 
+  // Règle Digihops/FPH : un CA labellisé ≥25 et tombant avant le 31/03 est
+  // un reliquat N-1 (les CA recommencent à 1 sur la nouvelle année).
+  // → ca → can1, ca_hp → ca_hpn1.
+  let promotedToN1 = 0;
+  for (const [date, st] of Object.entries(cleanStates)) {
+    if (st !== 'ca' && st !== 'ca_hp') continue;
+    const month = parseInt(date.slice(5, 7), 10);
+    if (!month || month > 3) continue;
+    const lbl = cleanLabels[date];
+    if (!lbl) continue;
+    const m = lbl.match(/(\d+)\s*$/);
+    if (!m) continue;
+    const n = parseInt(m[1], 10);
+    if (!Number.isFinite(n) || n < 25) continue;
+    cleanStates[date] = (st === 'ca') ? 'can1' : 'ca_hpn1';
+    promotedToN1++;
+  }
+
   let promotedToRcn = 0;
   const sortedDates = Object.keys(cleanStates).sort();
   for (let i = 1; i < sortedDates.length; i++) {
@@ -293,7 +311,8 @@ Extrais tous les jours du mois cible visibles avec leur état. Retourne le JSON 
     labels: cleanLabels,
     count: Object.keys(cleanStates).length,
     dropped,
-    promotedToRcn
+    promotedToRcn,
+    promotedToN1
   }, 200, origin);
 }
 

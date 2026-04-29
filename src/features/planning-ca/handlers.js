@@ -233,6 +233,21 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     _scanInProgress = false;
 };
 
+// Règle Digihops/FPH : un CA labellisé ≥25 et tombant avant le 31 mars est un
+// reliquat de l'année N-1 (les CA recommencent à 1 sur la nouvelle année).
+// → ca → can1, ca_hp → ca_hpn1.
+function _normalizeCAYearN1(dateStr, state, label) {
+    if (state !== 'ca' && state !== 'ca_hp') return state;
+    if (!label) return state;
+    const month = parseInt(dateStr.slice(5, 7), 10);
+    if (!month || month > 3) return state;
+    const m = String(label).match(/(\d+)\s*$/);
+    if (!m) return state;
+    const n = parseInt(m[1], 10);
+    if (!Number.isFinite(n) || n < 25) return state;
+    return state === 'ca' ? 'can1' : 'ca_hpn1';
+}
+
 function _applyScannedPlan(scanned, count, labels) {
     if (!scanned || count === 0) {
         showToast('Aucune donnée à importer');
@@ -242,10 +257,12 @@ function _applyScannedPlan(scanned, count, labels) {
     const snapshot = { states: JSON.parse(JSON.stringify(planStates)), labels: JSON.parse(JSON.stringify(planLabels)) };
     let added = 0, replaced = 0;
     for (const [date, state] of Object.entries(scanned)) {
-        if (planStates[date] !== undefined && planStates[date] !== state) replaced++;
+        const lbl = labels && labels[date] ? labels[date] : null;
+        const finalState = _normalizeCAYearN1(date, state, lbl);
+        if (planStates[date] !== undefined && planStates[date] !== finalState) replaced++;
         else if (planStates[date] === undefined) added++;
-        planStates[date] = state;
-        if (labels && labels[date]) planLabels[date] = labels[date];
+        planStates[date] = finalState;
+        if (lbl) planLabels[date] = lbl;
         else delete planLabels[date];
     }
     savePlanData();
@@ -294,6 +311,17 @@ async function loadUserPlan(userId) {
         if (userPlan.labels && typeof userPlan.labels === 'object') {
             planLabels = userPlan.labels;
             localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
+        }
+        // Normalisation rétroactive : CA labellisés ≥25 avant le 31/03 → can1/ca_hpn1
+        let _changed = 0;
+        for (const [d, st] of Object.entries(planStates)) {
+            const lbl = planLabels[d];
+            const norm = _normalizeCAYearN1(d, st, lbl);
+            if (norm !== st) { planStates[d] = norm; _changed++; }
+        }
+        if (_changed > 0) {
+            localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
+            savePlanData();
         }
         if (userPlan.regime) {
             planRegime = userPlan.regime;
