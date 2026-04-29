@@ -1116,8 +1116,7 @@ window.renderSuiviRH = function renderSuiviRH() {
     }
     setText('suivi-profile-type', _suiviProfileLabel(profile));
     setText('suivi-year-lbl', year);
-    setText('suivi-ca-year-lbl', year);
-    setText('suivi-cahp-year-lbl', year);
+    setText('suivi-cards-year-lbl', year);
 
     // Compteurs CA / CA-HP / Frac / RCV
     const postes = E.soldesPostes(year, planStates);
@@ -1147,11 +1146,11 @@ window.renderSuiviRH = function renderSuiviRH() {
             bar.style.width = pct + '%';
         }
     }
-    // CA / CA-HP / Frac : compteurs séparés courant vs N-1 (reliquat).
+    // CA / CA-HP / Frac / RCV : compteurs séparés courant vs N-1 (reliquat).
     _setCard('ca',   postes.ca || 0,    caTotal);
     _setCard('cahp', postes.ca_hp || 0, caHpTotal);
     _setCard('frac', postes.frac || 0,  fracTotal);
-    _setCard('rcv',  (postes.rcv || 0) + (postes.rcvn1 || 0), rcvTotal, { notEligible: !rcvEligible });
+    _setCard('rcv',  postes.rcv || 0,   rcvTotal, { notEligible: !rcvEligible });
     // Lignes "reliquat N-1" sous CA / CA-HP / Frac — visibles seulement si > 0
     function _setN1(prefix, n) {
         const line = document.getElementById('suivi-' + prefix + '-n1-line');
@@ -1164,6 +1163,7 @@ window.renderSuiviRH = function renderSuiviRH() {
     _setN1('ca',   postes.can1 || 0);
     _setN1('cahp', postes.ca_hpn1 || 0);
     _setN1('frac', postes.fracn1 || 0);
+    _setN1('rcv',  postes.rcvn1 || 0);
     const rcvCard = document.getElementById('suivi-card-rcv');
     if (rcvCard) rcvCard.classList.toggle('is-disabled', !rcvEligible);
     const rcvRestWrap = document.getElementById('suivi-rcv-rest-wrap');
