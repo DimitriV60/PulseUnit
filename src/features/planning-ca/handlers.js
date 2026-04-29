@@ -418,8 +418,18 @@ window.cyclePlanDay = function cyclePlanDay(dateStr) {
         if (shouldRevert) { delete planStates[dateStr]; next = getPlanDayState(dateStr); }
         else planStates[dateStr] = next;
     }
-    // Tout cyclage manuel invalide le label scanné Digihops (numéro de séquence)
-    if (planLabels[dateStr]) delete planLabels[dateStr];
+    // Le label scanné Digihops est conservé tant qu'on cycle dans la famille CA :
+    // on extrait le numéro et on rebrand le préfixe selon le nouvel état (ca/can1/
+    // ca_hp/ca_hpn1). Hors famille CA → label supprimé.
+    if (planLabels[dateStr]) {
+        const CA_FAM = ['ca', 'can1', 'ca_hp', 'ca_hpn1'];
+        if (CA_FAM.includes(next)) {
+            const m = String(planLabels[dateStr]).match(/(\d+)\s*$/);
+            if (m) planLabels[dateStr] = (window.PLAN_LABELS[next] || '') + ' ' + m[1];
+        } else {
+            delete planLabels[dateStr];
+        }
+    }
     savePlanData();
 
     refreshPlanCell(dateStr);
