@@ -202,22 +202,32 @@
   }
 
   // Compteurs de congés (CA / CA-HP / Frac / RCV)
+  // Reste = Total - posed (le reliquat N-1 est affiché en sous-ligne séparée).
+  // Cohérent avec l'UI Suivi RH : posed = année courante uniquement, n1 = reliquat.
   function _drawCountersSection(doc, y, ca, caHp, frac, rcv) {
     y = _sectionTitle(doc, 'Compteurs de congés', y);
 
-    var rows = [
-      ['CA', _safe(ca && ca.posed), _safe(ca && ca.total),
-        _safe(ca ? ((ca.total || 0) - (ca.posed || 0)) : null)],
-      ['CA-HP', _safe(caHp && caHp.posed), _safe(caHp && caHp.total),
-        _safe(caHp ? ((caHp.total || 0) - (caHp.posed || 0)) : null)],
-      ['Fractionné', _safe(frac && frac.posed), _safe(frac && frac.total),
-        _safe(frac ? ((frac.total || 0) - (frac.posed || 0)) : null)]
-    ];
+    var rows = [];
+    var subRowIndices = []; // indices des sous-lignes "↳ reliquat N-1"
+    function _pushCat(label, c) {
+      var posed = (c && c.posed) || 0;
+      var n1    = (c && c.n1) || 0;
+      var total = (c && c.total) || 0;
+      var rest  = Math.max(0, total - posed);
+      rows.push([label, _safe(posed), _safe(total), _safe(rest)]);
+      if (n1 > 0) {
+        rows.push(['↳ reliquat N-1', _safe(n1), '', '']);
+        subRowIndices.push(rows.length - 1);
+      }
+    }
+    _pushCat('CA', ca);
+    _pushCat('CA-HP', caHp);
+    _pushCat('Fractionné', frac);
 
     var rcvEligible = !!(rcv && rcv.eligible);
+    var rcvRowIdx = rows.length;
     if (rcvEligible) {
-      rows.push(['RCV', _safe(rcv.posed), _safe(rcv.total),
-        _safe((rcv.total || 0) - (rcv.posed || 0))]);
+      _pushCat('RCV', rcv);
     } else {
       rows.push(['RCV', 'Non éligible', 'Non éligible', 'Non éligible']);
     }
@@ -231,14 +241,19 @@
       headStyles: { fillColor: COLOR_ACCENT, textColor: [255, 255, 255], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: COLOR_ALT_ROW },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 40 },
+        0: { fontStyle: 'bold', cellWidth: 50 },
         1: { halign: 'center' },
         2: { halign: 'center' },
         3: { halign: 'center' }
       },
       didParseCell: function (data) {
-        // Grise la ligne RCV si non éligible
-        if (!rcvEligible && data.row.index === 3 && data.section === 'body') {
+        if (data.section !== 'body') return;
+        if (subRowIndices.indexOf(data.row.index) !== -1) {
+          data.cell.styles.textColor = COLOR_MUTED;
+          data.cell.styles.fontStyle = 'italic';
+          data.cell.styles.fontSize = 9;
+        }
+        if (!rcvEligible && data.row.index === rcvRowIdx) {
           data.cell.styles.textColor = COLOR_MUTED;
           data.cell.styles.fontStyle = 'italic';
         }
@@ -261,14 +276,21 @@
     var theoTotal = recap && recap.totalTheoretical;
     var realTotal = recap && recap.totalRealized;
     var dcAnnual = recap && recap.annualDebitCredit;
+    var theoAnnual = recap && recap.annualTheoreticalContract;
 
-    doc.text('Total heures théoriques : ' + _fmtHours(theoTotal), 19, y);
+    doc.text('Total heures théoriques (à ce jour) : ' + _fmtHours(theoTotal), 19, y);
     y += 5;
     doc.text('Total heures réalisées : ' + _fmtHours(realTotal), 19, y);
     y += 5;
     var dcLabel = 'Débit/crédit annuel : ' + _fmtHours(dcAnnual);
     doc.text(dcLabel, 19, y);
-    y += 7;
+    y += 5;
+    if (theoAnnual !== undefined && theoAnnual !== null) {
+      doc.text('Réalisées / Théoriques contractuelles : ' +
+               _fmtHours(realTotal) + ' / ' + _fmtHours(theoAnnual), 19, y);
+      y += 5;
+    }
+    y += 2;
 
     // Tableau mensuel style Digihops
     var monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -371,7 +393,8 @@
     var feriesTravailles = r.feriesWorked !== undefined ? r.feriesWorked : (r.holidaysWorked || 0);
     var dimanches = r.sundaysWorked || 0;
     var dow = r.workedByDow || { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 };
-    var nbGardes = (counts.jour || 0) + (counts.nuit || 0);
+    // Transmissions = J + N + HSJ + HSN (cohérent avec l'UI Suivi RH)
+    var nbGardes = (counts.jour || 0) + (counts.nuit || 0) + (counts.hs_j || 0) + (counts.hs_n || 0);
     var transmTotal = _fmtTransmission(nbGardes);
 
     _setColor(doc, 'setTextColor', [40, 40, 40]);
