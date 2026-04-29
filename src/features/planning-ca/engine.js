@@ -169,6 +169,14 @@
         return annual * (monthW / annualW);
     }
 
+    // Heures annuelles théoriques contractuelles selon le profil
+    //  - jour-fixe / alterne : 1582h
+    //  - nuit-fixe : 1482h
+    // Indépendant de l'année et du planning : c'est la dotation contractuelle.
+    function annualTheoreticalHours(profile) {
+        return ANNUAL_HOURS_BY_PROFILE[profile] || 0;
+    }
+
     // --- 2. Heures réalisées mensuelles --------------------------------------
     // Signature étendue avec `profile` (optionnel pour rétro-compatibilité) pour
     // appliquer la revalorisation des nuits chez les agents non-nuit-fixe.
@@ -428,6 +436,7 @@
     if (typeof window !== 'undefined') {
         window.PlanEngine = {
             theoreticalHoursForMonth,
+            annualTheoreticalHours,
             realizedHoursForMonth,
             monthlyDebitCredit,
             yearlyDebitCreditTable,
