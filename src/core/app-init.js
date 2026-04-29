@@ -149,6 +149,7 @@ window.appInit = async function appInit() {
       const pv = document.getElementById('planning-ca-view');
       if (pv && pv.style.display !== 'none') renderPlanCalendrier();
     });
+    if (typeof window.loadUserProfile === 'function') window.loadUserProfile(currentUser.id);
     if (typeof window.loadBedNotes === 'function') window.loadBedNotes().then(() => renderApp());
     if (typeof window.loadNotifs === 'function') window.loadNotifs();
     if (typeof window.loadMessages === 'function') window.loadMessages();
@@ -163,6 +164,7 @@ window.appInit = async function appInit() {
       const pv = document.getElementById('planning-ca-view');
       if (pv && pv.style.display !== 'none') renderPlanCalendrier();
     });
+    if (typeof window.loadUserProfile === 'function') window.loadUserProfile(currentUser.id);
     if (typeof window.loadBedNotes === 'function') window.loadBedNotes().then(() => renderApp());
     if (typeof window.loadNotifs === 'function') window.loadNotifs();
     if (typeof window.loadMessages === 'function') window.loadMessages();

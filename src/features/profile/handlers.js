@@ -16,6 +16,16 @@
 
     // ── State ────────────────────────────────────────────────────────────────
     window.userProfile = { ...DEFAULT_PROFILE };
+    // Hydratation synchrone depuis localStorage dès que le module est chargé.
+    // Permet à window.userProfile.agentType d'être le bon avant même tout appel
+    // à loadUserProfile (auto-login, navigation, refresh dans la PWA, etc.).
+    try {
+        const fb = localStorage.getItem('pulseunit_user_profile_global');
+        if (fb) {
+            const parsed = JSON.parse(fb);
+            if (parsed && parsed.agentType) window.userProfile = { ...DEFAULT_PROFILE, ...parsed };
+        }
+    } catch(e) { /* ignore */ }
 
     // Clé localStorage par utilisateur ; fallback "_global" si l'auth n'a pas encore
     // peuplé currentUser au moment de la sauvegarde (rare mais possible).
@@ -69,27 +79,32 @@
     // ── API publique ─────────────────────────────────────────────────────────
 
     window.loadUserProfile = async function loadUserProfile(userId) {
-        // Reset à la valeur par défaut puis tente de relire local + Firestore
-        window.userProfile = { ...DEFAULT_PROFILE };
-        if (!userId) return;
+        // ⚠ NE JAMAIS écraser window.userProfile avant d'avoir vérifié la
+        // source de vérité côté serveur — sinon une simple navigation qui
+        // re-déclencherait cette fonction effacerait la valeur que l'utilisateur
+        // vient de sélectionner. On commence par lire le localStorage (synchrone),
+        // puis on n'écrit que si Firestore renvoie une valeur différente.
         _loadFromLocal();
+        if (!userId) return;
         if (typeof PLANS_DOC === 'undefined' || !PLANS_DOC) return;
         try {
             const doc = await PLANS_DOC.get();
             if (!doc.exists) return;
             const userPlan = doc.data()[userId];
             if (userPlan && userPlan.profile && userPlan.profile.agentType) {
+                // Firestore a une valeur → seule source de vérité distante
                 window.userProfile = { ...DEFAULT_PROFILE, ...userPlan.profile };
                 _saveLocal();
-            } else {
-                // Migration douce : si pas de profil Firestore mais regime existant ('jour'/'nuit'),
-                // dérive un type par défaut. Le user peut toujours corriger via la modale.
-                if (userPlan && userPlan.regime === 'nuit') {
-                    window.userProfile.agentType = 'nuit-fixe';
-                    _saveLocal();
-                    _saveFirestore();
-                }
+                if (typeof _refreshProfileUI === 'function') _refreshProfileUI();
+            } else if (userPlan && userPlan.regime === 'nuit' && window.userProfile.agentType === 'jour-fixe') {
+                // Migration douce : ancien planRegime='nuit' sans profile → pré-remplit
+                // (uniquement si on n'a aucun choix utilisateur explicite)
+                window.userProfile.agentType = 'nuit-fixe';
+                _saveLocal();
+                _saveFirestore();
             }
+            // Sinon : Firestore n'a rien et le local a peut-être déjà la bonne valeur.
+            // On ne touche pas à window.userProfile — surtout pas après un setAgentType.
         } catch(e) { console.warn('loadUserProfile error', e); }
     };
 
