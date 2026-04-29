@@ -32,14 +32,19 @@ function savePlanData() {
     localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
     localStorage.setItem('pulseunit_plan_regime', planRegime);
     if (typeof PLANS_DOC !== 'undefined' && PLANS_DOC && currentUser) {
-        // update() avec dotted-path REMPLACE la valeur entière (pas de merge sur les sous-maps),
-        // contrairement à set({merge:true}) qui fusionne — sinon les dates supprimées localement
-        // reviennent au prochain load car Firestore les conserve.
-        const userPlan = { states: planStates, labels: planLabels, regime: planRegime };
-        PLANS_DOC.update({ [currentUser.id]: userPlan })
+        // Dotted-paths par champ : remplace states/labels/regime individuellement
+        // (les dates supprimées localement disparaissent côté serveur — comportement voulu)
+        // SANS écraser les autres sous-champs comme `profile` (cf. setAgentType).
+        const uid = currentUser.id;
+        const update = {
+            [`${uid}.states`]: planStates,
+            [`${uid}.labels`]: planLabels,
+            [`${uid}.regime`]: planRegime
+        };
+        PLANS_DOC.update(update)
             .catch(() => {
                 // Doc inexistant → fallback set merge pour le créer
-                PLANS_DOC.set({ [currentUser.id]: userPlan }, { merge: true })
+                PLANS_DOC.set({ [uid]: { states: planStates, labels: planLabels, regime: planRegime } }, { merge: true })
                     .catch(e => console.warn('Plan sync error', e));
             });
     }
