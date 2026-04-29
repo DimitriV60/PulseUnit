@@ -238,65 +238,13 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
 // non pris l'année précédente). Sur Digihops, la numérotation reprend la
 // séquence N-1 (ex: CA 22, 23, 24, 25 en janvier = fin de séquence 2025).
 // → ca → can1, ca_hp → ca_hpn1
+// Visuellement : même couleur verte, libellé "CA + numéro scanné" — la
+// distinction N-1 n'apparaît que dans les compteurs Suivi RH et soldes.
 function _normalizeCAYearN1(dateStr, state, _label) {
     if (state !== 'ca' && state !== 'ca_hp') return state;
     const month = parseInt(dateStr.slice(5, 7), 10);
     if (!month || month > 3) return state;
     return state === 'ca' ? 'can1' : 'ca_hpn1';
-}
-
-// Heuristique surplus / report : promeut les `ca` les plus anciens (jan-mars)
-// vers `can1` quand on dépasse le capital annuel courant. Deux cas combinés :
-//   1. Si planSoldes.caN1 est saisi (ex: 4), on promeut les 4 premiers ca chrono.
-//   2. Si total ca > capital annuel (25 + bonus), on promeut le surplus.
-// Idem ca_hp → ca_hpn1 (avec planSoldes.hpn1 ou surplus vs HP+HPN1 saisis).
-function _autoPromoteCAByOverflow(year) {
-    const yearKey = String(year) + '-';
-    let promoted = 0;
-    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0 };
-    const caCapital = 25 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
-    const caN1Solde = (planSoldes && planSoldes.caN1) || 0;
-    const cas = [];
-    for (const [d, st] of Object.entries(planStates)) {
-        if (!d.startsWith(yearKey)) continue;
-        if (st === 'ca') cas.push(d);
-    }
-    cas.sort();
-    // Nb à promouvoir = max(surplus capital, solde N-1 déclaré)
-    const surplusCa = Math.max(0, cas.length - caCapital);
-    const promoteCount = Math.max(surplusCa, Math.min(caN1Solde, cas.length));
-    for (let i = 0; i < promoteCount; i++) {
-        const d = cas[i];
-        if (parseInt(d.slice(5, 7), 10) > 3) break;
-        planStates[d] = 'can1';
-        if (planLabels[d]) {
-            const m = String(planLabels[d]).match(/(\d+)\s*$/);
-            if (m) planLabels[d] = (window.PLAN_LABELS.can1 || 'CA-1') + ' ' + m[1];
-        }
-        promoted++;
-    }
-    // CA-HP : capital = soldes HP + HPN1
-    const hpCapital = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
-    const hpn1Solde = (planSoldes && planSoldes.hpn1) || 0;
-    const cahps = [];
-    for (const [d, st] of Object.entries(planStates)) {
-        if (!d.startsWith(yearKey)) continue;
-        if (st === 'ca_hp') cahps.push(d);
-    }
-    cahps.sort();
-    const surplusHp = Math.max(0, cahps.length - hpCapital);
-    const promoteHpCount = Math.max(surplusHp, Math.min(hpn1Solde, cahps.length));
-    for (let i = 0; i < promoteHpCount; i++) {
-        const d = cahps[i];
-        if (parseInt(d.slice(5, 7), 10) > 3) break;
-        planStates[d] = 'ca_hpn1';
-        if (planLabels[d]) {
-            const m = String(planLabels[d]).match(/(\d+)\s*$/);
-            if (m) planLabels[d] = (window.PLAN_LABELS.ca_hpn1 || 'CA-HP1') + ' ' + m[1];
-        }
-        promoted++;
-    }
-    return promoted;
 }
 
 function _applyScannedPlan(scanned, count, labels) {
@@ -316,9 +264,6 @@ function _applyScannedPlan(scanned, count, labels) {
         if (lbl) planLabels[date] = lbl;
         else delete planLabels[date];
     }
-    // Heuristique surplus : si total CA > capital annuel, surplus chronologique
-    // (jan-mars) promu en N-1
-    _autoPromoteCAByOverflow(planYear);
     savePlanData();
     if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
     else if (typeof updatePlanStats === 'function') updatePlanStats();
@@ -366,15 +311,13 @@ async function loadUserPlan(userId) {
             planLabels = userPlan.labels;
             localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
         }
-        // Normalisation rétroactive : CA labellisés ≥25 avant le 31/03 → can1/ca_hpn1
+        // Normalisation rétroactive : tout CA jan-mars → can1 / ca_hpn1
         let _changed = 0;
         for (const [d, st] of Object.entries(planStates)) {
             const lbl = planLabels[d];
             const norm = _normalizeCAYearN1(d, st, lbl);
             if (norm !== st) { planStates[d] = norm; _changed++; }
         }
-        // + heuristique surplus (CA dépassant le capital annuel → reliquat N-1)
-        _changed += _autoPromoteCAByOverflow(planYear);
         if (_changed > 0) {
             localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
             localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
@@ -436,8 +379,8 @@ function planDayHTML(dayNum, state, dateStr) {
     const prefix = window.PLAN_LABELS[state];
     const isCAFamily = (state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1');
     let lbl;
-    // 1. Label scanné AVEC un chiffre → on conserve le numéro, on rebrand le préfixe
-    //    selon l'état réel (un CA promu en CA-1 garde son numéro mais voit le préfixe synchronisé).
+    // 1. Label scanné AVEC un chiffre → on conserve le numéro scanné Digihops,
+    //    on applique le préfixe ("CA" / "CA-HP") issu de l'état réel.
     if (customLbl) {
         const m = String(customLbl).match(/(\d+)\s*$/);
         if (m && prefix) {
@@ -809,14 +752,6 @@ function savePlanSoldes() { try { localStorage.setItem('pulseunit_plan_soldes', 
 
 window.updatePlanSolde = function(field, val) {
     planSoldes[field] = val; savePlanSoldes();
-    // Si on change un solde N-1, déclenche la promotion auto (puis save + render)
-    if (field === 'caN1' || field === 'hpn1') {
-        const n = _autoPromoteCAByOverflow(planYear);
-        if (n > 0) {
-            savePlanData();
-            if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
-        }
-    }
     updatePlanStats();
 };
 window.reportSolde = function(fromKey, toKey, inputId) {

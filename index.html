@@ -858,6 +858,7 @@
           <div>Calendrier annuel personnel + onglet <strong style="color:var(--text);">📊 Suivi RH</strong> avec compteurs CA, débit/crédit mensuel, transmissions et export PDF.</div>
           <div><strong style="color:var(--text);">📅 Onglet Calendrier</strong> — pose tes congés, repos, formations, heures supp. <strong style="color:var(--text);">📷 Scan</strong> ton planning Digihops par photo (Mistral Pixtral Vision).</div>
           <div><strong style="color:var(--text);">📊 Onglet Suivi RH</strong> — 4 compteurs (CA, CA-HP, Fractionné, RCV) avec barre de progression posés/restants. Tableau débit/crédit style Digihops. Alertes CA consécutifs &gt; 31j. Aperçu annuel (jours travaillés, fériés, week-ends pour prime).</div>
+          <div><strong style="color:var(--text);">🟢 CA N-1 / année courante</strong> — règle FPH : tout CA posé entre <strong style="color:var(--text);">1er janvier et 31 mars</strong> est automatiquement compté en reliquat <strong style="color:var(--text);">N-1</strong>, les CA d'avril à décembre alimentent l'année courante (capital 25 j + bonus). Affichage identique dans le calendrier (vert + numéro Digihops scanné), la séparation se fait dans les compteurs Suivi RH.</div>
           <div><strong style="color:var(--text);">⏱️ Transmissions cumulées</strong> = nb gardes (J + N + HS) × 0h25.</div>
           <div><strong style="color:var(--text);">👤 Mon profil</strong> (menu burger) — choisis ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Détermine le calcul des heures théoriques mensuelles.</div>
           <div><strong style="color:var(--text);">📄 Export PDF</strong> — récap annuel formel avec en-tête nom/prénom/poste, tous les compteurs, exportable pour la DRH.</div>
@@ -1171,8 +1172,7 @@
     <div id="plan-legend-body" class="plan-legend-compact" style="display:none;">
       <span><span class="plan-legend-dot" style="background:rgba(96,206,234,0.18);border:1.5px solid #60ceea;"></span>J Jour</span>
       <span><span class="plan-legend-dot" style="background:rgba(239,68,68,0.13);border:1.5px solid #ef4444;"></span>N Nuit</span>
-      <span><span class="plan-legend-dot" style="background:var(--as-glow);border:1.5px solid var(--as);"></span>CA</span>
-      <span><span class="plan-legend-dot" style="background:rgba(20,184,166,0.16);border:1.5px solid #14b8a6;"></span>CA-1 reporté</span>
+      <span><span class="plan-legend-dot" style="background:var(--as-glow);border:1.5px solid var(--as);"></span>CA <em style="font-weight:400;">(N-1 jan-mars auto)</em></span>
       <span><span class="plan-legend-dot" style="background:rgba(99,102,241,0.16);border:1.5px solid #6366f1;"></span>HP</span>
       <span><span class="plan-legend-dot" style="background:rgba(165,180,252,0.16);border:1.5px solid #a5b4fc;"></span>HP-1</span>
       <span><span class="plan-legend-dot" style="background:rgba(16,185,129,0.16);border:1.5px solid #10b981;"></span>RCV</span>
