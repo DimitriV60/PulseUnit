@@ -575,8 +575,15 @@ function calcPlanStats() {
     if (curPer.length>0) caPeriodsWD.push(curPer);
 
     const caCount  = caSet.size;
-    const hsBonus  = hsCA>=6 ? 2 : hsCA>=3 ? 1 : 0;
-    const fracBonus = caPeriodsWD.filter(p=>p.length>=5).length>=3 ? 1 : 0;
+    // Bonus "Hors Période" (CA-HP) — Décret 2002-8 art. 1 :
+    //   • 5 à 7 jours de CA pris hors période 1er mai-31 oct → +1 jour
+    //   • 8 jours et plus → +2 jours
+    const hsBonus  = hsCA>=8 ? 2 : hsCA>=5 ? 1 : 0;
+    // Bonus "Fractionnement" — pratique FPH :
+    //   • ≥3 fractions de ≥5 jours ouvrés → +1 jour
+    //   • ≥4 fractions de ≥5 jours ouvrés → +2 jours
+    const fracPeriods = caPeriodsWD.filter(p=>p.length>=5).length;
+    const fracBonus = fracPeriods>=4 ? 2 : fracPeriods>=3 ? 1 : 0;
     const rcvBonus  = (planRegime!=='nuit' && djfCount>=20) ? 2 : 0;
     const caN1Solde  = (planSoldes && planSoldes.caN1)  || 0;
     const hpSolde    = (planSoldes && planSoldes.hp)    || 0;
@@ -1085,10 +1092,10 @@ function _suiviProfileLabel(t) {
 }
 
 function _suiviTotalCAEntitled() {
-    // Capital CA année courante = 25 + bonus HS + bonus Frac (les reliquats N-1
-    // sont affichés à part dans la ligne "reliquat" de la card CA).
-    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0 };
-    return 25 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
+    // Capital CA année courante = 25 jours stricts (FPH).
+    // Les bonus Hors Période (CA-HP) et Fractionnement sont comptabilisés
+    // dans leurs cards dédiées avec leur propre cap auto-calculé.
+    return 25;
 }
 
 window.renderSuiviRH = function renderSuiviRH() {
@@ -1114,12 +1121,12 @@ window.renderSuiviRH = function renderSuiviRH() {
 
     // Compteurs CA / CA-HP / Frac / RCV
     const postes = E.soldesPostes(year, planStates);
-    const caTotal   = _suiviTotalCAEntitled();
-    const caHpTotal = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
-    const fracTotal = ((planSoldes && planSoldes.frac) || 0) + ((planSoldes && planSoldes.fracn1) || 0);
-    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { rcvBonus:0, djfCount:0 };
-    const rcvBonus = stats.rcvBonus || 0;
-    const rcvTotal = rcvBonus + ((planSoldes && planSoldes.rcv) || 0) + ((planSoldes && planSoldes.rcvn1) || 0);
+    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0, rcvBonus:0, djfCount:0 };
+    const caTotal   = _suiviTotalCAEntitled();              // 25 strict
+    const caHpTotal = stats.hsBonus || 0;                   // 0/1/2 auto (Décret 2002-8)
+    const fracTotal = stats.fracBonus || 0;                 // 0/1/2 auto (≥3 ou ≥4 fractions ≥5j)
+    const rcvBonus  = stats.rcvBonus || 0;
+    const rcvTotal  = rcvBonus + ((planSoldes && planSoldes.rcv) || 0) + ((planSoldes && planSoldes.rcvn1) || 0);
     const rcvEligible = (profile !== 'nuit-fixe') && (stats.djfCount >= 20 || rcvTotal > 0);
 
     function _setCard(prefix, posed, total, opts) {
@@ -1140,12 +1147,12 @@ window.renderSuiviRH = function renderSuiviRH() {
             bar.style.width = pct + '%';
         }
     }
-    // CA / CA-HP : compteurs séparés courant vs N-1 (reliquat).
+    // CA / CA-HP / Frac : compteurs séparés courant vs N-1 (reliquat).
     _setCard('ca',   postes.ca || 0,    caTotal);
     _setCard('cahp', postes.ca_hp || 0, caHpTotal);
-    _setCard('frac', (postes.frac || 0) + (postes.fracn1 || 0), fracTotal);
+    _setCard('frac', postes.frac || 0,  fracTotal);
     _setCard('rcv',  (postes.rcv || 0) + (postes.rcvn1 || 0), rcvTotal, { notEligible: !rcvEligible });
-    // Lignes "reliquat N-1" sous CA et CA-HP — visibles seulement si > 0
+    // Lignes "reliquat N-1" sous CA / CA-HP / Frac — visibles seulement si > 0
     function _setN1(prefix, n) {
         const line = document.getElementById('suivi-' + prefix + '-n1-line');
         const val  = document.getElementById('suivi-' + prefix + '-n1');
@@ -1156,6 +1163,7 @@ window.renderSuiviRH = function renderSuiviRH() {
     }
     _setN1('ca',   postes.can1 || 0);
     _setN1('cahp', postes.ca_hpn1 || 0);
+    _setN1('frac', postes.fracn1 || 0);
     const rcvCard = document.getElementById('suivi-card-rcv');
     if (rcvCard) rcvCard.classList.toggle('is-disabled', !rcvEligible);
     const rcvRestWrap = document.getElementById('suivi-rcv-rest-wrap');

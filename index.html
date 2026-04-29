@@ -859,6 +859,7 @@
           <div><strong style="color:var(--text);">📅 Onglet Calendrier</strong> — pose tes congés, repos, formations, heures supp. <strong style="color:var(--text);">📷 Scan</strong> ton planning Digihops par photo (Mistral Pixtral Vision).</div>
           <div><strong style="color:var(--text);">📊 Onglet Suivi RH</strong> — 4 compteurs (CA, CA-HP, Fractionné, RCV) avec barre de progression posés/restants. Tableau débit/crédit style Digihops. Alertes CA consécutifs &gt; 31j. Aperçu annuel (jours travaillés, fériés, week-ends pour prime).</div>
           <div><strong style="color:var(--text);">🟢 CA N-1 / année courante</strong> — séparation auto :<br>• <strong style="color:var(--text);">CA</strong> : on suit les numéros Digihops scannés ; tant qu'on n'a pas vu "CA 1", les CA précédents sont des reliquats <strong style="color:var(--text);">N-1</strong>. À partir de "CA 1" → année courante.<br>• <strong style="color:var(--text);">CA-HP</strong> : règle calendaire — tout CA-HP avant le <strong style="color:var(--text);">1er mai</strong> est un reliquat N-1, à partir du 1er mai → année courante.<br>Affichage identique dans le calendrier (vert + numéro scanné), distinction visible uniquement dans les compteurs Suivi RH.</div>
+          <div><strong style="color:var(--text);">🧮 Capital auto-calculé</strong> (Décret 2002-8) :<br>• <strong style="color:var(--text);">CA</strong> : 25 jours stricts.<br>• <strong style="color:var(--text);">CA-HP (Hors Période)</strong> : compte les CA pris hors 1er mai – 31 octobre. <strong style="color:var(--text);">5 à 7 jours → +1 CA-HP</strong>, <strong style="color:var(--text);">8 jours et + → +2 CA-HP</strong>.<br>• <strong style="color:var(--text);">Fractionnement</strong> : compte les fractions de CA de ≥5 jours ouvrés. <strong style="color:var(--text);">≥3 fractions → +1 jour</strong>, <strong style="color:var(--text);">≥4 fractions → +2 jours</strong>.<br>Le total se met à jour en temps réel à mesure que tu poses tes CA.</div>
           <div><strong style="color:var(--text);">⏱️ Transmissions cumulées</strong> = nb gardes (J + N + HS) × 0h25.</div>
           <div><strong style="color:var(--text);">👤 Mon profil</strong> (menu burger) — choisis ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Détermine le calcul des heures théoriques mensuelles.</div>
           <div><strong style="color:var(--text);">📄 Export PDF</strong> — récap annuel formel avec en-tête nom/prénom/poste, tous les compteurs, exportable pour la DRH.</div>
@@ -1443,6 +1444,7 @@
             <span><strong id="suivi-frac-posed">0</strong> posés</span>
             <span class="suivi-card-rest"><strong id="suivi-frac-rest">0</strong> restants</span>
           </div>
+          <div class="suivi-card-n1" id="suivi-frac-n1-line" style="display:none;"><strong id="suivi-frac-n1">0</strong> reliquat <span id="suivi-frac-n1-year">N-1</span></div>
         </div>
 
         <div class="suivi-card" data-color="rcv" id="suivi-card-rcv">
