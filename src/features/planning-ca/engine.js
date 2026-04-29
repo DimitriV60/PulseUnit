@@ -143,24 +143,29 @@
         return count;
     }
 
-    function _monthWorkdays(year, month) {
+    // untilDate (YYYY-MM-DD, optionnel) borne le décompte au jour donné inclus.
+    // Le DÉNOMINATEUR (annualW) reste l'année entière : la théorie annuelle est
+    // toujours répartie sur 12 mois, on borne juste le NUMÉRATEUR (jours déjà
+    // écoulés) pour obtenir une théorique « au prorata des jours passés ».
+    function _monthWorkdays(year, month, untilDate) {
         const feries = (typeof window !== 'undefined' && typeof window.getJoursFeries === 'function')
             ? window.getJoursFeries(year)
             : new Set();
         let count = 0;
         eachDayInMonth(year, month, (ds, dow) => {
+            if (untilDate && ds > untilDate) return;
             const isWE = (dow === 0 || dow === 6);
             if (!isWE && !feries.has(ds)) count++;
         });
         return count;
     }
 
-    function theoreticalHoursForMonth(year, month, profile) {
+    function theoreticalHoursForMonth(year, month, profile, untilDate) {
         const annual = ANNUAL_HOURS_BY_PROFILE[profile];
         if (annual === undefined) return 0;
         const annualW = _annualWorkdays(year);
         if (annualW === 0) return 0;
-        const monthW = _monthWorkdays(year, month);
+        const monthW = _monthWorkdays(year, month, untilDate);
         return annual * (monthW / annualW);
     }
 
@@ -168,11 +173,12 @@
     // Signature étendue avec `profile` (optionnel pour rétro-compatibilité) pour
     // appliquer la revalorisation des nuits chez les agents non-nuit-fixe.
 
-    function realizedHoursForMonth(year, month, planStates, joursFeries, profile) {
+    function realizedHoursForMonth(year, month, planStates, joursFeries, profile, untilDate) {
         const feries = joursFeries || new Set();
         const nightCoef = (NIGHT_REVALORIZATION[profile] !== undefined) ? NIGHT_REVALORIZATION[profile] : 1.0;
         let total = 0;
         eachDayInMonth(year, month, (ds) => {
+            if (untilDate && ds > untilDate) return;
             const st = stateOf(planStates, ds);
             const h = HOURS_BY_STATE_BASE[st];
             if (h === undefined) return;
@@ -185,18 +191,18 @@
 
     // --- 3. Débit/crédit mensuel ---------------------------------------------
 
-    function monthlyDebitCredit(year, month, planStates, joursFeries, profile) {
-        return realizedHoursForMonth(year, month, planStates, joursFeries, profile)
-             - theoreticalHoursForMonth(year, month, profile);
+    function monthlyDebitCredit(year, month, planStates, joursFeries, profile, untilDate) {
+        return realizedHoursForMonth(year, month, planStates, joursFeries, profile, untilDate)
+             - theoreticalHoursForMonth(year, month, profile, untilDate);
     }
 
     // --- 4. Tableau annuel débit/crédit + cumul ------------------------------
 
-    function yearlyDebitCreditTable(year, planStates, joursFeries, profile) {
+    function yearlyDebitCreditTable(year, planStates, joursFeries, profile, untilDate) {
         const rows = [];
         let cumul = 0;
         for (let m = 1; m <= 12; m++) {
-            const dc = monthlyDebitCredit(year, m, planStates, joursFeries, profile);
+            const dc = monthlyDebitCredit(year, m, planStates, joursFeries, profile, untilDate);
             cumul += dc;
             rows.push({
                 month: m,
@@ -211,9 +217,10 @@
 
     // --- 5. Heures de transmission -------------------------------------------
 
-    function transmissionHours(year, planStates) {
+    function transmissionHours(year, planStates, untilDate) {
         let gardes = 0;
         eachDayInYear(year, (ds) => {
+            if (untilDate && ds > untilDate) return;
             const st = stateOf(planStates, ds);
             if (TRANSMISSION_STATES.has(st)) gardes++;
         });
@@ -236,7 +243,7 @@
 
     // --- 6. Récap annuel pour export PDF -------------------------------------
 
-    function yearlyRecap(year, planStates, joursFeries, profile) {
+    function yearlyRecap(year, planStates, joursFeries, profile, untilDate) {
         const feries = joursFeries || new Set();
 
         const daysWorked = { jour: 0, nuit: 0, hs_j: 0, hs_n: 0, formation: 0, total: 0 };
@@ -257,6 +264,7 @@
         const DOW_KEYS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam']; // index = getDay()
 
         eachDayInYear(year, (ds) => {
+            if (untilDate && ds > untilDate) return;
             const st = stateOf(planStates, ds);
             const dt = new Date(ds + 'T12:00:00');
             const dow = dt.getDay(); // 0=dim, 6=sam
@@ -301,8 +309,8 @@
         // Totaux horaires annuels — passe `profile` pour la revalorisation nuits
         let totalRealized = 0, totalTheoretical = 0;
         for (let m = 1; m <= 12; m++) {
-            totalRealized    += realizedHoursForMonth(year, m, planStates, feries, profile);
-            totalTheoretical += theoreticalHoursForMonth(year, m, profile);
+            totalRealized    += realizedHoursForMonth(year, m, planStates, feries, profile, untilDate);
+            totalTheoretical += theoreticalHoursForMonth(year, m, profile, untilDate);
         }
 
         return {
@@ -315,7 +323,7 @@
             totalRealizedHours: totalRealized,
             totalTheoreticalHours: totalTheoretical,
             totalDebitCredit: totalRealized - totalTheoretical,
-            transmissions: transmissionHours(year, planStates)
+            transmissions: transmissionHours(year, planStates, untilDate)
         };
     }
 
@@ -335,7 +343,7 @@
 
     // --- 7. Périodes CA consécutives -----------------------------------------
 
-    function consecutiveCAPeriods(year, planStates, joursFeries) {
+    function consecutiveCAPeriods(year, planStates, joursFeries, untilDate) {
         const periods = [];
         let cur = null; // { start, end, lengthDays, lengthCalendarDays }
 
@@ -348,6 +356,7 @@
         };
 
         eachDayInYear(year, (ds) => {
+            if (untilDate && ds > untilDate) { flush(); return; }
             const st = stateOf(planStates, ds);
 
             if (CA_STATES.has(st)) {
@@ -377,7 +386,7 @@
 
     // --- 8. Soldes posés par poste -------------------------------------------
 
-    function soldesPostes(year, planStates) {
+    function soldesPostes(year, planStates, untilDate) {
         const counters = {
             ca: 0, can1: 0, ca_hp: 0, ca_hpn1: 0,
             frac: 0, fracn1: 0,
@@ -386,6 +395,7 @@
             rc: 0, rcn: 0
         };
         eachDayInYear(year, (ds) => {
+            if (untilDate && ds > untilDate) return;
             // On ne compte que les états explicitement saisis (pas les défauts résolus)
             const raw = planStates && planStates[ds];
             if (raw !== undefined && Object.prototype.hasOwnProperty.call(counters, raw)) {
