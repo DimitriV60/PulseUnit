@@ -1517,12 +1517,20 @@ window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
         start: p.start, end: p.end, days: p.lengthCalendarDays || p.lengthDays || 0
     }));
 
-    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { rcvBonus:0, djfCount:0 };
+    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0, rcvBonus:0, djfCount:0 };
+    // Mêmes formules que renderSuiviRH (cards compteurs) pour la cohérence affichage UI ↔ PDF :
+    //   - CA total : 25 strict (Décret 2002-8)
+    //   - CA-HP total : bonus auto-calculé 0/1/2 (≥5 → +1, ≥8 → +2)
+    //   - Fractionné total : bonus auto-calculé 0/1/2 (≥3 fractions → +1, ≥4 → +2)
+    //   - RCV total : bonus + soldes hérités N-1
     const caTotal   = _suiviTotalCAEntitled();
-    const caHpTotal = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
-    const fracTotal = ((planSoldes && planSoldes.frac) || 0) + ((planSoldes && planSoldes.fracn1) || 0);
+    const caHpTotal = stats.hsBonus || 0;
+    const fracTotal = stats.fracBonus || 0;
     const rcvTotal  = (stats.rcvBonus || 0) + ((planSoldes && planSoldes.rcv) || 0) + ((planSoldes && planSoldes.rcvn1) || 0);
     const rcvEligible = (profile !== 'nuit-fixe') && (stats.djfCount >= 20 || rcvTotal > 0);
+    // Théorique annuel contractuel (pour la ligne "Réalisées / Théoriques contractuelles" du PDF)
+    const theoAnnual = (typeof E.annualTheoreticalHours === 'function') ? E.annualTheoreticalHours(profile) : (recapEng.totalTheoreticalHours || 0);
+    recapAdapted.annualTheoreticalContract = theoAnnual;
 
     if (typeof showToast === 'function') showToast('📄 Génération du PDF...');
     try {
@@ -1532,10 +1540,11 @@ window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
             profile,
             recap: recapAdapted,
             debitCreditTable: dcTableAdapted,
-            ca:   { posed: (postes.ca || 0) + (postes.can1 || 0),         total: caTotal },
-            caHp: { posed: (postes.ca_hp || 0) + (postes.ca_hpn1 || 0),   total: caHpTotal },
-            frac: { posed: (postes.frac || 0) + (postes.fracn1 || 0),     total: fracTotal },
-            rcv:  { posed: (postes.rcv || 0) + (postes.rcvn1 || 0),       total: rcvTotal, eligible: rcvEligible },
+            // posed = année courante uniquement, n1 = reliquat N-1 (séparés comme dans l'UI)
+            ca:   { posed: postes.ca   || 0, n1: postes.can1    || 0, total: caTotal },
+            caHp: { posed: postes.ca_hp|| 0, n1: postes.ca_hpn1 || 0, total: caHpTotal },
+            frac: { posed: postes.frac || 0, n1: postes.fracn1  || 0, total: fracTotal },
+            rcv:  { posed: postes.rcv  || 0, n1: postes.rcvn1   || 0, total: rcvTotal, eligible: rcvEligible },
             consecutiveCA: consecAdapted
         });
         if (typeof showToast === 'function') showToast('✅ PDF téléchargé');
