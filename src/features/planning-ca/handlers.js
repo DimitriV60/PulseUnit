@@ -248,6 +248,62 @@ function _normalizeCAYearN1(dateStr, state, label) {
     return state === 'ca' ? 'can1' : 'ca_hpn1';
 }
 
+// Heuristique surplus : si le total de CA `ca` dans l'année dépasse le capital
+// annuel (25 + bonus HS + bonus Frac), le surplus chronologique en jan-mars
+// est nécessairement du reliquat N-1 — on promeut ca → can1 en partant des
+// dates les plus anciennes. Idem pour ca_hp si total dépasse soldeHP+soldeHPN1.
+function _autoPromoteCAByOverflow(year) {
+    const yearKey = String(year) + '-';
+    let promoted = 0;
+    // CA standard : capital = 25 + bonus
+    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0 };
+    const caLimit = 25 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
+    const cas = [];
+    for (const [d, st] of Object.entries(planStates)) {
+        if (!d.startsWith(yearKey)) continue;
+        if (st === 'ca') cas.push(d);
+    }
+    cas.sort();
+    if (cas.length > caLimit) {
+        const surplus = cas.length - caLimit;
+        for (let i = 0; i < surplus; i++) {
+            const d = cas[i];
+            if (parseInt(d.slice(5, 7), 10) > 3) break;
+            planStates[d] = 'can1';
+            // Adapter le préfixe du label scanné si présent (numéro conservé)
+            if (planLabels[d]) {
+                const m = String(planLabels[d]).match(/(\d+)\s*$/);
+                if (m) planLabels[d] = (window.PLAN_LABELS.can1 || 'CA-1') + ' ' + m[1];
+            }
+            promoted++;
+        }
+    }
+    // CA-HP : capital = soldes HP + HPN1 saisis
+    const hpLimit = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
+    if (hpLimit > 0) {
+        const cahps = [];
+        for (const [d, st] of Object.entries(planStates)) {
+            if (!d.startsWith(yearKey)) continue;
+            if (st === 'ca_hp') cahps.push(d);
+        }
+        cahps.sort();
+        if (cahps.length > hpLimit) {
+            const surplus = cahps.length - hpLimit;
+            for (let i = 0; i < surplus; i++) {
+                const d = cahps[i];
+                if (parseInt(d.slice(5, 7), 10) > 3) break;
+                planStates[d] = 'ca_hpn1';
+                if (planLabels[d]) {
+                    const m = String(planLabels[d]).match(/(\d+)\s*$/);
+                    if (m) planLabels[d] = (window.PLAN_LABELS.ca_hpn1 || 'CA-HP1') + ' ' + m[1];
+                }
+                promoted++;
+            }
+        }
+    }
+    return promoted;
+}
+
 function _applyScannedPlan(scanned, count, labels) {
     if (!scanned || count === 0) {
         showToast('Aucune donnée à importer');
@@ -265,6 +321,9 @@ function _applyScannedPlan(scanned, count, labels) {
         if (lbl) planLabels[date] = lbl;
         else delete planLabels[date];
     }
+    // Heuristique surplus : si total CA > capital annuel, surplus chronologique
+    // (jan-mars) promu en N-1
+    _autoPromoteCAByOverflow(planYear);
     savePlanData();
     if (typeof renderPlanCalendrier === 'function') renderPlanCalendrier();
     else if (typeof updatePlanStats === 'function') updatePlanStats();
@@ -319,8 +378,11 @@ async function loadUserPlan(userId) {
             const norm = _normalizeCAYearN1(d, st, lbl);
             if (norm !== st) { planStates[d] = norm; _changed++; }
         }
+        // + heuristique surplus (CA dépassant le capital annuel → reliquat N-1)
+        _changed += _autoPromoteCAByOverflow(planYear);
         if (_changed > 0) {
             localStorage.setItem('pulseunit_plan_states', JSON.stringify(planStates));
+            localStorage.setItem('pulseunit_plan_labels', JSON.stringify(planLabels));
             savePlanData();
         }
         if (userPlan.regime) {
@@ -357,33 +419,9 @@ function getPlanDayState(dateStr) {
     return getPlanDefaultState(dateStr);
 }
 
-// Numérotation auto des CA non labellisés — recalculé à chaque renderPlanCalendrier
-let _caNumberCache = { year: null, map: {} };
-function _rebuildCANumberCache(year) {
-    const buckets = { ca: [], can1: [], ca_hp: [], ca_hpn1: [] };
-    for (const [d, st] of Object.entries(planStates)) {
-        if (!d.startsWith(String(year) + '-')) continue;
-        if (buckets[st]) buckets[st].push(d);
-    }
-    const map = {};
-    Object.keys(buckets).forEach(bk => {
-        buckets[bk].sort();
-        buckets[bk].forEach((d, i) => { map[d] = i + 1; });
-    });
-    _caNumberCache = { year, map };
-}
-
 function planDayHTML(dayNum, state, dateStr) {
     const customLbl = dateStr && planLabels[dateStr];
-    let lbl = customLbl;
-    if (!lbl) {
-        lbl = window.PLAN_LABELS[state];
-        // Auto-numéro pour CA / CA-1 / CA-HP / CA-HP-1 (suffixe au label de base)
-        if ((state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1') && lbl) {
-            const n = _caNumberCache.map[dateStr];
-            if (n) lbl = lbl + ' ' + n;
-        }
-    }
+    const lbl = customLbl || window.PLAN_LABELS[state];
     if (!lbl) return String(dayNum);
     return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
 }
@@ -686,7 +724,6 @@ function renderPlanCalendrier() {
     document.getElementById('plan-year-label').textContent = planYear;
     const rcnLeg = document.getElementById('plan-legend-rcn');
     if (rcnLeg) rcnLeg.style.display = planRegime === 'nuit' ? 'inline' : 'none';
-    _rebuildCANumberCache(planYear);
     let html = '';
     for (let m = 0; m < 12; m++) html += renderPlanMonth(planYear, m);
     document.getElementById('plan-scroll').innerHTML = html;
