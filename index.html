@@ -1399,11 +1399,11 @@
       </div>
 
       <!-- Compteurs de congés -->
-      <div class="suivi-section-title">Compteurs de congés</div>
+      <div class="suivi-section-title">CA (Congés Annuels)</div>
       <div class="suivi-cards-grid">
         <div class="suivi-card" data-color="ca">
           <div class="suivi-card-head">
-            <span class="suivi-card-label">CA</span>
+            <span class="suivi-card-label">CA <span id="suivi-ca-year-lbl" style="opacity:0.7;font-weight:700;">année courante</span></span>
             <span class="suivi-card-total" id="suivi-ca-total">25</span>
           </div>
           <div class="suivi-card-bar"><div class="suivi-card-bar-fill" id="suivi-ca-bar" style="width:0%;"></div></div>
@@ -1413,10 +1413,13 @@
           </div>
           <div class="suivi-card-n1" id="suivi-ca-n1-line" style="display:none;"><strong id="suivi-ca-n1">0</strong> reliquat <span id="suivi-ca-n1-year">N-1</span></div>
         </div>
+      </div>
 
+      <div class="suivi-section-title">CA-HP (Hors Période)</div>
+      <div class="suivi-cards-grid">
         <div class="suivi-card" data-color="ca_hp">
           <div class="suivi-card-head">
-            <span class="suivi-card-label">CA-HP</span>
+            <span class="suivi-card-label">CA-HP <span id="suivi-cahp-year-lbl" style="opacity:0.7;font-weight:700;">année courante</span></span>
             <span class="suivi-card-total" id="suivi-cahp-total">0</span>
           </div>
           <div class="suivi-card-bar"><div class="suivi-card-bar-fill" id="suivi-cahp-bar" style="width:0%;"></div></div>
@@ -1426,7 +1429,10 @@
           </div>
           <div class="suivi-card-n1" id="suivi-cahp-n1-line" style="display:none;"><strong id="suivi-cahp-n1">0</strong> reliquat <span id="suivi-cahp-n1-year">N-1</span></div>
         </div>
+      </div>
 
+      <div class="suivi-section-title">Autres congés</div>
+      <div class="suivi-cards-grid">
         <div class="suivi-card" data-color="frac">
           <div class="suivi-card-head">
             <span class="suivi-card-label">Fractionné</span>

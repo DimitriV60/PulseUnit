@@ -442,18 +442,27 @@ function _rebuildCANumberCache(year) {
 function planDayHTML(dayNum, state, dateStr) {
     const customLbl = dateStr && planLabels[dateStr];
     const prefix = window.PLAN_LABELS[state];
+    const isCAFamily = (state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1');
     let lbl;
+    // 1. Label scanné AVEC un chiffre → on conserve le numéro, on rebrand le préfixe
+    //    selon l'état réel (un CA promu en CA-1 garde son numéro mais voit le préfixe synchronisé).
     if (customLbl) {
-        // Numéro extrait du label scanné, préfixe synchronisé avec l'état actuel
-        // (un CA promu en CA-1 garde son numéro mais voit son préfixe rebrandé).
         const m = String(customLbl).match(/(\d+)\s*$/);
-        lbl = (m && prefix) ? (prefix + ' ' + m[1]) : customLbl;
+        if (m && prefix) {
+            lbl = prefix + ' ' + m[1];
+        } else if (isCAFamily && prefix) {
+            // 2. Label scanné SANS chiffre (ex: "CA" tout court) → on bascule sur l'auto-num
+            const n = _caNumberCache.map[dateStr];
+            lbl = n ? (prefix + ' ' + n) : prefix;
+        } else {
+            lbl = customLbl;
+        }
+    } else if (isCAFamily && prefix) {
+        // 3. Aucun label scanné → préfixe + numéro auto chronologique
+        const n = _caNumberCache.map[dateStr];
+        lbl = n ? (prefix + ' ' + n) : prefix;
     } else {
         lbl = prefix;
-        if ((state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1') && prefix) {
-            const n = _caNumberCache.map[dateStr];
-            if (n) lbl = prefix + ' ' + n;
-        }
     }
     if (!lbl) return String(dayNum);
     return `<span style="font-size:0.7rem;line-height:1;">${dayNum}</span><span style="font-size:0.48rem;font-weight:900;line-height:1;">${lbl}</span>`;
@@ -1126,6 +1135,8 @@ window.renderSuiviRH = function renderSuiviRH() {
     }
     setText('suivi-profile-type', _suiviProfileLabel(profile));
     setText('suivi-year-lbl', year);
+    setText('suivi-ca-year-lbl', year);
+    setText('suivi-cahp-year-lbl', year);
 
     // Compteurs CA / CA-HP / Frac / RCV
     const postes = E.soldesPostes(year, planStates);
