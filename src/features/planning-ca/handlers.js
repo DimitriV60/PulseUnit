@@ -1139,27 +1139,30 @@ window.renderSuiviRH = function renderSuiviRH() {
         grid.innerHTML = rowsHtml;
     }
 
-    // CA consécutifs — règle GHPSO (Guide DRH 2014) confirmée par usage interne :
-    //   21 jours consécutifs max pour agents de jour (jour-fixe / alterné)
-    //   22 jours consécutifs max pour agents de nuit (nuit-fixe)
-    // Référence FPH : Décret 2002-8 du 4 janvier 2002 art. 4 (congés annuels FPH)
-    // + Loi 86-33 (fonction publique hospitalière) — durée fixée localement.
+    // CA consécutifs — la LOI prime sur la règle locale.
+    //   Loi (limite dure) : 31 jours consécutifs max — Décret 84-972 du 26 octobre 1984 art. 5,
+    //     applicable à la FPH par renvoi (Loi 86-33 + Décret 2002-8). Au-delà = illégal.
+    //   Préconisation locale GHPSO : 21j (jour-fixe / alterné) ou 22j (nuit-fixe) — non bloquante,
+    //     règle interne du service. Au-delà = légal mais hors préconisation interne.
+    const LEGAL_LIMIT = 31;
+    const localLimit = (profile === 'nuit-fixe') ? 22 : 21;
     const consec = E.consecutiveCAPeriods(year, planStates, fer);
-    const caLimit = (profile === 'nuit-fixe') ? 22 : 21;
     const consecEl = document.getElementById('suivi-consec');
     if (consecEl) {
         if (!consec || consec.length === 0) {
-            consecEl.innerHTML = `<div class="suivi-consec-empty">Aucune période de CA pour ${year}. Limite : ${caLimit} jours consécutifs (${profile === 'nuit-fixe' ? 'nuit fixe' : 'jour / alterné'}).</div>`;
+            consecEl.innerHTML = `<div class="suivi-consec-empty">Aucune période de CA pour ${year}.<br><span style="font-size:0.72rem;opacity:0.85;">Limite légale FPH : ${LEGAL_LIMIT}j · Préconisation interne ${profile === 'nuit-fixe' ? 'nuit' : 'jour'} : ${localLimit}j.</span></div>`;
         } else {
             consecEl.innerHTML = consec.map(p => {
                 const len = p.lengthCalendarDays || p.lengthDays || 0;
-                const overLimit = len > caLimit;
-                const warn = !overLimit && len >= caLimit - 2;
-                const cls = overLimit ? 'is-over' : (warn ? 'is-warn' : '');
-                const tag = overLimit ? `⚠️ Dépasse ${caLimit}j (limite ${profile === 'nuit-fixe' ? 'nuit' : 'jour'})` : (warn ? `⚠️ Proche limite ${caLimit}j` : '');
+                const overLegal = len > LEGAL_LIMIT;
+                const overLocal = !overLegal && len > localLimit;
+                const cls = overLegal ? 'is-over' : (overLocal ? 'is-warn' : '');
+                const tag = overLegal
+                    ? `⛔ Dépasse la limite légale ${LEGAL_LIMIT}j (Décret 84-972)`
+                    : (overLocal ? `⚠️ Au-delà de la préconisation interne ${localLimit}j (légal jusqu'à ${LEGAL_LIMIT}j)` : '');
                 return `<div class="suivi-consec-row ${cls}">
                     <span class="suivi-consec-dates">${p.start} → ${p.end}${tag ? ' · ' + tag : ''}</span>
-                    <span class="suivi-consec-len">${len}/${caLimit} j</span>
+                    <span class="suivi-consec-len">${len}/${LEGAL_LIMIT} j</span>
                 </div>`;
             }).join('');
         }
