@@ -408,6 +408,19 @@
   .settings-action-btn { width: 100%; padding: 12px 14px; border-radius: 12px; background: var(--surface-sec); border: 1px solid var(--border); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 12px; transition: background 0.18s, transform 0.12s; }
   .settings-action-btn:hover { background: var(--ide-glow); }
   .settings-action-btn:active { transform: scale(0.98); }
+
+  /* Profile — radio cards (type d'agent) */
+  .profile-type-card { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-sec); border: 2px solid var(--border); cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.12s; }
+  .profile-type-card:hover { background: var(--ide-glow); }
+  .profile-type-card:active { transform: scale(0.98); }
+  .profile-type-card.is-active { border-color: var(--brand-aqua); background: var(--ide-glow); }
+  .profile-type-icon { font-size: 1.4rem; flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--surface); }
+  .profile-type-card.is-active .profile-type-icon { background: rgba(64,206,234,0.18); }
+  .profile-type-text { display: flex; flex-direction: column; flex: 1; gap: 2px; }
+  .profile-type-title { font-size: 0.92rem; font-weight: 900; color: var(--text); line-height: 1.1; }
+  .profile-type-sub { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+  .profile-type-check { color: var(--brand-aqua); font-weight: 900; font-size: 1.1rem; opacity: 0; transition: opacity 0.18s; }
+  .profile-type-card.is-active .profile-type-check { opacity: 1; }
   .settings-action-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; border: 1px solid var(--border); }
 
   #data-empty-banner { display: none; position: sticky; top: 0; z-index: 60; padding: 10px 14px; background: linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08)); border-bottom: 1px solid rgba(245,158,11,0.4); color: var(--text); font-size: 0.82rem; font-weight: 800; align-items: center; gap: 10px; }
@@ -525,6 +538,85 @@
   /* Barre stats unifiée */
   .plan-stats-unified { display:flex; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
   .plan-stats-unified::-webkit-scrollbar { display:none; }
+
+  /* Onglets Calendrier / Suivi RH */
+  .plan-tabs { display:flex; gap:6px; padding:8px 12px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .plan-tab-btn { flex:1; padding:9px 10px; border-radius:9px; font-family:var(--font); font-weight:900; font-size:0.82rem; cursor:pointer; border:1.5px solid var(--border); background:var(--surface-sec); color:var(--text-muted); transition:all 0.18s; }
+  .plan-tab-btn:active { transform:scale(0.98); }
+  .plan-tab-btn.is-active { background:var(--brand-aqua); color:#fff; border-color:var(--brand-aqua); box-shadow:0 0 8px rgba(64,206,234,0.3); }
+  .plan-tab-content { flex:1; display:flex; flex-direction:column; min-height:0; }
+
+  /* Suivi RH layout */
+  .suivi-banner { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:14px; }
+  .suivi-banner-info { flex:1; min-width:0; }
+  .suivi-banner-name { font-size:1rem; font-weight:900; color:var(--text); line-height:1.1; }
+  .suivi-banner-meta { font-size:0.74rem; font-weight:700; color:var(--text-muted); margin-top:3px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .suivi-banner-dot { color:var(--border); }
+  .suivi-banner-actions { display:flex; gap:6px; flex-shrink:0; }
+  .suivi-btn-secondary, .suivi-btn-primary { padding:8px 11px; border-radius:9px; font-family:var(--font); font-weight:900; font-size:0.78rem; cursor:pointer; border:1.5px solid var(--border); background:var(--surface-sec); color:var(--text); transition:all 0.18s; }
+  .suivi-btn-secondary:active, .suivi-btn-primary:active { transform:scale(0.96); }
+  .suivi-btn-primary { background:var(--brand-aqua); color:#fff; border-color:var(--brand-aqua); }
+
+  .suivi-section-title { font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:18px 0 8px; }
+  .suivi-section-title:first-of-type { margin-top:6px; }
+
+  .suivi-cards-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+  .suivi-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; }
+  .suivi-card[data-color="ca"]    { border-left:3px solid var(--as); }
+  .suivi-card[data-color="ca_hp"] { border-left:3px solid #6366f1; }
+  .suivi-card[data-color="frac"]  { border-left:3px solid #ec4899; }
+  .suivi-card[data-color="rcv"]   { border-left:3px solid #10b981; }
+  .suivi-card.is-disabled { opacity:0.42; }
+  .suivi-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .suivi-card-label { font-size:0.78rem; font-weight:900; color:var(--text); letter-spacing:0.3px; }
+  .suivi-card-total { font-size:0.74rem; font-weight:800; color:var(--text-muted); background:var(--surface-sec); padding:2px 7px; border-radius:6px; }
+  .suivi-card-bar { width:100%; height:6px; background:var(--surface-sec); border-radius:3px; overflow:hidden; }
+  .suivi-card-bar-fill { height:100%; background:var(--brand-aqua); border-radius:3px; transition:width 0.32s; }
+  .suivi-card[data-color="ca"]    .suivi-card-bar-fill { background:var(--as); }
+  .suivi-card[data-color="ca_hp"] .suivi-card-bar-fill { background:#6366f1; }
+  .suivi-card[data-color="frac"]  .suivi-card-bar-fill { background:#ec4899; }
+  .suivi-card[data-color="rcv"]   .suivi-card-bar-fill { background:#10b981; }
+  .suivi-card-foot { display:flex; justify-content:space-between; font-size:0.74rem; color:var(--text-muted); font-weight:700; }
+  .suivi-card-foot strong { color:var(--text); font-weight:900; }
+  .suivi-card-rest strong { color:var(--brand-aqua); }
+  .suivi-card-rest.is-over strong { color:var(--crit); }
+  .suivi-card-rest.not-eligible { font-style:italic; color:var(--text-muted); }
+
+  .suivi-transmission { display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+  .suivi-transmission-icon { font-size:1.6rem; flex-shrink:0; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:rgba(64,206,234,0.14); }
+  .suivi-transmission-text { flex:1; min-width:0; }
+  .suivi-transmission-formula { font-size:0.78rem; color:var(--text-muted); font-weight:700; }
+  .suivi-transmission-total { font-size:1.1rem; font-weight:900; color:var(--brand-aqua); margin-top:1px; }
+
+  .suivi-debit-table { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .suivi-debit-summary { display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--border); }
+  .suivi-debit-summary-cell { background:var(--surface); padding:9px 8px; display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center; }
+  .suivi-debit-summary-label { font-size:0.66rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; }
+  .suivi-debit-summary-val { font-size:0.92rem; font-weight:900; color:var(--text); }
+  .suivi-debit-summary-val.is-positive { color:#10b981; }
+  .suivi-debit-summary-val.is-negative { color:var(--crit); }
+  .suivi-debit-grid { padding:6px 0; }
+  .suivi-debit-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:8px 12px; align-items:center; border-bottom:1px dashed var(--border); }
+  .suivi-debit-row:last-child { border-bottom:none; }
+  .suivi-debit-row-month { font-size:0.82rem; font-weight:800; color:var(--text); }
+  .suivi-debit-row-dc, .suivi-debit-row-cumul { font-size:0.78rem; font-weight:900; text-align:right; font-variant-numeric:tabular-nums; color:var(--text); }
+  .suivi-debit-row-dc.is-positive, .suivi-debit-row-cumul.is-positive { color:#10b981; }
+  .suivi-debit-row-dc.is-negative, .suivi-debit-row-cumul.is-negative { color:var(--crit); }
+  .suivi-debit-row-cumul { color:var(--text-muted); }
+
+  .suivi-consec { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .suivi-consec-empty { padding:14px; text-align:center; font-size:0.82rem; color:var(--text-muted); font-weight:700; }
+  .suivi-consec-row { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:var(--surface-sec); }
+  .suivi-consec-row.is-warn { border-left:3px solid #f59e0b; background:rgba(245,158,11,0.06); }
+  .suivi-consec-row.is-over { border-left:3px solid var(--crit); background:rgba(239,68,68,0.08); }
+  .suivi-consec-dates { flex:1; font-size:0.78rem; color:var(--text); font-weight:800; }
+  .suivi-consec-len { font-size:0.74rem; color:var(--text-muted); font-weight:700; background:var(--surface); padding:3px 9px; border-radius:6px; }
+  .suivi-consec-row.is-over .suivi-consec-len { background:rgba(239,68,68,0.18); color:var(--crit); }
+
+  .suivi-recap-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+  .suivi-recap-cell { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:9px 10px; display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center; }
+  .suivi-recap-cell-val { font-size:1.05rem; font-weight:900; color:var(--text); line-height:1; }
+  .suivi-recap-cell-lbl { font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; }
   .psu { display:flex; flex-direction:column; align-items:center; padding:8px 10px; min-width:52px; border-right:1px solid var(--border); flex-shrink:0; }
   .psu:last-child { border-right:none; }
   .psu-val { font-size:1.05rem; font-weight:900; color:var(--text); line-height:1; }
@@ -946,6 +1038,7 @@
       <div style="flex: 1; min-height: 16px;"></div>
       <div class="side-menu-section">Compte</div>
       <a href="#" class="side-link side-link-accent" onclick="openAlphaModal();"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" onclick="openProfile();"><span class="side-link-icon">👤</span><span>Mon profil</span><span class="side-link-arrow">›</span></a>
       <a href="#" class="side-link" onclick="openSettings();"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
       <a href="#" class="side-link side-link-danger" onclick="closeSideMenu(); logoutUser();" data-keep-menu="false"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
     </div>
@@ -1018,6 +1111,69 @@
       </div>
 
       <button class="btn-primary" style="margin-top:14px;" onclick="document.getElementById('settings-modal').style.display='none'">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Modale : Mon profil (type d'agent pour calcul d'heures théoriques) -->
+  <div id="profile-modal" role="dialog" aria-modal="true" aria-label="Mon profil" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px); padding:16px;">
+    <div class="modal-content" style="width:min(440px,94vw); padding:22px; max-height:92vh; overflow-y:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <div style="font-size:1.15rem; font-weight:900; color:var(--text);">👤 Mon profil</div>
+        <button onclick="closeProfile()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
+      </div>
+      <div style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-bottom:14px;">Le type d'agent détermine le calcul des heures théoriques mensuelles (Guide DRH GHPSO 2014).</div>
+
+      <!-- Identité (lecture seule) -->
+      <div style="background:var(--surface-sec); border-radius:12px; padding:14px; border:1px solid var(--border); margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Identité</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Nom</span>
+            <span id="profile-name" style="font-size:0.92rem; color:var(--text); font-weight:900;">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Fonction</span>
+            <span id="profile-role" style="font-size:0.88rem; color:var(--brand-aqua); font-weight:900; letter-spacing:0.5px;">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type d'agent -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Type d'agent</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label id="profile-type-card-jour-fixe" class="profile-type-card" for="profile-type-jour-fixe">
+            <input type="radio" name="profile-type" id="profile-type-jour-fixe" value="jour-fixe" onchange="setAgentType('jour-fixe')" style="position:absolute; opacity:0;">
+            <span class="profile-type-icon">☀️</span>
+            <span class="profile-type-text">
+              <span class="profile-type-title">Jour fixe</span>
+              <span class="profile-type-sub">35h hebdo · repos fixes</span>
+            </span>
+            <span class="profile-type-check">✓</span>
+          </label>
+          <label id="profile-type-card-nuit-fixe" class="profile-type-card" for="profile-type-nuit-fixe">
+            <input type="radio" name="profile-type" id="profile-type-nuit-fixe" value="nuit-fixe" onchange="setAgentType('nuit-fixe')" style="position:absolute; opacity:0;">
+            <span class="profile-type-icon">🌙</span>
+            <span class="profile-type-text">
+              <span class="profile-type-title">Nuit fixe</span>
+              <span class="profile-type-sub">32h30 hebdo · ≥90% nuit</span>
+            </span>
+            <span class="profile-type-check">✓</span>
+          </label>
+          <label id="profile-type-card-alterne" class="profile-type-card" for="profile-type-alterne">
+            <input type="radio" name="profile-type" id="profile-type-alterne" value="alterne" onchange="setAgentType('alterne')" style="position:absolute; opacity:0;">
+            <span class="profile-type-icon">🔄</span>
+            <span class="profile-type-text">
+              <span class="profile-type-title">Alterné</span>
+              <span class="profile-type-sub">Jour + nuit · base 35h</span>
+            </span>
+            <span class="profile-type-check">✓</span>
+          </label>
+        </div>
+        <div id="profile-type-help" style="margin-top:10px; font-size:0.74rem; color:var(--text-muted); font-weight:700; line-height:1.4; padding:8px 10px; background:var(--surface-sec); border-radius:8px; border-left:3px solid var(--brand-aqua);"></div>
+      </div>
+
+      <button class="btn-primary" style="width:100%;" onclick="closeProfile()">Fermer</button>
     </div>
   </div>
 
@@ -1631,10 +1787,13 @@
           <span style="font-size:1.05rem;">📅</span><span style="flex:1;">Planning & Congés (CA)</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div>Calendrier annuel personnel : pose tes congés, repos, formations, heures supp.</div>
-          <div><strong style="color:var(--text);">Régime ☀ Jour</strong> ou <strong style="color:var(--text);">☾ Nuit</strong> — calcul automatique (max 21j consécutifs jour / 22j nuit, fractionnement, RCV). Coche les <strong style="color:var(--text);">DJF</strong> travaillés pour le RCV.</div>
-          <div><strong style="color:var(--text);">Heures supp.</strong> : <span style="color:#a855f7; font-weight:800;">HS</span> · <span style="color:#eab308; font-weight:800;">HSJ</span> (jour) · <span style="color:#818cf8; font-weight:800;">HSN</span> (nuit). Toutes comptent dans les DJF.</div>
-          <div style="font-size:0.74rem; opacity:0.85;">Données strictement locales sur l'appareil. Bouton ↺ pour réinitialiser l'année.</div>
+          <div>Calendrier annuel personnel + onglet <strong style="color:var(--text);">📊 Suivi RH</strong> avec compteurs CA, débit/crédit mensuel, transmissions et export PDF.</div>
+          <div><strong style="color:var(--text);">📅 Onglet Calendrier</strong> — pose tes congés, repos, formations, heures supp. <strong style="color:var(--text);">📷 Scan</strong> ton planning Digihops par photo (Mistral Pixtral Vision).</div>
+          <div><strong style="color:var(--text);">📊 Onglet Suivi RH</strong> — 4 compteurs (CA, CA-HP, Fractionné, RCV) avec barre de progression posés/restants. Tableau débit/crédit style Digihops. Alertes CA consécutifs &gt; 31j. Aperçu annuel (jours travaillés, fériés, week-ends pour prime).</div>
+          <div><strong style="color:var(--text);">⏱️ Transmissions cumulées</strong> = nb gardes (J + N + HS) × 0h25.</div>
+          <div><strong style="color:var(--text);">👤 Mon profil</strong> (menu burger) — choisis ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Détermine le calcul des heures théoriques mensuelles.</div>
+          <div><strong style="color:var(--text);">📄 Export PDF</strong> — récap annuel formel avec en-tête nom/prénom/poste, tous les compteurs, exportable pour la DRH.</div>
+          <div style="font-size:0.74rem; opacity:0.85;">Données synchronisées Firestore. Bouton ↺ pour réinitialiser l'année.</div>
         </div>
       </details>
 
@@ -1776,7 +1935,10 @@
 <script src="src/features/presence/handlers.js"></script>
 <script src="src/features/search/handlers.js"></script>
 <script src="src/features/conges-calendar/handlers.js"></script>
+<script src="src/features/planning-ca/engine.js"></script>
+<script src="src/features/planning-ca/pdf-export.js"></script>
 <script src="src/features/planning-ca/handlers.js"></script>
+<script src="src/features/profile/handlers.js"></script>
 <script src="src/features/admin/handlers.js"></script>
 <script src="src/features/auth/handlers.js"></script>
 <script src="src/features/settings/handlers.js"></script>
@@ -1923,6 +2085,13 @@
       <input type="file" id="plan-scan-input" accept="image/*" style="display:none;" onchange="scanPlanningPhoto(event)">
     </div>
 
+    <!-- Onglets : Calendrier | Suivi RH -->
+    <div class="plan-tabs">
+      <button id="plan-tab-btn-calendar" class="plan-tab-btn is-active" onclick="switchPlanTab('calendar')">📅 Calendrier</button>
+      <button id="plan-tab-btn-suivi" class="plan-tab-btn" onclick="switchPlanTab('suivi')">📊 Suivi RH</button>
+    </div>
+
+    <div id="plan-tab-calendar" class="plan-tab-content">
 
     <!-- Légende collapsible -->
     <div class="plan-legend-toggle" onclick="togglePlanLegend()">
@@ -2135,6 +2304,123 @@
         <div class="psu-lbl">Total CA</div>
       </div>
     </div>
+
+    </div><!-- /#plan-tab-calendar -->
+
+    <!-- ──────── ONGLET SUIVI RH ──────── -->
+    <div id="plan-tab-suivi" class="plan-tab-content" style="display:none; overflow-y:auto; padding:14px; flex:1;">
+
+      <!-- Bandeau profil + actions -->
+      <div class="suivi-banner">
+        <div class="suivi-banner-info">
+          <div class="suivi-banner-name" id="suivi-name">—</div>
+          <div class="suivi-banner-meta">
+            <span id="suivi-role">—</span>
+            <span class="suivi-banner-dot">•</span>
+            <span id="suivi-profile-type">Profil non défini</span>
+            <span class="suivi-banner-dot">•</span>
+            <span id="suivi-year-lbl">2026</span>
+          </div>
+        </div>
+        <div class="suivi-banner-actions">
+          <button class="suivi-btn-secondary" onclick="openProfile()" title="Modifier le profil">⚙️ Profil</button>
+          <button class="suivi-btn-primary" onclick="exportSuiviRHPdf()" title="Exporter récap PDF">📄 PDF</button>
+        </div>
+      </div>
+
+      <!-- Compteurs de congés -->
+      <div class="suivi-section-title">Compteurs de congés</div>
+      <div class="suivi-cards-grid">
+        <div class="suivi-card" data-color="ca">
+          <div class="suivi-card-head">
+            <span class="suivi-card-label">CA</span>
+            <span class="suivi-card-total" id="suivi-ca-total">25</span>
+          </div>
+          <div class="suivi-card-bar"><div class="suivi-card-bar-fill" id="suivi-ca-bar" style="width:0%;"></div></div>
+          <div class="suivi-card-foot">
+            <span><strong id="suivi-ca-posed">0</strong> posés</span>
+            <span class="suivi-card-rest"><strong id="suivi-ca-rest">25</strong> restants</span>
+          </div>
+        </div>
+
+        <div class="suivi-card" data-color="ca_hp">
+          <div class="suivi-card-head">
+            <span class="suivi-card-label">CA-HP</span>
+            <span class="suivi-card-total" id="suivi-cahp-total">0</span>
+          </div>
+          <div class="suivi-card-bar"><div class="suivi-card-bar-fill" id="suivi-cahp-bar" style="width:0%;"></div></div>
+          <div class="suivi-card-foot">
+            <span><strong id="suivi-cahp-posed">0</strong> posés</span>
+            <span class="suivi-card-rest"><strong id="suivi-cahp-rest">0</strong> restants</span>
+          </div>
+        </div>
+
+        <div class="suivi-card" data-color="frac">
+          <div class="suivi-card-head">
+            <span class="suivi-card-label">Fractionné</span>
+            <span class="suivi-card-total" id="suivi-frac-total">0</span>
+          </div>
+          <div class="suivi-card-bar"><div class="suivi-card-bar-fill" id="suivi-frac-bar" style="width:0%;"></div></div>
+          <div class="suivi-card-foot">
+            <span><strong id="suivi-frac-posed">0</strong> posés</span>
+            <span class="suivi-card-rest"><strong id="suivi-frac-rest">0</strong> restants</span>
+          </div>
+        </div>
+
+        <div class="suivi-card" data-color="rcv" id="suivi-card-rcv">
+          <div class="suivi-card-head">
+            <span class="suivi-card-label">RCV</span>
+            <span class="suivi-card-total" id="suivi-rcv-total">0</span>
+          </div>
+          <div class="suivi-card-bar"><div class="suivi-card-bar-fill" id="suivi-rcv-bar" style="width:0%;"></div></div>
+          <div class="suivi-card-foot">
+            <span><strong id="suivi-rcv-posed">0</strong> posés</span>
+            <span class="suivi-card-rest" id="suivi-rcv-rest-wrap"><strong id="suivi-rcv-rest">0</strong> restants</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heures de transmission -->
+      <div class="suivi-section-title">Transmissions cumulées</div>
+      <div class="suivi-transmission">
+        <div class="suivi-transmission-icon">🕐</div>
+        <div class="suivi-transmission-text">
+          <div class="suivi-transmission-formula" id="suivi-transm-formula">— gardes × 0h25</div>
+          <div class="suivi-transmission-total" id="suivi-transm-total">—</div>
+        </div>
+      </div>
+
+      <!-- Tableau débit/crédit mensuel (style Digihops) -->
+      <div class="suivi-section-title">Débit / Crédit mensuel</div>
+      <div class="suivi-debit-table">
+        <div class="suivi-debit-summary">
+          <div class="suivi-debit-summary-cell">
+            <span class="suivi-debit-summary-label">Théoriques</span>
+            <span class="suivi-debit-summary-val" id="suivi-theo-total">—</span>
+          </div>
+          <div class="suivi-debit-summary-cell">
+            <span class="suivi-debit-summary-label">Réalisées</span>
+            <span class="suivi-debit-summary-val" id="suivi-real-total">—</span>
+          </div>
+          <div class="suivi-debit-summary-cell">
+            <span class="suivi-debit-summary-label">Solde annuel</span>
+            <span class="suivi-debit-summary-val" id="suivi-dc-total">—</span>
+          </div>
+        </div>
+        <div class="suivi-debit-grid" id="suivi-debit-grid"></div>
+      </div>
+
+      <!-- CA consécutifs -->
+      <div class="suivi-section-title">CA consécutifs</div>
+      <div class="suivi-consec" id="suivi-consec">
+        <div class="suivi-consec-empty">Aucune période de CA pour cette année.</div>
+      </div>
+
+      <!-- Récap rapide -->
+      <div class="suivi-section-title">Aperçu annuel</div>
+      <div class="suivi-recap-grid" id="suivi-recap-grid"></div>
+
+    </div><!-- /#plan-tab-suivi -->
   </div>
 
   <!-- ═══ NORMES DE RÉFÉRENCE ═══ -->

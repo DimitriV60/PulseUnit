@@ -197,6 +197,7 @@ window.registerUser = async function registerUser() {
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     await loadUserPlan(rosterId);
+    if (typeof window.loadUserProfile === 'function') await window.loadUserProfile(rosterId);
     if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
     if (typeof window.loadNotifs === 'function') await window.loadNotifs();
     if (typeof window.loadMessages === 'function') await window.loadMessages();
@@ -287,6 +288,7 @@ window.loginUser = async function loginUser() {
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
     await loadUserPlan(userId);
+    if (typeof window.loadUserProfile === 'function') await window.loadUserProfile(userId);
     if (typeof window.loadBedNotes === 'function') await window.loadBedNotes();
     if (typeof window.loadNotifs === 'function') await window.loadNotifs();
     if (typeof window.loadMessages === 'function') await window.loadMessages();
