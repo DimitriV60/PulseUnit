@@ -44,14 +44,22 @@ L'image montre LE planning de l'utilisateur connecté (calendrier mensuel ou lis
 RÈGLE CRITIQUE — balayage systématique :
 Pour CHAQUE jour numéroté visible dans le calendrier (du 1 au 28/30/31), examine la cellule sous le numéro. Si elle contient un texte ou un horaire, ajoute une entrée. N'omets aucun jour. Les cellules vides ne sont pas ajoutées, mais doivent être vérifiées une à une.
 
-RÈGLE NUMÉROTATION (très importante) :
-Les CA sont souvent NUMÉROTÉS dans Digihops avec un espace + chiffre (ex. "CA 1", "CA 2", "CA-HP 1", "CA-HP 2"). Ce chiffre est juste un numéro d'ordre dans la séquence de CA, à IGNORER pour le mapping.
-- "CA 1", "CA 2", "CA 3"... → ca (jamais can1 — pas de compteur N-1 ici)
-- "CA-HP 1", "CA-HP 2", "CA-HP 3"... → ca_hp (jamais ca_hpn1)
-À l'inverse, un TIRET + 1 (sans espace) signifie le compteur N-1 :
-- "CA-1" → can1
-- "CA-HP-1" → ca_hpn1
-- "HP-1" → hpn1
+RÈGLE NUMÉROTATION (TRÈS IMPORTANTE — lecture sur 2 lignes) :
+Sur Digihops mobile, les CA sont écrits sur DEUX LIGNES dans la cellule :
+- Ligne 1 : le code (CA, CA-HP, HP, HS, RCV, FR…)
+- Ligne 2 : le numéro de séquence (1, 2, 3 … 25, 26 …)
+Tu DOIS lire ces deux lignes et les concaténer avec un espace dans le label.
+Exemples sur 2 lignes :
+  CA          CA          CA-HP        HP
+  22          25          3            7
+→ labels = "CA 22", "CA 25", "CA-HP 3", "HP 7" — JAMAIS juste "CA" sans le numéro.
+
+Le numéro est TOUJOURS visible juste en dessous du code (parfois en rouge ou plus petit). Ne JAMAIS l'omettre.
+
+Mapping état (ignore le numéro pour le state, garde-le pour le label) :
+- "CA N" (espace + chiffre, ex CA 22) → state=ca, label="CA 22"
+- "CA-HP N" → state=ca_hp, label="CA-HP N"
+- TIRET + 1 sans espace = compteur N-1 explicite : "CA-1" → can1, "CA-HP-1" → ca_hpn1, "HP-1" → hpn1
 
 Mapping codes → état JSON :
 - "20:00 / 08:00" (cellule rose saumon) → nuit

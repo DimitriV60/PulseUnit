@@ -233,23 +233,15 @@ window.scanPlanningPhoto = async function scanPlanningPhoto(ev) {
     _scanInProgress = false;
 };
 
-// Règle Digihops/FPH : tout CA tombant entre le 1er janvier et le 31 mars est
-// par défaut un reliquat de l'année N-1 (les agents ont jusqu'au 31/03 pour
-// poser les CA non pris l'année précédente).
+// Règle FPH : tout CA tombant entre le 1er janvier et le 31 mars est un
+// reliquat de l'année N-1 (les agents ont jusqu'au 31/03 pour poser les CA
+// non pris l'année précédente). Sur Digihops, la numérotation reprend la
+// séquence N-1 (ex: CA 22, 23, 24, 25 en janvier = fin de séquence 2025).
 // → ca → can1, ca_hp → ca_hpn1
-// EXCEPTION : si le label scanné contient un numéro 1-24, on considère que c'est
-// déjà un CA de l'année courante (Digihops les renumérote dès le 1er janvier).
-function _normalizeCAYearN1(dateStr, state, label) {
+function _normalizeCAYearN1(dateStr, state, _label) {
     if (state !== 'ca' && state !== 'ca_hp') return state;
     const month = parseInt(dateStr.slice(5, 7), 10);
     if (!month || month > 3) return state;
-    if (label) {
-        const m = String(label).match(/(\d+)\s*$/);
-        if (m) {
-            const n = parseInt(m[1], 10);
-            if (Number.isFinite(n) && n >= 1 && n < 25) return state; // 1-24 = année courante
-        }
-    }
     return state === 'ca' ? 'can1' : 'ca_hpn1';
 }
 
