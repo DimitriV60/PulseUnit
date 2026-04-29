@@ -600,6 +600,8 @@
   .suivi-recap-row strong { color:var(--text); font-weight:900; font-variant-numeric:tabular-nums; }
   .suivi-recap-row.is-total { padding-top:6px; margin-top:2px; border-top:1px dashed var(--border); color:var(--text); font-weight:900; }
   .suivi-recap-row.is-total strong { color:var(--brand-aqua); }
+  .suivi-recap-row.is-sub { font-size:0.72rem; opacity:0.8; padding:1px 0 1px 8px; font-weight:600; margin-top:-2px; }
+  .suivi-recap-row.is-sub strong { color:var(--text-muted); font-weight:800; }
   .suivi-recap-block-wide { grid-column:1 / -1; }
   .suivi-dow-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; }
   .suivi-dow-cell { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:7px 4px; background:var(--surface-sec); border:1px solid var(--border); border-radius:8px; }
