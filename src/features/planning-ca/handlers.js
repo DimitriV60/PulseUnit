@@ -1334,10 +1334,10 @@ window.renderSuiviRH = function renderSuiviRH() {
     if (recapGrid) {
         const dw = recap.daysWorked || {};
         const off = recap.daysOff || {};
-        const samedis = (recap.weekendDaysWorked && recap.weekendDaysWorked.samedis) || 0;
         const dimanches = (recap.weekendDaysWorked && recap.weekendDaysWorked.dimanches) || 0;
         const totalRealized = recap.totalRealizedHours || 0;
         const totalWorkedDays = (dw.jour || 0) + (dw.nuit || 0) + (dw.hs_j || 0) + (dw.hs_n || 0) + (dw.formation || 0);
+        const dow = recap.workedByDow || { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 };
 
         recapGrid.innerHTML = `
             <div class="suivi-recap-block">
@@ -1375,10 +1375,20 @@ window.renderSuiviRH = function renderSuiviRH() {
                 <div class="suivi-recap-block-title">Primes & spécial</div>
                 <div class="suivi-recap-rows">
                     <div class="suivi-recap-row"><span>Fériés travaillés</span><strong>${recap.feriesWorked || 0}</strong></div>
-                    <div class="suivi-recap-row"><span>Samedis travaillés</span><strong>${samedis}</strong></div>
-                    <div class="suivi-recap-row"><span>Dimanches travaillés</span><strong>${dimanches}</strong></div>
-                    <div class="suivi-recap-row is-total"><span>Total WE (prime)</span><strong>${samedis + dimanches}</strong></div>
+                    <div class="suivi-recap-row is-total"><span>Dimanches travaillés (prime)</span><strong>${dimanches}</strong></div>
                     <div class="suivi-recap-row"><span>Total heures réalisées</span><strong>${E.formatHours(totalRealized)}</strong></div>
+                </div>
+            </div>
+            <div class="suivi-recap-block suivi-recap-block-wide">
+                <div class="suivi-recap-block-title">Jours travaillés par jour de la semaine</div>
+                <div class="suivi-dow-grid">
+                    <div class="suivi-dow-cell"><span class="suivi-dow-lbl">L</span><strong>${dow.lun || 0}</strong></div>
+                    <div class="suivi-dow-cell"><span class="suivi-dow-lbl">M</span><strong>${dow.mar || 0}</strong></div>
+                    <div class="suivi-dow-cell"><span class="suivi-dow-lbl">M</span><strong>${dow.mer || 0}</strong></div>
+                    <div class="suivi-dow-cell"><span class="suivi-dow-lbl">J</span><strong>${dow.jeu || 0}</strong></div>
+                    <div class="suivi-dow-cell"><span class="suivi-dow-lbl">V</span><strong>${dow.ven || 0}</strong></div>
+                    <div class="suivi-dow-cell"><span class="suivi-dow-lbl">S</span><strong>${dow.sam || 0}</strong></div>
+                    <div class="suivi-dow-cell is-prime"><span class="suivi-dow-lbl">D</span><strong>${dow.dim || 0}</strong></div>
                 </div>
             </div>
         `;
@@ -1428,7 +1438,8 @@ window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
         annualDebitCredit: recapEng.totalDebitCredit || 0,
         feriesWorked: recapEng.feriesWorked || 0,
         saturdaysWorked: (recapEng.weekendDaysWorked && recapEng.weekendDaysWorked.samedis) || 0,
-        sundaysWorked: (recapEng.weekendDaysWorked && recapEng.weekendDaysWorked.dimanches) || 0
+        sundaysWorked: (recapEng.weekendDaysWorked && recapEng.weekendDaysWorked.dimanches) || 0,
+        workedByDow: recapEng.workedByDow || { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 }
     };
 
     // Si le tableau Digihops a été importé pour cette année → utilise ces valeurs

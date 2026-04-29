@@ -369,9 +369,8 @@
     var r = recap || {};
     var counts = r.counts || {};
     var feriesTravailles = r.feriesWorked !== undefined ? r.feriesWorked : (r.holidaysWorked || 0);
-    var samedis = r.saturdaysWorked || 0;
     var dimanches = r.sundaysWorked || 0;
-    var totalWeekend = samedis + dimanches;
+    var dow = r.workedByDow || { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 };
     var nbGardes = (counts.jour || 0) + (counts.nuit || 0);
     var transmTotal = _fmtTransmission(nbGardes);
 
@@ -381,11 +380,19 @@
 
     doc.text('Fériés travaillés : ' + feriesTravailles, 19, y);
     y += 5;
-    doc.text('Week-ends travaillés : ' + samedis + ' samedi(s) + ' + dimanches +
-             ' dimanche(s) = ' + totalWeekend + ' jour(s) (prime week-end)', 19, y);
+    doc.text('Dimanches travaillés (prime) : ' + dimanches, 19, y);
     y += 5;
     doc.text('Heures de transmission cumulées : ' + nbGardes +
              ' gardes × 0h25 = ' + transmTotal, 19, y);
+    y += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Jours travaillés par jour de la semaine :', 19, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text('L : ' + (dow.lun || 0) + '   M : ' + (dow.mar || 0) +
+             '   M : ' + (dow.mer || 0) + '   J : ' + (dow.jeu || 0) +
+             '   V : ' + (dow.ven || 0) + '   S : ' + (dow.sam || 0) +
+             '   D : ' + (dow.dim || 0), 19, y);
     y += 6;
 
     return y;

@@ -252,6 +252,9 @@
         let feriesWorked = 0;
         const weekendsSet = new Set(); // clés "YYYY-Www" pour dédupliquer
         let samedis = 0, dimanches = 0;
+        // Décompte par jour de la semaine (Lundi → Dimanche), tout état "travaillé"
+        const workedByDow = { lun:0, mar:0, mer:0, jeu:0, ven:0, sam:0, dim:0 };
+        const DOW_KEYS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam']; // index = getDay()
 
         eachDayInYear(year, (ds) => {
             const st = stateOf(planStates, ds);
@@ -272,6 +275,11 @@
             }
             // Note: 'hs' brut (sans suffixe j/n) n'est pas dans daysWorked détaillé ;
             // il existe mais reste rare. On le compte dans total via WORKED_STATES.
+
+            // Décompte par jour de la semaine (uniquement gardes/HS/formation/férié travaillé)
+            if (WORKED_STATES.has(st) || st === 'ferie') {
+                workedByDow[DOW_KEYS[dow]]++;
+            }
 
             // Fériés travaillés : agent a un état "travaillé" un jour férié,
             // OU a explicitement coché 'ferie' (qui signifie "férié travaillé" dans PulseUnit)
@@ -303,6 +311,7 @@
             feriesWorked,
             weekendsWorked: weekendsSet.size,
             weekendDaysWorked: { samedis, dimanches },
+            workedByDow,
             totalRealizedHours: totalRealized,
             totalTheoreticalHours: totalTheoretical,
             totalDebitCredit: totalRealized - totalTheoretical,
