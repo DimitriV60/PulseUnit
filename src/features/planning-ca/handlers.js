@@ -737,8 +737,265 @@ window.resetPlanMonth = function(mKey) {
 
 window.openPlanningCA = function openPlanningCA() {
     document.getElementById('planning-ca-view').style.display = 'flex';
-    setTimeout(() => { renderPlanCalendrier(); initPlanSoldesUI(); }, 30);
+    setTimeout(() => { renderPlanCalendrier(); initPlanSoldesUI(); switchPlanTab('calendar'); }, 30);
 };
 window.closePlanningCA = function closePlanningCA() {
     document.getElementById('planning-ca-view').style.display = 'none';
+};
+
+// ============================================================================
+// Onglets Calendrier / Suivi RH
+// ============================================================================
+
+window.switchPlanTab = function switchPlanTab(name) {
+    const tabs = ['calendar', 'suivi'];
+    if (!tabs.includes(name)) return;
+    tabs.forEach(t => {
+        const content = document.getElementById('plan-tab-' + t);
+        const btn = document.getElementById('plan-tab-btn-' + t);
+        const isActive = (t === name);
+        if (content) content.style.display = isActive ? (t === 'calendar' ? 'flex' : 'block') : 'none';
+        if (btn) btn.classList.toggle('is-active', isActive);
+    });
+    if (name === 'suivi') renderSuiviRH();
+};
+
+// ============================================================================
+// Suivi RH — moteur de rendu
+// ============================================================================
+
+function _suiviProfileType() {
+    // Source de vérité : window.userProfile.agentType (cf. profile/handlers.js)
+    // Fallback sur planRegime ('jour'/'nuit') puis 'jour-fixe' par défaut
+    if (typeof getProfileAgentType === 'function') return getProfileAgentType();
+    if (planRegime === 'nuit') return 'nuit-fixe';
+    return 'jour-fixe';
+}
+
+function _suiviProfileLabel(t) {
+    return ({ 'jour-fixe':'Jour fixe', 'nuit-fixe':'Nuit fixe', 'alterne':'Alterné' })[t] || '—';
+}
+
+function _suiviTotalCAEntitled() {
+    // Capital théorique CA = 25 + bonus HS + bonus Frac + soldes N-1 reportés
+    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { hsBonus:0, fracBonus:0 };
+    const caN1 = (planSoldes && planSoldes.caN1) || 0;
+    return 25 + caN1 + (stats.hsBonus || 0) + (stats.fracBonus || 0);
+}
+
+window.renderSuiviRH = function renderSuiviRH() {
+    if (typeof window.PlanEngine !== 'object') return;
+    const E = window.PlanEngine;
+    const year = planYear;
+    const profile = _suiviProfileType();
+    const fer = (typeof getJoursFeries === 'function') ? getJoursFeries(year) : new Set();
+
+    // Bandeau identité
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    if (currentUser) {
+        setText('suivi-name', `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || '—');
+        setText('suivi-role', (currentUser.role || '').toUpperCase() || '—');
+    } else {
+        setText('suivi-name', '—');
+        setText('suivi-role', '—');
+    }
+    setText('suivi-profile-type', _suiviProfileLabel(profile));
+    setText('suivi-year-lbl', year);
+
+    // Compteurs CA / CA-HP / Frac / RCV
+    const postes = E.soldesPostes(year, planStates);
+    const caTotal   = _suiviTotalCAEntitled();
+    const caHpTotal = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
+    const fracTotal = ((planSoldes && planSoldes.frac) || 0) + ((planSoldes && planSoldes.fracn1) || 0);
+    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { rcvBonus:0, djfCount:0 };
+    const rcvBonus = stats.rcvBonus || 0;
+    const rcvTotal = rcvBonus + ((planSoldes && planSoldes.rcv) || 0) + ((planSoldes && planSoldes.rcvn1) || 0);
+    const rcvEligible = (profile !== 'nuit-fixe') && (stats.djfCount >= 20 || rcvTotal > 0);
+
+    function _setCard(prefix, posed, total, opts) {
+        opts = opts || {};
+        const rest = total - posed;
+        const restEl = document.getElementById('suivi-' + prefix + '-rest');
+        const restWrap = restEl ? restEl.parentElement : null;
+        const bar = document.getElementById('suivi-' + prefix + '-bar');
+        setText('suivi-' + prefix + '-posed', String(posed));
+        setText('suivi-' + prefix + '-total', String(total));
+        if (restEl) restEl.textContent = String(Math.max(0, rest));
+        if (restWrap) {
+            restWrap.classList.toggle('is-over', rest < 0);
+            restWrap.classList.toggle('not-eligible', !!opts.notEligible);
+        }
+        if (bar) {
+            const pct = total > 0 ? Math.min(100, Math.round((posed / total) * 100)) : 0;
+            bar.style.width = pct + '%';
+        }
+    }
+    _setCard('ca',   (postes.ca || 0) + (postes.can1 || 0), caTotal);
+    _setCard('cahp', (postes.ca_hp || 0) + (postes.ca_hpn1 || 0), caHpTotal);
+    _setCard('frac', (postes.frac || 0) + (postes.fracn1 || 0), fracTotal);
+    _setCard('rcv',  (postes.rcv || 0) + (postes.rcvn1 || 0), rcvTotal, { notEligible: !rcvEligible });
+    const rcvCard = document.getElementById('suivi-card-rcv');
+    if (rcvCard) rcvCard.classList.toggle('is-disabled', !rcvEligible);
+    const rcvRestWrap = document.getElementById('suivi-rcv-rest-wrap');
+    if (rcvRestWrap && !rcvEligible) rcvRestWrap.innerHTML = '<em>Non éligible (&lt;20 DJF)</em>';
+
+    // Transmissions
+    const transm = E.transmissionHours(year, planStates);
+    setText('suivi-transm-formula', `${transm.gardes} gardes × 0h25`);
+    setText('suivi-transm-total', transm.formatted || '—');
+
+    // Tableau débit/crédit mensuel
+    const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile);
+    const recap = E.yearlyRecap(year, planStates, fer, profile);
+    const fmt = (h) => E.formatHours(h);
+    const sign = (h) => h > 0.005 ? 'is-positive' : (h < -0.005 ? 'is-negative' : '');
+
+    const theoTotal = recap.totalTheoreticalHours || 0;
+    const realTotal = recap.totalRealizedHours || 0;
+    const dcTotal = recap.totalDebitCredit || 0;
+    setText('suivi-theo-total', fmt(theoTotal));
+    setText('suivi-real-total', fmt(realTotal));
+    const dcEl = document.getElementById('suivi-dc-total');
+    if (dcEl) {
+        dcEl.textContent = fmt(dcTotal);
+        dcEl.classList.remove('is-positive', 'is-negative');
+        if (sign(dcTotal)) dcEl.classList.add(sign(dcTotal));
+    }
+
+    const grid = document.getElementById('suivi-debit-grid');
+    if (grid) {
+        grid.innerHTML = dcTable.map(row => {
+            const dcCls = sign(row.debitCredit);
+            const cuCls = sign(row.cumul);
+            return `<div class="suivi-debit-row">
+                <span class="suivi-debit-row-month">${row.monthName || row.monthLabel || ''}</span>
+                <span class="suivi-debit-row-dc ${dcCls}">${fmt(row.debitCredit)}</span>
+                <span class="suivi-debit-row-cumul ${cuCls}">${fmt(row.cumul)}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // CA consécutifs
+    const consec = E.consecutiveCAPeriods(year, planStates, fer);
+    const consecEl = document.getElementById('suivi-consec');
+    if (consecEl) {
+        if (!consec || consec.length === 0) {
+            consecEl.innerHTML = '<div class="suivi-consec-empty">Aucune période de CA pour cette année.</div>';
+        } else {
+            consecEl.innerHTML = consec.map(p => {
+                const len = p.lengthCalendarDays || p.lengthDays || 0;
+                const overLimit = p.exceedsLimit || len > 31;
+                const warn = !overLimit && len >= 22;
+                const cls = overLimit ? 'is-over' : (warn ? 'is-warn' : '');
+                const tag = overLimit ? '⚠️ Dépasse 31 jours' : (warn ? '⚠️ Proche limite' : '');
+                return `<div class="suivi-consec-row ${cls}">
+                    <span class="suivi-consec-dates">${p.start} → ${p.end}${tag ? ' · ' + tag : ''}</span>
+                    <span class="suivi-consec-len">${len} j</span>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // Récap rapide
+    const recapGrid = document.getElementById('suivi-recap-grid');
+    if (recapGrid) {
+        const dw = recap.daysWorked || {};
+        const samedis = (recap.weekendDaysWorked && recap.weekendDaysWorked.samedis) || 0;
+        const dimanches = (recap.weekendDaysWorked && recap.weekendDaysWorked.dimanches) || 0;
+        const cells = [
+            { v: dw.total || 0, l: 'Jours trav.' },
+            { v: dw.jour || 0, l: 'Gardes J' },
+            { v: dw.nuit || 0, l: 'Gardes N' },
+            { v: recap.feriesWorked || 0, l: 'Fériés trav.' },
+            { v: samedis + dimanches, l: 'Week-ends' },
+            { v: (recap.daysOff && recap.daysOff.maladie) || 0, l: 'Maladie' }
+        ];
+        recapGrid.innerHTML = cells.map(c => `<div class="suivi-recap-cell">
+            <span class="suivi-recap-cell-val">${c.v}</span>
+            <span class="suivi-recap-cell-lbl">${c.l}</span>
+        </div>`).join('');
+    }
+};
+
+// ============================================================================
+// Export PDF — adapter PlanEngine.yearlyRecap → format attendu par PlanPdfExport
+// ============================================================================
+
+window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
+    if (!window.PlanEngine || !window.PlanPdfExport) {
+        if (typeof showToast === 'function') showToast('⛔ Modules manquants (rechargez l\'app)');
+        return;
+    }
+    if (!currentUser) {
+        if (typeof showToast === 'function') showToast('⛔ Connectez-vous pour exporter');
+        return;
+    }
+    const E = window.PlanEngine;
+    const year = planYear;
+    const profile = _suiviProfileType();
+    const fer = (typeof getJoursFeries === 'function') ? getJoursFeries(year) : new Set();
+    const recapEng = E.yearlyRecap(year, planStates, fer, profile);
+    const dcTable = E.yearlyDebitCreditTable(year, planStates, fer, profile);
+    const consec = E.consecutiveCAPeriods(year, planStates, fer);
+    const postes = E.soldesPostes(year, planStates);
+
+    // Adapter : engine output → shape attendue par PdfExport (counts, totalTheoretical, etc.)
+    const dw = recapEng.daysWorked || {};
+    const off = recapEng.daysOff || {};
+    const recapAdapted = {
+        counts: {
+            jour: dw.jour || 0,
+            nuit: dw.nuit || 0,
+            hs_j: dw.hs_j || 0,
+            hs_n: dw.hs_n || 0,
+            formation: dw.formation || 0,
+            rh: off.rh || 0,
+            rc: off.rc || 0,
+            rcn: off.rcn || 0,
+            ferie: off.ferie || 0,
+            maladie: off.maladie || 0
+        },
+        totalTheoretical: recapEng.totalTheoreticalHours || 0,
+        totalRealized: recapEng.totalRealizedHours || 0,
+        annualDebitCredit: recapEng.totalDebitCredit || 0,
+        feriesWorked: recapEng.feriesWorked || 0,
+        saturdaysWorked: (recapEng.weekendDaysWorked && recapEng.weekendDaysWorked.samedis) || 0,
+        sundaysWorked: (recapEng.weekendDaysWorked && recapEng.weekendDaysWorked.dimanches) || 0
+    };
+
+    const dcTableAdapted = dcTable.map(r => ({
+        debitCredit: r.debitCredit,
+        cumul: r.cumul
+    }));
+
+    const consecAdapted = (consec || []).map(p => ({
+        start: p.start, end: p.end, days: p.lengthCalendarDays || p.lengthDays || 0
+    }));
+
+    const stats = (typeof calcPlanStats === 'function') ? calcPlanStats() : { rcvBonus:0, djfCount:0 };
+    const caTotal   = _suiviTotalCAEntitled();
+    const caHpTotal = ((planSoldes && planSoldes.hp) || 0) + ((planSoldes && planSoldes.hpn1) || 0);
+    const fracTotal = ((planSoldes && planSoldes.frac) || 0) + ((planSoldes && planSoldes.fracn1) || 0);
+    const rcvTotal  = (stats.rcvBonus || 0) + ((planSoldes && planSoldes.rcv) || 0) + ((planSoldes && planSoldes.rcvn1) || 0);
+    const rcvEligible = (profile !== 'nuit-fixe') && (stats.djfCount >= 20 || rcvTotal > 0);
+
+    if (typeof showToast === 'function') showToast('📄 Génération du PDF...');
+    try {
+        await window.PlanPdfExport.exportYearlyRecap({
+            year,
+            user: { firstName: currentUser.firstName, lastName: currentUser.lastName, role: currentUser.role },
+            profile,
+            recap: recapAdapted,
+            debitCreditTable: dcTableAdapted,
+            ca:   { posed: (postes.ca || 0) + (postes.can1 || 0),         total: caTotal },
+            caHp: { posed: (postes.ca_hp || 0) + (postes.ca_hpn1 || 0),   total: caHpTotal },
+            frac: { posed: (postes.frac || 0) + (postes.fracn1 || 0),     total: fracTotal },
+            rcv:  { posed: (postes.rcv || 0) + (postes.rcvn1 || 0),       total: rcvTotal, eligible: rcvEligible },
+            consecutiveCA: consecAdapted
+        });
+        if (typeof showToast === 'function') showToast('✅ PDF téléchargé');
+    } catch (e) {
+        console.warn('exportSuiviRHPdf error', e);
+        if (typeof showToast === 'function') showToast('⛔ Échec export : ' + (e && e.message || 'inconnu'));
+    }
 };
