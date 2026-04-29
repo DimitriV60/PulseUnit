@@ -18,34 +18,50 @@
 
     // --- Constantes métier ---------------------------------------------------
 
-    // Heures théoriques journalières par profil (cf. Nomenclature TT GHPSO chap. cycles)
-    //  - jour-fixe : 35h hebdo / 5j  = 7h00/j
-    //  - nuit-fixe : 32h30 hebdo / 5j = 6h30/j  (= 6.5)
-    //  - alterne   : base jour 7h00/j (les revalorisations J↔N se neutralisent au cumul mensuel)
-    const HOURS_PER_DAY_BY_PROFILE = {
-        'jour-fixe': 7.0,
-        'nuit-fixe': 6.5,
-        'alterne':   7.0
+    // Heures annuelles théoriques par profil (cf. Nomenclature TT GHPSO chap. cycles)
+    //  - jour-fixe : 35h hebdo → 1582h annuelles (en repos variables, ≥10 DJF)
+    //  - nuit-fixe : 32h30 hebdo → 1482h annuelles (personnel exclusivement nuit)
+    //  - alterne   : base 1582h, mêmes droits qu'un agent jour fixe au global
+    // Source : Guide DRH GHPSO 2014 chap. 1.4.4
+    const ANNUAL_HOURS_BY_PROFILE = {
+        'jour-fixe': 1582,
+        'nuit-fixe': 1482,
+        'alterne':   1582
     };
 
-    // Durée réalisée par état de planning (en heures décimales)
-    // Règles :
-    //  - jour : 7h30 effectif (Nomenclature chap. 1.3.2)
-    //  - nuit : 10h00 effectif (Nomenclature chap. 1.3.3 — réa typique 20h-08h)
-    //  - hs / hs_j / hs_n : 7h (l'HS est décomptée comme journée standard, le détail va sur le compteur dédié)
-    //  - formation : 7h (temps réel effectué, on prend la valeur standard d'une journée jour)
-    //  - ferie travaillé : 7h30 (équivalent jour, le bonus férié est compté à part via feriesWorked)
-    //  - travail (par défaut) : 0h — case non remplie, ne doit pas alimenter le réalisé
-    //  - tous les autres (ca/ca_hp/can1/.../rh/rc/rcn/rcv/...) : 0h
-    const HOURS_BY_STATE = {
-        jour:      7.5,
-        nuit:      10.0,
-        hs:        7.0,
-        hs_j:      7.0,
-        hs_n:      7.0,
-        formation: 7.0,
-        ferie:     7.5  // uniquement si l'agent a travaillé ce jour férié — voir realizedHoursForMonth
+    // Coefficient de revalorisation des nuits chez un agent NON nuit-fixe
+    //  - alterne : 1582 / 1456.5 = 1.0862 (Guide DRH 2014, repos variables)
+    //  - jour-fixe : ne fait pas de nuits par définition (mais on garde 1.0 par défaut)
+    //  - nuit-fixe : pas de revalorisation (12h plein, c'est leur cycle)
+    // Source : "Conversion JOUR-NUIT" — Guide DRH 2014 chap. cycles de travail effectif
+    const NIGHT_REVALORIZATION = {
+        'jour-fixe': 1.087,  // au cas où un jour-fixe ferait une nuit ponctuelle (HS_n typique)
+        'nuit-fixe': 1.000,
+        'alterne':   1.087
     };
+
+    // Durée réalisée par état de planning (en heures décimales) — réa GHPSO en cycles 12h
+    // Règles :
+    //  - jour : 12h effectif (garde 8h-20h, dérogation art. 7 Décret 2002-9)
+    //  - nuit : 12h effectif × revalorisation selon profil (cf. NIGHT_REVALORIZATION)
+    //  - hs / hs_j : 12h (HS jour comptée comme une garde complète)
+    //  - hs_n : 12h × revalorisation nuit (idem nuit normale)
+    //  - formation : 7h (forfait demi-journée — pratique réa, en réalité = temps réel effectué)
+    //  - ferie travaillé : 12h (équivalent garde complète, le bonus férié est compté à part)
+    //  - travail (par défaut) : 0h — case non remplie
+    //  - tous les autres (ca/ca_hp/can1/.../rh/rc/rcn/rcv/...) : 0h
+    const HOURS_BY_STATE_BASE = {
+        jour:      12.0,
+        nuit:      12.0,  // revalorisé selon profil dans realizedHoursForMonth
+        hs:        12.0,
+        hs_j:      12.0,
+        hs_n:      12.0,  // revalorisé selon profil aussi (HSN = nuit en HS)
+        formation: 7.0,
+        ferie:     12.0
+    };
+
+    // États dont les heures sont revalorisées chez un agent jour-fixe ou alterné qui fait une nuit
+    const NIGHT_LIKE_STATES = new Set(['nuit', 'hs_n']);
 
     // États qui comptent comme "garde" pour les heures de transmission (15 min/garde)
     const TRANSMISSION_STATES = new Set(['jour', 'nuit', 'hs_j', 'hs_n']);
@@ -99,37 +115,63 @@
     }
 
     // --- 1. Heures théoriques mensuelles -------------------------------------
+    // Modèle GHPSO réa (cycles 12h) : on répartit les heures annuelles selon
+    // les jours ouvrés (hors WE et fériés) du mois sur l'année, pour préserver
+    // le total annuel même quand le calendrier varie (28-31j, 4-5 fériés/mois).
+    //
+    //   théoriques(mois) = annual_hours × (workdays_mois / workdays_année)
+    //
+    // Pour jour-fixe / alterné : 1582h/an
+    // Pour nuit-fixe : 1482h/an
 
-    function theoreticalHoursForMonth(year, month, profile) {
-        const hPerDay = HOURS_PER_DAY_BY_PROFILE[profile];
-        if (hPerDay === undefined) return 0;
+    function _annualWorkdays(year) {
         const feries = (typeof window !== 'undefined' && typeof window.getJoursFeries === 'function')
             ? window.getJoursFeries(year)
             : new Set();
-        let workdays = 0;
+        let count = 0;
+        eachDayInYear(year, (ds, dow) => {
+            const isWE = (dow === 0 || dow === 6);
+            if (!isWE && !feries.has(ds)) count++;
+        });
+        return count;
+    }
+
+    function _monthWorkdays(year, month) {
+        const feries = (typeof window !== 'undefined' && typeof window.getJoursFeries === 'function')
+            ? window.getJoursFeries(year)
+            : new Set();
+        let count = 0;
         eachDayInMonth(year, month, (ds, dow) => {
             const isWE = (dow === 0 || dow === 6);
-            if (!isWE && !feries.has(ds)) workdays++;
+            if (!isWE && !feries.has(ds)) count++;
         });
-        return workdays * hPerDay;
+        return count;
+    }
+
+    function theoreticalHoursForMonth(year, month, profile) {
+        const annual = ANNUAL_HOURS_BY_PROFILE[profile];
+        if (annual === undefined) return 0;
+        const annualW = _annualWorkdays(year);
+        if (annualW === 0) return 0;
+        const monthW = _monthWorkdays(year, month);
+        return annual * (monthW / annualW);
     }
 
     // --- 2. Heures réalisées mensuelles --------------------------------------
+    // Signature étendue avec `profile` (optionnel pour rétro-compatibilité) pour
+    // appliquer la revalorisation des nuits chez les agents non-nuit-fixe.
 
-    function realizedHoursForMonth(year, month, planStates, joursFeries) {
+    function realizedHoursForMonth(year, month, planStates, joursFeries, profile) {
         const feries = joursFeries || new Set();
+        const nightCoef = (NIGHT_REVALORIZATION[profile] !== undefined) ? NIGHT_REVALORIZATION[profile] : 1.0;
         let total = 0;
         eachDayInMonth(year, month, (ds) => {
             const st = stateOf(planStates, ds);
-            // Cas spécial : 'ferie' n'apporte des heures que si on l'a explicitement marqué travaillé
-            // Dans le modèle PulseUnit, 'ferie' sur un jour férié = férié travaillé (l'agent a saisi ce code).
-            // Sur un jour non férié, l'état 'ferie' reste sémantiquement "travaillé en mode férié" → on garde 7.5h.
-            if (st === 'ferie') {
-                total += HOURS_BY_STATE.ferie;
-                return;
-            }
-            const h = HOURS_BY_STATE[st];
-            if (h !== undefined) total += h;
+            const h = HOURS_BY_STATE_BASE[st];
+            if (h === undefined) return;
+            // Revalorisation des nuits (nuit, hs_n) selon profil
+            const factor = NIGHT_LIKE_STATES.has(st) ? nightCoef : 1.0;
+            total += h * factor;
         });
         return total;
     }
@@ -137,7 +179,7 @@
     // --- 3. Débit/crédit mensuel ---------------------------------------------
 
     function monthlyDebitCredit(year, month, planStates, joursFeries, profile) {
-        return realizedHoursForMonth(year, month, planStates, joursFeries)
+        return realizedHoursForMonth(year, month, planStates, joursFeries, profile)
              - theoreticalHoursForMonth(year, month, profile);
     }
 
@@ -241,10 +283,10 @@
 
         daysWorked.total = daysWorked.jour + daysWorked.nuit + daysWorked.hs_j + daysWorked.hs_n + daysWorked.formation;
 
-        // Totaux horaires annuels
+        // Totaux horaires annuels — passe `profile` pour la revalorisation nuits
         let totalRealized = 0, totalTheoretical = 0;
         for (let m = 1; m <= 12; m++) {
-            totalRealized    += realizedHoursForMonth(year, m, planStates, feries);
+            totalRealized    += realizedHoursForMonth(year, m, planStates, feries, profile);
             totalTheoretical += theoreticalHoursForMonth(year, m, profile);
         }
 
@@ -380,10 +422,19 @@
         // Stub minimal des jours fériés pour les tests Node
         const fakeFeries = new Set();
 
-        // Test 1 : journée 'jour' → 7.5h réalisé
+        // Test 1 : journée 'jour' → 12h réalisé (cycle réa GHPSO)
         const t1States = { '2026-01-15': 'jour' };
-        const t1 = realizedHoursForMonth(2026, 1, t1States, fakeFeries);
-        assert('Une journée jour → 7.5h', t1 === 7.5);
+        const t1 = realizedHoursForMonth(2026, 1, t1States, fakeFeries, 'jour-fixe');
+        assert('Une journée jour → 12h', t1 === 12);
+
+        // Test 1bis : nuit chez agent jour-fixe → 12h × 1.087 = 13.044
+        const t1bisStates = { '2026-01-15': 'nuit' };
+        const t1bis = realizedHoursForMonth(2026, 1, t1bisStates, fakeFeries, 'alterne');
+        assert('Nuit alterné → 12h × 1.087 = 13.044', Math.abs(t1bis - 13.044) < 0.001);
+
+        // Test 1ter : nuit chez agent nuit-fixe → 12h pile (pas de revalo)
+        const t1ter = realizedHoursForMonth(2026, 1, t1bisStates, fakeFeries, 'nuit-fixe');
+        assert('Nuit nuit-fixe → 12h', t1ter === 12);
 
         // Test 2 : Janvier 2026 plein de 'travail' (par défaut, donc 0h réalisé)
         // → débit/crédit = -theorique
