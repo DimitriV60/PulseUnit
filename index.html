@@ -623,10 +623,16 @@
   .suivi-consec-len { font-size:0.74rem; color:var(--text-muted); font-weight:700; background:var(--surface); padding:3px 9px; border-radius:6px; }
   .suivi-consec-row.is-over .suivi-consec-len { background:rgba(239,68,68,0.18); color:var(--crit); }
 
-  .suivi-recap-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
-  .suivi-recap-cell { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:9px 10px; display:flex; flex-direction:column; gap:2px; align-items:center; text-align:center; }
-  .suivi-recap-cell-val { font-size:1.05rem; font-weight:900; color:var(--text); line-height:1; }
-  .suivi-recap-cell-lbl { font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; }
+  .suivi-recap-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  @media (max-width: 480px) { .suivi-recap-grid { grid-template-columns:1fr; } }
+  .suivi-recap-block { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:11px 12px; display:flex; flex-direction:column; gap:7px; }
+  .suivi-recap-block-title { font-size:0.7rem; font-weight:900; color:var(--brand-aqua); text-transform:uppercase; letter-spacing:0.3px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .suivi-recap-rows { display:flex; flex-direction:column; gap:4px; }
+  .suivi-recap-row { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:0.78rem; color:var(--text-muted); font-weight:700; padding:2px 0; }
+  .suivi-recap-row span { flex:1; min-width:0; }
+  .suivi-recap-row strong { color:var(--text); font-weight:900; font-variant-numeric:tabular-nums; }
+  .suivi-recap-row.is-total { padding-top:6px; margin-top:2px; border-top:1px dashed var(--border); color:var(--text); font-weight:900; }
+  .suivi-recap-row.is-total strong { color:var(--brand-aqua); }
   .psu { display:flex; flex-direction:column; align-items:center; padding:8px 10px; min-width:52px; border-right:1px solid var(--border); flex-shrink:0; }
   .psu:last-child { border-right:none; }
   .psu-val { font-size:1.05rem; font-weight:900; color:var(--text); line-height:1; }

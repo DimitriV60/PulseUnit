@@ -1168,24 +1168,61 @@ window.renderSuiviRH = function renderSuiviRH() {
         }
     }
 
-    // Récap rapide
+    // Récap annuel détaillé — conforme spec utilisateur :
+    // "tableau final avec dessus le nombre de chaque jour travaillé, des différents congés,
+    //  total des heures, le nombre de férié travaillé, le de weekend travaillé"
     const recapGrid = document.getElementById('suivi-recap-grid');
     if (recapGrid) {
         const dw = recap.daysWorked || {};
+        const off = recap.daysOff || {};
         const samedis = (recap.weekendDaysWorked && recap.weekendDaysWorked.samedis) || 0;
         const dimanches = (recap.weekendDaysWorked && recap.weekendDaysWorked.dimanches) || 0;
-        const cells = [
-            { v: dw.total || 0, l: 'Jours trav.' },
-            { v: dw.jour || 0, l: 'Gardes J' },
-            { v: dw.nuit || 0, l: 'Gardes N' },
-            { v: recap.feriesWorked || 0, l: 'Fériés trav.' },
-            { v: samedis + dimanches, l: 'Week-ends' },
-            { v: (recap.daysOff && recap.daysOff.maladie) || 0, l: 'Maladie' }
-        ];
-        recapGrid.innerHTML = cells.map(c => `<div class="suivi-recap-cell">
-            <span class="suivi-recap-cell-val">${c.v}</span>
-            <span class="suivi-recap-cell-lbl">${c.l}</span>
-        </div>`).join('');
+        const totalRealized = recap.totalRealizedHours || 0;
+        const totalWorkedDays = (dw.jour || 0) + (dw.nuit || 0) + (dw.hs_j || 0) + (dw.hs_n || 0) + (dw.formation || 0);
+
+        recapGrid.innerHTML = `
+            <div class="suivi-recap-block">
+                <div class="suivi-recap-block-title">Jours travaillés</div>
+                <div class="suivi-recap-rows">
+                    <div class="suivi-recap-row"><span>Gardes jour (J)</span><strong>${dw.jour || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Gardes nuit (N)</span><strong>${dw.nuit || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>HS jour (HSJ)</span><strong>${dw.hs_j || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>HS nuit (HSN)</span><strong>${dw.hs_n || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Formation (FO)</span><strong>${dw.formation || 0}</strong></div>
+                    <div class="suivi-recap-row is-total"><span>Total jours trav.</span><strong>${totalWorkedDays}</strong></div>
+                </div>
+            </div>
+            <div class="suivi-recap-block">
+                <div class="suivi-recap-block-title">Congés posés</div>
+                <div class="suivi-recap-rows">
+                    <div class="suivi-recap-row"><span>CA</span><strong>${(postes.ca || 0) + (postes.can1 || 0)}</strong></div>
+                    <div class="suivi-recap-row"><span>CA-HP</span><strong>${(postes.ca_hp || 0) + (postes.ca_hpn1 || 0)}</strong></div>
+                    <div class="suivi-recap-row"><span>Fractionné (FR)</span><strong>${(postes.frac || 0) + (postes.fracn1 || 0)}</strong></div>
+                    <div class="suivi-recap-row"><span>RCV</span><strong>${(postes.rcv || 0) + (postes.rcvn1 || 0)}</strong></div>
+                    <div class="suivi-recap-row"><span>HP</span><strong>${(postes.hp || 0) + (postes.hpn1 || 0)}</strong></div>
+                </div>
+            </div>
+            <div class="suivi-recap-block">
+                <div class="suivi-recap-block-title">Repos & absences</div>
+                <div class="suivi-recap-rows">
+                    <div class="suivi-recap-row"><span>Repos hebdo (RH)</span><strong>${off.rh || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Récup (RC)</span><strong>${off.rc || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Récup nuit (RCN)</span><strong>${off.rcn || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Jours fériés (JF)</span><strong>${off.ferie || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Maladie (AM)</span><strong>${off.maladie || 0}</strong></div>
+                </div>
+            </div>
+            <div class="suivi-recap-block">
+                <div class="suivi-recap-block-title">Primes & spécial</div>
+                <div class="suivi-recap-rows">
+                    <div class="suivi-recap-row"><span>Fériés travaillés</span><strong>${recap.feriesWorked || 0}</strong></div>
+                    <div class="suivi-recap-row"><span>Samedis travaillés</span><strong>${samedis}</strong></div>
+                    <div class="suivi-recap-row"><span>Dimanches travaillés</span><strong>${dimanches}</strong></div>
+                    <div class="suivi-recap-row is-total"><span>Total WE (prime)</span><strong>${samedis + dimanches}</strong></div>
+                    <div class="suivi-recap-row"><span>Total heures réalisées</span><strong>${E.formatHours(totalRealized)}</strong></div>
+                </div>
+            </div>
+        `;
     }
 };
 
@@ -1235,10 +1272,43 @@ window.exportSuiviRHPdf = async function exportSuiviRHPdf() {
         sundaysWorked: (recapEng.weekendDaysWorked && recapEng.weekendDaysWorked.dimanches) || 0
     };
 
-    const dcTableAdapted = dcTable.map(r => ({
-        debitCredit: r.debitCredit,
-        cumul: r.cumul
-    }));
+    // Si le tableau Digihops a été importé pour cette année → utilise ces valeurs
+    // (cohérence garantie avec la DRH, cf. solde initial -17h39 reporté de N-1)
+    const importedDc = planDebitCredit[String(year)];
+    const isImported = !!(importedDc && importedDc.months && Object.keys(importedDc.months).length > 0);
+    let dcTableAdapted;
+    if (isImported) {
+        dcTableAdapted = [];
+        for (let mo = 0; mo < 12; mo++) {
+            const m = importedDc.months[mo + 1];
+            if (m) {
+                dcTableAdapted.push({
+                    debitCredit: _parseDigihopsHours(m.dc),
+                    cumul: _parseDigihopsHours(m.cumul)
+                });
+            } else {
+                dcTableAdapted.push({ debitCredit: 0, cumul: 0 });
+            }
+        }
+        // Recalcule annualDebitCredit & totaux à partir des valeurs Digihops
+        // (cumul de décembre = solde annuel ; somme dc = mouvements)
+        let lastCumul = 0;
+        for (let mo = 12; mo >= 1; mo--) {
+            if (importedDc.months[mo]) { lastCumul = _parseDigihopsHours(importedDc.months[mo].cumul); break; }
+        }
+        let sumDc = 0;
+        for (let mo = 1; mo <= 12; mo++) {
+            if (importedDc.months[mo]) sumDc += _parseDigihopsHours(importedDc.months[mo].dc);
+        }
+        recapAdapted.annualDebitCredit = lastCumul;
+        recapAdapted.totalRealized = recapAdapted.totalTheoretical + sumDc;
+        recapAdapted.importedFromDigihops = true;
+    } else {
+        dcTableAdapted = dcTable.map(r => ({
+            debitCredit: r.debitCredit,
+            cumul: r.cumul
+        }));
+    }
 
     const consecAdapted = (consec || []).map(p => ({
         start: p.start, end: p.end, days: p.lengthCalendarDays || p.lengthDays || 0
