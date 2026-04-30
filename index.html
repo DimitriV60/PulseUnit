@@ -1830,9 +1830,13 @@
     <!-- VUE CONVERSATION INDIVIDUELLE -->
     <div id="msg-conv-view" style="display:none; flex-direction:column; flex:1; min-height:0;">
       <div id="msg-conv-header" style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--pill-bg);"></div>
+      <div id="msg-conv-search-wrap" style="display:none; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--surface-sec); gap:6px; align-items:center;">
+        <input type="text" id="msg-conv-search" placeholder="🔍 Rechercher dans la conversation..." oninput="setConvSearchQuery(this.value)" style="flex:1; padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; outline:none;">
+        <button onclick="toggleConvSearch()" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 4px;">×</button>
+      </div>
       <div id="msg-conv-body" style="flex:1; overflow-y:auto; padding:14px; background:var(--surface); min-height:0;"></div>
       <div style="display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--border); background:var(--pill-bg);">
-        <input type="text" id="msg-input" placeholder="Écrire un message..." onkeydown="handleMsgInputKey(event)" style="flex:1; padding:10px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; outline:none;">
+        <input type="text" id="msg-input" placeholder="Écrire un message..." onkeydown="handleMsgInputKey(event)" oninput="saveDraftFromInput()" style="flex:1; padding:10px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; outline:none;">
         <button data-action="submitCurrentMessage" id="msg-send-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:20px; padding:0 18px; font-weight:900; cursor:pointer; font-size:0.88rem;">➤</button>
       </div>
     </div>

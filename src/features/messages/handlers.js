@@ -17,6 +17,23 @@ window._messagesSavePending = false;
 
 let _activeConvId = null;
 let _activeConvUserId = null;
+let _convSearchQuery = '';
+
+const _DRAFTS_KEY = 'pu_msg_drafts';
+function _loadDrafts() {
+    try { return JSON.parse(localStorage.getItem(_DRAFTS_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function _saveDraft(convId, text) {
+    if (!convId) return;
+    const d = _loadDrafts();
+    if (text && text.trim()) d[convId] = text;
+    else delete d[convId];
+    try { localStorage.setItem(_DRAFTS_KEY, JSON.stringify(d)); } catch (e) {}
+}
+function _getDraft(convId) {
+    if (!convId) return '';
+    return _loadDrafts()[convId] || '';
+}
 
 function _convId(a, b) {
     if (!a || !b) return null;
@@ -145,8 +162,34 @@ window.sendMessage = async function sendMessage(toUserId, textOverride) {
     arr.push(msg);
     _persistConversation(cid, arr);
     if (input) input.value = '';
+    _saveDraft(cid, '');
     renderConvView();
     renderConvList();
+};
+
+window.saveDraftFromInput = function saveDraftFromInput() {
+    const input = document.getElementById('msg-input');
+    if (!input || !_activeConvId) return;
+    _saveDraft(_activeConvId, input.value);
+};
+
+window.setConvSearchQuery = function setConvSearchQuery(q) {
+    _convSearchQuery = (q || '').toLowerCase().trim();
+    renderConvView();
+};
+
+window.toggleConvSearch = function toggleConvSearch() {
+    const wrap = document.getElementById('msg-conv-search-wrap');
+    if (!wrap) return;
+    const visible = wrap.style.display === 'flex';
+    wrap.style.display = visible ? 'none' : 'flex';
+    if (!visible) {
+        const inp = document.getElementById('msg-conv-search');
+        if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 30); }
+    } else {
+        _convSearchQuery = '';
+        renderConvView();
+    }
 };
 
 window.deleteMessage = function deleteMessage(convId, msgId) {
@@ -207,15 +250,27 @@ window.openMessagesWith = function openMessagesWith(userId) {
     m.style.display = 'flex';
     _activeConvId = _convId(currentUser.id, userId);
     _activeConvUserId = userId;
+    _convSearchQuery = '';
     _markConvRead(_activeConvId);
     document.getElementById('msg-list-view').style.display = 'none';
     document.getElementById('msg-conv-view').style.display = 'flex';
+    const searchWrap = document.getElementById('msg-conv-search-wrap');
+    if (searchWrap) searchWrap.style.display = 'none';
+    const searchInp = document.getElementById('msg-conv-search');
+    if (searchInp) searchInp.value = '';
     renderConvView();
+    // Restaurer le brouillon
+    const input = document.getElementById('msg-input');
+    if (input) input.value = _getDraft(_activeConvId) || '';
 };
 
 window.backToConvList = function backToConvList() {
+    // Sauvegarde du brouillon avant de quitter
+    const input = document.getElementById('msg-input');
+    if (input && _activeConvId) _saveDraft(_activeConvId, input.value);
     _activeConvId = null;
     _activeConvUserId = null;
+    _convSearchQuery = '';
     document.getElementById('msg-list-view').style.display = 'flex';
     document.getElementById('msg-conv-view').style.display = 'none';
     renderConvList();
@@ -266,6 +321,7 @@ function renderConvList() {
         return;
     }
 
+    const drafts = _loadDrafts();
     container.innerHTML = convs.map(c => {
         const name = c.other ? `${c.other.firstName} ${c.other.lastName.toUpperCase()}` : 'Utilisateur supprimé';
         const role = c.other?.role || 'ide';
@@ -275,11 +331,15 @@ function renderConvList() {
         const dateStr = sameDay
             ? `${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}`
             : `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;
-        const preview = (c.last.text || '').slice(0, 60);
+        const draftText = drafts[c.cid];
+        const preview = draftText ? draftText.slice(0, 60) : (c.last.text || '').slice(0, 60);
         const lastFromMe = c.last.from === currentUser.id;
         const unreadBadge = c.unread > 0
             ? `<span style="background:var(--crit); color:#fff; min-width:18px; height:18px; border-radius:9px; padding:0 5px; font-size:0.65rem; font-weight:900; display:inline-flex; align-items:center; justify-content:center; line-height:1; flex-shrink:0;">${c.unread}</span>`
             : '';
+        const previewPrefix = draftText
+            ? '<span style="color:var(--crit); font-weight:800;">Brouillon : </span>'
+            : (lastFromMe ? '<span style="color:var(--brand-aqua);">Vous : </span>' : '');
         return `
           <div onclick="openMessagesWith('${c.otherId}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:${c.unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
             <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
@@ -289,7 +349,7 @@ function renderConvList() {
                 <span style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${dateStr}</span>
               </div>
               <div style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
-                ${lastFromMe ? '<span style="color:var(--brand-aqua);">Vous : </span>' : ''}${escapeHTML(preview)}
+                ${previewPrefix}${escapeHTML(preview)}
               </div>
             </div>
             ${unreadBadge}
@@ -313,12 +373,19 @@ function renderConvView() {
         <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(name)}</div>
         <div style="font-size:0.68rem; color:var(--text-muted);">${role.toUpperCase()}</div>
       </div>
+      <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
       <button onclick="deleteConversation('${_activeConvId}')" title="Supprimer la conversation" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--crit); padding:0 8px;">🗑️</button>
     `;
 
-    const msgs = (window.messagesData[_activeConvId] || []).slice().sort((a, b) => a.createdAt - b.createdAt);
-    if (msgs.length === 0) {
+    const allMsgs = (window.messagesData[_activeConvId] || []).slice().sort((a, b) => a.createdAt - b.createdAt);
+    const q = _convSearchQuery;
+    const msgs = q
+        ? allMsgs.filter(m => (m.text || '').toLowerCase().includes(q))
+        : allMsgs;
+    if (allMsgs.length === 0) {
         bodyEl.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:30px; font-size:0.85rem;">Aucun message — écrivez le premier !</p>';
+    } else if (msgs.length === 0) {
+        bodyEl.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px; font-size:0.85rem;">Aucun résultat pour « ${escapeHTML(q)} »</p>`;
     } else {
         bodyEl.innerHTML = msgs.map(m => {
             const mine = m.from === currentUser.id;
