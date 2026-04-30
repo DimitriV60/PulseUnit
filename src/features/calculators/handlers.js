@@ -4,6 +4,138 @@
  * Dépend de window.CALCULATORS_DATA (src/features/calculators/data.js).
  */
 
+// ============ PRESETS PSE — DROGUES COURANTES DE RÉANIMATION ============
+// Sources : Vidal, SmPC, recommandations SFAR. Plages indicatives en réanimation
+// adulte. Les seuils "critique" déclenchent une alerte rouge ; "max" un avertissement.
+const PSE_DRUG_PRESETS = {
+    noradrenaline: {
+        name: 'Noradrénaline', defaultUnit: 'ugkgmin', defaultConc: 0.16,
+        concNote: '0.16 mg/mL (8 mg dans 50 mL G5%)',
+        unit: 'µg/kg/min', min: 0.05, usual: 2, critical: 3,
+        notes: 'Vasopresseur. Voie centrale impérative au-delà de 0,1 µg/kg/min.'
+    },
+    adrenaline: {
+        name: 'Adrénaline', defaultUnit: 'ugkgmin', defaultConc: 0.1,
+        concNote: '0.1 mg/mL (5 mg dans 50 mL G5%)',
+        unit: 'µg/kg/min', min: 0.05, usual: 1, critical: 2,
+        notes: 'Choc anaphylactique / arrêt cardiaque. Surveillance ECG continue.'
+    },
+    dobutamine: {
+        name: 'Dobutamine', defaultUnit: 'ugkgmin', defaultConc: 5,
+        concNote: '5 mg/mL (250 mg dans 50 mL G5%)',
+        unit: 'µg/kg/min', min: 2, usual: 20, critical: 30,
+        notes: 'Inotrope. Risque arythmogène à fortes doses.'
+    },
+    propofol: {
+        name: 'Propofol', defaultUnit: 'mgkgh', defaultConc: 10,
+        concNote: '10 mg/mL (Diprivan 1% pur)',
+        unit: 'mg/kg/h', min: 1, usual: 4, critical: 5,
+        notes: 'Sédation. Au-delà de 4 mg/kg/h prolongé : risque de PRIS (acidose lactique, rhabdomyolyse).'
+    },
+    midazolam: {
+        name: 'Midazolam', defaultUnit: 'mgkgh', defaultConc: 1,
+        concNote: '1 mg/mL (50 mg dans 50 mL NaCl 0,9%)',
+        unit: 'mg/kg/h', min: 0.03, usual: 0.2, critical: 0.4,
+        notes: 'Sédation. Accumulation chez l\'insuffisant rénal/hépatique.'
+    },
+    sufentanil: {
+        name: 'Sufentanil', defaultUnit: 'ugkgh', defaultConc: 0.005,
+        concNote: '5 µg/mL (250 µg dans 50 mL NaCl 0,9%)',
+        unit: 'µg/kg/h', min: 0.1, usual: 1, critical: 2,
+        notes: 'Analgésie centrale. Dépression respiratoire majeure.'
+    },
+    remifentanil: {
+        name: 'Rémifentanil', defaultUnit: 'ugkgmin', defaultConc: 0.05,
+        concNote: '50 µg/mL (2,5 mg dans 50 mL NaCl 0,9%)',
+        unit: 'µg/kg/min', min: 0.05, usual: 0.25, critical: 0.5,
+        notes: 'Analgésie courte durée. Apnée immédiate à l\'arrêt.'
+    },
+    ketamine: {
+        name: 'Kétamine', defaultUnit: 'mgkgh', defaultConc: 5,
+        concNote: '5 mg/mL (250 mg dans 50 mL NaCl 0,9%)',
+        unit: 'mg/kg/h', min: 0.5, usual: 2, critical: 4,
+        notes: 'Sédation/analgésie. Effets dissociatifs, surveillance HD.'
+    },
+    furosemide: {
+        name: 'Furosémide', defaultUnit: 'mgh', defaultConc: 10,
+        concNote: '10 mg/mL (Lasilix pur)',
+        unit: 'mg/h', min: 5, usual: 40, critical: 80,
+        notes: 'Diurétique IV continu. Surveillance kaliémie + diurèse horaire.'
+    },
+    insuline: {
+        name: 'Insuline', defaultUnit: 'uih', defaultConc: 1,
+        concNote: '1 UI/mL (50 UI dans 50 mL NaCl 0,9%)',
+        unit: 'UI/h', min: 0.5, usual: 10, critical: 20,
+        notes: 'Surveillance dextro horaire. Risque hypoglycémie sévère.'
+    }
+};
+
+window.applyPSEDrugPreset = function applyPSEDrugPreset() {
+    const sel = document.getElementById('calc_pse_drug');
+    if (!sel) return;
+    const key = sel.value;
+    const preset = PSE_DRUG_PRESETS[key];
+    if (!preset) return;
+    document.getElementById('calc_pse_unit').value = preset.defaultUnit;
+    document.getElementById('calc_pse_conc').value = preset.defaultConc;
+    if (typeof showToast === 'function') {
+        showToast(`💊 ${preset.name} — ${preset.concNote}`);
+    }
+};
+
+// Convertit une dose dans l'unité native du préset (pour la comparer aux seuils)
+function _normalizeDoseToPresetUnit(dose, unit, poids, presetUnit) {
+    // Convertir d'abord en µg/kg/min (référence universelle), puis dans l'unité du preset
+    let ugkgmin = null;
+    const w = poids > 0 ? poids : null;
+    if (unit === 'ugkgmin') ugkgmin = dose;
+    else if (unit === 'ugkgh') ugkgmin = dose / 60;
+    else if (unit === 'mgkgh') ugkgmin = (dose * 1000) / 60;
+    else if (unit === 'mgh' && w) ugkgmin = (dose * 1000) / 60 / w;
+    else if (unit === 'ugh' && w) ugkgmin = dose / 60 / w;
+    else if (unit === 'uih') return { val: dose, unit: 'UI/h' }; // insuline : pas de conversion
+    if (ugkgmin === null) return null;
+    if (presetUnit === 'µg/kg/min') return { val: ugkgmin, unit: presetUnit };
+    if (presetUnit === 'µg/kg/h')   return { val: ugkgmin * 60, unit: presetUnit };
+    if (presetUnit === 'mg/kg/h')   return { val: (ugkgmin * 60) / 1000, unit: presetUnit };
+    if (presetUnit === 'mg/h' && w) return { val: (ugkgmin * 60 * w) / 1000, unit: presetUnit };
+    return null;
+}
+
+window.evaluatePSEDose = function evaluatePSEDose(drugKey, dose, unit, poids) {
+    if (!drugKey) return null;
+    const p = PSE_DRUG_PRESETS[drugKey];
+    if (!p) return null;
+    const norm = _normalizeDoseToPresetUnit(dose, unit, poids, p.unit);
+    if (!norm) return {
+        html: `<span style="color:var(--text-muted);">Préset <strong>${escapeHTML(p.name)}</strong> — Saisis le poids pour vérifier la plage usuelle.</span>`
+    };
+    const v = norm.val;
+    const fmt = v < 0.1 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v.toFixed(1);
+    let level, color, icon, label;
+    if (v >= p.critical) {
+        level = 'critical'; color = 'var(--crit)'; icon = '🚨';
+        label = `OVERDOSE — ${fmt} ${p.unit} ≥ ${p.critical} ${p.unit} (seuil critique)`;
+    } else if (v > p.usual) {
+        level = 'high'; color = 'var(--med)'; icon = '⚠️';
+        label = `HORS PLAGE USUELLE — ${fmt} ${p.unit} > ${p.usual} ${p.unit} (vérifier prescription)`;
+    } else if (v < p.min) {
+        level = 'low'; color = 'var(--med)'; icon = '⚠️';
+        label = `Dose faible — ${fmt} ${p.unit} < ${p.min} ${p.unit} (sous le seuil minimal usuel)`;
+    } else {
+        level = 'ok'; color = 'var(--ok)'; icon = '✅';
+        label = `Plage usuelle OK — ${fmt} ${p.unit} (entre ${p.min} et ${p.usual})`;
+    }
+    return {
+        level,
+        html: `
+          <div style="padding:8px 10px; border-radius:8px; background:${level === 'critical' ? 'rgba(239,68,68,0.12)' : 'var(--surface-sec)'}; border-left:3px solid ${color};">
+            <div style="color:${color}; font-weight:900; font-size:0.82rem;">${icon} ${label}</div>
+            <div style="color:var(--text-muted); font-size:0.72rem; font-weight:700; margin-top:4px;">${escapeHTML(p.notes)}</div>
+          </div>`
+    };
+};
+
 window.openCalculateurs = function openCalculateurs() {
     document.getElementById('calculateurs-view').style.display = 'flex';
     renderCalculateurs();
@@ -223,15 +355,29 @@ window.execCalc = function execCalc(id) {
         const unit = document.getElementById('calc_pse_unit').value;
         const poids = parseFloat(document.getElementById('calc_pse_poids').value);
         const conc = parseFloat(document.getElementById('calc_pse_conc').value);
+        const drug = document.getElementById('calc_pse_drug')?.value || '';
         if(isNaN(dose) || isNaN(conc) || conc === 0) return;
         let debit = 0;
         if(unit === 'mgh')     debit = dose / conc;
         else if(unit === 'ugh') debit = (dose / 1000) / conc;
+        else if(unit === 'uih') debit = dose / conc; // 1 UI/mL ≈ 1 mg/mL pour insuline diluée
         else if(unit === 'mgkgh')  { if(isNaN(poids)) return; debit = (dose * poids) / conc; }
         else if(unit === 'ugkgh')  { if(isNaN(poids)) return; debit = ((dose * poids) / 1000) / conc; }
         else if(unit === 'ugkgmin'){ if(isNaN(poids)) return; debit = ((dose * poids * 60) / 1000) / conc; }
         document.getElementById('res_pse_val').textContent = debit.toFixed(1) + ' mL/h';
         document.getElementById('res_pse_box').style.display = 'block';
+        // Évaluation de sécurité si un médicament est sélectionné
+        const safetyEl = document.getElementById('res_pse_safety');
+        if (safetyEl) {
+            const safety = window.evaluatePSEDose ? window.evaluatePSEDose(drug, dose, unit, poids) : null;
+            if (safety) {
+                safetyEl.style.display = 'block';
+                safetyEl.innerHTML = safety.html;
+            } else {
+                safetyEl.style.display = 'none';
+                safetyEl.innerHTML = '';
+            }
+        }
     }
     else if(id === 'dosekg') {
         const poids = parseFloat(document.getElementById('calc_dose_poids').value);

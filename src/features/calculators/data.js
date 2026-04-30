@@ -344,6 +344,22 @@
     id: 'pse', icon: '⏱️', title: 'Débit PSE',
     html: `
       <div class="calc-form-group">
+        <span class="calc-label">Médicament <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">(préset facultatif)</span></span>
+        <select id="calc_pse_drug" class="calc-select" onchange="applyPSEDrugPreset()">
+          <option value="">— Sans préset (mode libre) —</option>
+          <option value="noradrenaline">Noradrénaline</option>
+          <option value="adrenaline">Adrénaline</option>
+          <option value="dobutamine">Dobutamine</option>
+          <option value="propofol">Propofol</option>
+          <option value="midazolam">Midazolam</option>
+          <option value="sufentanil">Sufentanil</option>
+          <option value="remifentanil">Rémifentanil</option>
+          <option value="ketamine">Kétamine</option>
+          <option value="furosemide">Furosémide</option>
+          <option value="insuline">Insuline</option>
+        </select>
+      </div>
+      <div class="calc-form-group">
         <span class="calc-label">Dose prescrite</span>
         <input type="number" id="calc_pse_dose" class="calc-input" placeholder="ex: 5">
       </div>
@@ -355,6 +371,7 @@
           <option value="mgkgh">mg/kg/h</option>
           <option value="ugkgh">µg/kg/h</option>
           <option value="ugkgmin">µg/kg/min</option>
+          <option value="uih">UI/h</option>
         </select>
       </div>
       <div class="calc-form-group">
@@ -369,6 +386,10 @@
       <div class="calc-result-box" id="res_pse_box" style="display:none;">
         <div class="calc-result-title">DÉBIT PSE</div>
         <div class="calc-result-val" id="res_pse_val">-- mL/h</div>
+        <div id="res_pse_safety" style="margin-top:8px; font-size:0.78rem; font-weight:800; line-height:1.4;"></div>
+      </div>
+      <div style="margin-top:10px; padding:8px 10px; background:rgba(239,68,68,0.06); border-left:3px solid var(--crit); border-radius:0 8px 8px 0; font-size:0.7rem; line-height:1.45; color:var(--text-muted); font-weight:700;">
+        ⚠️ <strong style="color:var(--text);">Outil d'aide à la vérification</strong>, ne remplace pas la prescription médicale ni la double vérification IDE.
       </div>
     `
   },
