@@ -30,7 +30,8 @@
   applyTheme(savedTheme);
 
   // Settings initialization
-  var appSettings = JSON.parse(localStorage.getItem('pulseunit_settings')) || { sound: true, haptic: true };
+  var appSettings = JSON.parse(localStorage.getItem('pulseunit_settings')) || { sound: true, haptic: true, dnd: false };
+  if (typeof appSettings.dnd === 'undefined') appSettings.dnd = false;
 </script>
 <link rel="stylesheet" href="src/styles/main.css">
 
@@ -140,13 +141,24 @@
         </label>
       </div>
 
-      <div class="toggle-row" style="margin-bottom:0; border-bottom:none;">
+      <div class="toggle-row">
         <div class="toggle-label">
           <span>Retour haptique</span>
           <span>Vibration au toucher</span>
         </div>
         <label class="toggle-switch">
           <input type="checkbox" id="setting-haptic" onchange="toggleAppSetting('haptic')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row" style="margin-bottom:0; border-bottom:none;">
+        <div class="toggle-label">
+          <span>🌙 Ne pas déranger</span>
+          <span>Silence des notifs sauf urgences (utile en garde / la nuit)</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setting-dnd" onchange="toggleAppSetting('dnd')">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -955,6 +967,7 @@
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
           <div><strong style="color:var(--text);">Thème</strong> — 🌗 Auto (☀️ 8h-20h / 🌙 20h-8h) · ☀️ Clair forcé · 🌙 Sombre forcé.</div>
           <div><strong style="color:var(--text);">Sons</strong> et <strong style="color:var(--text);">Retour haptique</strong> indépendants.</div>
+          <div><strong style="color:var(--text);">🌙 Ne pas déranger</strong> — coupe les notifs (toast, son, vibration, push) sauf urgences. Idéal en garde de nuit. Les notifs restent dans le centre 🔔 pour consultation différée.</div>
           <div><strong style="color:var(--text);">Changer mon code</strong> — ancien + nouveau (×2). Actif immédiatement.</div>
           <div>🧪 <strong style="color:var(--text);">Signaler un bug</strong> — ouvre une conversation WhatsApp pré-remplie.</div>
         </div>

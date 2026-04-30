@@ -255,6 +255,10 @@ window.requestNotifPermission = async function requestNotifPermission() {
 
 window.showLocalPushNotif = function showLocalPushNotif(title, body, opts) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    // Mode "Ne pas déranger" : silence total sauf si la notif est marquée urgente
+    const dnd = (typeof appSettings !== 'undefined') && appSettings.dnd === true;
+    const urgent = !!(opts && opts.urgent);
+    if (dnd && !urgent) return;
     // Pas de notif système si la page est visible et l'app au premier plan — toast suffit
     if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         showToast('🔔 ' + title + (body ? ' — ' + body : ''));

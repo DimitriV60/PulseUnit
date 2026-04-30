@@ -51,4 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateThemeBtns();
     document.getElementById('setting-sound').checked  = appSettings.sound;
     document.getElementById('setting-haptic').checked = appSettings.haptic;
+    const dndEl = document.getElementById('setting-dnd');
+    if (dndEl) dndEl.checked = !!appSettings.dnd;
 });
