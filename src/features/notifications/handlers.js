@@ -60,7 +60,8 @@ window.pushNotif = function pushNotif(targetUserId, type, title, body, action) {
     _persistNotifsForUser(targetUserId, notifs);
     // Trigger Web Push local si c'est pour l'utilisateur courant + permission accordée
     if (currentUser && currentUser.id === targetUserId && typeof window.showLocalPushNotif === 'function') {
-        window.showLocalPushNotif(title || 'PulseUnit', body || '', { type, action });
+        const urgent = !!(action && action.urgent);
+        window.showLocalPushNotif(title || 'PulseUnit', body || '', { type, action, urgent });
     }
 };
 

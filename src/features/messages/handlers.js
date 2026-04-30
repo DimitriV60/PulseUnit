@@ -77,6 +77,46 @@ function _otherUserId(convId, selfId) {
     return parts.find(p => p !== selfId) || parts[0];
 }
 
+// ============ MENTIONS @nom ============
+// Parse @<prénom> dans le texte → résout un userId si match unique parmi les membres
+function _convMembers(convId) {
+    if (!convId || !currentUser) return [];
+    if (_isGroupConv(convId)) {
+        const role = _groupRole(convId);
+        if (role === 'all') return (window.roster || []).slice();
+        return (window.roster || []).filter(r => r.role === role);
+    }
+    const otherId = _otherUserId(convId, currentUser.id);
+    return (window.roster || []).filter(r => r.id === otherId || r.id === currentUser.id);
+}
+
+function _parseMentions(text, convId) {
+    if (!text || !convId) return [];
+    const members = _convMembers(convId);
+    if (!members.length) return [];
+    const mentions = new Set();
+    // Match @ suivi de lettres (avec accents et tiret), s'arrête au premier espace
+    const re = /@([\p{L}][\p{L}\-']{1,30})/gu;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+        const needle = m[1].toLowerCase();
+        const matches = members.filter(r =>
+            r.firstName.toLowerCase() === needle ||
+            r.firstName.toLowerCase().startsWith(needle) ||
+            (r.firstName + r.lastName).toLowerCase().replace(/[\s'-]/g, '').startsWith(needle)
+        );
+        if (matches.length === 1) mentions.add(matches[0].id);
+    }
+    return Array.from(mentions);
+}
+
+function _renderMentionsHTML(text) {
+    if (!text) return '';
+    return escapeHTML(text).replace(/@([\p{L}][\p{L}\-']{1,30})/gu,
+        (full, name) => `<span style="background:rgba(64,206,234,0.18); color:var(--brand-aqua); font-weight:800; padding:0 3px; border-radius:3px;">${full}</span>`
+    );
+}
+
 // ============ GROUPES PAR RÔLE ============
 // Clé Firestore : "group__<role>" — role ∈ {ide, as, rea, usip, all}
 const _GROUPS = [
@@ -186,14 +226,16 @@ window.applyMessagesSnapshot = function applyMessagesSnapshot(data) {
                 const sender = (window.roster || []).find(r => r.id === m.from);
                 const senderName = sender ? `${sender.firstName} ${sender.lastName.toUpperCase()}` : 'Utilisateur';
                 const preview = (m.text || '').slice(0, 80);
+                const isMentioned = Array.isArray(m.mentions) && m.mentions.includes(currentUser.id);
                 if (typeof window.pushNotif === 'function') {
                     if (isGroup) {
                         const meta = _groupMeta(cid);
                         const label = meta ? meta.label : 'Groupe';
-                        window.pushNotif(currentUser.id, 'message',
-                            `${meta?.icon || '💬'} ${label} — ${senderName}`,
+                        const titleIcon = isMentioned ? '🔔 @vous' : (meta?.icon || '💬');
+                        window.pushNotif(currentUser.id, isMentioned ? 'mention' : 'message',
+                            `${titleIcon} ${label} — ${senderName}`,
                             preview,
-                            { kind: 'openGroup', groupKey: cid });
+                            { kind: 'openGroup', groupKey: cid, urgent: isMentioned });
                     } else {
                         window.pushNotif(currentUser.id, 'message',
                             `💬 ${senderName}`,
@@ -238,21 +280,24 @@ window.sendMessage = async function sendMessage(target, textOverride) {
     }
     const cid = isGroup ? target : _convId(currentUser.id, target);
     const arr = (window.messagesData[cid] || []).slice();
+    const finalText = text.slice(0, 2000);
+    const mentions = _parseMentions(finalText, cid).filter(uid => uid !== currentUser.id);
     const msg = isGroup ? {
         id: _genMsgId(),
         from: currentUser.id,
         to: cid,
-        text: text.slice(0, 2000),
+        text: finalText,
         createdAt: Date.now(),
         readBy: [currentUser.id]
     } : {
         id: _genMsgId(),
         from: currentUser.id,
         to: target,
-        text: text.slice(0, 2000),
+        text: finalText,
         createdAt: Date.now(),
         read: false
     };
+    if (mentions.length) msg.mentions = mentions;
     arr.push(msg);
     _persistConversation(cid, arr);
     if (input) input.value = '';
@@ -776,7 +821,7 @@ function renderConvView() {
               <div style="display:flex; flex-direction:column; align-items:${align}; margin-bottom:8px;">
                 ${senderHeader}
                 <div style="max-width:78%; background:${bg}; color:${color}; padding:8px 12px; border-radius:14px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} position:relative;">
-                  <div style="font-size:0.85rem; line-height:1.35; white-space:pre-wrap; word-wrap:break-word;">${escapeHTML(m.text)}</div>
+                  <div style="font-size:0.85rem; line-height:1.35; white-space:pre-wrap; word-wrap:break-word;">${_renderMentionsHTML(m.text)}</div>
                   <div style="font-size:0.62rem; color:${mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'}; margin-top:3px; text-align:right;">${dateStr}${editedTag}${readIndicator}</div>
                   ${reactBtn}
                   ${ownActions}
