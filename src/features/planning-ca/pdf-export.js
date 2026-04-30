@@ -278,19 +278,24 @@
 
     var theoTotal = recap && recap.totalTheoretical;
     var realTotal = recap && recap.totalRealized;
-    var dcAnnual = recap && recap.annualDebitCredit;
+    var dcAnnual  = recap && recap.annualDebitCredit;
     var theoAnnual = recap && recap.annualTheoreticalContract;
 
-    doc.text('Total heures théoriques (à ce jour) : ' + _fmtHours(theoTotal), 19, y);
+    // Swap volontaire : le moteur historique nommait "theoretical" la valeur
+    // perçue par l'agent comme "réalisée" (et inversement). On préserve les
+    // noms internes du moteur (totalDebitCredit = realized - theoretical reste
+    // mathématiquement cohérent) et on inverse uniquement à l'affichage PDF
+    // pour matcher la convention utilisateur (cohérent avec l'onglet RH).
+    doc.text('Total heures théoriques (à ce jour) : ' + _fmtHours(realTotal), 19, y);
     y += 5;
-    doc.text('Total heures réalisées : ' + _fmtHours(realTotal), 19, y);
+    doc.text('Total heures réalisées : ' + _fmtHours(theoTotal), 19, y);
     y += 5;
     var dcLabel = 'Débit/crédit annuel : ' + _fmtHours(dcAnnual);
     doc.text(dcLabel, 19, y);
     y += 5;
     if (theoAnnual !== undefined && theoAnnual !== null) {
       doc.text('Réalisées / Théoriques contractuelles : ' +
-               _fmtHours(realTotal) + ' / ' + _fmtHours(theoAnnual), 19, y);
+               _fmtHours(theoTotal) + ' / ' + _fmtHours(theoAnnual), 19, y);
       y += 5;
     }
     y += 2;
