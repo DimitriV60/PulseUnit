@@ -434,23 +434,21 @@ function planDayHTML(dayNum, state, dateStr) {
     const prefix = window.PLAN_LABELS[state];
     const isCAFamily = (state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1');
     let lbl;
-    // 1. Label scanné AVEC un chiffre → on conserve le numéro scanné Digihops,
-    //    on applique le préfixe ("CA" / "CA-HP") issu de l'état réel.
-    if (customLbl) {
+    // Famille CA : numérotation auto chronologique continue (1, 2, 3, ...).
+    // On IGNORE les numéros scannés Digihops qui peuvent être discontinus
+    // (mélange manuel + scanné = sauts du genre "CA 8 → CA 13"). Les labels
+    // scannés restent stockés dans planLabels et servent uniquement à la
+    // détection N-1 via _normalizeCAFamilyByLabel (règle "CA 1" rencontré).
+    if (isCAFamily && prefix) {
+        const n = _caNumberCache.map[dateStr];
+        lbl = n ? (prefix + ' ' + n) : prefix;
+    } else if (customLbl) {
         const m = String(customLbl).match(/(\d+)\s*$/);
         if (m && prefix) {
             lbl = prefix + ' ' + m[1];
-        } else if (isCAFamily && prefix) {
-            // 2. Label scanné SANS chiffre (ex: "CA" tout court) → on bascule sur l'auto-num
-            const n = _caNumberCache.map[dateStr];
-            lbl = n ? (prefix + ' ' + n) : prefix;
         } else {
             lbl = customLbl;
         }
-    } else if (isCAFamily && prefix) {
-        // 3. Aucun label scanné → préfixe + numéro auto chronologique
-        const n = _caNumberCache.map[dateStr];
-        lbl = n ? (prefix + ' ' + n) : prefix;
     } else {
         lbl = prefix;
     }
