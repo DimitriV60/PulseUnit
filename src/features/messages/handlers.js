@@ -34,6 +34,12 @@ function _genMsgId() {
 }
 
 window.loadMessages = async function loadMessages() {
+    // Hydratation immédiate depuis le cache local (offline-first)
+    try {
+        const cached = localStorage.getItem('pu_messages_cache');
+        if (cached) window.messagesData = JSON.parse(cached) || {};
+    } catch (e) {}
+    window.renderMessagesBadge();
     if (typeof MESSAGES_DOC === 'undefined' || !MESSAGES_DOC) return;
     try {
         const doc = await MESSAGES_DOC.get({ source: 'server' });
@@ -42,6 +48,30 @@ window.loadMessages = async function loadMessages() {
             try { localStorage.setItem('pu_messages_cache', JSON.stringify(window.messagesData)); } catch (e) {}
         }
     } catch (e) { console.warn('loadMessages error', e); }
+    window.renderMessagesBadge();
+};
+
+window.totalUnreadMessages = function totalUnreadMessages() {
+    if (!currentUser || !window.messagesData) return 0;
+    let n = 0;
+    Object.keys(window.messagesData).forEach(cid => {
+        if (!cid.split('__').includes(currentUser.id)) return;
+        const arr = window.messagesData[cid] || [];
+        arr.forEach(m => { if (m.to === currentUser.id && !m.read) n++; });
+    });
+    return n;
+};
+
+window.renderMessagesBadge = function renderMessagesBadge() {
+    const badge = document.getElementById('msg-side-badge');
+    if (!badge) return;
+    const count = window.totalUnreadMessages();
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.style.display = 'inline-flex';
+    } else {
+        badge.style.display = 'none';
+    }
 };
 
 window.applyMessagesSnapshot = function applyMessagesSnapshot(data) {
@@ -79,6 +109,7 @@ window.applyMessagesSnapshot = function applyMessagesSnapshot(data) {
         renderConvList();
         if (_activeConvId) renderConvView();
     }
+    window.renderMessagesBadge();
 };
 
 function _persistConversation(convId, msgs) {
@@ -86,6 +117,7 @@ function _persistConversation(convId, msgs) {
     if (!window.messagesData) window.messagesData = {};
     window.messagesData[convId] = msgs;
     try { localStorage.setItem('pu_messages_cache', JSON.stringify(window.messagesData)); } catch (e) {}
+    window.renderMessagesBadge();
     if (typeof MESSAGES_DOC !== 'undefined' && MESSAGES_DOC) {
         window._messagesSavePending = true;
         MESSAGES_DOC.set({ [convId]: msgs }, { merge: true })
