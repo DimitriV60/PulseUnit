@@ -930,8 +930,10 @@
           <span style="font-size:1.05rem;">📞</span><span style="flex:1;">Annuaire des Services</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; font-size:0.8rem; line-height:1.6; color:var(--text-muted);">
-          Annuaire interne GHPSO (Creil + Senlis).<br>
-          <strong style="color:var(--text);">📋 Annuaire</strong> — par catégorie avec badge étage. <strong style="color:var(--text);">🏢 Par étage</strong> — du sous-sol au 7ème.<br>
+          Annuaire interne GHPSO (Creil + Senlis), refondu pour une lecture par bâtiment.<br>
+          <strong style="color:var(--text);">🏢 Par étage</strong> (vue par défaut) — chaque étage est un bloc visuel coloré, du 7ème au sous-sol, avec mini-ascenseur sticky pour sauter à un niveau en 1 tap. Sélecteur <strong>Creil / Senlis</strong>.<br>
+          <strong style="color:var(--text);">📋 Catégories</strong> — vue classique par service, avec badge site + étage.<br>
+          <strong style="color:var(--text);">⭐ Favoris</strong> — touchez ☆ à côté d'un numéro pour l'épingler. Persistance locale (localStorage), idéal pour les numéros de garde.<br>
           Recherche temps réel · résultats aussi via la recherche globale du dashboard.
         </div>
       </details>
@@ -1592,12 +1594,17 @@
         <input type="text" id="services-search" placeholder="🔍 Rechercher un service ou numéro..." oninput="renderServices()" autocomplete="off"
           style="width:100%; box-sizing:border-box; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
       </div>
-      <div style="padding:0 16px 12px; display:flex; gap:8px;">
-        <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Annuaire</button>
-        <button id="svc-tab-etage" data-action="setServicesTab:etage" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">🏢 Par étage</button>
+      <div style="padding:0 16px 10px; display:flex; gap:6px;">
+        <button id="svc-tab-etage"    data-action="setServicesTab:etage"    style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">🏢 Par étage</button>
+        <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Catégories</button>
+        <button id="svc-tab-favoris"  data-action="setServicesTab:favoris"  style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">⭐ Favoris</button>
+      </div>
+      <div id="svc-site-selector" style="padding:0 16px 12px; display:flex; gap:6px;">
+        <button id="svc-site-Creil"  data-action="setServicesSite:Creil"  style="flex:1; padding:7px 0; border-radius:8px; border:none; font-size:0.76rem; font-weight:800; font-family:var(--font); cursor:pointer;">📍 Creil</button>
+        <button id="svc-site-Senlis" data-action="setServicesSite:Senlis" style="flex:1; padding:7px 0; border-radius:8px; border:none; font-size:0.76rem; font-weight:800; font-family:var(--font); cursor:pointer;">📍 Senlis</button>
       </div>
     </div>
-    <div style="padding:12px 16px 24px; max-width:700px; margin:0 auto; width:100%; box-sizing:border-box; overflow-y:auto; flex:1;">
+    <div style="padding:0 16px 24px; max-width:720px; margin:0 auto; width:100%; box-sizing:border-box; overflow-y:auto; flex:1;">
       <div id="services-list"></div>
     </div>
   </div>
