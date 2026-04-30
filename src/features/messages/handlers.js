@@ -18,6 +18,19 @@ window._messagesSavePending = false;
 let _activeConvId = null;
 let _activeConvUserId = null;
 let _convSearchQuery = '';
+let _listFilter = 'all'; // 'all' | 'unread' | 'groups'
+
+window.setMessagesListFilter = function setMessagesListFilter(f) {
+    if (!['all', 'unread', 'groups'].includes(f)) return;
+    _listFilter = f;
+    document.querySelectorAll('.msg-filter-tab').forEach(b => {
+        const sel = b.dataset.filter === f;
+        b.style.background = sel ? 'var(--brand-aqua)' : 'transparent';
+        b.style.color = sel ? '#fff' : 'var(--text-muted)';
+        b.style.fontWeight = sel ? '900' : '700';
+    });
+    renderConvList();
+};
 
 const _DRAFTS_KEY = 'pu_msg_drafts';
 function _loadDrafts() {
@@ -448,33 +461,98 @@ function renderConvList() {
     const container = document.getElementById('msg-conv-list');
     if (!container || !currentUser) return;
 
-    // Filtrer destinataires recherchés (nouveau message)
+    // Recherche : collègues + contenu des messages
     const searchEl = document.getElementById('msg-new-search');
     const q = (searchEl?.value || '').toLowerCase().trim();
     if (q.length >= 1) {
-        const matches = (window.roster || [])
+        const userMatches = (window.roster || [])
             .filter(r => r.id !== currentUser.id)
             .filter(r => (r.firstName + ' ' + r.lastName).toLowerCase().includes(q))
-            .slice(0, 30);
-        if (matches.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:24px; font-size:0.85rem;">Aucun utilisateur trouvé</p>';
+            .slice(0, 20);
+        // Recherche dans les messages : trouver tous les messages qui matchent
+        const msgMatches = [];
+        Object.entries(window.messagesData || {}).forEach(([cid, arr]) => {
+            if (!Array.isArray(arr) || arr.length === 0) return;
+            const isGroup = _isGroupConv(cid);
+            if (isGroup && !_userCanAccessGroup(cid, currentUser)) return;
+            if (!isGroup && !cid.split('__').includes(currentUser.id)) return;
+            arr.forEach(m => {
+                if (!(m.text || '').toLowerCase().includes(q)) return;
+                msgMatches.push({ cid, msg: m, isGroup });
+            });
+        });
+        msgMatches.sort((a, b) => (b.msg.createdAt || 0) - (a.msg.createdAt || 0));
+        const topMsgs = msgMatches.slice(0, 30);
+
+        let html = '';
+        if (userMatches.length > 0) {
+            html += '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:2px 0 6px;">Collègues</div>';
+            html += userMatches.map(r => `
+              <div onclick="openMessagesWith('${r.id}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${r.role || 'ide'}); flex-shrink:0;"></span>
+                <div style="flex:1;">
+                  <div style="font-weight:800; font-size:0.85rem;">${escapeHTML(r.firstName)} ${escapeHTML(r.lastName.toUpperCase())}</div>
+                  <div style="font-size:0.7rem; color:var(--text-muted);">${(r.role || 'ide').toUpperCase()}</div>
+                </div>
+                <span style="color:var(--brand-aqua); font-size:1.1rem;">›</span>
+              </div>`).join('');
+        }
+        if (topMsgs.length > 0) {
+            html += '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:14px 0 6px;">Dans les messages (' + msgMatches.length + ')</div>';
+            html += topMsgs.map(({ cid, msg, isGroup }) => {
+                let label, openCall, role = 'ide';
+                if (isGroup) {
+                    const meta = _groupMeta(cid);
+                    label = meta ? meta.label : 'Groupe';
+                    openCall = `openGroupMessages('${cid}')`;
+                    role = meta?.roleColor || 'brand-aqua';
+                } else {
+                    const otherId = _otherUserId(cid, currentUser.id);
+                    const other = (window.roster || []).find(r => r.id === otherId);
+                    label = other ? `${other.firstName} ${other.lastName.toUpperCase()}` : 'Utilisateur';
+                    openCall = `openMessagesWith('${otherId}')`;
+                    role = other?.role || 'ide';
+                }
+                const dt = new Date(msg.createdAt);
+                const dateStr = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}`;
+                // Highlight le terme recherché
+                const text = msg.text || '';
+                const idx = text.toLowerCase().indexOf(q);
+                const start = Math.max(0, idx - 20);
+                const end = Math.min(text.length, idx + q.length + 40);
+                const before = (start > 0 ? '…' : '') + escapeHTML(text.slice(start, idx));
+                const matched = '<mark style="background:rgba(64,206,234,0.35); color:var(--text); padding:0 2px; border-radius:2px;">' + escapeHTML(text.slice(idx, idx + q.length)) + '</mark>';
+                const after = escapeHTML(text.slice(idx + q.length, end)) + (end < text.length ? '…' : '');
+                return `
+                  <div onclick="${openCall}" style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
+                    <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0; margin-top:6px;"></span>
+                    <div style="flex:1; min-width:0;">
+                      <div style="display:flex; justify-content:space-between; gap:6px; margin-bottom:3px;">
+                        <span style="font-weight:800; font-size:0.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${isGroup ? '👥 ' : ''}${escapeHTML(label)}</span>
+                        <span style="font-size:0.66rem; color:var(--text-muted); flex-shrink:0;">${dateStr}</span>
+                      </div>
+                      <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.35;">${before}${matched}${after}</div>
+                    </div>
+                  </div>`;
+            }).join('');
+        }
+        if (!html) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:24px; font-size:0.85rem;">Aucun résultat pour « ' + escapeHTML(q) + ' »</p>';
             return;
         }
-        container.innerHTML = matches.map(r => `
-          <div onclick="openMessagesWith('${r.id}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
-            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${r.role || 'ide'}); flex-shrink:0;"></span>
-            <div style="flex:1;">
-              <div style="font-weight:800; font-size:0.85rem;">${escapeHTML(r.firstName)} ${escapeHTML(r.lastName.toUpperCase())}</div>
-              <div style="font-size:0.7rem; color:var(--text-muted);">${(r.role || 'ide').toUpperCase()}</div>
-            </div>
-            <span style="color:var(--brand-aqua); font-size:1.1rem;">›</span>
-          </div>`).join('');
+        container.innerHTML = html;
         return;
     }
 
-    // En-tête : groupes accessibles (équipe, rôle utilisateur)
+    // Application du filtre actif (Tous / Non-lus / Groupes)
     const drafts = _loadDrafts();
-    const groups = window.userAccessibleGroups();
+    const showGroups = (_listFilter === 'all' || _listFilter === 'groups' || _listFilter === 'unread');
+    const showDMs    = (_listFilter === 'all' || _listFilter === 'unread');
+    const onlyUnread = (_listFilter === 'unread');
+    let groups = showGroups ? window.userAccessibleGroups() : [];
+    if (onlyUnread) {
+        groups = groups.filter(g => _convUnread(g.key, window.messagesData[g.key] || []) > 0);
+    }
     let groupsHTML = '';
     if (groups.length > 0) {
         groupsHTML = '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:2px 0 6px;">Groupes</div>';
@@ -513,11 +591,11 @@ function renderConvList() {
                 ${unreadBadge}
               </div>`;
         }).join('');
-        groupsHTML += '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:14px 0 6px;">Conversations privées</div>';
+        if (showDMs) groupsHTML += '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:14px 0 6px;">Conversations privées</div>';
     }
 
     // Liste des conversations 1-à-1 existantes
-    const convs = Object.entries(window.messagesData || {})
+    let convs = !showDMs ? [] : Object.entries(window.messagesData || {})
         .filter(([cid, arr]) => Array.isArray(arr) && arr.length > 0 && !_isGroupConv(cid) && cid.split('__').includes(currentUser.id))
         .map(([cid, arr]) => {
             const last = arr[arr.length - 1];
@@ -527,13 +605,17 @@ function renderConvList() {
             return { cid, otherId, other, last, unread };
         })
         .sort((a, b) => (b.last?.createdAt || 0) - (a.last?.createdAt || 0));
+    if (onlyUnread) convs = convs.filter(c => c.unread > 0);
 
     if (convs.length === 0 && groups.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:24px; font-size:0.85rem;">Aucune conversation.<br>Cherchez un collègue ci-dessus pour commencer.</p>';
+        const emptyMsg = onlyUnread
+            ? 'Aucun message non-lu. ✨'
+            : (_listFilter === 'groups' ? 'Aucun groupe accessible.' : 'Aucune conversation.<br>Cherchez un collègue ci-dessus pour commencer.');
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:24px; font-size:0.85rem;">' + emptyMsg + '</p>';
         return;
     }
     if (convs.length === 0) {
-        container.innerHTML = groupsHTML + '<p style="text-align:center; color:var(--text-muted); padding:14px; font-size:0.8rem;">Aucune conversation privée.<br>Cherchez un collègue pour commencer.</p>';
+        container.innerHTML = groupsHTML;
         return;
     }
 
