@@ -254,7 +254,18 @@
         <div id="profile-type-help" style="margin-top:10px; font-size:0.74rem; color:var(--text-muted); font-weight:700; line-height:1.4; padding:8px 10px; background:var(--surface-sec); border-radius:8px; border-left:3px solid var(--brand-aqua);"></div>
       </div>
 
-      <button class="btn-primary" style="width:100%;" data-action="closeProfile">Fermer</button>
+      <!-- Export RGPD -->
+      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Mes données (RGPD)</div>
+        <button data-action="exportRGPDData" style="width:100%; padding:11px; border-radius:10px; border:1px solid var(--brand-aqua); background:transparent; color:var(--brand-aqua); font-weight:900; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          📦 Exporter mes données (.json)
+        </button>
+        <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; line-height:1.4; margin-top:6px;">
+          Droit d'accès et de portabilité (art. 15 et 20 RGPD) : télécharge un JSON contenant ton profil, planning, notes de lit, messages (DM + groupes accessibles), notifs et préférences locales.
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width:100%; margin-top:14px;" data-action="closeProfile">Fermer</button>
     </div>
   </div>
 
@@ -933,11 +944,16 @@
           <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">2</span><div>En haut de la liste : <strong style="color:var(--text);">Groupes</strong> (👥 Toute l'équipe + groupe de ton rôle). Plus bas : conversations privées. Cherche un nom dans la barre <em>🔍 Chercher un collègue</em> pour démarrer une nouvelle DM.</div></div>
           <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">3</span><div>Tape ton message → <strong style="color:var(--brand-aqua);">➤</strong> ou Entrée pour envoyer. Le texte non envoyé est <strong style="color:var(--text);">conservé en brouillon</strong> automatiquement.</div></div>
           <div style="background:var(--surface); border-radius:8px; padding:10px; border:1px solid var(--border); font-size:0.75rem;">
-            <div><strong style="color:var(--text);">Accusés de lecture</strong> — <span style="color:var(--brand-aqua);">✓</span> envoyé · <span style="color:var(--brand-aqua);">✓✓</span> lu (DM) ou <span style="color:var(--brand-aqua);">✓✓ N</span> nb de membres ayant lu (groupe).</div>
-            <div style="margin-top:4px;"><strong style="color:var(--text);">Édition</strong> — survole un de tes messages → ✏️ pour modifier (le tag <em>· modifié</em> s'ajoute).</div>
-            <div style="margin-top:4px;"><strong style="color:var(--text);">Réactions emoji</strong> — bouton 😊 sur chaque message → choisis 👍❤️😂😮😢🙏. Re-clique pour retirer ta réaction.</div>
-            <div style="margin-top:4px;"><strong style="color:var(--text);">Recherche</strong> — bouton 🔍 dans le header de la conv pour filtrer les messages par mot-clé.</div>
-            <div style="margin-top:4px;"><strong style="color:var(--text);">Suppression</strong> — survole un de tes messages → × rouge. Bouton 🗑️ en haut (DM seulement) pour effacer toute la conv des deux côtés.</div>
+            <div><strong style="color:var(--text);">Onglets liste</strong> — Tous · Non-lus · Groupes pour filtrer rapidement. La barre 🔍 cherche aussi dans le contenu de tous les messages (extrait surligné).</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">📌 Épingler</strong> — bouton 📌 dans le header d'une conv pour la fixer en haut de ta liste (local à l'appareil).</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Statut en ligne</strong> — point vert + « En ligne » si ton interlocuteur est actif (DM seulement). Indication « ⋯ Prénom écrit… » quand quelqu'un tape dans la conv ouverte.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Mentions @nom</strong> — tape <code>@Prénom</code> dans un groupe pour notifier la personne. La notif passe outre le mode 🌙 Ne pas déranger.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Réponse / citation</strong> — bouton ↩ sur un message → bandeau de citation au-dessus de l'input. Clic sur la citation dans la conv → scroll vers le message original.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Accusés de lecture</strong> — <span style="color:var(--brand-aqua);">✓</span> envoyé · <span style="color:var(--brand-aqua);">✓✓</span> lu (DM) ou <span style="color:var(--brand-aqua);">✓✓ N</span> nb de membres ayant lu (groupe).</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Édition</strong> — survole un de tes messages → ✏️ pour modifier (tag <em>· modifié</em>).</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Réactions emoji</strong> — bouton 😊 → 👍❤️😂😮😢🙏. Re-clique pour retirer.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Recherche dans la conv</strong> — bouton 🔍 du header pour filtrer les messages par mot-clé.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Suppression</strong> — survole un de tes messages → × rouge. Bouton 🗑️ (DM seulement) pour effacer toute la conv des deux côtés.</div>
           </div>
           <div style="border-left:3px solid var(--brand-aqua); padding:6px 10px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0;">
             <strong style="color:var(--text);">Persistance</strong> — Les messages restent à vie tant qu'ils ne sont pas supprimés. Brouillons et historiques synchronisés multi-appareils.

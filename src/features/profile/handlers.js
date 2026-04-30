@@ -139,6 +139,70 @@
         _refreshProfileUI();
     };
 
+    // Export RGPD complet (droit à la portabilité, art. 15)
+    window.exportRGPDData = async function exportRGPDData() {
+        if (!currentUser) { if (typeof showToast === 'function') showToast('Connectez-vous d\'abord'); return; }
+        const uid = currentUser.id;
+        const data = {
+            _meta: {
+                application: 'PulseUnit',
+                exportedAt: new Date().toISOString(),
+                userId: uid,
+                schemaVersion: 1,
+                notice: 'Export RGPD — Droit d\'accès / portabilité (art. 15 et 20 RGPD). Toutes les données associées à votre compte présentes dans cet appareil.'
+            },
+            account: {
+                id: uid,
+                firstName: currentUser.firstName,
+                lastName:  currentUser.lastName,
+                role:      currentUser.role,
+                profile:   window.userProfile || null
+            },
+            planning: (typeof window.userPlan !== 'undefined') ? window.userPlan : null,
+            bedNotes: (window.bedNotesData && window.bedNotesData[uid]) || null,
+            notifs:   (window.notifsData && window.notifsData[uid]) || null,
+            messages: {
+                directMessages: {},
+                groupMessages:  {},
+                drafts: (function () {
+                    try { return JSON.parse(localStorage.getItem('pu_msg_drafts') || '{}'); } catch (e) { return {}; }
+                })()
+            },
+            localStorageKeys: {
+                pulseunit_settings: localStorage.getItem('pulseunit_settings'),
+                pulseunit_theme:    localStorage.getItem('pulseunit_theme'),
+                pulseunit_cal_ca:   localStorage.getItem('pulseunit_cal_ca'),
+                pulseunit_cal_djf:  localStorage.getItem('pulseunit_cal_djf'),
+                pu_msg_pins:        localStorage.getItem('pu_msg_pins')
+            }
+        };
+        // Messages : DM auxquelles l'utilisateur participe + groupes accessibles
+        if (window.messagesData) {
+            Object.entries(window.messagesData).forEach(([cid, arr]) => {
+                if (!Array.isArray(arr)) return;
+                if (cid.startsWith('group__')) {
+                    if (typeof window.userAccessibleGroups === 'function') {
+                        const ok = window.userAccessibleGroups().some(g => g.key === cid);
+                        if (ok) data.messages.groupMessages[cid] = arr;
+                    }
+                } else if (cid.split('__').includes(uid)) {
+                    data.messages.directMessages[cid] = arr;
+                }
+            });
+        }
+        // Création du fichier JSON et téléchargement
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const today = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `pulseunit_export_${currentUser.firstName}_${currentUser.lastName}_${today}.json`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+        if (typeof showToast === 'function') showToast('📦 Export RGPD téléchargé');
+    };
+
     window.closeProfile = function closeProfile() {
         const m = document.getElementById('profile-modal');
         if (m) m.style.display = 'none';
