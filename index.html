@@ -856,7 +856,7 @@
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
           <div>Calendrier annuel personnel + onglet <strong style="color:var(--text);">📊 Suivi RH</strong> avec compteurs CA, débit/crédit mensuel, transmissions et export PDF.</div>
-          <div><strong style="color:var(--text);">📅 Onglet Calendrier</strong> — pose tes congés, repos, formations, heures supp. <strong style="color:var(--text);">📷 Scan</strong> ton planning Digihops par photo (Mistral Pixtral Vision).</div>
+          <div><strong style="color:var(--text);">📅 Onglet Calendrier</strong> — pose tes congés, repos, formations, heures supp en touchant les cases (cyclage des états). Le bouton <strong style="color:var(--text);">📷 Importer mon planning par photo</strong>, juste au-dessus de janvier, lance le scan Digihops (Mistral Pixtral Vision) : seule la ligne à ton nom est lue, les cases déjà saisies sont préservées (jamais d'écrasement).</div>
           <div><strong style="color:var(--text);">📊 Onglet Suivi RH</strong> — 4 compteurs (CA, CA-HP, Fractionné, RCV) avec barre de progression posés/restants. Tableau débit/crédit style Digihops. Alertes CA consécutifs &gt; 31j. Aperçu annuel (jours travaillés, fériés, week-ends pour prime). <strong style="color:var(--text);">📅 Tout est arrêté à la date du jour</strong> sur l'année courante (les CA et heures planifiés dans le futur ne sont pas comptés tant qu'ils ne sont pas réalisés).</div>
           <div><strong style="color:var(--text);">🟢 CA N-1 / année courante</strong> — séparation auto :<br>• <strong style="color:var(--text);">CA</strong> : on suit les numéros Digihops scannés ; tant qu'on n'a pas vu "CA 1", les CA précédents sont des reliquats <strong style="color:var(--text);">N-1</strong>. À partir de "CA 1" → année courante.<br>• <strong style="color:var(--text);">CA-HP</strong> : règle calendaire — tout CA-HP avant le <strong style="color:var(--text);">1er mai</strong> est un reliquat N-1, à partir du 1er mai → année courante.<br>Affichage identique dans le calendrier (vert + numéro scanné), distinction visible uniquement dans les compteurs Suivi RH.</div>
           <div><strong style="color:var(--text);">🧮 Capital auto-calculé</strong> (Décret 2002-8) :<br>• <strong style="color:var(--text);">CA</strong> : 25 jours stricts.<br>• <strong style="color:var(--text);">CA-HP (Hors Période)</strong> : compte les CA pris hors 1er mai – 31 octobre. <strong style="color:var(--text);">5 à 7 jours → +1 CA-HP</strong>, <strong style="color:var(--text);">8 jours et + → +2 CA-HP</strong>.<br>• <strong style="color:var(--text);">Fractionnement</strong> : compte les fractions de CA de ≥5 jours ouvrés. <strong style="color:var(--text);">≥3 fractions → +1 jour</strong>, <strong style="color:var(--text);">≥4 fractions → +2 jours</strong>.<br>Le total se met à jour en temps réel à mesure que tu poses tes CA.</div>
@@ -1140,19 +1140,18 @@
   </div>
 
 
-  <!-- ═══ PLANNING CA ═══ -->
+  <!-- ═══ PLANNING ═══ -->
   <div class="fs-view" id="planning-ca-view" style="z-index:445; display:none;">
 
     <!-- En-tête compact -->
     <div class="plan-topbar">
       <button class="fs-back" data-action="closePlanningCA">←</button>
-      <span class="plan-title">Planning CA</span>
+      <span class="plan-title">Planning</span>
       <div class="plan-year-inline">
         <button class="plan-yr-btn" data-action="changePlanYear:-1">‹</button>
         <span class="plan-yr-lbl" id="plan-year-label">2026</span>
         <button class="plan-yr-btn" data-action="changePlanYear:1">›</button>
       </div>
-      <button class="plan-reset-btn" data-action="clickById:plan-scan-input" title="Scanner mon planning">📷</button>
       <button class="plan-reset-btn" data-action="resetPlanningCA" title="Effacer l'année">↺</button>
       <input type="file" id="plan-scan-input" accept="image/*" style="display:none;" onchange="scanPlanningPhoto(event)">
     </div>
@@ -1191,146 +1190,14 @@
       <span><span class="plan-legend-dot" style="background:rgba(159,18,57,0.18);border:1.5px solid #9f1239;"></span>AM Maladie</span>
     </div>
 
-    <!-- Soldes & Reports -->
-    <div class="plan-soldes">
-      <div class="plan-soldes-title" data-action="togglePlanSoldes">
-        <span>Soldes & Reports</span>
-        <span id="plan-soldes-toggle">▾</span>
+    <!-- Bouton Scan planning — placé juste au-dessus du calendrier (mois de janvier) -->
+    <div class="plan-scan-cta" data-action="clickById:plan-scan-input">
+      <div class="plan-scan-cta-icon">📷</div>
+      <div class="plan-scan-cta-text">
+        <div class="plan-scan-cta-title">Importer mon planning par photo</div>
+        <div class="plan-scan-cta-sub">Prends une photo de ton planning Digihops — la ligne à ton nom est lue automatiquement et tes cases du calendrier sont remplies. Aucune ligne déjà saisie n'est écrasée.</div>
       </div>
-      <div id="plan-soldes-body" style="display:none;">
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#14b8a6;">CA N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="25" id="solde-ca-n1" placeholder="0" onchange="updatePlanSolde('caN1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-ca-n1-exp" onchange="updatePlanSolde('caN1Exp',this.value)">
-            <span id="solde-can1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-can1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#a5b4fc;">HP N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-hpn1" placeholder="0" onchange="updatePlanSolde('hpn1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-hpn1-exp" onchange="updatePlanSolde('hpn1Exp',this.value)">
-            <span id="solde-hpn1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-hpn1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#6366f1;">HP</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-hp" placeholder="0" onchange="updatePlanSolde('hp',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-hp-exp" onchange="updatePlanSolde('hpExp',this.value)">
-            <span id="solde-hp-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-hp-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#6ee7b7;">RCV N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-rcvn1" placeholder="0" onchange="updatePlanSolde('rcvn1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-rcvn1-exp" onchange="updatePlanSolde('rcvn1Exp',this.value)">
-            <span id="solde-rcvn1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-rcvn1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#10b981;">RCV</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-rcv" placeholder="0" onchange="updatePlanSolde('rcv',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-rcv-exp" onchange="updatePlanSolde('rcvExp',this.value)">
-            <span id="solde-rcv-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-rcv-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#f9a8d4;">Frac N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-fracn1" placeholder="0" onchange="updatePlanSolde('fracn1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-fracn1-exp" onchange="updatePlanSolde('fracn1Exp',this.value)">
-            <span id="solde-fracn1-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-fracn1-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#ec4899;">Frac</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-frac" placeholder="0" onchange="updatePlanSolde('frac',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span class="plan-solde-explbl">expire</span>
-            <input type="date" id="solde-frac-exp" onchange="updatePlanSolde('fracExp',this.value)">
-            <span id="solde-frac-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-frac-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#a5b4fc;">HSJ N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-hsj-n1" placeholder="0" onchange="updatePlanSolde('hsjN1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#eab308;">HS Jour</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-hsj" placeholder="0" onchange="updatePlanSolde('hsj',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span id="solde-hs_j-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-hs_j-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-            <button class="plan-report-btn" data-action="reportSolde:hsj,hsjN1,solde-hsj-n1" title="Reporter le solde vers N-1">→ N-1</button>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#a5b4fc;">HSN N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-hsn-n1" placeholder="0" onchange="updatePlanSolde('hsnN1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#6366f1;">HS Nuit</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-hsn" placeholder="0" onchange="updatePlanSolde('hsn',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span id="solde-hs_n-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-hs_n-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-            <button class="plan-report-btn" data-action="reportSolde:hsn,hsnN1,solde-hsn-n1" title="Reporter le solde vers N-1">→ N-1</button>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#fb923c;">RC N-1</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-rc-n1" placeholder="0" onchange="updatePlanSolde('rcN1',+this.value)">
-            <span class="plan-solde-unit">j</span>
-          </div>
-        </div>
-        <div class="plan-solde-row">
-          <span class="plan-solde-lbl" style="color:#fb923c;">RC Récup.</span>
-          <div class="plan-solde-inputs">
-            <input type="number" min="0" max="99" id="solde-rc" placeholder="0" onchange="updatePlanSolde('rc',+this.value)">
-            <span class="plan-solde-unit">j</span>
-            <span id="solde-rc-used" style="font-size:0.72rem;color:var(--text-muted);margin-left:4px;"></span>
-            <span id="solde-rc-warn" style="display:none;color:var(--crit);font-size:0.75rem;font-weight:900;">!</span>
-            <button class="plan-report-btn" data-action="reportSolde:rc,rcN1,solde-rc-n1" title="Reporter le solde vers N-1">→ N-1</button>
-          </div>
-        </div>
-        <div class="plan-solde-total-bar">
-          <span style="color:var(--text-muted);font-size:0.75rem;">Soldes disponibles</span>
-          <span id="plan-solde-total-val" style="color:var(--as);font-weight:900;">—</span>
-        </div>
-      </div>
+      <div class="plan-scan-cta-arrow">›</div>
     </div>
 
     <!-- Calendrier -->
