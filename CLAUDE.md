@@ -23,6 +23,13 @@ Ne jamais laisser un changement sur une seule branche. Après chaque commit sur 
 - **Réponses courtes** : pas de détail exhaustif sur ce qui a été fait. Un message de synthèse à la fin suffit.
 - **Toujours proposer les meilleures options** disponibles (librairies, patterns, UX) avant d'implémenter.
 
+## Coût des solutions proposées
+
+**Toujours présenter les options gratuites en premier**, puis comparer avec les alternatives payantes (si pertinentes). Pour chaque techno / service / API évoqué :
+1. Citer **d'abord** la solution gratuite (Firebase Spark, Web Speech API, librairies open-source, etc.).
+2. **Ensuite** seulement, mentionner les options payantes en précisant le tarif et le bénéfice par rapport au gratuit.
+3. Si le gratuit suffit pour le besoin, le dire explicitement et ne pas pousser le payant.
+
 ## Maintenance du Guide et du Lexique in-app
 
 À chaque **nouvelle fonctionnalité ou changement important** dans PulseUnit, mettre à jour :
