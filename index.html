@@ -316,30 +316,31 @@
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Données collectées</div>
         <p style="margin:0 0 10px;">PulseUnit collecte uniquement les données nécessaires à son fonctionnement :</p>
         <ul style="margin:0 0 10px 18px; padding:0;">
-          <li><strong style="color:var(--text);">Compte</strong> — identifiant, prénom, nom, rôle professionnel, code PIN haché (SHA-256, non réversible).</li>
+          <li><strong style="color:var(--text);">Compte</strong> — identifiant, prénom, nom, rôle professionnel, type d'agent (jour fixe / nuit fixe / alterné), code PIN haché (SHA-256, non réversible).</li>
           <li><strong style="color:var(--text);">Garde</strong> — affectation aux lits, checklists, tâches IDE Tech, présence en ligne.</li>
           <li><strong style="color:var(--text);">Planning personnel</strong> — états jour/nuit/CA/RH/RCV/HS/formation/maladie pour le calendrier individuel.</li>
           <li><strong style="color:var(--text);">Bourse d'échange</strong> — annonces de permutation de gardes (date offerte/souhaitée, note libre).</li>
           <li><strong style="color:var(--text);">Notes de lit</strong> — texte libre par lit, 5 emplacements par utilisateur, 7 jours.</li>
-          <li><strong style="color:var(--text);">Messages internes</strong> — conversations privées 1-à-1 entre utilisateurs (texte, horodatage, accusé de lecture).</li>
+          <li><strong style="color:var(--text);">Messages internes</strong> — conversations privées 1-à-1 + groupes par rôle (IDE/AS/Réa/USIP/Toute l'équipe). Texte, horodatage, accusés de lecture (✓ / ✓✓), réactions emoji, marqueur d'édition. Brouillons stockés <em>uniquement en local</em> (jamais transmis tant qu'ils ne sont pas envoyés).</li>
           <li><strong style="color:var(--text);">Notifications</strong> — flux des alertes par utilisateur (titre, corps, type, lien d'action).</li>
         </ul>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Stockage des données</div>
-        <p style="margin:0 0 10px;">Les données sont stockées dans <strong style="color:var(--text);">Firebase Firestore</strong> (Google Cloud Platform, région <em>europe-west</em>, hébergement UE) et mises en cache dans le <strong style="color:var(--text);">localStorage</strong> de votre navigateur pour le mode offline. Les notes de lit, le planning et les messages sont synchronisés entre vos appareils via Firestore. Aucun fichier audio, image ou pièce jointe n'est transmis.</p>
+        <p style="margin:0 0 10px;">Les données sont stockées dans <strong style="color:var(--text);">Firebase Firestore</strong> (Google Cloud Platform, région <em>europe-west</em>, hébergement UE) et mises en cache dans le <strong style="color:var(--text);">localStorage</strong> de votre navigateur pour le mode offline. Les notes de lit, le planning et les messages (DM + groupes) sont synchronisés entre vos appareils via Firestore. Les <strong style="color:var(--text);">brouillons de messages</strong> et le cache de conversations restent en localStorage — non synchronisés. Aucun fichier audio, image ou pièce jointe n'est transmis.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Accès aux données</div>
-        <p style="margin:0 0 10px;">L'accès est restreint aux utilisateurs authentifiés via les <em>Firestore Security Rules</em> (<code>request.auth != null</code>, auth anonyme Firebase). Les notes de lit et messages privés ne sont visibles que par leurs auteurs/destinataires. L'administrateur dispose d'un accès en lecture globale pour la supervision (gestion des comptes, déblocage, reset PIN). <strong style="color:var(--text);">Aucune donnée n'est partagée avec des tiers ni revendue.</strong></p>
+        <p style="margin:0 0 10px;">L'accès est restreint aux utilisateurs authentifiés via les <em>Firestore Security Rules</em> (<code>request.auth != null</code>, auth anonyme Firebase). Les notes de lit et les messages privés (DM) ne sont visibles que par leurs auteurs/destinataires. Les <strong style="color:var(--text);">groupes par rôle</strong> sont visibles par tous les agents du rôle concerné (groupe « Toute l'équipe » accessible à tous). L'administrateur dispose d'un accès en lecture globale pour la supervision (gestion des comptes, déblocage, reset PIN). <strong style="color:var(--text);">Aucune donnée n'est partagée avec des tiers ni revendue.</strong></p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Notifications & Web Push</div>
-        <p style="margin:0 0 10px;">Si vous activez les notifications système, l'autorisation est gérée localement par votre navigateur (<em>Notification API + Service Worker</em>). PulseUnit n'envoie <strong style="color:var(--text);">aucun token vers un serveur tiers</strong> (pas de Firebase Cloud Messaging dans la version actuelle). Les notifs sont déclenchées localement à partir des données Firestore que votre appareil reçoit. Vous pouvez révoquer l'autorisation à tout moment dans les paramètres du navigateur.</p>
+        <p style="margin:0 0 10px;">L'autorisation des notifications est demandée au moment de la création du compte (case à cocher décochable) et reste révocable à tout moment. Elle est gérée localement par votre navigateur (<em>Notification API + Service Worker</em>). PulseUnit n'envoie <strong style="color:var(--text);">aucun token vers un serveur tiers</strong> (pas de Firebase Cloud Messaging dans la version actuelle). Les notifs sont déclenchées localement à partir des données Firestore que votre appareil reçoit.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--ide); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Durée de conservation</div>
         <ul style="margin:0 0 10px 18px; padding:0;">
           <li><strong style="color:var(--text);">Notes de lit</strong> — 7 jours (purge automatique côté client).</li>
           <li><strong style="color:var(--text);">Notifications</strong> — 30 jours (purge automatique).</li>
           <li><strong style="color:var(--text);">Réponses "travaillez-vous ?"</strong> — 4 jours.</li>
-          <li><strong style="color:var(--text);">Messages internes</strong> — persistants à vie tant qu'ils ne sont pas supprimés manuellement par leur expéditeur ou destinataire.</li>
+          <li><strong style="color:var(--text);">Messages internes (DM + groupes)</strong> — persistants à vie tant qu'ils ne sont pas supprimés. Les DM peuvent être effacées par l'un des deux interlocuteurs (suppression visible des deux côtés). Les messages de groupe ne sont supprimables que par leur auteur.</li>
+          <li><strong style="color:var(--text);">Brouillons de messages</strong> — locaux, conservés tant qu'ils ne sont pas envoyés ou effacés. Vidés au logout local.</li>
           <li><strong style="color:var(--text);">Données de garde, planning, compte</strong> — conservés le temps d'utilisation de l'application. Suppression sur demande via l'administrateur.</li>
         </ul>
 
@@ -350,7 +351,7 @@
         <p style="margin:0 0 10px;">Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition. Pour exercer ces droits, contactez l'administrateur de l'application qui supprimera votre compte et toutes les données associées (notes, messages, planning, notifications) dans les meilleurs délais. <strong style="color:var(--text);">Aucune décision automatisée ni profilage</strong> n'est effectué.</p>
 
         <div style="font-size:0.72rem; font-weight:900; color:var(--med); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">⚠️ Important — Données patient</div>
-        <p style="margin:0;">PulseUnit est un outil d'organisation d'équipe. <strong style="color:var(--text);">Ne saisissez JAMAIS d'informations patient nominatives</strong> (nom, prénom, date de naissance, NIP, diagnostic identifiant) dans les notes de lit, les messages internes ou les annonces de bourse. L'application n'est pas un dossier patient et n'est pas conforme aux exigences <em>HDS</em> (Hébergeur de Données de Santé).</p>
+        <p style="margin:0;">PulseUnit est un outil d'organisation d'équipe. <strong style="color:var(--text);">Ne saisissez JAMAIS d'informations patient nominatives</strong> (nom, prénom, date de naissance, NIP, diagnostic identifiant) dans les notes de lit, les messages internes (DM ou groupes) ou les annonces de bourse. L'application n'est pas un dossier patient et n'est pas conforme aux exigences <em>HDS</em> (Hébergeur de Données de Santé).</p>
       </div>
 
       <button class="btn-primary" style="margin-top:18px;" data-action="hide:rgpd-modal">Fermer</button>
@@ -866,7 +867,7 @@
           <div><strong style="color:var(--text);">🟢 CA N-1 / année courante</strong> — séparation auto :<br>• <strong style="color:var(--text);">CA</strong> : on suit les numéros Digihops scannés ; tant qu'on n'a pas vu "CA 1", les CA précédents sont des reliquats <strong style="color:var(--text);">N-1</strong>. À partir de "CA 1" → année courante.<br>• <strong style="color:var(--text);">CA-HP</strong> : règle calendaire — tout CA-HP avant le <strong style="color:var(--text);">1er mai</strong> est un reliquat N-1, à partir du 1er mai → année courante.<br>Affichage identique dans le calendrier (vert + numéro scanné), distinction visible uniquement dans les compteurs Suivi RH.</div>
           <div><strong style="color:var(--text);">🧮 Capital auto-calculé</strong> (Décret 2002-8) :<br>• <strong style="color:var(--text);">CA</strong> : 25 jours stricts.<br>• <strong style="color:var(--text);">CA-HP (Hors Période)</strong> : compte les CA pris hors 1er mai – 31 octobre. <strong style="color:var(--text);">5 à 7 jours → +1 CA-HP</strong>, <strong style="color:var(--text);">8 jours et + → +2 CA-HP</strong>.<br>• <strong style="color:var(--text);">Fractionnement</strong> : compte les fractions de CA de ≥5 jours ouvrés. <strong style="color:var(--text);">≥3 fractions → +1 jour</strong>, <strong style="color:var(--text);">≥4 fractions → +2 jours</strong>.<br>Le total se met à jour en temps réel à mesure que tu poses tes CA.</div>
           <div><strong style="color:var(--text);">⏱️ Transmissions cumulées</strong> = nb gardes (J + N + HS) × 0h25.</div>
-          <div><strong style="color:var(--text);">👤 Mon profil</strong> (menu burger) — choisis ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Détermine le calcul des heures théoriques mensuelles.</div>
+          <div><strong style="color:var(--text);">👤 Mon profil</strong> (menu burger) — modifie ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Le choix initial est demandé à l'inscription. Détermine le calcul des heures théoriques mensuelles.</div>
           <div><strong style="color:var(--text);">📄 Export PDF</strong> — récap annuel formel avec en-tête nom/prénom/poste, tous les compteurs, exportable pour la DRH.</div>
           <div style="font-size:0.74rem; opacity:0.85;">Données synchronisées Firestore. Bouton ↺ pour réinitialiser l'année.</div>
         </div>
@@ -1407,6 +1408,7 @@
           <div class="projet-row"><span class="projet-row-key">Checklist chambre</span><span class="projet-row-val">10 items de vérification par lit — sauvegardés par garde</span></div>
           <div class="projet-row"><span class="projet-row-key">Calendrier Congés</span><span class="projet-row-val">Simulateur CA — bonus HS, fractionnement, RCV selon Décrets 2002-8 et 2002-9</span></div>
           <div class="projet-row"><span class="projet-row-key">Messages</span><span class="projet-row-val">DM 1-à-1 + groupes par rôle (IDE/AS/Réa/USIP/Toute l'équipe) — édition, réactions emoji, brouillons, recherche plein-texte, badge non-lus global</span></div>
+          <div class="projet-row"><span class="projet-row-key">Mon profil</span><span class="projet-row-val">Type d'agent (Jour fixe 35h / Nuit fixe 32h30 / Alterné) — base du calcul des heures théoriques mensuelles. Demandé à l'inscription, modifiable à tout moment.</span></div>
         </div>
       </div>
 
@@ -1431,6 +1433,9 @@
           <div class="projet-row"><span class="projet-row-key">MESSAGES_DOC</span><span class="projet-row-val">Doc Firestore <em>pulseunit/messages</em> — clé de conv : <code>userA__userB</code> (DM, ids triés) ou <code>group__&lt;role&gt;</code> (groupe par rôle)</span></div>
           <div class="projet-row"><span class="projet-row-key">readBy[]</span><span class="projet-row-val">Tableau des userIds ayant lu un message de groupe (remplace <code>read:bool</code> qui n'existe que pour les DM)</span></div>
           <div class="projet-row"><span class="projet-row-key">totalUnreadMessages()</span><span class="projet-row-val">Compteur global des messages non-lus (DM + groupes accessibles) — alimente la pastille rouge du menu</span></div>
+          <div class="projet-row"><span class="projet-row-key">selectAgentType()</span><span class="projet-row-val">Sélection du type d'agent au formulaire d'inscription (jour-fixe, nuit-fixe, alterne) — sauvegardé dans userProfile.agentType</span></div>
+          <div class="projet-row"><span class="projet-row-key">requestNotifPermission()</span><span class="projet-row-val">Demande la permission Notification API du navigateur — déclenchée à la création du compte si la case 🔔 est cochée</span></div>
+          <div class="projet-row"><span class="projet-row-key">toggleClearBtn() / clearSearchInput()</span><span class="projet-row-val">Helpers de la croix × dans les barres de recherche — affichage conditionnel + reset du champ</span></div>
         </div>
       </div>
 
