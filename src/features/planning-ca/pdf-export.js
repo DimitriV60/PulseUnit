@@ -116,9 +116,11 @@
     return sign + (hh < 10 ? '0' + hh : hh) + 'h' + (mm < 10 ? '0' + mm : mm);
   }
 
-  // Format "HHhMM" identique à _formatDigihopsHours côté UI Suivi RH.
+  // Notation GHPSO : "0h25" = 0,25 heure décimale = 15 minutes (un quart
+  // d'heure), pas 25 minutes. Cohérent avec engine.js (gardes * 0.25h) et
+  // _formatDigihopsHours côté UI.
   function _fmtTransmission(gardes) {
-    var totalMin = (gardes || 0) * 25;
+    var totalMin = (gardes || 0) * 15;
     var hh = Math.floor(totalMin / 60);
     var mm = totalMin % 60;
     return (hh < 10 ? '0' + hh : hh) + 'h' + (mm < 10 ? '0' + mm : mm);

@@ -406,26 +406,22 @@ function getPlanDayState(dateStr) {
 
 // Numérotation auto (1, 2, 3...) pour les CA sans numéro dans le label scanné.
 // Recalculé à chaque renderPlanCalendrier sur l'année active.
-// Familles fusionnées :
-//   - CA + reliquat N-1 (ca / can1) → une seule série continue chronologique.
-//     Évite le saut "CA 20 → CA 1" quand on bascule N-1 vers année courante.
-//   - CA-HP + reliquat (ca_hp / ca_hpn1) → idem.
+// Buckets séparés ca / can1 / ca_hp / ca_hpn1 : les reliquats N-1 conservent
+// leurs numéros Digihops scannés (ex 20, 21, 22…) tandis que l'année courante
+// repart de "CA 1" à "CA 25" dès que le label "CA 1" est rencontré
+// (cf. _normalizeCAFamilyByLabel).
 let _caNumberCache = { year: null, map: {} };
 function _rebuildCANumberCache(year) {
-    const families = [
-        ['ca', 'can1'],         // famille CA fusionnée
-        ['ca_hp', 'ca_hpn1']    // famille CA-HP fusionnée
-    ];
-    const map = {};
-    for (const fam of families) {
-        const dates = [];
-        for (const [d, st] of Object.entries(planStates)) {
-            if (!d.startsWith(String(year) + '-')) continue;
-            if (fam.indexOf(st) !== -1) dates.push(d);
-        }
-        dates.sort();
-        dates.forEach((d, i) => { map[d] = i + 1; });
+    const buckets = { ca: [], can1: [], ca_hp: [], ca_hpn1: [] };
+    for (const [d, st] of Object.entries(planStates)) {
+        if (!d.startsWith(String(year) + '-')) continue;
+        if (buckets[st]) buckets[st].push(d);
     }
+    const map = {};
+    Object.keys(buckets).forEach(bk => {
+        buckets[bk].sort();
+        buckets[bk].forEach((d, i) => { map[d] = i + 1; });
+    });
     _caNumberCache = { year, map };
 }
 
@@ -434,21 +430,23 @@ function planDayHTML(dayNum, state, dateStr) {
     const prefix = window.PLAN_LABELS[state];
     const isCAFamily = (state === 'ca' || state === 'can1' || state === 'ca_hp' || state === 'ca_hpn1');
     let lbl;
-    // Famille CA : numérotation auto chronologique continue (1, 2, 3, ...).
-    // On IGNORE les numéros scannés Digihops qui peuvent être discontinus
-    // (mélange manuel + scanné = sauts du genre "CA 8 → CA 13"). Les labels
-    // scannés restent stockés dans planLabels et servent uniquement à la
-    // détection N-1 via _normalizeCAFamilyByLabel (règle "CA 1" rencontré).
-    if (isCAFamily && prefix) {
-        const n = _caNumberCache.map[dateStr];
-        lbl = n ? (prefix + ' ' + n) : prefix;
-    } else if (customLbl) {
+    // 1. Label scanné AVEC un chiffre → on conserve le numéro scanné Digihops,
+    //    on applique le préfixe ("CA" / "CA-HP") issu de l'état réel.
+    if (customLbl) {
         const m = String(customLbl).match(/(\d+)\s*$/);
         if (m && prefix) {
             lbl = prefix + ' ' + m[1];
+        } else if (isCAFamily && prefix) {
+            // 2. Label scanné SANS chiffre (ex: "CA" tout court) → on bascule sur l'auto-num
+            const n = _caNumberCache.map[dateStr];
+            lbl = n ? (prefix + ' ' + n) : prefix;
         } else {
             lbl = customLbl;
         }
+    } else if (isCAFamily && prefix) {
+        // 3. Aucun label scanné → préfixe + numéro auto chronologique
+        const n = _caNumberCache.map[dateStr];
+        lbl = n ? (prefix + ' ' + n) : prefix;
     } else {
         lbl = prefix;
     }
