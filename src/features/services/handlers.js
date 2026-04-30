@@ -1,12 +1,14 @@
 /**
  * Services handlers — Annuaire téléphonique GHPSO.
- * Refonte 2026-04-30 : vue "Par étage" mise en avant + métaphore bâtiment,
- * mini-ascenseur sticky, favoris, sélecteur de site.
+ * Refonte v2 (2026-04-30) : 3 onglets sobres.
+ *   1. 📋 Annuaire    — liste alphabétique par site (Creil / Senlis), index A→Z latéral.
+ *   2. 🏢 Par étage   — étages distincts, services groupés à l'intérieur de chaque étage.
+ *   3. ⭐ Favoris     — numéros épinglés par l'utilisateur, persistance localStorage.
  *
  * Dépend de window.SERVICES_DATA et window.escapeHTML.
  */
 
-let _servicesTab  = 'etage';            // 'etage' | 'annuaire' | 'favoris'  — par étage par défaut
+let _servicesTab  = 'annuaire';         // 'annuaire' | 'etage' | 'favoris'
 let _servicesSite = 'Creil';            // 'Creil' | 'Senlis'
 const FAV_KEY     = 'pulseunit_svc_favs';
 let _servicesFavs = _loadFavs();
@@ -55,7 +57,7 @@ window.setServicesSite = function setServicesSite(site) {
 };
 
 function _updateTabStyles() {
-    const tabs = { etage: 'svc-tab-etage', annuaire: 'svc-tab-annuaire', favoris: 'svc-tab-favoris' };
+    const tabs = { annuaire: 'svc-tab-annuaire', etage: 'svc-tab-etage', favoris: 'svc-tab-favoris' };
     Object.entries(tabs).forEach(([key, id]) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -64,9 +66,9 @@ function _updateTabStyles() {
         el.style.color      = active ? '#fff' : 'var(--text-muted)';
         el.style.border     = active ? 'none' : '1px solid var(--border)';
     });
-    // Le sélecteur de site n'a de sens que pour la vue Par étage
+    // Site selector visible pour Annuaire + Par étage uniquement
     const siteWrap = document.getElementById('svc-site-selector');
-    if (siteWrap) siteWrap.style.display = (_servicesTab === 'etage') ? 'flex' : 'none';
+    if (siteWrap) siteWrap.style.display = (_servicesTab === 'favoris') ? 'none' : 'flex';
 }
 
 function _updateSiteStyles() {
@@ -86,41 +88,29 @@ window.revealServiceNum = function revealServiceNum(el, num, fullDisplay) {
 };
 
 /* ═════════ Normalisation étages ═════════ */
-// Étages canoniques : id numérique pour tri.
-// -2 = Sous-sol, 0 = RDC, 1..7 = étages, 99 = Transverse/Administration.
-const FLOOR_META = {
-    7:  { label: 'Étage 7',          short: '7',  icon: '🏢', accent: '#7B61FF', tag: '7e' },
-    6:  { label: 'Étage 6',          short: '6',  icon: '🏢', accent: '#3B82F6', tag: '6e' },
-    5:  { label: 'Étage 5',          short: '5',  icon: '🏢', accent: '#06B6D4', tag: '5e' },
-    4:  { label: 'Étage 4',          short: '4',  icon: '🏢', accent: '#10B981', tag: '4e' },
-    3:  { label: 'Étage 3',          short: '3',  icon: '🏢', accent: '#F59E0B', tag: '3e' },
-    2:  { label: 'Étage 2',          short: '2',  icon: '🏢', accent: '#F97316', tag: '2e' },
-    1:  { label: 'Étage 1',          short: '1',  icon: '🏢', accent: '#EF4444', tag: '1er' },
-    0:  { label: 'Rez-de-chaussée',  short: 'RDC', icon: '🚪', accent: '#22C55E', tag: 'RDC' },
-   '-2':{ label: 'Sous-sol',         short: '−1', icon: '⬇️', accent: '#64748B', tag: 'SS' },
-    99: { label: 'Administration / Transverse', short: '★', icon: '🗂️', accent: '#94A3B8', tag: 'Adm' }
+const FLOOR_LABEL = {
+    7: 'Étage 7', 6: 'Étage 6', 5: 'Étage 5', 4: 'Étage 4',
+    3: 'Étage 3', 2: 'Étage 2', 1: 'Étage 1',
+    0: 'Rez-de-chaussée', '-2': 'Sous-sol', 99: 'Transverse / Administration'
+};
+const FLOOR_TAG = {
+    7: '7e', 6: '6e', 5: '5e', 4: '4e', 3: '3e', 2: '2e', 1: '1er',
+    0: 'RDC', '-2': 'SS', 99: 'Adm'
 };
 
-// Détecte un étage depuis n'importe quelle chaîne (libellé section ou nom d'entrée).
 function _parseFloor(text) {
     if (!text) return null;
     const t = String(text).toLowerCase();
     if (t.includes('administratif') || t.includes('administration')) return 99;
     if (t.includes('sous-sol')) return -2;
     if (/\brdc\b|rez[- ]de[- ]chauss/.test(t)) return 0;
-    // Range "Étages 2 à 6" / "Étages 4-5" → premier étage cité
     const range = t.match(/étages?\s*(\d)\s*(?:à|-|et)\s*(\d)/);
     if (range) return parseInt(range[1], 10);
-    // Étage simple "Étage 5", "(Étage 4)"
     const single = t.match(/étage\s*(\d)/);
     if (single) return parseInt(single[1], 10);
     return null;
 }
 
-// Renvoie l'étage final pour une entrée donnée.
-// 1) Si le nom de l'entrée mentionne explicitement un étage → priorité.
-// 2) Sinon on prend le premier étage cité dans section.floor.
-// 3) Sinon → 99 (Transverse).
 function _resolveFloor(section, entry) {
     const fromEntry = _parseFloor(entry.name);
     if (fromEntry !== null) return fromEntry;
@@ -145,24 +135,28 @@ function _favStarHTML(site, cat, name) {
     const safe  = (s) => String(s).replace(/'/g, "\\'");
     return `<button onclick="event.stopPropagation();toggleServiceFav('${safe(site)}','${safe(cat)}','${safe(name)}')"
         aria-label="${isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}"
-        style="background:transparent; border:none; cursor:pointer; padding:4px 6px; font-size:1.1rem; color:${color}; line-height:1;">${star}</button>`;
+        style="background:transparent; border:none; cursor:pointer; padding:4px 6px; font-size:1.15rem; color:${color}; line-height:1;">${star}</button>`;
+}
+
+function _floorBadge(f, escapeHTML) {
+    const tag = FLOOR_TAG[f];
+    if (!tag) return '';
+    return `<span style="font-size:0.62rem; font-weight:900; color:var(--text-muted); background:var(--surface-sec); border:1px solid var(--border); border-radius:5px; padding:2px 7px; white-space:nowrap;">${escapeHTML(tag)}</span>`;
 }
 
 function _entryRow(entry, section, escapeHTML, opts = {}) {
-    const { showCategory = false, showFloorBadge = false } = opts;
+    const { showFloorBadge = false, showCategory = false } = opts;
     const hasNum = entry.num && entry.num.trim() !== '';
     const label  = entry.display && entry.display.trim() !== '' ? entry.display : entry.num;
 
-    const badges = [];
-    if (showCategory) {
-        badges.push(`<span style="font-size:0.62rem; font-weight:800; color:var(--text-muted); background:var(--surface-sec); border:1px solid var(--border); border-radius:5px; padding:2px 7px; white-space:nowrap;">${escapeHTML(section.icon)} ${escapeHTML(section.cat)}</span>`);
-    }
+    const sub = [];
+    if (showCategory) sub.push(`<span style="font-size:0.7rem; font-weight:700; color:var(--text-muted);">${escapeHTML(section.icon)} ${escapeHTML(section.cat)}</span>`);
     if (showFloorBadge) {
         const f = _resolveFloor(section, entry);
-        const meta = FLOOR_META[f];
-        if (meta) badges.push(`<span style="font-size:0.62rem; font-weight:900; color:#fff; background:${meta.accent}; border-radius:5px; padding:2px 7px; white-space:nowrap;">${meta.tag}</span>`);
+        const tag = FLOOR_TAG[f];
+        if (tag) sub.push(`<span style="font-size:0.62rem; font-weight:900; color:var(--text-muted); background:var(--surface-sec); border:1px solid var(--border); border-radius:5px; padding:2px 7px;">${escapeHTML(tag)}</span>`);
     }
-    const badgesHTML = badges.length ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:3px;">${badges.join('')}</div>` : '';
+    const subHTML = sub.length ? `<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:3px;">${sub.join('')}</div>` : '';
 
     const numEl = !hasNum
         ? `<span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); background:var(--surface-sec); border-radius:6px; padding:3px 10px;">—</span>`
@@ -173,21 +167,88 @@ function _entryRow(entry, section, escapeHTML, opts = {}) {
     return `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:10px;">
         <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1;">
             ${_favStarHTML(section.site, section.cat, entry.name)}
-            <div style="display:flex; flex-direction:column; gap:2px; min-width:0; flex:1;">
+            <div style="display:flex; flex-direction:column; gap:0; min-width:0; flex:1;">
               <span style="font-size:0.88rem; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis;">${escapeHTML(entry.name)}</span>
-              ${badgesHTML}
+              ${subHTML}
             </div>
         </div>
         ${numEl}
     </div>`;
 }
 
-/* ═════════ Vue 1 — PAR ÉTAGE (principale) ═════════ */
-function _renderParEtage(data, q, escapeHTML) {
-    // Filtre par site + recherche, regroupe par étage puis par catégorie
-    const byFloor = new Map(); // floorId → Map<cat, {section, entries[]}>
-    let total = 0;
+/* ═════════ Vue 1 — ANNUAIRE alphabétique par site ═════════ */
+// Aplatit toutes les entries du site sélectionné, trie A→Z, regroupe par lettre initiale.
+// Index latéral A B C ... Z permettant de sauter à une lettre en 1 tap.
+function _stripAccents(s) {
+    return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+function _firstLetter(name) {
+    const s = _stripAccents(name).trim().toUpperCase();
+    const c = s.charCodeAt(0);
+    if (c >= 65 && c <= 90) return s[0];      // A-Z
+    if (c >= 48 && c <= 57) return '#';        // chiffre
+    return '#';
+}
 
+function _renderAnnuaire(data, q, escapeHTML) {
+    // Aplatit
+    const flat = [];
+    data.forEach(section => {
+        if (section.site !== _servicesSite) return;
+        section.entries.forEach(e => {
+            if (!_matchEntry(e, section, q)) return;
+            flat.push({ section, entry: e });
+        });
+    });
+    if (!flat.length) return { html: '', total: 0 };
+
+    // Trie alpha (insensible accents)
+    flat.sort((a, b) => _stripAccents(a.entry.name).localeCompare(_stripAccents(b.entry.name), 'fr', { sensitivity: 'base' }));
+
+    // Groupe par lettre
+    const byLetter = new Map();
+    flat.forEach(item => {
+        const L = _firstLetter(item.entry.name);
+        if (!byLetter.has(L)) byLetter.set(L, []);
+        byLetter.get(L).push(item);
+    });
+
+    const letters = [...byLetter.keys()].sort((a, b) => {
+        if (a === '#') return 1;
+        if (b === '#') return -1;
+        return a.localeCompare(b);
+    });
+
+    // Index latéral A→Z (sticky droite)
+    const letterIndex = `<nav id="svc-alpha-index" aria-label="Index alphabétique"
+        style="position:fixed; right:6px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:1px; z-index:5; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:6px 4px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+      ${letters.map(L => `<a href="#svc-letter-${L}" onclick="event.preventDefault();document.getElementById('svc-letter-${L}')?.scrollIntoView({behavior:'smooth',block:'start'});if(window.triggerHaptic)triggerHaptic('light');"
+        style="display:flex; align-items:center; justify-content:center; width:18px; height:16px; font-size:0.65rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; cursor:pointer;">${escapeHTML(L)}</a>`).join('')}
+    </nav>`;
+
+    // Liste
+    let html = letterIndex;
+    letters.forEach(L => {
+        const items = byLetter.get(L);
+        html += `<div id="svc-letter-${L}" style="margin-bottom:18px;">
+          <div style="display:flex; align-items:center; gap:10px; padding:8px 4px 6px; position:sticky; top:0; background:var(--bg); z-index:1;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 8px; border-radius:7px; background:var(--brand-aqua); color:#fff; font-size:0.85rem; font-weight:900;">${escapeHTML(L)}</span>
+            <span style="font-size:0.66rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">${items.length} entrée${items.length > 1 ? 's' : ''}</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">`;
+        items.forEach(({ section, entry }) => {
+            html += _entryRow(entry, section, escapeHTML, { showFloorBadge: true, showCategory: true });
+        });
+        html += `</div></div>`;
+    });
+
+    return { html, total: flat.length };
+}
+
+/* ═════════ Vue 2 — PAR ÉTAGE (étages → services) ═════════ */
+function _renderParEtage(data, q, escapeHTML) {
+    const byFloor = new Map();
+    let total = 0;
     data.forEach(section => {
         if (section.site !== _servicesSite) return;
         section.entries.forEach(e => {
@@ -200,48 +261,31 @@ function _renderParEtage(data, q, escapeHTML) {
             total++;
         });
     });
+    if (!total) return { html: '', total: 0 };
 
-    if (!total) return { html: '', total: 0, floorIds: [] };
-
-    // Ordre architectural : du haut vers le bas (7 → −2), Transverse en dernier
     const order = [7, 6, 5, 4, 3, 2, 1, 0, -2, 99];
     const floorIds = order.filter(f => byFloor.has(f));
 
-    // Mini-ascenseur sticky
-    const elevator = `<div id="svc-elevator" style="position:sticky; top:0; z-index:2; display:flex; flex-wrap:wrap; gap:4px; padding:8px 0 12px; background:var(--bg); border-bottom:1px solid var(--border); margin-bottom:14px;">
-      <span style="font-size:0.65rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; align-self:center; margin-right:4px;">Aller à :</span>
-      ${floorIds.map(f => {
-        const m = FLOOR_META[f];
-        return `<a href="#svc-floor-${f}" onclick="event.preventDefault();document.getElementById('svc-floor-${f}')?.scrollIntoView({behavior:'smooth',block:'start'});if(window.triggerHaptic)triggerHaptic('light');"
-          style="display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:30px; padding:0 8px; border-radius:8px; background:${m.accent}; color:#fff; font-size:0.78rem; font-weight:900; text-decoration:none; cursor:pointer;">${m.short}</a>`;
-      }).join('')}
-    </div>`;
-
-    let html = elevator;
-
+    let html = '';
     floorIds.forEach(f => {
-        const meta   = FLOOR_META[f];
         const catMap = byFloor.get(f);
         const count  = [...catMap.values()].reduce((s, g) => s + g.entries.length, 0);
 
-        // Bandeau d'étage : numéro géant + libellé + compteur
-        html += `<section id="svc-floor-${f}" style="margin-bottom:22px; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface-sec);">
-          <header style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:linear-gradient(135deg, ${meta.accent} 0%, ${meta.accent}dd 100%); color:#fff;">
-            <div style="display:flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:12px; background:rgba(255,255,255,0.18); font-size:1.4rem; font-weight:900; flex-shrink:0;">${meta.short}</div>
-            <div style="flex:1; min-width:0;">
-              <div style="font-size:1rem; font-weight:900; line-height:1.1;">${meta.icon} ${escapeHTML(meta.label)}</div>
-              <div style="font-size:0.72rem; font-weight:700; opacity:0.9; margin-top:2px;">${count} service${count > 1 ? 's' : ''}</div>
-            </div>
-          </header>
-          <div style="padding:14px;">`;
+        // Bandeau d'étage sobre : tag + libellé + compteur
+        html += `<section id="svc-floor-${f}" style="margin-bottom:18px;">
+          <header style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-sec); border:1px solid var(--border); border-radius:10px; margin-bottom:10px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:30px; padding:0 8px; border-radius:7px; background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900;">${escapeHTML(FLOOR_TAG[f] || '')}</span>
+            <span style="font-size:0.92rem; font-weight:900; color:var(--text);">${escapeHTML(FLOOR_LABEL[f] || '')}</span>
+            <span style="margin-left:auto; font-size:0.7rem; font-weight:800; color:var(--text-muted);">${count} service${count > 1 ? 's' : ''}</span>
+          </header>`;
 
-        // Catégories triées alphabétiquement à l'intérieur de chaque étage
+        // Services (catégories) triés alphabétiquement à l'intérieur de l'étage
         const sortedCats = [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'fr'));
         sortedCats.forEach(([cat, group], idx) => {
-            html += `<div style="${idx > 0 ? 'margin-top:14px;' : ''}">
+            html += `<div style="${idx > 0 ? 'margin-top:14px;' : ''} padding-left:6px;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <span style="font-size:1rem;">${group.section.icon}</span>
-                <span style="font-size:0.78rem; font-weight:900; color:var(--text); text-transform:uppercase; letter-spacing:0.4px;">${escapeHTML(cat)}</span>
+                <span style="font-size:0.95rem;">${group.section.icon}</span>
+                <span style="font-size:0.78rem; font-weight:900; color:var(--text);">${escapeHTML(cat)}</span>
                 <span style="margin-left:auto; font-size:0.66rem; font-weight:800; color:var(--text-muted);">${group.entries.length}</span>
               </div>
               <div style="display:flex; flex-direction:column; gap:6px;">`;
@@ -249,35 +293,9 @@ function _renderParEtage(data, q, escapeHTML) {
             html += `</div></div>`;
         });
 
-        html += `</div></section>`;
+        html += `</section>`;
     });
 
-    return { html, total, floorIds };
-}
-
-/* ═════════ Vue 2 — PAR CATÉGORIE (annuaire classique) ═════════ */
-function _renderAnnuaire(data, q, escapeHTML) {
-    let html = '';
-    let total = 0;
-    data.forEach(section => {
-        const matched = section.entries.filter(e => _matchEntry(e, section, q));
-        if (!matched.length) return;
-        total += matched.length;
-        const floorBadge = section.floor && section.floor !== '—'
-            ? `<span style="font-size:0.62rem; font-weight:900; color:#fff; background:var(--brand-aqua); border-radius:5px; padding:2px 8px; white-space:nowrap;">${escapeHTML(section.floor)}</span>`
-            : '';
-        const siteBadge = `<span style="font-size:0.62rem; font-weight:800; color:var(--text-muted); background:var(--surface-sec); border:1px solid var(--border); border-radius:5px; padding:2px 7px; white-space:nowrap;">📍 ${escapeHTML(section.site)}</span>`;
-        html += `<div style="margin-bottom:18px;">
-          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
-            <span style="font-size:0.95rem;">${section.icon}</span>
-            <span style="font-size:0.78rem; font-weight:900; color:var(--text); text-transform:uppercase; letter-spacing:0.4px;">${escapeHTML(section.cat)}</span>
-            ${siteBadge}
-            ${floorBadge}
-          </div>
-          <div style="display:flex; flex-direction:column; gap:6px;">`;
-        matched.forEach(e => { html += _entryRow(e, section, escapeHTML); });
-        html += `</div></div>`;
-    });
     return { html, total };
 }
 
@@ -293,19 +311,29 @@ function _renderFavoris(data, q, escapeHTML) {
             total: 0
         };
     }
-    const favs = [];
+    // Regroupé par site
+    const bySite = { Creil: [], Senlis: [] };
     data.forEach(section => {
         section.entries.forEach(e => {
             if (_servicesFavs.has(_favKey(section.site, section.cat, e.name)) && _matchEntry(e, section, q)) {
-                favs.push({ section, entry: e });
+                (bySite[section.site] || (bySite[section.site] = [])).push({ section, entry: e });
             }
         });
     });
-    if (!favs.length) return { html: '', total: 0 };
-    let html = `<div style="display:flex; flex-direction:column; gap:6px;">`;
-    favs.forEach(({ section, entry }) => { html += _entryRow(entry, section, escapeHTML, { showCategory: true, showFloorBadge: true }); });
-    html += `</div>`;
-    return { html, total: favs.length };
+    let html = '';
+    let total = 0;
+    ['Creil', 'Senlis'].forEach(site => {
+        const items = bySite[site] || [];
+        if (!items.length) return;
+        items.sort((a, b) => _stripAccents(a.entry.name).localeCompare(_stripAccents(b.entry.name), 'fr', { sensitivity: 'base' }));
+        total += items.length;
+        html += `<div style="margin-bottom:16px;">
+          <div style="font-size:0.66rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px; padding-left:4px;">📍 ${escapeHTML(site)} · ${items.length}</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">`;
+        items.forEach(({ section, entry }) => { html += _entryRow(entry, section, escapeHTML, { showFloorBadge: true, showCategory: true }); });
+        html += `</div></div>`;
+    });
+    return { html, total };
 }
 
 /* ═════════ Render principal ═════════ */
@@ -318,8 +346,8 @@ window.renderServices = function renderServices() {
 
     let result;
     if (_servicesTab === 'favoris')      result = _renderFavoris(SERVICES_DATA, q, escapeHTML);
-    else if (_servicesTab === 'annuaire') result = _renderAnnuaire(SERVICES_DATA, q, escapeHTML);
-    else                                  result = _renderParEtage(SERVICES_DATA, q, escapeHTML);
+    else if (_servicesTab === 'etage')   result = _renderParEtage(SERVICES_DATA, q, escapeHTML);
+    else                                  result = _renderAnnuaire(SERVICES_DATA, q, escapeHTML);
 
     container.innerHTML = (q && result.total === 0)
         ? `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-weight:700; font-size:0.9rem;">Aucun résultat pour « ${escapeHTML(q)} »</div>`

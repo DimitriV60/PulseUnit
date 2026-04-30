@@ -930,10 +930,10 @@
           <span style="font-size:1.05rem;">📞</span><span style="flex:1;">Annuaire des Services</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; font-size:0.8rem; line-height:1.6; color:var(--text-muted);">
-          Annuaire interne GHPSO (Creil + Senlis), refondu pour une lecture par bâtiment.<br>
-          <strong style="color:var(--text);">🏢 Par étage</strong> (vue par défaut) — chaque étage est un bloc visuel coloré, du 7ème au sous-sol, avec mini-ascenseur sticky pour sauter à un niveau en 1 tap. Sélecteur <strong>Creil / Senlis</strong>.<br>
-          <strong style="color:var(--text);">📋 Catégories</strong> — vue classique par service, avec badge site + étage.<br>
-          <strong style="color:var(--text);">⭐ Favoris</strong> — touchez ☆ à côté d'un numéro pour l'épingler. Persistance locale (localStorage), idéal pour les numéros de garde.<br>
+          Annuaire interne GHPSO (Creil + Senlis), 3 onglets sobres.<br>
+          <strong style="color:var(--text);">📋 Annuaire</strong> (défaut) — liste alphabétique du site choisi, avec index latéral A→Z pour saut rapide. Sélecteur <strong>Creil / Senlis</strong> en haut.<br>
+          <strong style="color:var(--text);">🏢 Par étage</strong> — étages bien séparés (7e → sous-sol), chaque étage contient ses services regroupés.<br>
+          <strong style="color:var(--text);">⭐ Favoris</strong> — touchez ☆ à côté d'un numéro pour l'épingler. Persistance locale (localStorage), regroupé par site, idéal pour les numéros de garde.<br>
           Recherche temps réel · résultats aussi via la recherche globale du dashboard.
         </div>
       </details>
@@ -1595,8 +1595,8 @@
           style="width:100%; box-sizing:border-box; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
       </div>
       <div style="padding:0 16px 10px; display:flex; gap:6px;">
+        <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Annuaire</button>
         <button id="svc-tab-etage"    data-action="setServicesTab:etage"    style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">🏢 Par étage</button>
-        <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Catégories</button>
         <button id="svc-tab-favoris"  data-action="setServicesTab:favoris"  style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">⭐ Favoris</button>
       </div>
       <div id="svc-site-selector" style="padding:0 16px 12px; display:flex; gap:6px;">
