@@ -966,3 +966,8 @@
   [data-theme="light"] .rv-modal-btn-pm { background:#f1f5f9; border-color:rgba(0,30,80,0.1); color:#1e293b; }
   [data-theme="light"] input.rv-modal-slider { background:#cbd5e1; }
   [data-theme="light"] .rv-modal-minmax { color:#94a3b8; }
+
+/* Messages : révéler boutons d'action au survol/tap */
+#msg-conv-body > div:hover .msg-act-btn { display: inline-flex !important; align-items: center; justify-content: center; }
+#msg-conv-body > div:focus-within .msg-act-btn { display: inline-flex !important; align-items: center; justify-content: center; }
+

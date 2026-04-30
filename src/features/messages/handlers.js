@@ -201,6 +201,76 @@ window.deleteMessage = function deleteMessage(convId, msgId) {
     renderConvList();
 };
 
+window.editMessage = function editMessage(convId, msgId) {
+    if (!currentUser || !convId) return;
+    const arr = (window.messagesData[convId] || []).slice();
+    const idx = arr.findIndex(m => m.id === msgId);
+    if (idx < 0) return;
+    const m = arr[idx];
+    if (m.from !== currentUser.id) { showToast('Vous ne pouvez éditer que vos propres messages'); return; }
+    const next = prompt('Modifier le message :', m.text);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed) { showToast('Message vide — utilisez la croix pour supprimer'); return; }
+    arr[idx] = { ...m, text: trimmed.slice(0, 2000), editedAt: Date.now() };
+    _persistConversation(convId, arr);
+    renderConvView();
+    renderConvList();
+};
+
+const _REACTION_SET = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+window.MESSAGE_REACTIONS = _REACTION_SET;
+
+window.toggleReaction = function toggleReaction(convId, msgId, emoji) {
+    if (!currentUser || !convId || !emoji) return;
+    if (!_REACTION_SET.includes(emoji)) return;
+    const arr = (window.messagesData[convId] || []).slice();
+    const idx = arr.findIndex(m => m.id === msgId);
+    if (idx < 0) return;
+    const m = { ...arr[idx] };
+    const reactions = { ...(m.reactions || {}) };
+    const users = (reactions[emoji] || []).slice();
+    const pos = users.indexOf(currentUser.id);
+    if (pos >= 0) users.splice(pos, 1); else users.push(currentUser.id);
+    if (users.length > 0) reactions[emoji] = users; else delete reactions[emoji];
+    m.reactions = reactions;
+    arr[idx] = m;
+    _persistConversation(convId, arr);
+    _hideReactionPicker();
+    renderConvView();
+};
+
+function _hideReactionPicker() {
+    const p = document.getElementById('msg-react-picker');
+    if (p) p.style.display = 'none';
+}
+
+window.openReactionPicker = function openReactionPicker(convId, msgId, anchorEl) {
+    const picker = document.getElementById('msg-react-picker');
+    if (!picker) return;
+    picker.innerHTML = _REACTION_SET.map(e =>
+        `<button onclick="toggleReaction('${convId}','${msgId}','${e}')" style="background:none; border:none; font-size:1.3rem; cursor:pointer; padding:4px 6px; border-radius:6px;" onmouseover="this.style.background='var(--surface-sec)'" onmouseout="this.style.background='none'">${e}</button>`
+    ).join('');
+    picker.style.display = 'flex';
+    // Positionner près du message
+    const body = document.getElementById('msg-conv-body');
+    if (anchorEl && body) {
+        const r = anchorEl.getBoundingClientRect();
+        const br = body.getBoundingClientRect();
+        picker.style.position = 'fixed';
+        picker.style.top = Math.max(br.top + 4, r.top - 44) + 'px';
+        picker.style.left = Math.min(br.right - 200, Math.max(br.left + 8, r.left)) + 'px';
+    }
+};
+
+document.addEventListener('click', e => {
+    const picker = document.getElementById('msg-react-picker');
+    if (!picker || picker.style.display === 'none') return;
+    if (picker.contains(e.target)) return;
+    if (e.target.closest('.msg-react-trigger')) return;
+    _hideReactionPicker();
+});
+
 window.deleteConversation = function deleteConversation(convId) {
     if (!convId) return;
     if (!confirm('Supprimer toute la conversation ?\n\nIrréversible — visible par les deux interlocuteurs.')) return;
@@ -394,13 +464,30 @@ function renderConvView() {
             const align = mine ? 'flex-end' : 'flex-start';
             const bg = mine ? 'var(--brand-aqua)' : 'var(--surface-sec)';
             const color = mine ? '#fff' : 'var(--text)';
+            const editedTag = m.editedAt
+                ? ` <span style="opacity:0.7; font-style:italic;">· modifié</span>`
+                : '';
+            const reactions = m.reactions || {};
+            const reactionEntries = Object.entries(reactions).filter(([, users]) => Array.isArray(users) && users.length > 0);
+            const reactionsHTML = reactionEntries.length > 0
+                ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; justify-content:${align};">${reactionEntries.map(([e, users]) => {
+                    const reacted = users.includes(currentUser.id);
+                    return `<button onclick="toggleReaction('${_activeConvId}','${m.id}','${e}')" style="background:${reacted ? 'rgba(64,206,234,0.20)' : 'var(--surface-sec)'}; border:1px solid ${reacted ? 'var(--brand-aqua)' : 'var(--border)'}; border-radius:12px; padding:1px 8px; font-size:0.75rem; cursor:pointer; line-height:1.4;" title="${users.length} réaction${users.length>1?'s':''}">${e} <span style="font-weight:700; color:var(--text);">${users.length}</span></button>`;
+                }).join('')}</div>`
+                : '';
+            const ownActions = mine ? `
+                  <button onclick="editMessage('${_activeConvId}', '${m.id}')" title="Modifier" style="position:absolute; top:-8px; right:38px; background:var(--brand-aqua); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.65rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">✏️</button>
+                  <button onclick="deleteMessage('${_activeConvId}', '${m.id}')" title="Supprimer" style="position:absolute; top:-8px; right:14px; background:var(--crit); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">×</button>` : '';
+            const reactBtn = `<button onclick="openReactionPicker('${_activeConvId}','${m.id}', this)" title="Réagir" class="msg-react-trigger msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:-8px' : 'right:-8px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">😊</button>`;
             return `
-              <div style="display:flex; justify-content:${align}; margin-bottom:8px;">
+              <div style="display:flex; flex-direction:column; align-items:${align}; margin-bottom:8px;">
                 <div style="max-width:78%; background:${bg}; color:${color}; padding:8px 12px; border-radius:14px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} position:relative;">
                   <div style="font-size:0.85rem; line-height:1.35; white-space:pre-wrap; word-wrap:break-word;">${escapeHTML(m.text)}</div>
-                  <div style="font-size:0.62rem; color:${mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'}; margin-top:3px; text-align:right;">${dateStr}${mine && m.read ? ' ✓✓' : (mine ? ' ✓' : '')}</div>
-                  ${mine ? `<button onclick="deleteMessage('${_activeConvId}', '${m.id}')" style="position:absolute; top:-6px; right:-6px; background:var(--crit); color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;" class="msg-del-btn">×</button>` : ''}
+                  <div style="font-size:0.62rem; color:${mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'}; margin-top:3px; text-align:right;">${dateStr}${editedTag}${mine && m.read ? ' ✓✓' : (mine ? ' ✓' : '')}</div>
+                  ${reactBtn}
+                  ${ownActions}
                 </div>
+                ${reactionsHTML}
               </div>`;
         }).join('');
         bodyEl.scrollTop = bodyEl.scrollHeight;
