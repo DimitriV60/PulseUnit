@@ -46,6 +46,33 @@ function _otherUserId(convId, selfId) {
     return parts.find(p => p !== selfId) || parts[0];
 }
 
+// ============ GROUPES PAR RÔLE ============
+// Clé Firestore : "group__<role>" — role ∈ {ide, as, rea, usip, all}
+const _GROUPS = [
+    { key: 'group__all',  label: 'Toute l\'équipe',     icon: '👥', roleColor: 'brand-aqua' },
+    { key: 'group__ide',  label: 'Équipe IDE',           icon: '💉', roleColor: 'ide'  },
+    { key: 'group__as',   label: 'Équipe AS',            icon: '🩺', roleColor: 'as'   },
+    { key: 'group__rea',  label: 'Équipe Réanimation',   icon: '🫀', roleColor: 'rea'  },
+    { key: 'group__usip', label: 'Équipe USIP',          icon: '🏥', roleColor: 'usip' }
+];
+window.MESSAGE_GROUPS = _GROUPS;
+
+function _isGroupConv(cid) { return typeof cid === 'string' && cid.startsWith('group__'); }
+function _groupRole(cid) { return _isGroupConv(cid) ? cid.slice(7) : null; }
+function _groupMeta(cid) { return _GROUPS.find(g => g.key === cid) || null; }
+
+function _userCanAccessGroup(groupKey, user) {
+    if (!user) return false;
+    if (groupKey === 'group__all') return true;
+    const role = _groupRole(groupKey);
+    return user.role === role;
+}
+
+window.userAccessibleGroups = function userAccessibleGroups() {
+    if (!currentUser) return [];
+    return _GROUPS.filter(g => _userCanAccessGroup(g.key, currentUser));
+};
+
 function _genMsgId() {
     return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
@@ -68,13 +95,26 @@ window.loadMessages = async function loadMessages() {
     window.renderMessagesBadge();
 };
 
+function _convUnread(cid, arr) {
+    if (!currentUser) return 0;
+    if (_isGroupConv(cid)) {
+        if (!_userCanAccessGroup(cid, currentUser)) return 0;
+        return arr.filter(m => m.from !== currentUser.id && !(m.readBy || []).includes(currentUser.id)).length;
+    }
+    return arr.filter(m => m.to === currentUser.id && !m.read).length;
+}
+
 window.totalUnreadMessages = function totalUnreadMessages() {
     if (!currentUser || !window.messagesData) return 0;
     let n = 0;
     Object.keys(window.messagesData).forEach(cid => {
-        if (!cid.split('__').includes(currentUser.id)) return;
+        if (_isGroupConv(cid)) {
+            if (!_userCanAccessGroup(cid, currentUser)) return;
+        } else if (!cid.split('__').includes(currentUser.id)) {
+            return;
+        }
         const arr = window.messagesData[cid] || [];
-        arr.forEach(m => { if (m.to === currentUser.id && !m.read) n++; });
+        n += _convUnread(cid, arr);
     });
     return n;
 };
@@ -104,19 +144,31 @@ window.applyMessagesSnapshot = function applyMessagesSnapshot(data) {
         Object.keys(data).forEach(cid => {
             const arr = data[cid] || [];
             const prevIds = previousByConv[cid] || [];
+            const isGroup = _isGroupConv(cid);
+            if (isGroup && !_userCanAccessGroup(cid, currentUser)) return;
+            if (!isGroup && !cid.split('__').includes(currentUser.id)) return;
             arr.forEach(m => {
                 if (prevIds.includes(m.id)) return;
                 if (m.from === currentUser.id) return;
-                if (m.to !== currentUser.id) return;
+                if (!isGroup && m.to !== currentUser.id) return;
                 // Récupérer le nom de l'expéditeur depuis roster
                 const sender = (window.roster || []).find(r => r.id === m.from);
                 const senderName = sender ? `${sender.firstName} ${sender.lastName.toUpperCase()}` : 'Utilisateur';
                 const preview = (m.text || '').slice(0, 80);
                 if (typeof window.pushNotif === 'function') {
-                    window.pushNotif(currentUser.id, 'message',
-                        `💬 ${senderName}`,
-                        preview,
-                        { kind: 'openMessage', userId: m.from });
+                    if (isGroup) {
+                        const meta = _groupMeta(cid);
+                        const label = meta ? meta.label : 'Groupe';
+                        window.pushNotif(currentUser.id, 'message',
+                            `${meta?.icon || '💬'} ${label} — ${senderName}`,
+                            preview,
+                            { kind: 'openGroup', groupKey: cid });
+                    } else {
+                        window.pushNotif(currentUser.id, 'message',
+                            `💬 ${senderName}`,
+                            preview,
+                            { kind: 'openMessage', userId: m.from });
+                    }
                 }
             });
         });
@@ -143,18 +195,29 @@ function _persistConversation(convId, msgs) {
     }
 }
 
-window.sendMessage = async function sendMessage(toUserId, textOverride) {
+window.sendMessage = async function sendMessage(target, textOverride) {
     if (!currentUser) { showToast('Connectez-vous pour envoyer un message'); return; }
-    if (!toUserId) { showToast('Destinataire manquant'); return; }
+    if (!target) { showToast('Destinataire manquant'); return; }
     const input = document.getElementById('msg-input');
     const text = (textOverride !== undefined ? textOverride : (input ? input.value : '')).trim();
     if (!text) return;
-    const cid = _convId(currentUser.id, toUserId);
+    const isGroup = _isGroupConv(target);
+    if (isGroup && !_userCanAccessGroup(target, currentUser)) {
+        showToast('Vous n\'êtes pas membre de ce groupe'); return;
+    }
+    const cid = isGroup ? target : _convId(currentUser.id, target);
     const arr = (window.messagesData[cid] || []).slice();
-    const msg = {
+    const msg = isGroup ? {
         id: _genMsgId(),
         from: currentUser.id,
-        to: toUserId,
+        to: cid,
+        text: text.slice(0, 2000),
+        createdAt: Date.now(),
+        readBy: [currentUser.id]
+    } : {
+        id: _genMsgId(),
+        from: currentUser.id,
+        to: target,
         text: text.slice(0, 2000),
         createdAt: Date.now(),
         read: false
@@ -291,7 +354,19 @@ function _markConvRead(convId) {
     if (!currentUser || !convId) return;
     const arr = (window.messagesData[convId] || []).slice();
     let changed = false;
-    arr.forEach(m => { if (m.to === currentUser.id && !m.read) { m.read = true; changed = true; } });
+    if (_isGroupConv(convId)) {
+        if (!_userCanAccessGroup(convId, currentUser)) return;
+        arr.forEach((m, i) => {
+            if (m.from === currentUser.id) return;
+            const readBy = m.readBy || [];
+            if (!readBy.includes(currentUser.id)) {
+                arr[i] = { ...m, readBy: [...readBy, currentUser.id] };
+                changed = true;
+            }
+        });
+    } else {
+        arr.forEach(m => { if (m.to === currentUser.id && !m.read) { m.read = true; changed = true; } });
+    }
     if (changed) _persistConversation(convId, arr);
 }
 
@@ -310,6 +385,29 @@ window.openMessages = function openMessages() {
 window.closeMessages = function closeMessages() {
     const m = document.getElementById('messages-modal');
     if (m) m.style.display = 'none';
+};
+
+window.openGroupMessages = function openGroupMessages(groupKey) {
+    if (!currentUser) { showToast('Connectez-vous pour accéder aux messages'); return; }
+    if (!_isGroupConv(groupKey) || !_userCanAccessGroup(groupKey, currentUser)) {
+        showToast('Groupe inaccessible'); return;
+    }
+    const m = document.getElementById('messages-modal');
+    if (!m) return;
+    m.style.display = 'flex';
+    _activeConvId = groupKey;
+    _activeConvUserId = null;
+    _convSearchQuery = '';
+    _markConvRead(_activeConvId);
+    document.getElementById('msg-list-view').style.display = 'none';
+    document.getElementById('msg-conv-view').style.display = 'flex';
+    const searchWrap = document.getElementById('msg-conv-search-wrap');
+    if (searchWrap) searchWrap.style.display = 'none';
+    const searchInp = document.getElementById('msg-conv-search');
+    if (searchInp) searchInp.value = '';
+    renderConvView();
+    const input = document.getElementById('msg-input');
+    if (input) input.value = _getDraft(_activeConvId) || '';
 };
 
 window.openMessagesWith = function openMessagesWith(userId) {
@@ -374,9 +472,53 @@ function renderConvList() {
         return;
     }
 
-    // Liste des conversations existantes
+    // En-tête : groupes accessibles (équipe, rôle utilisateur)
+    const drafts = _loadDrafts();
+    const groups = window.userAccessibleGroups();
+    let groupsHTML = '';
+    if (groups.length > 0) {
+        groupsHTML = '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:2px 0 6px;">Groupes</div>';
+        groupsHTML += groups.map(g => {
+            const arr = (window.messagesData[g.key] || []);
+            const unread = _convUnread(g.key, arr);
+            const last = arr.length > 0 ? arr[arr.length - 1] : null;
+            const draftText = drafts[g.key];
+            let preview, dateStr = '';
+            if (draftText) preview = draftText.slice(0, 60);
+            else if (last) preview = (last.text || '').slice(0, 60);
+            else preview = 'Aucun message — soyez le premier !';
+            if (last) {
+                const dt = new Date(last.createdAt);
+                const sameDay = dt.toDateString() === new Date().toDateString();
+                dateStr = sameDay
+                    ? `${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}`
+                    : `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}`;
+            }
+            const unreadBadge = unread > 0
+                ? `<span style="background:var(--crit); color:#fff; min-width:18px; height:18px; border-radius:9px; padding:0 5px; font-size:0.65rem; font-weight:900; display:inline-flex; align-items:center; justify-content:center; line-height:1; flex-shrink:0;">${unread}</span>`
+                : '';
+            const previewPrefix = draftText ? '<span style="color:var(--crit); font-weight:800;">Brouillon : </span>' : '';
+            return `
+              <div onclick="openGroupMessages('${g.key}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:${unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:var(--${g.roleColor}); color:#fff; flex-shrink:0; font-size:0.95rem;">${g.icon}</span>
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                    <span style="font-weight:800; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(g.label)}</span>
+                    <span style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${dateStr}</span>
+                  </div>
+                  <div style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+                    ${previewPrefix}${escapeHTML(preview)}
+                  </div>
+                </div>
+                ${unreadBadge}
+              </div>`;
+        }).join('');
+        groupsHTML += '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:14px 0 6px;">Conversations privées</div>';
+    }
+
+    // Liste des conversations 1-à-1 existantes
     const convs = Object.entries(window.messagesData || {})
-        .filter(([cid, arr]) => Array.isArray(arr) && arr.length > 0 && cid.split('__').includes(currentUser.id))
+        .filter(([cid, arr]) => Array.isArray(arr) && arr.length > 0 && !_isGroupConv(cid) && cid.split('__').includes(currentUser.id))
         .map(([cid, arr]) => {
             const last = arr[arr.length - 1];
             const otherId = _otherUserId(cid, currentUser.id);
@@ -386,13 +528,16 @@ function renderConvList() {
         })
         .sort((a, b) => (b.last?.createdAt || 0) - (a.last?.createdAt || 0));
 
-    if (convs.length === 0) {
+    if (convs.length === 0 && groups.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:24px; font-size:0.85rem;">Aucune conversation.<br>Cherchez un collègue ci-dessus pour commencer.</p>';
         return;
     }
+    if (convs.length === 0) {
+        container.innerHTML = groupsHTML + '<p style="text-align:center; color:var(--text-muted); padding:14px; font-size:0.8rem;">Aucune conversation privée.<br>Cherchez un collègue pour commencer.</p>';
+        return;
+    }
 
-    const drafts = _loadDrafts();
-    container.innerHTML = convs.map(c => {
+    container.innerHTML = groupsHTML + convs.map(c => {
         const name = c.other ? `${c.other.firstName} ${c.other.lastName.toUpperCase()}` : 'Utilisateur supprimé';
         const role = c.other?.role || 'ide';
         const dt = new Date(c.last.createdAt);
@@ -433,19 +578,36 @@ function renderConvView() {
     const bodyEl = document.getElementById('msg-conv-body');
     if (!headerEl || !bodyEl || !currentUser || !_activeConvId) return;
 
-    const other = (window.roster || []).find(r => r.id === _activeConvUserId);
-    const name = other ? `${other.firstName} ${other.lastName.toUpperCase()}` : 'Utilisateur';
-    const role = other?.role || 'ide';
-    headerEl.innerHTML = `
-      <button onclick="backToConvList()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
-      <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
-      <div style="flex:1; min-width:0;">
-        <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(name)}</div>
-        <div style="font-size:0.68rem; color:var(--text-muted);">${role.toUpperCase()}</div>
-      </div>
-      <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
-      <button onclick="deleteConversation('${_activeConvId}')" title="Supprimer la conversation" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--crit); padding:0 8px;">🗑️</button>
-    `;
+    const isGroup = _isGroupConv(_activeConvId);
+    if (isGroup) {
+        const meta = _groupMeta(_activeConvId);
+        const label = meta ? meta.label : 'Groupe';
+        const icon = meta ? meta.icon : '💬';
+        const roleColor = meta ? meta.roleColor : 'brand-aqua';
+        headerEl.innerHTML = `
+          <button onclick="backToConvList()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--${roleColor}); color:#fff; flex-shrink:0; font-size:0.85rem;">${icon}</span>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(label)}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);">Groupe</div>
+          </div>
+          <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
+        `;
+    } else {
+        const other = (window.roster || []).find(r => r.id === _activeConvUserId);
+        const name = other ? `${other.firstName} ${other.lastName.toUpperCase()}` : 'Utilisateur';
+        const role = other?.role || 'ide';
+        headerEl.innerHTML = `
+          <button onclick="backToConvList()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
+          <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(name)}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);">${role.toUpperCase()}</div>
+          </div>
+          <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
+          <button onclick="deleteConversation('${_activeConvId}')" title="Supprimer la conversation" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--crit); padding:0 8px;">🗑️</button>
+        `;
+    }
 
     const allMsgs = (window.messagesData[_activeConvId] || []).slice().sort((a, b) => a.createdAt - b.createdAt);
     const q = _convSearchQuery;
@@ -467,6 +629,14 @@ function renderConvView() {
             const editedTag = m.editedAt
                 ? ` <span style="opacity:0.7; font-style:italic;">· modifié</span>`
                 : '';
+            // Nom de l'expéditeur dans les groupes (au-dessus de la bulle, pour les autres)
+            let senderHeader = '';
+            if (isGroup && !mine) {
+                const sender = (window.roster || []).find(r => r.id === m.from);
+                const senderName = sender ? `${sender.firstName} ${sender.lastName.toUpperCase()}` : 'Utilisateur';
+                const senderRole = sender?.role || 'ide';
+                senderHeader = `<div style="font-size:0.68rem; font-weight:800; color:var(--${senderRole}); margin:0 4px 2px; align-self:flex-start;">${escapeHTML(senderName)}</div>`;
+            }
             const reactions = m.reactions || {};
             const reactionEntries = Object.entries(reactions).filter(([, users]) => Array.isArray(users) && users.length > 0);
             const reactionsHTML = reactionEntries.length > 0
@@ -479,11 +649,22 @@ function renderConvView() {
                   <button onclick="editMessage('${_activeConvId}', '${m.id}')" title="Modifier" style="position:absolute; top:-8px; right:38px; background:var(--brand-aqua); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.65rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">✏️</button>
                   <button onclick="deleteMessage('${_activeConvId}', '${m.id}')" title="Supprimer" style="position:absolute; top:-8px; right:14px; background:var(--crit); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">×</button>` : '';
             const reactBtn = `<button onclick="openReactionPicker('${_activeConvId}','${m.id}', this)" title="Réagir" class="msg-react-trigger msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:-8px' : 'right:-8px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">😊</button>`;
+            // Indicateurs de lecture : DM utilise read:bool, groupes utilisent readBy:[]
+            let readIndicator = '';
+            if (mine) {
+                if (isGroup) {
+                    const others = (m.readBy || []).filter(uid => uid !== currentUser.id).length;
+                    readIndicator = others > 0 ? ` ✓✓ ${others}` : ' ✓';
+                } else {
+                    readIndicator = m.read ? ' ✓✓' : ' ✓';
+                }
+            }
             return `
               <div style="display:flex; flex-direction:column; align-items:${align}; margin-bottom:8px;">
+                ${senderHeader}
                 <div style="max-width:78%; background:${bg}; color:${color}; padding:8px 12px; border-radius:14px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} position:relative;">
                   <div style="font-size:0.85rem; line-height:1.35; white-space:pre-wrap; word-wrap:break-word;">${escapeHTML(m.text)}</div>
-                  <div style="font-size:0.62rem; color:${mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'}; margin-top:3px; text-align:right;">${dateStr}${editedTag}${mine && m.read ? ' ✓✓' : (mine ? ' ✓' : '')}</div>
+                  <div style="font-size:0.62rem; color:${mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'}; margin-top:3px; text-align:right;">${dateStr}${editedTag}${readIndicator}</div>
                   ${reactBtn}
                   ${ownActions}
                 </div>
@@ -497,13 +678,21 @@ function renderConvView() {
 }
 window.renderConvView = renderConvView;
 
+function _activeSendTarget() {
+    if (_activeConvUserId) return _activeConvUserId;
+    if (_activeConvId && _isGroupConv(_activeConvId)) return _activeConvId;
+    return null;
+}
+
 window.handleMsgInputKey = function handleMsgInputKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        if (_activeConvUserId) window.sendMessage(_activeConvUserId);
+        const target = _activeSendTarget();
+        if (target) window.sendMessage(target);
     }
 };
 
 window.submitCurrentMessage = function submitCurrentMessage() {
-    if (_activeConvUserId) window.sendMessage(_activeConvUserId);
+    const target = _activeSendTarget();
+    if (target) window.sendMessage(target);
 };

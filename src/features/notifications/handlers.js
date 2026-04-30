@@ -229,6 +229,8 @@ window.handleNotifAction = function handleNotifAction(action, notifId) {
         window.openAdmin();
     } else if (action.kind === 'openMessage' && typeof window.openMessagesWith === 'function') {
         window.openMessagesWith(action.userId);
+    } else if (action.kind === 'openGroup' && typeof window.openGroupMessages === 'function') {
+        window.openGroupMessages(action.groupKey);
     } else if (action.kind === 'positionShift') {
         if (typeof window.checkWorkStatus === 'function') window.checkWorkStatus();
     }
