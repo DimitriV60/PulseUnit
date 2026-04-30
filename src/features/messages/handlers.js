@@ -32,6 +32,24 @@ window.setMessagesListFilter = function setMessagesListFilter(f) {
     renderConvList();
 };
 
+const _PINS_KEY = 'pu_msg_pins';
+function _loadPins() {
+    try { return JSON.parse(localStorage.getItem(_PINS_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function _isPinned(convId) {
+    if (!convId) return false;
+    return !!_loadPins()[convId];
+}
+window.toggleConvPin = function toggleConvPin(convId) {
+    if (!convId) return;
+    const p = _loadPins();
+    if (p[convId]) delete p[convId]; else p[convId] = Date.now();
+    try { localStorage.setItem(_PINS_KEY, JSON.stringify(p)); } catch (e) {}
+    if (typeof showToast === 'function') showToast(p[convId] ? '📌 Conversation épinglée' : 'Épinglage retiré');
+    renderConvList();
+    if (_activeConvId === convId) renderConvView();
+};
+
 const _DRAFTS_KEY = 'pu_msg_drafts';
 function _loadDrafts() {
     try { return JSON.parse(localStorage.getItem(_DRAFTS_KEY) || '{}') || {}; } catch (e) { return {}; }
@@ -595,6 +613,7 @@ function renderConvList() {
     }
 
     // Liste des conversations 1-à-1 existantes
+    const pins = _loadPins();
     let convs = !showDMs ? [] : Object.entries(window.messagesData || {})
         .filter(([cid, arr]) => Array.isArray(arr) && arr.length > 0 && !_isGroupConv(cid) && cid.split('__').includes(currentUser.id))
         .map(([cid, arr]) => {
@@ -602,9 +621,13 @@ function renderConvList() {
             const otherId = _otherUserId(cid, currentUser.id);
             const other = (window.roster || []).find(r => r.id === otherId);
             const unread = arr.filter(m => m.to === currentUser.id && !m.read).length;
-            return { cid, otherId, other, last, unread };
+            const pinned = !!pins[cid];
+            return { cid, otherId, other, last, unread, pinned };
         })
-        .sort((a, b) => (b.last?.createdAt || 0) - (a.last?.createdAt || 0));
+        .sort((a, b) => {
+            if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+            return (b.last?.createdAt || 0) - (a.last?.createdAt || 0);
+        });
     if (onlyUnread) convs = convs.filter(c => c.unread > 0);
 
     if (convs.length === 0 && groups.length === 0) {
@@ -637,13 +660,17 @@ function renderConvList() {
         const previewPrefix = draftText
             ? '<span style="color:var(--crit); font-weight:800;">Brouillon : </span>'
             : (lastFromMe ? '<span style="color:var(--brand-aqua);">Vous : </span>' : '');
+        const pinIcon = c.pinned ? '<span style="font-size:0.85rem; flex-shrink:0;" title="Épinglée">📌</span>' : '';
         return `
-          <div onclick="openMessagesWith('${c.otherId}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:${c.unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
+          <div onclick="openMessagesWith('${c.otherId}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid ${c.pinned ? 'var(--brand-aqua)' : 'var(--border)'}; border-radius:10px; margin-bottom:7px; cursor:pointer; background:${c.unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
             <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
             <div style="flex:1; min-width:0;">
               <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
                 <span style="font-weight:800; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(name)}</span>
-                <span style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${dateStr}</span>
+                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                  ${pinIcon}
+                  <span style="font-size:0.68rem; color:var(--text-muted);">${dateStr}</span>
+                </div>
               </div>
               <div style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
                 ${previewPrefix}${escapeHTML(preview)}
@@ -661,6 +688,8 @@ function renderConvView() {
     if (!headerEl || !bodyEl || !currentUser || !_activeConvId) return;
 
     const isGroup = _isGroupConv(_activeConvId);
+    const pinned = _isPinned(_activeConvId);
+    const pinBtn = `<button onclick="toggleConvPin('${_activeConvId}')" title="${pinned ? 'Désépingler' : 'Épingler'}" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:${pinned ? 'var(--brand-aqua)' : 'var(--text-muted)'}; padding:0 8px;">📌</button>`;
     if (isGroup) {
         const meta = _groupMeta(_activeConvId);
         const label = meta ? meta.label : 'Groupe';
@@ -673,6 +702,7 @@ function renderConvView() {
             <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(label)}</div>
             <div style="font-size:0.68rem; color:var(--text-muted);">Groupe</div>
           </div>
+          ${pinBtn}
           <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
         `;
     } else {
@@ -686,6 +716,7 @@ function renderConvView() {
             <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(name)}</div>
             <div style="font-size:0.68rem; color:var(--text-muted);">${role.toUpperCase()}</div>
           </div>
+          ${pinBtn}
           <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
           <button onclick="deleteConversation('${_activeConvId}')" title="Supprimer la conversation" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--crit); padding:0 8px;">🗑️</button>
         `;
