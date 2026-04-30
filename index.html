@@ -70,8 +70,9 @@
     <div id="locked-banner">🔒 GARDE TERMINÉE - LECTURE SEULE</div>
     <div id="app-mode-tag" style="display:none; font-size:0.7rem; font-weight:800; text-align:center; padding:3px 10px; border-radius:4px; margin:2px 8px 0;"></div>
     <div style="position:relative; padding:6px 12px 4px;">
-      <input type="text" id="global-search" placeholder="🔍 Recherche — service, terme médical, protocole..." oninput="renderGlobalSearch()" onfocus="renderGlobalSearch()" autocomplete="off"
-        style="width:100%; box-sizing:border-box; padding:9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; font-family:var(--font); outline:none;">
+      <input type="text" id="global-search" placeholder="🔍 Recherche — service, terme médical, protocole..." oninput="renderGlobalSearch(); toggleClearBtn('global-search')" onfocus="renderGlobalSearch()" autocomplete="off"
+        style="width:100%; box-sizing:border-box; padding:9px 36px 9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; font-family:var(--font); outline:none;">
+      <button id="global-search-clear" type="button" onclick="clearSearchInput('global-search', renderGlobalSearch)" title="Effacer" style="display:none; position:absolute; right:20px; top:14px; background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       <div id="global-search-results" style="display:none; position:absolute; left:12px; right:12px; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:500; max-height:60vh; overflow-y:auto;"></div>
     </div>
     <div class="shift-nav" id="shift-nav"></div>
@@ -454,7 +455,10 @@
         </div>
         <button data-action="hide:admin-users-modal" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
-      <input type="text" id="admin-users-search" placeholder="🔍 Rechercher un nom…" oninput="renderAdminUsers()" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box; margin-bottom:12px;">
+      <div style="position:relative; margin-bottom:12px;">
+        <input type="text" id="admin-users-search" placeholder="🔍 Rechercher un nom…" oninput="renderAdminUsers(); toggleClearBtn('admin-users-search')" style="width:100%; padding:9px 32px 9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box;">
+        <button id="admin-users-search-clear" type="button" onclick="clearSearchInput('admin-users-search', renderAdminUsers)" title="Effacer" style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+      </div>
       <div id="admin-users-container"></div>
     </div>
   </div>
@@ -598,8 +602,9 @@
         </div>
       </div>
       <div class="fs-subtitle">Cliquer sur une carte pour afficher l'explication experte</div>
-      <div class="lex-search-container">
-        <input type="text" id="lexique-search" class="search-input" placeholder="🔍 Rechercher un terme ou une abréviation..." oninput="renderLexique()">
+      <div class="lex-search-container" style="position:relative;">
+        <input type="text" id="lexique-search" class="search-input" placeholder="🔍 Rechercher un terme ou une abréviation..." oninput="renderLexique(); toggleClearBtn('lexique-search')" style="padding-right:34px;">
+        <button id="lexique-search-clear" type="button" onclick="clearSearchInput('lexique-search', renderLexique)" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
     </div>
     <div class="lexique-filters" id="lexique-filters"></div>
@@ -1599,9 +1604,10 @@
           </div>
         </div>
       </div>
-      <div style="padding:0 16px 8px;">
-        <input type="text" id="services-search" placeholder="🔍 Rechercher un service ou numéro..." oninput="renderServices()" autocomplete="off"
-          style="width:100%; box-sizing:border-box; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
+      <div style="padding:0 16px 8px; position:relative;">
+        <input type="text" id="services-search" placeholder="🔍 Rechercher un service ou numéro..." oninput="renderServices(); toggleClearBtn('services-search')" autocomplete="off"
+          style="width:100%; box-sizing:border-box; padding:11px 38px 11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
+        <button id="services-search-clear" type="button" onclick="clearSearchInput('services-search', renderServices)" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:1rem; cursor:pointer; width:24px; height:24px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
       <div style="padding:0 16px 10px; display:flex; gap:6px;">
         <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Annuaire</button>
@@ -1653,9 +1659,10 @@
           </div>
         </div>
       </div>
-      <div id="dil-search-wrap" style="padding:0 16px 10px;">
-        <input type="text" id="dil-search" placeholder="🔍 Filtrer par médicament..." oninput="filterDilutions()" autocomplete="off"
-          style="width:100%; box-sizing:border-box; padding:9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; font-weight:700; font-family:var(--font); outline:none;">
+      <div id="dil-search-wrap" style="padding:0 16px 10px; position:relative;">
+        <input type="text" id="dil-search" placeholder="🔍 Filtrer par médicament..." oninput="filterDilutions(); toggleClearBtn('dil-search')" autocomplete="off"
+          style="width:100%; box-sizing:border-box; padding:9px 36px 9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; font-weight:700; font-family:var(--font); outline:none;">
+        <button id="dil-search-clear" type="button" onclick="clearSearchInput('dil-search', filterDilutions)" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
     </div>
     <div id="dilutions-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
@@ -1672,9 +1679,10 @@
           </div>
         </div>
       </div>
-      <div style="padding:0 16px 8px;">
-        <input type="text" id="pathologies-search" placeholder="🔍 Rechercher une pathologie ou un système..." oninput="renderPathologies()" autocomplete="off"
-          style="width:100%; box-sizing:border-box; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
+      <div style="padding:0 16px 8px; position:relative;">
+        <input type="text" id="pathologies-search" placeholder="🔍 Rechercher une pathologie ou un système..." oninput="renderPathologies(); toggleClearBtn('pathologies-search')" autocomplete="off"
+          style="width:100%; box-sizing:border-box; padding:10px 38px 10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
+        <button id="pathologies-search-clear" type="button" onclick="clearSearchInput('pathologies-search', renderPathologies)" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:1rem; cursor:pointer; width:24px; height:24px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
       <div style="padding:0 16px 12px; display:flex; gap:8px;">
         <button id="patho-tab-all" data-action="setPathoTab:all" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Toutes</button>
@@ -1897,8 +1905,9 @@
     <div id="auth-login-view">
       <div class="auth-logo">Pulse<span>Unit</span></div>
       <div class="auth-sub">Connectez-vous pour accéder à l'application</div>
-      <div id="auth-search-user-wrap">
-        <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterAuthUsers(this.value)" autocomplete="off">
+      <div id="auth-search-user-wrap" style="position:relative;">
+        <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterAuthUsers(this.value); toggleClearBtn('auth-search-user')" autocomplete="off" style="padding-right:34px;">
+        <button id="auth-search-user-clear" type="button" onclick="clearSearchInput('auth-search-user', filterAuthUsers)" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0; z-index:2;">×</button>
       </div>
       <input type="hidden" id="auth-select-user" value="">
       <div id="auth-user-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
@@ -1939,7 +1948,10 @@
     <div id="auth-forgot-view" style="display:none;">
       <div class="auth-logo" style="font-size:1.2rem;">Code oublié</div>
       <div class="auth-sub">Une demande sera envoyée à l'administrateur</div>
-      <input class="auth-input" type="text" id="forgot-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterForgotUsers(this.value)" autocomplete="off">
+      <div style="position:relative;">
+        <input class="auth-input" type="text" id="forgot-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterForgotUsers(this.value); toggleClearBtn('forgot-search-user')" autocomplete="off" style="padding-right:34px;">
+        <button id="forgot-search-user-clear" type="button" onclick="clearSearchInput('forgot-search-user', filterForgotUsers)" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0; z-index:2;">×</button>
+      </div>
       <input type="hidden" id="forgot-select-user" value="">
       <div id="forgot-user-list" style="max-height:130px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
       <div id="forgot-selected-user" style="display:none; background:rgba(59,130,246,0.1); border:1px solid var(--brand-blue); border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:0.85rem; font-weight:800; color:var(--brand-blue);"></div>

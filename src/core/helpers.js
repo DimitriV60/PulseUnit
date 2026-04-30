@@ -69,3 +69,21 @@ window.playSound = function playSound(type) {
     console.log('Audio non supporté par ce navigateur.');
   }
 };
+
+// ============ Barres de recherche : bouton × pour effacer ============
+window.toggleClearBtn = function toggleClearBtn(inputId, btnId) {
+    const inp = document.getElementById(inputId);
+    const btn = document.getElementById(btnId || (inputId + '-clear'));
+    if (!inp || !btn) return;
+    btn.style.display = (inp.value && inp.value.length > 0) ? 'inline-flex' : 'none';
+};
+
+window.clearSearchInput = function clearSearchInput(inputId, onChange) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    inp.value = '';
+    if (typeof onChange === 'function') onChange('');
+    const btn = document.getElementById(inputId + '-clear');
+    if (btn) btn.style.display = 'none';
+    inp.focus();
+};
