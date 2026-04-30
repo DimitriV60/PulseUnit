@@ -715,7 +715,7 @@
           <span style="font-size:1.05rem;">🔑</span><span style="flex:1;">Connexion & Compte</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div><strong style="color:var(--text);">Première connexion</strong> — Crée ton compte : prénom · nom · rôle · code à 6 chiffres.</div>
+          <div><strong style="color:var(--text);">Première connexion</strong> — Crée ton compte : prénom · nom · rôle · <strong style="color:var(--text);">type d'agent</strong> (jour fixe · nuit fixe · alterné) · code à 6 chiffres · activation des notifications. Le type d'agent peut être modifié plus tard dans Mon profil.</div>
           <div><strong style="color:var(--text);">Ensuite</strong> — Recherche ton nom → sélectionne → tape ton code. Coche <em>« Se souvenir »</em> pour 7 jours d'auto-connexion sur cet appareil.</div>
           <div><strong style="color:var(--text);">Mauvais nom ?</strong> Clique la <span style="color:var(--brand-blue); font-weight:800;">✕</span> à droite pour relancer la recherche.</div>
           <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0;">
@@ -1938,6 +1938,16 @@
         <button class="auth-role-btn" data-role="as" data-action="selectRole:as">🩺 AS</button>
         <button class="auth-role-btn" data-role="med" data-action="selectRole:med">👨‍⚕️ Médecin</button>
       </div>
+      <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin:10px 0 6px;">Type d'agent</div>
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button type="button" class="auth-agent-btn" data-agent="jour-fixe" data-action="selectAgentType:jour-fixe" style="flex:1; padding:10px 6px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; font-size:0.78rem; display:flex; flex-direction:column; gap:2px; align-items:center;"><span style="font-size:1.1rem;">☀️</span><span>Jour fixe</span></button>
+        <button type="button" class="auth-agent-btn" data-agent="nuit-fixe" data-action="selectAgentType:nuit-fixe" style="flex:1; padding:10px 6px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; font-size:0.78rem; display:flex; flex-direction:column; gap:2px; align-items:center;"><span style="font-size:1.1rem;">🌙</span><span>Nuit fixe</span></button>
+        <button type="button" class="auth-agent-btn" data-agent="alterne" data-action="selectAgentType:alterne" style="flex:1; padding:10px 6px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; font-size:0.78rem; display:flex; flex-direction:column; gap:2px; align-items:center;"><span style="font-size:1.1rem;">🔄</span><span>Alterné</span></button>
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:10px; cursor:pointer;">
+        <input type="checkbox" id="reg-notif-permission" checked style="width:16px; height:16px; cursor:pointer;">
+        🔔 Activer les notifications <span style="color:var(--text-muted); font-weight:600;">(messages, transmissions)</span>
+      </label>
       <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">Code à 6 chiffres</div>
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin" placeholder="••••••" autocomplete="new-password">
       <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="reg-pin2" placeholder="Confirmer le code" autocomplete="new-password">

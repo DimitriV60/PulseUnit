@@ -47,6 +47,18 @@ window.selectRole = function selectRole(role) {
     );
 };
 
+window._selectedAgentType = null;
+window.selectAgentType = function selectAgentType(type) {
+    if (!['jour-fixe', 'nuit-fixe', 'alterne'].includes(type)) return;
+    window._selectedAgentType = type;
+    document.querySelectorAll('.auth-agent-btn').forEach(b => {
+        const sel = b.dataset.agent === type;
+        b.style.borderColor = sel ? 'var(--brand-aqua)' : 'var(--border)';
+        b.style.background = sel ? 'rgba(64,206,234,0.12)' : 'var(--surface-sec)';
+        b.style.color = sel ? 'var(--brand-aqua)' : 'var(--text)';
+    });
+};
+
 function _renderUserList(containerId, hiddenId, selectedId, entries, onSelect) {
     const box = document.getElementById(containerId);
     if (!box) return;
@@ -164,9 +176,12 @@ window.registerUser = async function registerUser() {
     const ln   = document.getElementById('reg-lastname').value.trim();
     const pin  = document.getElementById('reg-pin').value;
     const pin2 = document.getElementById('reg-pin2').value;
+    const agentType = window._selectedAgentType;
+    const wantsNotif = document.getElementById('reg-notif-permission')?.checked !== false;
     if (!fn || !ln) return alert('Veuillez entrer votre prénom et nom.');
     if (fn.length > 50 || ln.length > 50) return alert('Prénom et nom ne peuvent pas dépasser 50 caractères.');
     if (!selectedRole) return alert('Veuillez choisir votre rôle.');
+    if (!agentType) return alert('Veuillez choisir votre type d\'agent (jour fixe, nuit fixe ou alterné).');
     if (!/^\d{6}$/.test(pin)) return alert('Le code doit contenir exactement 6 chiffres.');
     if (pin !== pin2) return alert('Les codes ne correspondent pas.');
     const already = Object.values(authUsers).find(u =>
@@ -202,7 +217,13 @@ window.registerUser = async function registerUser() {
     if (typeof window.loadNotifs === 'function') await window.loadNotifs();
     if (typeof window.loadMessages === 'function') await window.loadMessages();
     if (typeof window.startShiftReminderLoop === 'function') window.startShiftReminderLoop();
-    if (typeof window.maybePromptNotifPermission === 'function') window.maybePromptNotifPermission();
+    // Sauvegarde du type d'agent choisi à l'inscription
+    if (window.userProfile) window.userProfile.agentType = agentType;
+    if (typeof window.saveUserProfile === 'function') window.saveUserProfile();
+    // Permission notifs : demandée tout de suite si l'utilisateur a coché la case
+    if (wantsNotif && typeof window.requestNotifPermission === 'function') {
+        try { await window.requestNotifPermission(); } catch (e) {}
+    }
     renderApp();
     showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
     checkWorkStatus();
