@@ -367,7 +367,7 @@
         { name: "Hotline / DPI", num: "0344616559", display: "(61) 6559" },
         { name: "CGOS", num: "0344616034", display: "(61) 6034" },
         { name: "HNE", num: "0344612071", display: "(61) 2071" },
-        { name: "Sécurité incendie", num: "", display: "bip 1818" },
+        { name: "Sécurité incendie", num: "0344611818", display: "(61) 1818" },
         { name: "Service technique", num: "0344617777", display: "(61) 7777" },
       ]
     },
