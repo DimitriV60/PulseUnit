@@ -227,6 +227,8 @@ window.registerUser = async function registerUser() {
     renderApp();
     showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
     checkWorkStatus();
+    // Lance le tutoriel d'accueil après inscription
+    if (typeof window.maybeStartTutorial === 'function') window.maybeStartTutorial();
 };
 
 window.loginUser = async function loginUser() {
