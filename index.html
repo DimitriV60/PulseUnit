@@ -910,16 +910,19 @@
           <span style="font-size:1.05rem;">💬</span><span style="flex:1;">Messages internes</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div>Conversations privées <strong style="color:var(--text);">1-à-1</strong> avec n'importe quel collègue de l'équipe. Sync temps réel multi-appareils.</div>
-          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">1</span><div>Menu ☰ → <strong style="color:var(--text);">💬 Messages</strong>.</div></div>
-          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">2</span><div>Cherche un nom dans la barre <em>🔍 Chercher un collègue</em>, ou tape une conversation existante.</div></div>
-          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">3</span><div>Tape ton message → <strong style="color:var(--brand-aqua);">➤</strong> ou Entrée pour envoyer.</div></div>
+          <div>Conversations privées <strong style="color:var(--text);">1-à-1</strong> avec n'importe quel collègue + <strong style="color:var(--text);">groupes</strong> par rôle. Sync temps réel multi-appareils.</div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">1</span><div>Menu ☰ → <strong style="color:var(--text);">💬 Messages</strong>. Une <strong style="color:var(--crit);">pastille rouge</strong> sur l'icône indique le total de messages non-lus.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">2</span><div>En haut de la liste : <strong style="color:var(--text);">Groupes</strong> (👥 Toute l'équipe + groupe de ton rôle). Plus bas : conversations privées. Cherche un nom dans la barre <em>🔍 Chercher un collègue</em> pour démarrer une nouvelle DM.</div></div>
+          <div style="display:flex; gap:10px; align-items:flex-start;"><span style="background:var(--brand-aqua); color:#fff; font-weight:900; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">3</span><div>Tape ton message → <strong style="color:var(--brand-aqua);">➤</strong> ou Entrée pour envoyer. Le texte non envoyé est <strong style="color:var(--text);">conservé en brouillon</strong> automatiquement.</div></div>
           <div style="background:var(--surface); border-radius:8px; padding:10px; border:1px solid var(--border); font-size:0.75rem;">
-            <div><strong style="color:var(--text);">Accusés de lecture</strong> — <span style="color:var(--brand-aqua);">✓</span> envoyé · <span style="color:var(--brand-aqua);">✓✓</span> lu par le destinataire</div>
-            <div style="margin-top:4px;"><strong style="color:var(--text);">Suppression</strong> — survole un de tes messages → croix rouge. Bouton 🗑️ en haut pour effacer toute la conv (visible des deux côtés).</div>
+            <div><strong style="color:var(--text);">Accusés de lecture</strong> — <span style="color:var(--brand-aqua);">✓</span> envoyé · <span style="color:var(--brand-aqua);">✓✓</span> lu (DM) ou <span style="color:var(--brand-aqua);">✓✓ N</span> nb de membres ayant lu (groupe).</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Édition</strong> — survole un de tes messages → ✏️ pour modifier (le tag <em>· modifié</em> s'ajoute).</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Réactions emoji</strong> — bouton 😊 sur chaque message → choisis 👍❤️😂😮😢🙏. Re-clique pour retirer ta réaction.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Recherche</strong> — bouton 🔍 dans le header de la conv pour filtrer les messages par mot-clé.</div>
+            <div style="margin-top:4px;"><strong style="color:var(--text);">Suppression</strong> — survole un de tes messages → × rouge. Bouton 🗑️ en haut (DM seulement) pour effacer toute la conv des deux côtés.</div>
           </div>
           <div style="border-left:3px solid var(--brand-aqua); padding:6px 10px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0;">
-            <strong style="color:var(--text);">Persistance</strong> — Les messages restent à vie tant qu'ils ne sont pas supprimés. Pastille bleue dans la liste = nouveau message non lu.
+            <strong style="color:var(--text);">Persistance</strong> — Les messages restent à vie tant qu'ils ne sont pas supprimés. Brouillons et historiques synchronisés multi-appareils.
           </div>
         </div>
       </details>
@@ -1398,6 +1401,7 @@
           <div class="projet-row"><span class="projet-row-key">Tâches IDE Tech</span><span class="projet-row-val">Liste auto selon jour/nuit — barre de progression, sauvegardée par garde</span></div>
           <div class="projet-row"><span class="projet-row-key">Checklist chambre</span><span class="projet-row-val">10 items de vérification par lit — sauvegardés par garde</span></div>
           <div class="projet-row"><span class="projet-row-key">Calendrier Congés</span><span class="projet-row-val">Simulateur CA — bonus HS, fractionnement, RCV selon Décrets 2002-8 et 2002-9</span></div>
+          <div class="projet-row"><span class="projet-row-key">Messages</span><span class="projet-row-val">DM 1-à-1 + groupes par rôle (IDE/AS/Réa/USIP/Toute l'équipe) — édition, réactions emoji, brouillons, recherche plein-texte, badge non-lus global</span></div>
         </div>
       </div>
 
@@ -1419,6 +1423,9 @@
           <div class="projet-row"><span class="projet-row-key">isShiftLocked()</span><span class="projet-row-val">true si la garde est terminée — JOUR verrouillé à 20h, NUIT à 8h lendemain</span></div>
           <div class="projet-row"><span class="projet-row-key">saveData()</span><span class="projet-row-val">Sauvegarde roster + shiftHistory en localStorage — alerte si quota dépassé</span></div>
           <div class="projet-row"><span class="projet-row-key">renderApp()</span><span class="projet-row-val">Reconstruit tout le tableau de bord — appelée après chaque modification</span></div>
+          <div class="projet-row"><span class="projet-row-key">MESSAGES_DOC</span><span class="projet-row-val">Doc Firestore <em>pulseunit/messages</em> — clé de conv : <code>userA__userB</code> (DM, ids triés) ou <code>group__&lt;role&gt;</code> (groupe par rôle)</span></div>
+          <div class="projet-row"><span class="projet-row-key">readBy[]</span><span class="projet-row-val">Tableau des userIds ayant lu un message de groupe (remplace <code>read:bool</code> qui n'existe que pour les DM)</span></div>
+          <div class="projet-row"><span class="projet-row-key">totalUnreadMessages()</span><span class="projet-row-val">Compteur global des messages non-lus (DM + groupes accessibles) — alimente la pastille rouge du menu</span></div>
         </div>
       </div>
 
@@ -1436,6 +1443,8 @@
           <div class="projet-row"><span class="projet-row-key">pulseunit_settings</span><span class="projet-row-val">Sons et retour haptique <span class="projet-row-muted">— non sensible</span></span></div>
           <div class="projet-row"><span class="projet-row-key">pulseunit_cal_ca</span><span class="projet-row-val">Jours de congés cochés <span class="projet-row-muted">— personnel</span></span></div>
           <div class="projet-row"><span class="projet-row-key">pulseunit_cal_djf</span><span class="projet-row-val">DJF travaillés cochés <span class="projet-row-muted">— personnel</span></span></div>
+          <div class="projet-row"><span class="projet-row-key">pu_messages_cache</span><span class="projet-row-val">Cache offline des conversations (DM + groupes) <span class="projet-row-muted">— synchro Firestore</span></span></div>
+          <div class="projet-row"><span class="projet-row-key">pu_msg_drafts</span><span class="projet-row-val">Brouillons de messages non envoyés, par conversation <span class="projet-row-muted">— local</span></span></div>
         </div>
       </div>
 
