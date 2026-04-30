@@ -363,6 +363,9 @@ window.saveDraftFromInput = function saveDraftFromInput() {
     const input = document.getElementById('msg-input');
     if (!input || !_activeConvId) return;
     _saveDraft(_activeConvId, input.value);
+    if (input.value && input.value.trim().length > 0 && typeof window.setTyping === 'function') {
+        window.setTyping(_activeConvId);
+    }
 };
 
 window.setConvSearchQuery = function setConvSearchQuery(q) {
@@ -514,6 +517,7 @@ window.openMessages = function openMessages() {
 window.closeMessages = function closeMessages() {
     const m = document.getElementById('messages-modal');
     if (m) m.style.display = 'none';
+    if (typeof window.clearTyping === 'function') window.clearTyping();
 };
 
 window.openGroupMessages = function openGroupMessages(groupKey) {
@@ -572,6 +576,7 @@ window.backToConvList = function backToConvList() {
     _convSearchQuery = '';
     _replyDraft = null;
     _renderReplyBanner();
+    if (typeof window.clearTyping === 'function') window.clearTyping();
     document.getElementById('msg-list-view').style.display = 'flex';
     document.getElementById('msg-conv-view').style.display = 'none';
     renderConvList();
@@ -812,12 +817,19 @@ function renderConvView() {
         const other = (window.roster || []).find(r => r.id === _activeConvUserId);
         const name = other ? `${other.firstName} ${other.lastName.toUpperCase()}` : 'Utilisateur';
         const role = other?.role || 'ide';
+        const online = typeof window.isUserOnline === 'function' && window.isUserOnline(_activeConvUserId);
+        const statusDot = online
+            ? '<span title="En ligne" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--ok); flex-shrink:0;"></span>'
+            : '';
+        const subLabel = online
+            ? '<span style="color:var(--ok); font-weight:800;">● En ligne</span>'
+            : `<span>${role.toUpperCase()}</span>`;
         headerEl.innerHTML = `
           <button onclick="backToConvList()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
           <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
           <div style="flex:1; min-width:0;">
-            <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(name)}</div>
-            <div style="font-size:0.68rem; color:var(--text-muted);">${role.toUpperCase()}</div>
+            <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px;">${escapeHTML(name)}${statusDot}</div>
+            <div style="font-size:0.68rem; color:var(--text-muted);">${subLabel}</div>
           </div>
           ${pinBtn}
           <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
@@ -900,9 +912,48 @@ function renderConvView() {
         }).join('');
         bodyEl.scrollTop = bodyEl.scrollHeight;
     }
+    // Indicateur "en train d'écrire…" en bas du body
+    const typingEl = document.getElementById('msg-typing-indicator');
+    if (typingEl) {
+        const typers = (typeof window.getTypingUsers === 'function') ? window.getTypingUsers(_activeConvId) : [];
+        if (typers.length === 0) {
+            typingEl.style.display = 'none';
+            typingEl.innerHTML = '';
+        } else {
+            typingEl.style.display = 'block';
+            const names = typers.map(t => t.firstName).join(', ');
+            const verb = typers.length > 1 ? 'écrivent' : 'écrit';
+            typingEl.innerHTML = `<span style="font-size:0.74rem; color:var(--text-muted); font-style:italic;"><span style="display:inline-block; animation:msgTypingPulse 1.4s infinite;">⋯</span> ${escapeHTML(names)} ${verb}…</span>`;
+        }
+    }
     _markConvRead(_activeConvId);
     if (typeof window.renderNotifsBell === 'function') window.renderNotifsBell();
 }
+
+// Re-render léger toutes les 5s pour rafraîchir typing/online (pas de re-fetch Firestore)
+let _convViewRefreshInterval = null;
+function _startConvViewRefresh() {
+    if (_convViewRefreshInterval) return;
+    _convViewRefreshInterval = setInterval(() => {
+        if (_activeConvId && document.getElementById('messages-modal')?.style.display === 'flex') {
+            // Re-render uniquement le header + zone typing pour éviter de scroller
+            const typers = (typeof window.getTypingUsers === 'function') ? window.getTypingUsers(_activeConvId) : [];
+            const typingEl = document.getElementById('msg-typing-indicator');
+            if (typingEl) {
+                if (typers.length === 0) {
+                    typingEl.style.display = 'none';
+                    typingEl.innerHTML = '';
+                } else {
+                    typingEl.style.display = 'block';
+                    const names = typers.map(t => t.firstName).join(', ');
+                    const verb = typers.length > 1 ? 'écrivent' : 'écrit';
+                    typingEl.innerHTML = `<span style="font-size:0.74rem; color:var(--text-muted); font-style:italic;"><span style="display:inline-block; animation:msgTypingPulse 1.4s infinite;">⋯</span> ${escapeHTML(names)} ${verb}…</span>`;
+                }
+            }
+        }
+    }, 5000);
+}
+document.addEventListener('DOMContentLoaded', _startConvViewRefresh);
 window.renderConvView = renderConvView;
 
 function _activeSendTarget() {

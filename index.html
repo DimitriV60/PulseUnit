@@ -1881,6 +1881,7 @@
         <button onclick="toggleConvSearch()" title="Fermer la recherche" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 4px;">⌫</button>
       </div>
       <div id="msg-conv-body" style="flex:1; overflow-y:auto; padding:14px; background:var(--surface); min-height:0;"></div>
+      <div id="msg-typing-indicator" style="display:none; padding:4px 14px; background:var(--surface); border-top:1px solid var(--border);"></div>
       <div id="msg-reply-banner" style="display:none; padding:6px 10px; background:var(--surface-sec); border-top:1px solid var(--border); gap:6px; align-items:stretch;"></div>
       <div style="display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--border); background:var(--pill-bg);">
         <input type="text" id="msg-input" placeholder="Écrire un message..." onkeydown="handleMsgInputKey(event)" oninput="saveDraftFromInput()" style="flex:1; padding:10px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; outline:none;">

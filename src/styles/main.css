@@ -971,3 +971,9 @@
 #msg-conv-body > div:hover .msg-act-btn { display: inline-flex !important; align-items: center; justify-content: center; }
 #msg-conv-body > div:focus-within .msg-act-btn { display: inline-flex !important; align-items: center; justify-content: center; }
 
+
+@keyframes msgTypingPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
