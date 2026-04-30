@@ -40,6 +40,50 @@ function _isPinned(convId) {
     if (!convId) return false;
     return !!_loadPins()[convId];
 }
+// ============ RÉPONSE À UN MESSAGE (citation) ============
+let _replyDraft = null; // { convId, msgId, fromName, textPreview }
+
+window.startReplyTo = function startReplyTo(convId, msgId) {
+    if (!convId || !msgId || !currentUser) return;
+    const arr = window.messagesData[convId] || [];
+    const m = arr.find(x => x.id === msgId);
+    if (!m) return;
+    const sender = (window.roster || []).find(r => r.id === m.from);
+    const fromName = m.from === currentUser.id
+        ? 'Vous'
+        : (sender ? `${sender.firstName} ${sender.lastName.toUpperCase()}` : 'Utilisateur');
+    _replyDraft = {
+        convId, msgId, fromName,
+        textPreview: (m.text || '').slice(0, 120)
+    };
+    _renderReplyBanner();
+    const inp = document.getElementById('msg-input');
+    if (inp) inp.focus();
+};
+
+window.cancelReply = function cancelReply() {
+    _replyDraft = null;
+    _renderReplyBanner();
+};
+
+function _renderReplyBanner() {
+    const wrap = document.getElementById('msg-reply-banner');
+    if (!wrap) return;
+    if (!_replyDraft || _replyDraft.convId !== _activeConvId) {
+        wrap.style.display = 'none';
+        wrap.innerHTML = '';
+        return;
+    }
+    wrap.style.display = 'flex';
+    wrap.innerHTML = `
+      <div style="flex:1; min-width:0; border-left:3px solid var(--brand-aqua); padding:4px 10px;">
+        <div style="font-size:0.7rem; color:var(--brand-aqua); font-weight:900;">↩ ${escapeHTML(_replyDraft.fromName)}</div>
+        <div style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(_replyDraft.textPreview)}</div>
+      </div>
+      <button onclick="cancelReply()" title="Annuler" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 6px;">×</button>
+    `;
+}
+
 window.toggleConvPin = function toggleConvPin(convId) {
     if (!convId) return;
     const p = _loadPins();
@@ -298,10 +342,19 @@ window.sendMessage = async function sendMessage(target, textOverride) {
         read: false
     };
     if (mentions.length) msg.mentions = mentions;
+    if (_replyDraft && _replyDraft.convId === cid) {
+        msg.replyTo = {
+            id: _replyDraft.msgId,
+            fromName: _replyDraft.fromName,
+            textPreview: _replyDraft.textPreview
+        };
+    }
     arr.push(msg);
     _persistConversation(cid, arr);
     if (input) input.value = '';
     _saveDraft(cid, '');
+    _replyDraft = null;
+    _renderReplyBanner();
     renderConvView();
     renderConvList();
 };
@@ -474,6 +527,7 @@ window.openGroupMessages = function openGroupMessages(groupKey) {
     _activeConvId = groupKey;
     _activeConvUserId = null;
     _convSearchQuery = '';
+    _replyDraft = null;
     _markConvRead(_activeConvId);
     document.getElementById('msg-list-view').style.display = 'none';
     document.getElementById('msg-conv-view').style.display = 'flex';
@@ -495,6 +549,7 @@ window.openMessagesWith = function openMessagesWith(userId) {
     _activeConvId = _convId(currentUser.id, userId);
     _activeConvUserId = userId;
     _convSearchQuery = '';
+    _replyDraft = null;
     _markConvRead(_activeConvId);
     document.getElementById('msg-list-view').style.display = 'none';
     document.getElementById('msg-conv-view').style.display = 'flex';
@@ -515,6 +570,8 @@ window.backToConvList = function backToConvList() {
     _activeConvId = null;
     _activeConvUserId = null;
     _convSearchQuery = '';
+    _replyDraft = null;
+    _renderReplyBanner();
     document.getElementById('msg-list-view').style.display = 'flex';
     document.getElementById('msg-conv-view').style.display = 'none';
     renderConvList();
@@ -731,6 +788,7 @@ function renderConvView() {
     const headerEl = document.getElementById('msg-conv-header');
     const bodyEl = document.getElementById('msg-conv-body');
     if (!headerEl || !bodyEl || !currentUser || !_activeConvId) return;
+    _renderReplyBanner();
 
     const isGroup = _isGroupConv(_activeConvId);
     const pinned = _isPinned(_activeConvId);
@@ -807,6 +865,15 @@ function renderConvView() {
                   <button onclick="editMessage('${_activeConvId}', '${m.id}')" title="Modifier" style="position:absolute; top:-8px; right:38px; background:var(--brand-aqua); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.65rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">✏️</button>
                   <button onclick="deleteMessage('${_activeConvId}', '${m.id}')" title="Supprimer" style="position:absolute; top:-8px; right:14px; background:var(--crit); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">×</button>` : '';
             const reactBtn = `<button onclick="openReactionPicker('${_activeConvId}','${m.id}', this)" title="Réagir" class="msg-react-trigger msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:-8px' : 'right:-8px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">😊</button>`;
+            const replyBtn = `<button onclick="startReplyTo('${_activeConvId}','${m.id}')" title="Répondre" class="msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:18px' : 'right:18px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">↩</button>`;
+            // Citation (replyTo) au-dessus de la bulle
+            let replyQuote = '';
+            if (m.replyTo && m.replyTo.fromName) {
+                replyQuote = `<div onclick="(function(){const el=document.getElementById('msg-${escapeHTML(m.replyTo.id)}'); if(el){el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.transition='background 0.5s'; el.style.background='rgba(64,206,234,0.25)'; setTimeout(()=>{el.style.background='';},1200);}})()" style="max-width:78%; margin-bottom:2px; border-left:3px solid var(--brand-aqua); padding:4px 8px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0; cursor:pointer;">
+                  <div style="font-size:0.68rem; color:var(--brand-aqua); font-weight:900;">↩ ${escapeHTML(m.replyTo.fromName)}</div>
+                  <div style="font-size:0.74rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(m.replyTo.textPreview || '')}</div>
+                </div>`;
+            }
             // Indicateurs de lecture : DM utilise read:bool, groupes utilisent readBy:[]
             let readIndicator = '';
             if (mine) {
@@ -818,12 +885,14 @@ function renderConvView() {
                 }
             }
             return `
-              <div style="display:flex; flex-direction:column; align-items:${align}; margin-bottom:8px;">
+              <div id="msg-${m.id}" style="display:flex; flex-direction:column; align-items:${align}; margin-bottom:8px;">
                 ${senderHeader}
+                ${replyQuote}
                 <div style="max-width:78%; background:${bg}; color:${color}; padding:8px 12px; border-radius:14px; ${mine ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'} position:relative;">
                   <div style="font-size:0.85rem; line-height:1.35; white-space:pre-wrap; word-wrap:break-word;">${_renderMentionsHTML(m.text)}</div>
                   <div style="font-size:0.62rem; color:${mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'}; margin-top:3px; text-align:right;">${dateStr}${editedTag}${readIndicator}</div>
                   ${reactBtn}
+                  ${replyBtn}
                   ${ownActions}
                 </div>
                 ${reactionsHTML}
