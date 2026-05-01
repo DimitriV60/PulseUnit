@@ -121,12 +121,6 @@ const CHECKLISTS = {
       'Gants non stériles (toilette préalable)',
       'Antiseptique (Dakin ou chlorhexidine aqueuse)',
       'Sérum physiologique stérile (rinçage méat)',
-      'Lubrifiant urétral stérile (gel Xylocaïne stérile)',
-      'Seringue 10 ml + eau stérile pour PPI (gonflage ballonnet 10 ml)',
-      'Sparadrap hypoallergénique (fixation cuisse)',
-      'Protection / alèse',
-      'Haricot',
-      'Sac DASRI',
       'Prescription médicale + traçabilité (date, calibre, indication)'
     ]
   }
