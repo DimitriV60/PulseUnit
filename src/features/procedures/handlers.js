@@ -82,19 +82,15 @@ const CHECKLISTS = {
     items: [
       'Sonde gastrique Salem double courant (CH 16 ou 18)',
       'Gants non stériles',
-      'Lubrifiant hydrosoluble (gel Xylocaïne)',
+      'Lubrifiant',
       'Compresses non stériles',
-      'Verre d\'eau + paille (si patient conscient)',
       'Seringue 50 ml à embout conique (ENFit)',
       'Stéthoscope (test à l\'air)',
-      'Bandelette pH gastrique (objectif < 5,5)',
       'Sparadrap hypoallergénique pour fixation',
       'Sac collecteur gradué + raccord',
       'Système d\'aspiration murale + manomètre (dépression douce 30-40 mmHg)',
       'Bocal d\'aspiration',
-      'Haricot',
-      'Protection / alèse',
-      'Prescription médicale + traçabilité (longueur extériorisée, pH)'
+      'Prescription médicale + traçabilité (longueur extériorisée)'
     ]
   },
   sng_sans_asp: {
@@ -103,19 +99,15 @@ const CHECKLISTS = {
     items: [
       'Sonde gastrique simple courant (CH 12 ou 14, polyuréthane/silicone)',
       'Gants non stériles',
-      'Lubrifiant hydrosoluble (gel Xylocaïne)',
+      'Lubrifiant',
       'Compresses non stériles',
-      'Verre d\'eau + paille (si patient conscient)',
       'Seringue 50 ml à embout conique (ENFit)',
       'Stéthoscope (test à l\'air)',
-      'Bandelette pH gastrique (objectif < 5,5)',
       'Sparadrap hypoallergénique pour fixation',
       'Bouchon obturateur de SNG',
       'Tubulure de nutrition entérale + pompe (si NE)',
       'Poche de NE prescrite',
-      'Haricot',
-      'Protection / alèse',
-      'Prescription médicale + traçabilité (longueur extériorisée, pH)'
+      'Prescription médicale + traçabilité (longueur extériorisée)'
     ]
   },
   sondeurinaire: {
