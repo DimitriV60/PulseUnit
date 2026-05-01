@@ -994,7 +994,7 @@
           <span style="font-size:1.05rem;">💉</span><span style="flex:1;">Procédures & Dilutions</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div><strong style="color:var(--text);">Checklists d'actes</strong> — KTA (cathéter artériel), KTC (cathéter central), Intubation oro-trachéale.</div>
+          <div><strong style="color:var(--text);">Checklists d'actes</strong> — KTA (cathéter artériel), KTC (cathéter central), Intubation oro-trachéale, SNG en aspiration, SNG sans aspiration, Sonde urinaire à demeure.</div>
           <div><strong style="color:var(--text);">Table de dilutions</strong> — 15 médicaments d'urgence (Adré, NA, Amio, Atra, Insuline, Hépa, MDZ, Propofol…) avec voies (IVD/PSE/IVL) et conservation.</div>
           <div><strong style="color:var(--text);">EER Citrate</strong> — Calculateur Prismaflex citrate régional : débits selon poids, arbres décisionnels Ca²⁺ post-filtre / Ca²⁺ ionisé patient, compteur de changements de set.</div>
         </div>
@@ -1803,15 +1803,18 @@
           <button class="fs-back" data-action="closeChecklists">←</button>
           <div>
             <h2 style="font-size:1.1rem; font-weight:900; color:var(--text); margin:0;">✅ Checklists procédures</h2>
-            <div class="fs-subtitle">KTA · KTC · Intubation</div>
+            <div class="fs-subtitle">KTA · KTC · IOT · SNG · Sonde U</div>
           </div>
         </div>
         <button id="cl-reset-btn" data-action="resetChecklist" style="background:var(--surface-sec); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text-muted); font-size:0.75rem; font-weight:900; font-family:var(--font); cursor:pointer;">↺ Reset</button>
       </div>
-      <div style="padding:0 16px 10px; display:flex; gap:8px;">
-        <button id="cl-tab-kta"        data-action="setChecklistTab:kta"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTA</button>
-        <button id="cl-tab-ktc"        data-action="setChecklistTab:ktc"        style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">KTC</button>
-        <button id="cl-tab-intubation" data-action="setChecklistTab:intubation" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Intubation</button>
+      <div style="padding:0 16px 10px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
+        <button id="cl-tab-kta"           data-action="setChecklistTab:kta"           style="flex-shrink:0; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; white-space:nowrap;">KTA</button>
+        <button id="cl-tab-ktc"           data-action="setChecklistTab:ktc"           style="flex-shrink:0; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; white-space:nowrap;">KTC</button>
+        <button id="cl-tab-intubation"    data-action="setChecklistTab:intubation"    style="flex-shrink:0; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; white-space:nowrap;">Intubation</button>
+        <button id="cl-tab-sng_asp"       data-action="setChecklistTab:sng_asp"       style="flex-shrink:0; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; white-space:nowrap;">SNG asp.</button>
+        <button id="cl-tab-sng_sans_asp"  data-action="setChecklistTab:sng_sans_asp"  style="flex-shrink:0; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; white-space:nowrap;">SNG ø asp.</button>
+        <button id="cl-tab-sondeurinaire" data-action="setChecklistTab:sondeurinaire" style="flex-shrink:0; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text-muted); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; white-space:nowrap;">Sonde U</button>
       </div>
     </div>
     <div id="checklists-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
