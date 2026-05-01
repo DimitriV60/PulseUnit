@@ -388,6 +388,11 @@
   .profile-type-card.is-active .profile-type-check { opacity: 1; }
   .settings-action-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; border: 1px solid var(--border); }
 
+  /* Onglets de la modale Mon compte */
+  .account-tab-btn { flex: 1; min-width: max-content; padding: 10px 12px; background: none; border: none; border-bottom: 2px solid transparent; font-family: var(--font); font-size: 0.78rem; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+  .account-tab-btn:hover { color: var(--text); }
+  .account-tab-btn.is-active { color: var(--brand-aqua); border-bottom-color: var(--brand-aqua); }
+
   #data-empty-banner { display: none; position: sticky; top: 0; z-index: 60; padding: 10px 14px; background: linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08)); border-bottom: 1px solid rgba(245,158,11,0.4); color: var(--text); font-size: 0.82rem; font-weight: 800; align-items: center; gap: 10px; }
   #data-empty-banner button { background: var(--med); color: #fff; border: none; padding: 7px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 900; cursor: pointer; font-family: var(--font); flex-shrink: 0; }
   #data-empty-banner button:disabled { opacity: 0.6; cursor: wait; }
