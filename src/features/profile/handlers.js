@@ -222,7 +222,7 @@
         const nameEl = document.getElementById('profile-name');
         const roleEl = document.getElementById('profile-role');
         if (currentUser) {
-            if (nameEl) nameEl.textContent = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || '—';
+            if (nameEl) nameEl.textContent = `${(currentUser.lastName || '').toUpperCase()} ${currentUser.firstName || ''}`.trim() || '—';
             if (roleEl) roleEl.textContent = (currentUser.role || '').toUpperCase() || '—';
         } else {
             if (nameEl) nameEl.textContent = '—';
