@@ -123,6 +123,25 @@ const CHECKLISTS = {
       'Sérum physiologique stérile (rinçage méat)',
       'Prescription médicale + traçabilité (date, calibre, indication)'
     ]
+  },
+  pdp: {
+    title: 'Prélèvement Distal Protégé (PDP)',
+    subtitle: 'Technique aveugle — diagnostic PAVM',
+    items: [
+      'Cathéter PDP type Combicath',
+      'Connecteur coudé orientable',
+      'Gants stériles',
+      'Masque chirurgical',
+      'Lunettes de protection',
+      'Champs stériles',
+      'Ciseau stérile',
+      'Compresses',
+      'Sérum physiologique 10 ml stérile (rinçage du cathéter)',
+      'Seringue 10 ml',
+      'Tube stérile de transport (microbiologie)',
+      'Système d\'aspiration prêt',
+      'Prescription médicale + traçabilité'
+    ]
   }
 };
 
@@ -149,13 +168,13 @@ const DILUTIONS_DATA = [
 // ─── État ─────────────────────────────────────────────────────────────────────
 
 let _clTab = 'kta';
-let _clChecked = { kta: {}, ktc: {}, intubation: {}, sng_asp: {}, sng_sans_asp: {}, sondeurinaire: {} };
+let _clChecked = { kta: {}, ktc: {}, intubation: {}, sng_asp: {}, sng_sans_asp: {}, sondeurinaire: {}, pdp: {} };
 
 // ─── Checklists ───────────────────────────────────────────────────────────────
 
 window.openChecklists = function openChecklists() {
     document.getElementById('checklists-view').style.display = 'flex';
-    _clChecked = { kta: {}, ktc: {}, intubation: {}, sng_asp: {}, sng_sans_asp: {}, sondeurinaire: {} };
+    _clChecked = { kta: {}, ktc: {}, intubation: {}, sng_asp: {}, sng_sans_asp: {}, sondeurinaire: {}, pdp: {} };
     renderChecklist();
 };
 
@@ -180,7 +199,7 @@ window.resetChecklist = function resetChecklist() {
 };
 
 function renderChecklist() {
-    ['kta', 'ktc', 'intubation', 'sng_asp', 'sng_sans_asp', 'sondeurinaire'].forEach(t => {
+    ['kta', 'ktc', 'intubation', 'sng_asp', 'sng_sans_asp', 'sondeurinaire', 'pdp'].forEach(t => {
         const btn = document.getElementById('cl-tab-' + t);
         if (!btn) return;
         btn.style.background = t === _clTab ? 'var(--brand-aqua)' : 'var(--surface-sec)';
