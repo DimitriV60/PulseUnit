@@ -172,7 +172,7 @@ window.initDates = function initDates() {
     else                      { curDate.setDate(curDate.getDate() - 1); curPeriod = 'nuit'; }
     currentShiftKey = `${toDS(curDate)}-${curPeriod}`;
 
-    // Génère 8 gardes en remontant 12h par 12h depuis la garde actuelle
+    // Génère 16 gardes en remontant 12h par 12h depuis la garde actuelle (= 8 jours, 4J/N × 2)
     // Ordre : nuit → jour du même jour → nuit du jour précédent → …
     // En garde de jour, on affiche aussi la nuit à venir (même date) pour permettre la préparation
     const shifts = [];
@@ -181,7 +181,7 @@ window.initDates = function initDates() {
     }
     const d = new Date(curDate);
     let period = curPeriod;
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 16; i++) {
         shifts.push({ ds: toDS(d), period });
         if (period === 'nuit') { period = 'jour'; }
         else { d.setDate(d.getDate() - 1); period = 'nuit'; }
