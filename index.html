@@ -1016,7 +1016,7 @@
           <div><strong style="color:var(--text);">🟢 CA N-1 / année courante</strong> — séparation auto :<br>• <strong style="color:var(--text);">CA</strong> : on suit les numéros Digihops scannés ; tant qu'on n'a pas vu "CA 1", les CA précédents sont des reliquats <strong style="color:var(--text);">N-1</strong>. À partir de "CA 1" → année courante.<br>• <strong style="color:var(--text);">CA-HP</strong> : règle calendaire — tout CA-HP avant le <strong style="color:var(--text);">1er mai</strong> est un reliquat N-1, à partir du 1er mai → année courante.<br>Affichage identique dans le calendrier (vert + numéro scanné), distinction visible uniquement dans les compteurs Suivi RH.</div>
           <div><strong style="color:var(--text);">🧮 Capital auto-calculé</strong> (Décret 2002-8) :<br>• <strong style="color:var(--text);">CA</strong> : 25 jours stricts.<br>• <strong style="color:var(--text);">CA-HP (Hors Période)</strong> : compte les CA pris hors 1er mai – 31 octobre. <strong style="color:var(--text);">5 à 7 jours → +1 CA-HP</strong>, <strong style="color:var(--text);">8 jours et + → +2 CA-HP</strong>.<br>• <strong style="color:var(--text);">Fractionnement</strong> : compte les fractions de CA de ≥5 jours ouvrés. <strong style="color:var(--text);">≥3 fractions → +1 jour</strong>, <strong style="color:var(--text);">≥4 fractions → +2 jours</strong>.<br>Le total se met à jour en temps réel à mesure que tu poses tes CA.</div>
           <div><strong style="color:var(--text);">⏱️ Transmissions cumulées</strong> = nb gardes (J + N + HS) × 0h25.</div>
-          <div><strong style="color:var(--text);">👤 Mon compte</strong> (menu burger) — modifie ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Le choix initial est demandé à l'inscription. Détermine le calcul des heures théoriques mensuelles.</div>
+          <div><strong style="color:var(--text);">👤 Mon compte</strong> (menu burger → onglet Profil) — modifie ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Le choix initial est demandé à l'inscription. Détermine le calcul des heures théoriques mensuelles.</div>
           <div><strong style="color:var(--text);">📄 Export PDF</strong> — récap annuel formel avec en-tête nom/prénom/poste, tous les compteurs, exportable pour la DRH.</div>
           <div style="font-size:0.74rem; opacity:0.85;">Données synchronisées Firestore. Bouton ↺ pour réinitialiser l'année.</div>
         </div>
@@ -1101,22 +1101,21 @@
         </div>
       </details>
 
-      <!-- MON COMPTE (Profil + Paramètres + Déconnexion fusionnés) -->
+      <!-- MON COMPTE (Profil + Paramètres + Déconnexion fusionnés en 4 onglets) -->
       <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
         <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
           <span style="font-size:1.05rem;">👤</span><span style="flex:1;">Mon compte</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div>Tout ce qui te concerne dans <strong style="color:var(--text);">une seule modale</strong> : Menu ☰ → <strong style="color:var(--text);">👤 Mon compte</strong>. Sections de haut en bas :</div>
-          <div><strong style="color:var(--text);">🪪 Identité</strong> — nom prénom + fonction (lecture seule, depuis ton compte).</div>
-          <div><strong style="color:var(--text);">⏱️ Type d'agent</strong> — Jour fixe (35h) · Nuit fixe (32h30) · Alterné. Détermine le calcul des heures théoriques mensuelles (Guide DRH GHPSO 2014).</div>
-          <div><strong style="color:var(--text);">🎨 Apparence</strong> — Thème : 🌗 Auto (☀️ 8h-20h / 🌙 20h-8h) · ☀️ Clair forcé · 🌙 Sombre forcé.</div>
-          <div><strong style="color:var(--text);">🔔 Notifications</strong> — Sons · Retour haptique · 🌙 Ne pas déranger (coupe toast/son/vibration/push sauf urgences, idéal en garde de nuit ; les notifs restent dans le centre 🔔).</div>
-          <div><strong style="color:var(--text);">🔐 Sécurité</strong> — Modifier mon code (ancien + nouveau ×2, actif immédiatement) · Accès Admin (réservé).</div>
-          <div><strong style="color:var(--text);">📲 Partage & Aide</strong> — QR code + tuto installation iPhone/Android · Revoir le tutoriel d'accueil.</div>
-          <div><strong style="color:var(--text);">🔒 Mes données (RGPD)</strong> — Export JSON complet (art. 15 & 20) · lien Confidentialité & RGPD.</div>
-          <div><strong style="color:var(--crit);">🚪 Déconnexion</strong> — bouton rouge en bas, avec mini-confirm en 2 clics pour éviter les déconnexions accidentelles (les brouillons de messages locaux seront vidés).</div>
-          <div style="font-size:0.74rem; opacity:0.85;">🧪 <strong style="color:var(--text);">Signaler un bug</strong> reste séparé en haut du menu (entrée dédiée).</div>
+          <div>Une <strong style="color:var(--text);">seule entrée</strong> pour tout ce qui te concerne : Menu ☰ → <strong style="color:var(--text);">👤 Mon compte</strong>. La modale est organisée en <strong style="color:var(--text);">4 onglets</strong> en haut + un bouton de déconnexion fixe en bas.</div>
+          <div style="background:var(--surface); border-radius:8px; padding:10px; border:1px solid var(--border); display:flex; flex-direction:column; gap:6px; font-size:0.78rem;">
+            <div><strong style="color:var(--text);">👤 Profil</strong> — 🪪 Identité (format <strong style="color:var(--text);">NOM Prénom</strong> + fonction, lecture seule) · ⏱️ Type d'agent (Jour fixe 35h · Nuit fixe 32h30 · Alterné, base du calcul des heures théoriques mensuelles GHPSO 2014).</div>
+            <div><strong style="color:var(--text);">🎨 Préférences</strong> — Thème (🌗 Auto 8h-20h / ☀️ Clair / 🌙 Sombre) · Sons · Retour haptique · 🌙 Ne pas déranger (coupe toast/son/vibration/push sauf urgences, idéal en garde de nuit — les notifs restent dans le centre 🔔).</div>
+            <div><strong style="color:var(--text);">🔐 Sécurité</strong> — Modifier mon code PIN (ancien + nouveau ×2, actif immédiatement) · Accès Admin (réservé).</div>
+            <div><strong style="color:var(--text);">... Plus</strong> — 📲 Partager & Installer (QR + tuto iPhone/Android) · 🎓 Revoir le tutoriel d'accueil · 📦 Export RGPD (.json, art. 15 & 20) · lien Confidentialité & RGPD.</div>
+          </div>
+          <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0;"><strong style="color:var(--crit);">🚪 Déconnexion</strong> — bouton rouge fixé en bas de la modale, <strong style="color:var(--text);">visible quel que soit l'onglet</strong>. Mini-confirm en 2 clics (Annuler / Confirmer) pour éviter les déconnexions accidentelles. À la déconnexion, les brouillons de messages locaux sont vidés.</div>
+          <div style="font-size:0.74rem; opacity:0.85;">🧪 <strong style="color:var(--text);">Signaler un bug</strong> reste séparé en haut du menu (entrée dédiée — ouverture WhatsApp pré-rempli).</div>
         </div>
       </details>
 
