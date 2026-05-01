@@ -65,8 +65,6 @@
           🔔
           <span id="notif-bell-badge" style="display:none; position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:var(--crit); color:#fff; font-size:0.65rem; font-weight:900; align-items:center; justify-content:center; line-height:1; box-sizing:border-box;">0</span>
         </button>
-        <button class="header-btn tuto" data-action="show:tuto-modal">Guide</button>
-        <button id="briefing-btn" class="header-btn" onclick="toggleBriefing()" title="Briefing vocal de début de garde" style="background:var(--brand-aqua); color:#fff; font-weight:900;">🔊 Briefing</button>
       </div>
     </div>
     <div id="locked-banner">🔒 GARDE TERMINÉE - LECTURE SEULE</div>
@@ -93,6 +91,7 @@
     </div>
     <div class="side-menu-content">
       <div class="side-menu-section">Outils cliniques</div>
+      <a href="#" class="side-link" data-action="closeSideMenu;show:tuto-modal"><span class="side-link-icon">📘</span><span>Guide PulseUnit</span><span class="side-link-arrow">›</span></a>
       <a href="#" class="side-link" data-action="openProtocoles"><span class="side-link-icon">📋</span><span>Protocoles</span><span class="side-link-arrow">›</span></a>
       <a href="#" class="side-link" data-action="openCalculateurs"><span class="side-link-icon">🧮</span><span>Calculateurs</span><span class="side-link-arrow">›</span></a>
       <a href="#" class="side-link" data-action="openNormes"><span class="side-link-icon">📊</span><span>Normes de référence</span><span class="side-link-arrow">›</span></a>
@@ -1191,9 +1190,7 @@
 <script src="src/features/bed-notes/handlers.js"></script>
 <script src="src/features/notifications/handlers.js"></script>
 <script src="src/features/messages/handlers.js"></script>
-<script src="src/features/onboarding/handlers.js"></script>
-<script src="src/features/briefing/handlers.js"></script>
-<script src="src/features/beds/handlers.js"></script>
+<script src="src/features/onboarding/handlers.js"></script><script src="src/features/beds/handlers.js"></script>
 <script src="src/features/work-status/handlers.js"></script>
 <script src="src/features/gestures/handlers.js"></script>
 <script src="src/core/app-init.js"></script>
