@@ -109,108 +109,24 @@
       <div style="flex: 1; min-height: 16px;"></div>
       <div class="side-menu-section">Compte</div>
       <a href="#" class="side-link side-link-accent" data-action="openAlphaModal"><span class="side-link-icon">🧪</span><span>Signaler un bug</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" data-action="openProfile"><span class="side-link-icon">👤</span><span>Mon profil</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link" data-action="openSettings"><span class="side-link-icon">⚙️</span><span>Paramètres</span><span class="side-link-arrow">›</span></a>
-      <a href="#" class="side-link side-link-danger" data-action="closeSideMenu;logoutUser" data-keep-menu="false"><span class="side-link-icon">🚪</span><span>Déconnexion</span><span class="side-link-arrow">›</span></a>
+      <a href="#" class="side-link" data-action="openAccount"><span class="side-link-icon">👤</span><span>Mon compte</span><span class="side-link-arrow">›</span></a>
     </div>
   </nav>
 
-  <div id="settings-modal" role="dialog" aria-modal="true" aria-label="Paramètres">
-    <div class="modal-content">
-      <h3 style="margin-bottom:16px; color:var(--text); font-weight:900;">⚙️ Paramètres</h3>
-
-      <div class="toggle-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
-        <div class="toggle-label">
-          <span>Thème de l'interface</span>
-          <span id="theme-desc-modal">Automatique (☀️ Jour / 🌙 Nuit selon l'heure)</span>
-        </div>
-        <div style="display:flex; gap:6px; width:100%;">
-          <button id="theme-btn-auto"  data-action="setTheme:auto"  style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌗 Auto</button>
-          <button id="theme-btn-light" data-action="setTheme:light" style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">☀️ Clair</button>
-          <button id="theme-btn-dark"  data-action="setTheme:dark"  style="flex:1; padding:8px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌙 Sombre</button>
-        </div>
+  <!-- Modale unifiée : Mon compte (Profil + Paramètres + Déconnexion) -->
+  <div id="account-modal" role="dialog" aria-modal="true" aria-label="Mon compte" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px); padding:16px;">
+    <div class="modal-content" style="width:min(460px,94vw); padding:22px; max-height:92vh; overflow-y:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <div style="font-size:1.18rem; font-weight:900; color:var(--text);">👤 Mon compte</div>
+        <button data-action="closeAccount" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;" aria-label="Fermer">×</button>
       </div>
 
-      <div class="toggle-row">
-        <div class="toggle-label">
-          <span>Sons</span>
-          <span>Notifications sonores</span>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="setting-sound" onchange="toggleAppSetting('sound')">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="toggle-row">
-        <div class="toggle-label">
-          <span>Retour haptique</span>
-          <span>Vibration au toucher</span>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="setting-haptic" onchange="toggleAppSetting('haptic')">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="toggle-row" style="margin-bottom:0; border-bottom:none;">
-        <div class="toggle-label">
-          <span>🌙 Ne pas déranger</span>
-          <span>Silence des notifs sauf urgences (utile en garde / la nuit)</span>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="setting-dnd" onchange="toggleAppSetting('dnd')">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <!-- Sous-onglets -->
-      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px; display:flex; flex-direction:column; gap:8px;">
-        <button class="settings-action-btn" data-action="openChangePinModal">
-          <span class="settings-action-icon">🔑</span>
-          <span style="flex:1; text-align:left;">
-            <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Modifier mon code</div>
-            <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Changer le PIN à 6 chiffres</div>
-          </span>
-          <span style="color:var(--text-muted); font-size:1rem;">›</span>
-        </button>
-        <button class="settings-action-btn" data-action="openShareInstallModal">
-          <span class="settings-action-icon">📲</span>
-          <span style="flex:1; text-align:left;">
-            <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Partager & Installer</div>
-            <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">QR Code + tuto iPhone/Android</div>
-          </span>
-          <span style="color:var(--text-muted); font-size:1rem;">›</span>
-        </button>
-      </div>
-
-      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-        <button class="btn-danger-soft" style="color:var(--crit); border-color:rgba(239,68,68,0.25);" data-action="hide:settings-modal;openAdmin">🔒 Accès Admin</button>
-      </div>
-
-      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:12px; text-align:center;">
-        <button data-action="hide:settings-modal;openRGPD" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; font-weight:700; font-family:var(--font); cursor:pointer; text-decoration:underline;">🔒 Confidentialité & RGPD</button>
-      </div>
-
-      <button class="btn-primary" style="margin-top:14px;" data-action="hide:settings-modal">Fermer</button>
-    </div>
-  </div>
-
-  <!-- Modale : Mon profil (type d'agent pour calcul d'heures théoriques) -->
-  <div id="profile-modal" role="dialog" aria-modal="true" aria-label="Mon profil" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px); padding:16px;">
-    <div class="modal-content" style="width:min(440px,94vw); padding:22px; max-height:92vh; overflow-y:auto;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-        <div style="font-size:1.15rem; font-weight:900; color:var(--text);">👤 Mon profil</div>
-        <button data-action="closeProfile" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
-      </div>
-      <div style="font-size:0.78rem; color:var(--text-muted); font-weight:700; margin-bottom:14px;">Le type d'agent détermine le calcul des heures théoriques mensuelles (Guide DRH GHPSO 2014).</div>
-
-      <!-- Identité (lecture seule) -->
+      <!-- Section : Identité -->
       <div style="background:var(--surface-sec); border-radius:12px; padding:14px; border:1px solid var(--border); margin-bottom:14px;">
-        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Identité</div>
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">🪪 Identité</div>
         <div style="display:flex; flex-direction:column; gap:6px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Nom</span>
+            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Nom prénom</span>
             <span id="profile-name" style="font-size:0.92rem; color:var(--text); font-weight:900;">—</span>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -220,9 +136,10 @@
         </div>
       </div>
 
-      <!-- Type d'agent -->
-      <div style="margin-bottom:14px;">
-        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Type d'agent</div>
+      <!-- Section : Type d'agent -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">⏱️ Type d'agent</div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; margin-bottom:10px; line-height:1.4;">Détermine le calcul des heures théoriques mensuelles (Guide DRH GHPSO 2014).</div>
         <div style="display:flex; flex-direction:column; gap:8px;">
           <div id="profile-type-card-jour-fixe" class="profile-type-card" data-action="setAgentType:jour-fixe" role="radio" tabindex="0" aria-checked="false">
             <input type="radio" name="profile-type" id="profile-type-jour-fixe" value="jour-fixe" tabindex="-1" aria-hidden="true" style="position:absolute; opacity:0; pointer-events:none;">
@@ -255,27 +172,209 @@
         <div id="profile-type-help" style="margin-top:10px; font-size:0.74rem; color:var(--text-muted); font-weight:700; line-height:1.4; padding:8px 10px; background:var(--surface-sec); border-radius:8px; border-left:3px solid var(--brand-aqua);"></div>
       </div>
 
-      <!-- Tutoriel -->
-      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-        <button data-action="closeProfile;startTutorial" style="width:100%; padding:11px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; font-size:0.84rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-          🎓 Revoir le tutoriel d'accueil
-        </button>
-      </div>
-
-      <!-- Export RGPD -->
-      <div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Mes données (RGPD)</div>
-        <button data-action="exportRGPDData" style="width:100%; padding:11px; border-radius:10px; border:1px solid var(--brand-aqua); background:transparent; color:var(--brand-aqua); font-weight:900; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-          📦 Exporter mes données (.json)
-        </button>
-        <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; line-height:1.4; margin-top:6px;">
-          Droit d'accès et de portabilité (art. 15 et 20 RGPD) : télécharge un JSON contenant ton profil, planning, notes de lit, messages (DM + groupes accessibles), notifs et préférences locales.
+      <!-- Section : Apparence -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">🎨 Apparence</div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; margin-bottom:10px;" id="theme-desc-modal">Automatique (☀️ Jour / 🌙 Nuit selon l'heure)</div>
+        <div style="display:flex; gap:6px; width:100%;">
+          <button id="theme-btn-auto"  data-action="setTheme:auto"  style="flex:1; padding:10px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌗 Auto</button>
+          <button id="theme-btn-light" data-action="setTheme:light" style="flex:1; padding:10px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">☀️ Clair</button>
+          <button id="theme-btn-dark"  data-action="setTheme:dark"  style="flex:1; padding:10px 4px; border-radius:8px; font-size:0.72rem; font-weight:900; font-family:var(--font); cursor:pointer; border:2px solid var(--border); background:var(--pill-bg); color:var(--text); transition:all 0.2s;">🌙 Sombre</button>
         </div>
       </div>
 
-      <button class="btn-primary" style="width:100%; margin-top:14px;" data-action="closeProfile">Fermer</button>
+      <!-- Section : Notifications -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">🔔 Notifications</div>
+        <div class="toggle-row">
+          <div class="toggle-label">
+            <span>Sons</span>
+            <span>Notifications sonores</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-sound" onchange="toggleAppSetting('sound')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-label">
+            <span>Retour haptique</span>
+            <span>Vibration au toucher</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-haptic" onchange="toggleAppSetting('haptic')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row" style="margin-bottom:0; border-bottom:none;">
+          <div class="toggle-label">
+            <span>🌙 Ne pas déranger</span>
+            <span>Silence des notifs sauf urgences (utile en garde / la nuit)</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-dnd" onchange="toggleAppSetting('dnd')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section : Sécurité -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">🔐 Sécurité</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="settings-action-btn" data-action="openChangePinModal">
+            <span class="settings-action-icon">🔑</span>
+            <span style="flex:1; text-align:left;">
+              <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Modifier mon code</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Changer le PIN à 6 chiffres</div>
+            </span>
+            <span style="color:var(--text-muted); font-size:1rem;">›</span>
+          </button>
+          <button class="settings-action-btn" data-action="closeAccount;openAdmin" style="border-color:rgba(239,68,68,0.25);">
+            <span class="settings-action-icon" style="color:var(--crit); border-color:rgba(239,68,68,0.25);">🔒</span>
+            <span style="flex:1; text-align:left;">
+              <div style="font-weight:900; color:var(--crit); font-size:0.88rem;">Accès Admin</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Espace administrateur (réservé)</div>
+            </span>
+            <span style="color:var(--text-muted); font-size:1rem;">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section : Partage & Aide -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">📲 Partage & Aide</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="settings-action-btn" data-action="openShareInstallModal">
+            <span class="settings-action-icon">📲</span>
+            <span style="flex:1; text-align:left;">
+              <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Partager & Installer</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">QR Code + tuto iPhone/Android</div>
+            </span>
+            <span style="color:var(--text-muted); font-size:1rem;">›</span>
+          </button>
+          <button class="settings-action-btn" data-action="closeAccount;startTutorial">
+            <span class="settings-action-icon">🎓</span>
+            <span style="flex:1; text-align:left;">
+              <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Revoir le tutoriel</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Visite guidée d'accueil</div>
+            </span>
+            <span style="color:var(--text-muted); font-size:1rem;">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section : Mes données (RGPD) -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">🔒 Mes données (RGPD)</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="settings-action-btn" data-action="exportRGPDData">
+            <span class="settings-action-icon">📦</span>
+            <span style="flex:1; text-align:left;">
+              <div style="font-weight:900; color:var(--text); font-size:0.88rem;">Exporter mes données</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">.json — droits art. 15 & 20 RGPD</div>
+            </span>
+            <span style="color:var(--text-muted); font-size:1rem;">›</span>
+          </button>
+          <button data-action="closeAccount;openRGPD" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; font-weight:700; font-family:var(--font); cursor:pointer; text-decoration:underline; padding:6px; align-self:center;">Confidentialité & RGPD</button>
+        </div>
+      </div>
+
+      <!-- Section : Déconnexion (mini-confirm inline) -->
+      <div style="border-top:2px solid rgba(239,68,68,0.2); padding-top:16px; margin-top:6px;">
+        <div id="account-logout-default">
+          <button class="btn-danger-soft" data-action="requestLogoutConfirm">🚪 Se déconnecter</button>
+        </div>
+        <div id="account-logout-confirm" style="display:none;">
+          <div style="font-size:0.85rem; color:var(--text); font-weight:900; text-align:center; margin-bottom:6px;">Confirmer la déconnexion ?</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; text-align:center; margin-bottom:12px; line-height:1.4;">Les brouillons de messages locaux seront vidés.</div>
+          <div style="display:flex; gap:8px;">
+            <button class="settings-action-btn" data-action="cancelLogoutConfirm" style="justify-content:center; flex:1; padding:11px;">
+              <span style="font-weight:900; color:var(--text); font-size:0.85rem;">Annuler</span>
+            </button>
+            <button class="btn-danger-soft" style="flex:1; margin:0; padding:11px;" data-action="confirmLogoutNow">🚪 Confirmer</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width:100%; margin-top:14px;" data-action="closeAccount">Fermer</button>
     </div>
   </div>
+
+  <!-- Logique modale Mon compte : open/close + mini-confirm déconnexion -->
+  <script>
+    (function () {
+      function _resetLogoutUI() {
+        var d = document.getElementById('account-logout-default');
+        var c = document.getElementById('account-logout-confirm');
+        if (d) d.style.display = '';
+        if (c) c.style.display = 'none';
+      }
+      window.openAccount = function openAccount() {
+        var m = document.getElementById('account-modal');
+        if (!m) return;
+        _resetLogoutUI();
+        m.style.display = 'flex';
+        if (typeof updateThemeBtns === 'function') updateThemeBtns();
+        // Refresh identité + type d'agent (réutilise la fct privée du module profile via openProfile-equivalent)
+        if (currentUser) {
+          var nameEl = document.getElementById('profile-name');
+          var roleEl = document.getElementById('profile-role');
+          if (nameEl) nameEl.textContent = ((currentUser.firstName || '') + ' ' + (currentUser.lastName || '')).trim() || '—';
+          if (roleEl) roleEl.textContent = (currentUser.role || '').toUpperCase() || '—';
+        }
+        var t = (typeof getProfileAgentType === 'function') ? getProfileAgentType() : 'jour-fixe';
+        ['jour-fixe', 'nuit-fixe', 'alterne'].forEach(function (opt) {
+          var radio = document.getElementById('profile-type-' + opt);
+          if (radio) radio.checked = (t === opt);
+          var card = document.getElementById('profile-type-card-' + opt);
+          if (card) {
+            card.classList.toggle('is-active', t === opt);
+            card.setAttribute('aria-checked', t === opt ? 'true' : 'false');
+          }
+        });
+        var help = document.getElementById('profile-type-help');
+        if (help) {
+          help.textContent = ({
+            'jour-fixe': "Personnel jour, repos fixes — 35h hebdo (≈1568-1596h annuelles).",
+            'nuit-fixe': "Personnel exclusivement nuit (≥90% du temps annuel) — 32h30 hebdo (≈1482h annuelles).",
+            'alterne'  : "Alternance jour/nuit — base 35h avec revalorisations sur les nuits travaillées."
+          })[t] || '';
+        }
+        var sSound  = document.getElementById('setting-sound');
+        var sHaptic = document.getElementById('setting-haptic');
+        var sDnd    = document.getElementById('setting-dnd');
+        if (sSound  && typeof appSettings !== 'undefined') sSound.checked  = !!appSettings.sound;
+        if (sHaptic && typeof appSettings !== 'undefined') sHaptic.checked = !!appSettings.haptic;
+        if (sDnd    && typeof appSettings !== 'undefined') sDnd.checked    = !!appSettings.dnd;
+      };
+      window.closeAccount = function closeAccount() {
+        var m = document.getElementById('account-modal');
+        if (m) m.style.display = 'none';
+        _resetLogoutUI();
+      };
+      // Aliases backwards-compat — anciens callers (openProfile depuis Suivi, openSettings éventuel)
+      window.openProfile  = window.openAccount;
+      window.closeProfile = window.closeAccount;
+      window.openSettings = window.openAccount;
+
+      // Mini-confirm déconnexion
+      window.requestLogoutConfirm = function requestLogoutConfirm() {
+        var d = document.getElementById('account-logout-default');
+        var c = document.getElementById('account-logout-confirm');
+        if (d) d.style.display = 'none';
+        if (c) c.style.display = '';
+      };
+      window.cancelLogoutConfirm = function cancelLogoutConfirm() {
+        _resetLogoutUI();
+      };
+      window.confirmLogoutNow = function confirmLogoutNow() {
+        window.closeAccount();
+        window.__logoutSkipConfirm = true;
+        if (typeof logoutUser === 'function') logoutUser();
+      };
+    })();
+  </script>
 
   <!-- Sous-modale : Modifier mon code -->
   <div id="change-pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
@@ -595,7 +694,7 @@
       </button>
 
       <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; text-align:center; margin-bottom:14px; line-height:1.5;">
-        💡 Pour partager l'accès ou installer l'app : Menu ☰ → Paramètres → Partager & Installer
+        💡 Pour partager l'accès ou installer l'app : Menu ☰ → 👤 Mon compte → Partager & Installer
       </div>
 
       <button class="btn-primary" style="width:100%; padding:11px;" data-action="hide:alpha-modal">Fermer</button>
@@ -747,7 +846,7 @@
           <span style="font-size:1.05rem;">🔑</span><span style="flex:1;">Connexion & Compte</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div><strong style="color:var(--text);">Première connexion</strong> — Crée ton compte : prénom · nom · rôle · <strong style="color:var(--text);">type d'agent</strong> (jour fixe · nuit fixe · alterné) · code à 6 chiffres · activation des notifications. Le type d'agent peut être modifié plus tard dans Mon profil.</div>
+          <div><strong style="color:var(--text);">Première connexion</strong> — Crée ton compte : prénom · nom · rôle · <strong style="color:var(--text);">type d'agent</strong> (jour fixe · nuit fixe · alterné) · code à 6 chiffres · activation des notifications. Le type d'agent peut être modifié plus tard dans Menu ☰ → 👤 Mon compte.</div>
           <div><strong style="color:var(--text);">Ensuite</strong> — Recherche ton nom → sélectionne → tape ton code. Coche <em>« Se souvenir »</em> pour 7 jours d'auto-connexion sur cet appareil.</div>
           <div><strong style="color:var(--text);">Mauvais nom ?</strong> Clique la <span style="color:var(--brand-blue); font-weight:800;">✕</span> à droite pour relancer la recherche.</div>
           <div style="border-left:3px solid var(--crit); padding:6px 10px; background:rgba(239,68,68,0.06); border-radius:0 8px 8px 0;">
@@ -898,7 +997,7 @@
           <div><strong style="color:var(--text);">🟢 CA N-1 / année courante</strong> — séparation auto :<br>• <strong style="color:var(--text);">CA</strong> : on suit les numéros Digihops scannés ; tant qu'on n'a pas vu "CA 1", les CA précédents sont des reliquats <strong style="color:var(--text);">N-1</strong>. À partir de "CA 1" → année courante.<br>• <strong style="color:var(--text);">CA-HP</strong> : règle calendaire — tout CA-HP avant le <strong style="color:var(--text);">1er mai</strong> est un reliquat N-1, à partir du 1er mai → année courante.<br>Affichage identique dans le calendrier (vert + numéro scanné), distinction visible uniquement dans les compteurs Suivi RH.</div>
           <div><strong style="color:var(--text);">🧮 Capital auto-calculé</strong> (Décret 2002-8) :<br>• <strong style="color:var(--text);">CA</strong> : 25 jours stricts.<br>• <strong style="color:var(--text);">CA-HP (Hors Période)</strong> : compte les CA pris hors 1er mai – 31 octobre. <strong style="color:var(--text);">5 à 7 jours → +1 CA-HP</strong>, <strong style="color:var(--text);">8 jours et + → +2 CA-HP</strong>.<br>• <strong style="color:var(--text);">Fractionnement</strong> : compte les fractions de CA de ≥5 jours ouvrés. <strong style="color:var(--text);">≥3 fractions → +1 jour</strong>, <strong style="color:var(--text);">≥4 fractions → +2 jours</strong>.<br>Le total se met à jour en temps réel à mesure que tu poses tes CA.</div>
           <div><strong style="color:var(--text);">⏱️ Transmissions cumulées</strong> = nb gardes (J + N + HS) × 0h25.</div>
-          <div><strong style="color:var(--text);">👤 Mon profil</strong> (menu burger) — modifie ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Le choix initial est demandé à l'inscription. Détermine le calcul des heures théoriques mensuelles.</div>
+          <div><strong style="color:var(--text);">👤 Mon compte</strong> (menu burger) — modifie ton type d'agent : Jour fixe (35h hebdo) · Nuit fixe (32h30) · Alterné. Le choix initial est demandé à l'inscription. Détermine le calcul des heures théoriques mensuelles.</div>
           <div><strong style="color:var(--text);">📄 Export PDF</strong> — récap annuel formel avec en-tête nom/prénom/poste, tous les compteurs, exportable pour la DRH.</div>
           <div style="font-size:0.74rem; opacity:0.85;">Données synchronisées Firestore. Bouton ↺ pour réinitialiser l'année.</div>
         </div>
@@ -983,17 +1082,22 @@
         </div>
       </details>
 
-      <!-- PARAMÈTRES -->
+      <!-- MON COMPTE (Profil + Paramètres + Déconnexion fusionnés) -->
       <details style="margin-bottom:8px; background:var(--surface-sec); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;">
         <summary style="font-weight:900; color:var(--text); cursor:pointer; outline:none; font-size:0.9rem; list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px;">
-          <span style="font-size:1.05rem;">⚙️</span><span style="flex:1;">Paramètres</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
+          <span style="font-size:1.05rem;">👤</span><span style="flex:1;">Mon compte</span><span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">›</span>
         </summary>
         <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; font-size:0.8rem; line-height:1.55; color:var(--text-muted);">
-          <div><strong style="color:var(--text);">Thème</strong> — 🌗 Auto (☀️ 8h-20h / 🌙 20h-8h) · ☀️ Clair forcé · 🌙 Sombre forcé.</div>
-          <div><strong style="color:var(--text);">Sons</strong> et <strong style="color:var(--text);">Retour haptique</strong> indépendants.</div>
-          <div><strong style="color:var(--text);">🌙 Ne pas déranger</strong> — coupe les notifs (toast, son, vibration, push) sauf urgences. Idéal en garde de nuit. Les notifs restent dans le centre 🔔 pour consultation différée.</div>
-          <div><strong style="color:var(--text);">Changer mon code</strong> — ancien + nouveau (×2). Actif immédiatement.</div>
-          <div>🧪 <strong style="color:var(--text);">Signaler un bug</strong> — ouvre une conversation WhatsApp pré-remplie.</div>
+          <div>Tout ce qui te concerne dans <strong style="color:var(--text);">une seule modale</strong> : Menu ☰ → <strong style="color:var(--text);">👤 Mon compte</strong>. Sections de haut en bas :</div>
+          <div><strong style="color:var(--text);">🪪 Identité</strong> — nom prénom + fonction (lecture seule, depuis ton compte).</div>
+          <div><strong style="color:var(--text);">⏱️ Type d'agent</strong> — Jour fixe (35h) · Nuit fixe (32h30) · Alterné. Détermine le calcul des heures théoriques mensuelles (Guide DRH GHPSO 2014).</div>
+          <div><strong style="color:var(--text);">🎨 Apparence</strong> — Thème : 🌗 Auto (☀️ 8h-20h / 🌙 20h-8h) · ☀️ Clair forcé · 🌙 Sombre forcé.</div>
+          <div><strong style="color:var(--text);">🔔 Notifications</strong> — Sons · Retour haptique · 🌙 Ne pas déranger (coupe toast/son/vibration/push sauf urgences, idéal en garde de nuit ; les notifs restent dans le centre 🔔).</div>
+          <div><strong style="color:var(--text);">🔐 Sécurité</strong> — Modifier mon code (ancien + nouveau ×2, actif immédiatement) · Accès Admin (réservé).</div>
+          <div><strong style="color:var(--text);">📲 Partage & Aide</strong> — QR code + tuto installation iPhone/Android · Revoir le tutoriel d'accueil.</div>
+          <div><strong style="color:var(--text);">🔒 Mes données (RGPD)</strong> — Export JSON complet (art. 15 & 20) · lien Confidentialité & RGPD.</div>
+          <div><strong style="color:var(--crit);">🚪 Déconnexion</strong> — bouton rouge en bas, avec mini-confirm en 2 clics pour éviter les déconnexions accidentelles (les brouillons de messages locaux seront vidés).</div>
+          <div style="font-size:0.74rem; opacity:0.85;">🧪 <strong style="color:var(--text);">Signaler un bug</strong> reste séparé en haut du menu (entrée dédiée).</div>
         </div>
       </details>
 

@@ -10,7 +10,13 @@
  */
 
 window.openSettings = function openSettings() {
-    document.getElementById('settings-modal').style.display = 'flex';
+    // Entrée historique. La modale Paramètres est désormais fusionnée
+    // dans la modale Mon compte (#account-modal).
+    if (typeof window.openAccount === 'function') {
+        return window.openAccount();
+    }
+    const m = document.getElementById('settings-modal') || document.getElementById('account-modal');
+    if (m) m.style.display = 'flex';
 };
 
 window.openRGPD = function openRGPD() {

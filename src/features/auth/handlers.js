@@ -371,7 +371,13 @@ window.changeTempPin = async function changeTempPin() {
 };
 
 window.logoutUser = async function logoutUser() {
-    if (!confirm('Se déconnecter ?')) return;
+    // Confirmation : sautée si l'appelant a déjà confirmé via l'UI in-app
+    // (modale Mon compte → mini-confirm). Sinon fallback vers le confirm natif.
+    if (window.__logoutSkipConfirm) {
+        window.__logoutSkipConfirm = false;
+    } else if (!confirm('Se déconnecter ?')) {
+        return;
+    }
     await setPresence(false);
     stopPresenceHeartbeat();
     setAdminSession(false);

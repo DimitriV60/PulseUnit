@@ -88,7 +88,7 @@ document.addEventListener('touchend', function(e) {
     if (dx > 60 && Math.abs(dy) < Math.abs(dx) && startX <= 30) {
       const menu = document.getElementById('side-menu');
       const menuOpen = menu && menu.style.transform === 'translateX(0)';
-      const anyModalOrViewOpen = ['calc-modal', 'tuto-modal', 'settings-modal', 'admin-login-modal', 'admin-panel-modal', 'bed-note-modal', 'rgpd-modal', 'add-modal', 'normes-view', 'normes-respi-view', 'protocoles-view', 'protocole-detail-view', 'calendrier-conges-view', 'planning-ca-view', 'tasks-view', 'calculateurs-view', 'lexique-view', 'lexique-projet-view', 'securite-view'].some(isVis);
+      const anyModalOrViewOpen = ['calc-modal', 'tuto-modal', 'account-modal', 'admin-login-modal', 'admin-panel-modal', 'bed-note-modal', 'rgpd-modal', 'add-modal', 'normes-view', 'normes-respi-view', 'protocoles-view', 'protocole-detail-view', 'calendrier-conges-view', 'planning-ca-view', 'tasks-view', 'calculateurs-view', 'lexique-view', 'lexique-projet-view', 'securite-view'].some(isVis);
       if (!menuOpen && !anyModalOrViewOpen && typeof openSideMenu === 'function') {
         openSideMenu();
         return;

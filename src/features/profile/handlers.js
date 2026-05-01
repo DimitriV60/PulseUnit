@@ -132,7 +132,13 @@
         console.log('[profile] setAgentType →', t);
     };
 
+    // openProfile : entrée historique. Délègue à la modale unifiée Mon compte
+    // si elle est présente (cas nominal), sinon tombe sur l'ancienne #profile-modal
+    // (compat éventuelle si l'HTML est rollback).
     window.openProfile = function openProfile() {
+        if (typeof window.openAccount === 'function') {
+            return window.openAccount();
+        }
         const m = document.getElementById('profile-modal');
         if (!m) return;
         m.style.display = 'flex';
@@ -204,6 +210,9 @@
     };
 
     window.closeProfile = function closeProfile() {
+        if (typeof window.closeAccount === 'function') {
+            return window.closeAccount();
+        }
         const m = document.getElementById('profile-modal');
         if (m) m.style.display = 'none';
     };
