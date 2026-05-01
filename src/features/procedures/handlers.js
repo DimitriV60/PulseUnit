@@ -75,6 +75,68 @@ const CHECKLISTS = {
       'Mandrin d\'Eschmann',
       'Boîte intubation difficile'
     ]
+  },
+  sng_asp: {
+    title: 'Pose de SNG en aspiration',
+    subtitle: 'Sonde nasogastrique — drainage / aspiration digestive',
+    items: [
+      'Sonde gastrique Salem double courant (CH 16 ou 18)',
+      'Gants non stériles',
+      'Lubrifiant hydrosoluble (gel Xylocaïne)',
+      'Compresses non stériles',
+      'Verre d\'eau + paille (si patient conscient)',
+      'Seringue 50 ml à embout conique (ENFit)',
+      'Stéthoscope (test à l\'air)',
+      'Bandelette pH gastrique (objectif < 5,5)',
+      'Sparadrap hypoallergénique pour fixation',
+      'Sac collecteur gradué + raccord',
+      'Système d\'aspiration murale + manomètre (dépression douce 30-40 mmHg)',
+      'Bocal d\'aspiration',
+      'Haricot',
+      'Protection / alèse',
+      'Prescription médicale + traçabilité (longueur extériorisée, pH)'
+    ]
+  },
+  sng_sans_asp: {
+    title: 'Pose de SNG sans aspiration',
+    subtitle: 'Sonde nasogastrique — nutrition entérale / médicaments',
+    items: [
+      'Sonde gastrique simple courant (CH 12 ou 14, polyuréthane/silicone)',
+      'Gants non stériles',
+      'Lubrifiant hydrosoluble (gel Xylocaïne)',
+      'Compresses non stériles',
+      'Verre d\'eau + paille (si patient conscient)',
+      'Seringue 50 ml à embout conique (ENFit)',
+      'Stéthoscope (test à l\'air)',
+      'Bandelette pH gastrique (objectif < 5,5)',
+      'Sparadrap hypoallergénique pour fixation',
+      'Bouchon obturateur de SNG',
+      'Tubulure de nutrition entérale + pompe (si NE)',
+      'Poche de NE prescrite',
+      'Haricot',
+      'Protection / alèse',
+      'Prescription médicale + traçabilité (longueur extériorisée, pH)'
+    ]
+  },
+  sondeurinaire: {
+    title: 'Pose de sonde urinaire',
+    subtitle: 'Sondage vésical à demeure — technique stérile',
+    items: [
+      'Sonde Foley CH 14 (femme) / CH 16-18 (homme), 2 voies à ballonnet',
+      'Sac collecteur stérile à urines (système clos)',
+      'Set de sondage stérile (champs, cupules, compresses, pince)',
+      'Gants stériles',
+      'Gants non stériles (toilette préalable)',
+      'Antiseptique (Dakin ou chlorhexidine aqueuse)',
+      'Sérum physiologique stérile (rinçage méat)',
+      'Lubrifiant urétral stérile (gel Xylocaïne stérile)',
+      'Seringue 10 ml + eau stérile pour PPI (gonflage ballonnet 10 ml)',
+      'Sparadrap hypoallergénique (fixation cuisse)',
+      'Protection / alèse',
+      'Haricot',
+      'Sac DASRI',
+      'Prescription médicale + traçabilité (date, calibre, indication)'
+    ]
   }
 };
 
@@ -101,13 +163,13 @@ const DILUTIONS_DATA = [
 // ─── État ─────────────────────────────────────────────────────────────────────
 
 let _clTab = 'kta';
-let _clChecked = { kta: {}, ktc: {}, intubation: {} };
+let _clChecked = { kta: {}, ktc: {}, intubation: {}, sng_asp: {}, sng_sans_asp: {}, sondeurinaire: {} };
 
 // ─── Checklists ───────────────────────────────────────────────────────────────
 
 window.openChecklists = function openChecklists() {
     document.getElementById('checklists-view').style.display = 'flex';
-    _clChecked = { kta: {}, ktc: {}, intubation: {} };
+    _clChecked = { kta: {}, ktc: {}, intubation: {}, sng_asp: {}, sng_sans_asp: {}, sondeurinaire: {} };
     renderChecklist();
 };
 
@@ -132,7 +194,7 @@ window.resetChecklist = function resetChecklist() {
 };
 
 function renderChecklist() {
-    ['kta', 'ktc', 'intubation'].forEach(t => {
+    ['kta', 'ktc', 'intubation', 'sng_asp', 'sng_sans_asp', 'sondeurinaire'].forEach(t => {
         const btn = document.getElementById('cl-tab-' + t);
         if (!btn) return;
         btn.style.background = t === _clTab ? 'var(--brand-aqua)' : 'var(--surface-sec)';
