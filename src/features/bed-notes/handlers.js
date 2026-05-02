@@ -1,5 +1,5 @@
 /**
- * Bed notes — 5 notes par lit (Garde 1 à 5), 7 jours TTL.
+ * Bed notes — 7 emplacements par lit, étiquetés par date+heure de création.
  * Clé : slot_X:bedId — bed-scopée, persistante jusqu'au TTL.
  *
  * Deux niveaux de visibilité :
@@ -425,6 +425,31 @@ function _slotHasContent(slotIdx, bedId, userNotes) {
     return false;
 }
 
+/**
+ * Cherche le createdAt du contenu d'un slot, en testant les 3 sources
+ * (notes privées, survey partagé, tech notes). Retourne 0 si vide.
+ */
+function _slotEarliestCreatedAt(slotIdx, bedId, userNotes) {
+    let ts = 0;
+    const own = userNotes[_slotKey(slotIdx, bedId)];
+    if (own && own.createdAt) ts = ts ? Math.min(ts, own.createdAt) : own.createdAt;
+    const shared = _getSharedSurvey(bedId, slotIdx);
+    if (shared && shared.createdAt) ts = ts ? Math.min(ts, shared.createdAt) : shared.createdAt;
+    const tech = (typeof _getTechNote === 'function') ? _getTechNote(bedId, slotIdx) : null;
+    if (tech && tech.createdAt) ts = ts ? Math.min(ts, tech.createdAt) : tech.createdAt;
+    return ts;
+}
+
+function _formatTabStamp(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mn = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}\n${hh}h${mn}`;
+}
+
 function _renderNoteTabsUI() {
     const container = document.getElementById('bed-note-tabs');
     if (!container || !_currentNotesBed) return;
@@ -433,8 +458,16 @@ function _renderNoteTabsUI() {
     for (let i = 0; i < NOTE_SLOTS; i++) {
         const hasNote = _slotHasContent(i, _currentNotesBed, notes);
         const isActive = _activeNoteSlot === i;
-        const dot = hasNote ? ' ●' : '';
-        html += `<button onclick="switchBedNoteTab(${i})" style="flex:1; padding:8px 4px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : 'var(--text-muted)'}; font-weight:${isActive ? '900' : '700'}; font-size:0.85rem; cursor:pointer; transition:all 0.15s;">Garde ${i + 1}${dot}</button>`;
+        // 2026-05-03 — label = date+heure de création si la note existe,
+        // sinon '+ Vide' (pour permettre la création d'une nouvelle note).
+        let label;
+        if (hasNote) {
+            const ts = _slotEarliestCreatedAt(i, _currentNotesBed, notes);
+            label = ts ? _formatTabStamp(ts) : '●';
+        } else {
+            label = '+ Vide';
+        }
+        html += `<button onclick="switchBedNoteTab(${i})" style="flex:1; min-width:62px; padding:6px 3px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : (hasNote ? 'var(--text)' : 'var(--text-muted)')}; font-weight:${isActive ? '900' : '700'}; font-size:0.7rem; cursor:pointer; transition:all 0.15s; line-height:1.15; white-space:pre;">${label}</button>`;
     }
     container.innerHTML = html;
 }
