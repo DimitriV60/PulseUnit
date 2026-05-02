@@ -6,8 +6,11 @@
   'use strict';
 
   // URLs CDN épinglées pour reproductibilité offline (cache PWA)
+  // P2.7 — SRI sha384 pour intégrité MITM (audit 2026-04-30)
   var JSPDF_URL = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
+  var JSPDF_SRI = 'sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/';
   var AUTOTABLE_URL = 'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js';
+  var AUTOTABLE_SRI = 'sha384-Xl/CUCfJbzsngMp0CFxkmF0VW/8C160IsGujqeQlIhaGxKz2+JsIGORFqtCPeldF';
 
   // Couleurs de la charte PulseUnit
   var COLOR_TITLE = [30, 58, 95];      // #1e3a5f
@@ -21,7 +24,8 @@
   var _autoTablePromise = null;
 
   // Charge un script unique en injectant <script> dans <head>.
-  function _loadScript(url) {
+  // P2.7 — accepte un SRI hash optionnel pour intégrité.
+  function _loadScript(url, sri) {
     return new Promise(function (resolve, reject) {
       // Si déjà présent, on attend juste qu'il soit prêt
       var existing = document.querySelector('script[src="' + url + '"]');
@@ -34,8 +38,12 @@
       var s = document.createElement('script');
       s.src = url;
       s.async = true;
+      if (sri) {
+        s.integrity = sri;
+        s.crossOrigin = 'anonymous';
+      }
       s.onload = function () { s.dataset.loaded = '1'; resolve(); };
-      s.onerror = function () { reject(new Error('Échec chargement ' + url)); };
+      s.onerror = function () { reject(new Error('Échec chargement ' + url + ' (SRI mismatch ?)')); };
       document.head.appendChild(s);
     });
   }
@@ -62,7 +70,7 @@
 
   function _loadJsPdf() {
     if (_jsPdfPromise) return _jsPdfPromise;
-    _jsPdfPromise = _loadScript(JSPDF_URL).then(function () {
+    _jsPdfPromise = _loadScript(JSPDF_URL, JSPDF_SRI).then(function () {
       if (!window.jspdf || !window.jspdf.jsPDF) {
         throw new Error('jsPDF non disponible après chargement');
       }
@@ -75,7 +83,7 @@
   function _loadJsPdfAutoTable() {
     if (_autoTablePromise) return _autoTablePromise;
     _autoTablePromise = _loadJsPdf().then(function () {
-      return _loadScript(AUTOTABLE_URL);
+      return _loadScript(AUTOTABLE_URL, AUTOTABLE_SRI);
     }).then(function () {
       _tryCachePwa([AUTOTABLE_URL]);
       return true;

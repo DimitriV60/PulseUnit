@@ -67,6 +67,7 @@ window.toggleAdminUsipLock = function toggleAdminUsipLock() {
     initShiftData(currentShiftKey);
     const newState = !shiftHistory._adminLockUsipGlobal;
     shiftHistory._adminLockUsipGlobal = newState;
+    if (window.customAuth) window.customAuth.audit('usip_lock_toggle', null, { locked: newState });
     // Propage l'état uniquement sur les gardes encore actives (en cours ou à venir).
     // Les gardes passées (verrouillées) gardent leur état historique tel qu'il était.
     Object.keys(shiftHistory).forEach(k => {
@@ -109,6 +110,7 @@ window.changeAdminPassword = async function changeAdminPassword() {
     document.getElementById('admin-cur-pass').value = '';
     document.getElementById('admin-new-pass').value = '';
     document.getElementById('admin-conf-pass').value = '';
+    if (window.customAuth) window.customAuth.audit('admin_pass_change');
     showToast('✅ Mot de passe admin mis à jour');
 };
 
