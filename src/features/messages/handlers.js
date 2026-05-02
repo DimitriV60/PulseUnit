@@ -443,18 +443,35 @@ function _hideReactionPicker() {
 window.openReactionPicker = function openReactionPicker(convId, msgId, anchorEl) {
     const picker = document.getElementById('msg-react-picker');
     if (!picker) return;
+    // 2026-05-03 — emojis plus grands + padding plus généreux pour la lisibilité
     picker.innerHTML = _REACTION_SET.map(e =>
-        `<button onclick="toggleReaction('${convId}','${msgId}','${e}')" style="background:none; border:none; font-size:1.3rem; cursor:pointer; padding:4px 6px; border-radius:6px;" onmouseover="this.style.background='var(--surface-sec)'" onmouseout="this.style.background='none'">${e}</button>`
+        `<button onclick="toggleReaction('${convId}','${msgId}','${e}')" style="background:none; border:none; font-size:1.85rem; cursor:pointer; padding:6px 10px; border-radius:10px; line-height:1; transition:transform 0.1s, background 0.1s;" onmouseover="this.style.background='var(--surface-sec)';this.style.transform='scale(1.2)'" onmouseout="this.style.background='none';this.style.transform='scale(1)'">${e}</button>`
     ).join('');
     picker.style.display = 'flex';
-    // Positionner près du message
-    const body = document.getElementById('msg-conv-body');
-    if (anchorEl && body) {
+    picker.style.position = 'fixed';
+    // Auto-positionnement intelligent : essaye au-dessus, fallback en dessous si trop haut.
+    // Centré horizontalement sur le message, contraint à la viewport.
+    if (anchorEl) {
         const r = anchorEl.getBoundingClientRect();
-        const br = body.getBoundingClientRect();
-        picker.style.position = 'fixed';
-        picker.style.top = Math.max(br.top + 4, r.top - 44) + 'px';
-        picker.style.left = Math.min(br.right - 200, Math.max(br.left + 8, r.left)) + 'px';
+        const vw = window.innerWidth, vh = window.innerHeight;
+        // Mesurer après display:flex + innerHTML pour avoir la vraie taille
+        const pw = picker.offsetWidth || 320;
+        const ph = picker.offsetHeight || 56;
+        const margin = 12;
+        // Position verticale : au-dessus si possible, sinon en dessous
+        let top = r.top - ph - 10;
+        if (top < margin) top = r.bottom + 10;
+        if (top + ph > vh - margin) top = Math.max(margin, vh - ph - margin);
+        // Position horizontale : centré sur le trigger, contraint à la viewport
+        let left = r.left + (r.width / 2) - (pw / 2);
+        left = Math.max(margin, Math.min(vw - pw - margin, left));
+        picker.style.top = top + 'px';
+        picker.style.left = left + 'px';
+    } else {
+        // Fallback : centré sur la viewport
+        picker.style.top = '40%';
+        picker.style.left = '50%';
+        picker.style.transform = 'translate(-50%, -50%)';
     }
 };
 
