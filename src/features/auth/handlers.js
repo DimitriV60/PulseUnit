@@ -206,6 +206,8 @@ function checkAutoLogin() {
 window.checkAutoLogin = checkAutoLogin;
 
 window.registerUser = async function registerUser() {
+    // Reset état user-scoped : aucune donnée d'un autre compte ne doit fuiter
+    window._resetUserScopedState();
     const fn   = document.getElementById('reg-firstname').value.trim();
     const ln   = document.getElementById('reg-lastname').value.trim();
     const pin  = document.getElementById('reg-pin').value;
@@ -281,6 +283,8 @@ window.registerUser = async function registerUser() {
 };
 
 window.loginUser = async function loginUser() {
+    // Reset état user-scoped : aucune donnée d'un autre compte ne doit fuiter
+    window._resetUserScopedState();
     const userId = document.getElementById('auth-select-user').value;
     const pin    = document.getElementById('auth-pin').value;
     if (!userId) return alert('Recherchez et sélectionnez votre nom dans la liste.');
@@ -399,6 +403,7 @@ window.loginUser = async function loginUser() {
 };
 
 window.loginAdminFromAuth = async function loginAdminFromAuth() {
+    window._resetUserScopedState();
     const user = document.getElementById('auth-admin-user').value.trim();
     const pass = document.getElementById('auth-admin-pass').value;
     if (!user || !pass) return alert('Veuillez remplir les identifiants admin.');
@@ -455,6 +460,44 @@ window.changeTempPin = async function changeTempPin() {
     alert('Nouveau code enregistré !');
 };
 
+/**
+ * Purge tout l'état user-scoped (variables in-memory + caches localStorage).
+ * À appeler à CHAQUE switch de compte : logout, login, register, autologin,
+ * admin login. Évite que les données d'un compte précédent ne restent visibles
+ * sur un autre compte ouvert sur le même navigateur (cross-account leak).
+ */
+window._resetUserScopedState = function _resetUserScopedState() {
+    // 1. Caches localStorage user-spécifiques
+    [
+        'pulseunit_plan_states', 'pulseunit_plan_regime', 'pulseunit_plan_year',
+        'pulseunit_plan_locked', 'pulseunit_plan_locked_months',
+        'pulseunit_plan_soldes', 'pulseunit_plan_labels',
+        'pulseunit_plan_debit_credit', 'pulseunit_plan_profile',
+        'pulseunit_user_profile',
+        'pu_messages_cache', 'pu_notifs_cache', 'pu_bednotes_cache',
+        'pu_msg_drafts'
+    ].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    // 2. Variables in-memory (let module-level → accessible across classic scripts)
+    try { if (typeof planStates       !== 'undefined') planStates = {}; }       catch (e) {}
+    try { if (typeof planLabels       !== 'undefined') planLabels = {}; }       catch (e) {}
+    try { if (typeof planRegime       !== 'undefined') planRegime = 'jour'; }   catch (e) {}
+    try { if (typeof planLockedMonths !== 'undefined') planLockedMonths = new Set(); } catch (e) {}
+    try { if (typeof planDebitCredit  !== 'undefined') planDebitCredit = {}; }  catch (e) {}
+    try { if (typeof planSoldes       !== 'undefined') planSoldes = {}; }       catch (e) {}
+    // 3. Variables exposées sur window (autre pattern utilisé)
+    if (window.userProfile)   window.userProfile = {};
+    if (window.messagesData)  window.messagesData = {};
+    if (window.notifsData)    window.notifsData = {};
+    if (window.bedNotesData)  window.bedNotesData = {};
+    // 4. Re-render du planning-ca-view s'il est ouvert (sinon on voit l'ancien plan)
+    try {
+        const pv = document.getElementById('planning-ca-view');
+        if (pv && pv.style.display !== 'none' && typeof window.renderPlanCalendrier === 'function') {
+            window.renderPlanCalendrier();
+        }
+    } catch (e) {}
+};
+
 window.logoutUser = async function logoutUser() {
     // Confirmation : sautée si l'appelant a déjà confirmé via l'UI in-app
     // (modale Mon compte → mini-confirm). Sinon fallback vers le confirm natif.
@@ -469,24 +512,7 @@ window.logoutUser = async function logoutUser() {
     currentUser = null;
     sessionStorage.removeItem('pulseunit_current_user');
     localStorage.removeItem('pulseunit_autologin');
-    // Fix bug cross-account : purger les caches user-spécifiques en localStorage
-    // pour éviter qu'un autre compte sur le même navigateur récupère les données.
-    [
-        'pulseunit_plan_states', 'pulseunit_plan_regime', 'pulseunit_plan_year',
-        'pulseunit_plan_locked_months', 'pulseunit_plan_soldes', 'pulseunit_plan_labels',
-        'pulseunit_plan_debit_credit', 'pulseunit_plan_profile',
-        'pulseunit_user_profile',
-        'pu_messages_cache', 'pu_notifs_cache', 'pu_bednotes_cache'
-    ].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
-    // Reset variables in-memory pour éviter qu'elles restent affichées
-    if (typeof planStates !== 'undefined') { planStates = {}; }
-    if (typeof planRegime !== 'undefined') { planRegime = 'jour'; }
-    if (typeof planLabels !== 'undefined') { window.planLabels = {}; }
-    if (typeof planSoldes !== 'undefined') { window.planSoldes = {}; }
-    if (window.userProfile) window.userProfile = {};
-    if (window.messagesData) window.messagesData = {};
-    if (window.notifsData) window.notifsData = {};
-    if (window.bedNotesData) window.bedNotesData = {};
+    window._resetUserScopedState();
     updateHeaderUser();
     showAuthModal();
 };
