@@ -227,60 +227,33 @@ window.registerUser = async function registerUser() {
         u.firstName.toLowerCase() === fn.toLowerCase() && u.lastName.toLowerCase() === ln.toLowerCase()
     );
     if (already) return alert('Un compte avec ce nom existe déjà. Connectez-vous.');
-    // P3.0 — tente d'abord Worker /register (uid + write SA + Custom Token).
+    // P3.0 — Le Worker /register a un bug de syntaxe Firestore REST (dotted-path
+    // dans fields ne fonctionne pas). Rollback temporaire : flux legacy client
+    // qui écrit pulseunit/auth directement, puis Custom Token via /login.
     let rosterId = null;
-    let registeredViaWorker = false;
-    if (window.customAuth) {
-        const cr = await window.customAuth.register(fn, ln, selectedRole, pin);
-        if (cr.ok && cr.uid) {
-            rosterId = cr.uid;
-            registeredViaWorker = true;
-            // Le Worker a écrit pulseunit/auth via SA. Sync local : la prochaine
-            // onSnapshot poussera le user dans authUsers, mais pour réactivité
-            // immédiate on l'ajoute déjà.
-            authUsers[rosterId] = {
-                firstName: fn, lastName: ln, role: selectedRole,
-                pinHash: '__worker__',  // valeur réelle via SA, pas exposée client
-                tempPin: null, createdAt: Date.now(),
-                failedAttempts: 0, blocked: false, blockedAt: null
-            };
-            if (!roster.find(r => r.id === rosterId)) {
-                roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
-                saveData();
-            }
-        } else if (!cr.fallback) {
-            // Erreur métier (user_exists, invalid_role, etc.) — afficher
-            return alert('Inscription refusée : ' + (cr.error || 'erreur'));
-        }
-        // sinon fallback (Worker indispo) → flux legacy ci-dessous
+    const rosterMatch = roster.find(r =>
+        r.firstName.toLowerCase() === fn.toLowerCase() && r.lastName.toLowerCase() === ln.toLowerCase()
+    );
+    if (rosterMatch) {
+        rosterId = rosterMatch.id;
+    } else {
+        rosterId = 'u_' + Date.now();
+        roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
+        saveData();
     }
-    // Fallback legacy (write Firestore direct côté client)
-    if (!registeredViaWorker) {
-        const rosterMatch = roster.find(r =>
-            r.firstName.toLowerCase() === fn.toLowerCase() && r.lastName.toLowerCase() === ln.toLowerCase()
-        );
-        if (rosterMatch) {
-            rosterId = rosterMatch.id;
-        } else {
-            rosterId = 'u_' + Date.now();
-            roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
-            saveData();
-        }
-        const hashes = await buildPinHashes(pin);
-        authUsers[rosterId] = {
-            firstName: fn, lastName: ln, role: selectedRole,
-            pinHash: hashes.pinHash,           // legacy (compat)
-            pinHashV2: hashes.pinHashV2,        // P1.5 PBKDF2
-            pinSalt: hashes.pinSalt,
-            tempPin: null, createdAt: Date.now(),
-            failedAttempts: 0, blocked: false, blockedAt: null
-        };
-        if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
-        // Tente login Custom Token séparément (Worker /login en fallback)
-        if (window.customAuth) {
-            const cr = await window.customAuth.loginWithPin(rosterId, pin);
-            if (!cr.ok && !cr.fallback) console.warn('[register] custom token failed', cr);
-        }
+    const hashes = await buildPinHashes(pin);
+    authUsers[rosterId] = {
+        firstName: fn, lastName: ln, role: selectedRole,
+        pinHash: hashes.pinHash,
+        pinHashV2: hashes.pinHashV2,
+        pinSalt: hashes.pinSalt,
+        tempPin: null, createdAt: Date.now(),
+        failedAttempts: 0, blocked: false, blockedAt: null
+    };
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    if (window.customAuth) {
+        const cr = await window.customAuth.loginWithPin(rosterId, pin);
+        if (!cr.ok && !cr.fallback) console.warn('[register] custom token failed', cr);
     }
     currentUser = { id: rosterId, firstName: fn, lastName: ln, role: selectedRole };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
@@ -496,6 +469,24 @@ window.logoutUser = async function logoutUser() {
     currentUser = null;
     sessionStorage.removeItem('pulseunit_current_user');
     localStorage.removeItem('pulseunit_autologin');
+    // Fix bug cross-account : purger les caches user-spécifiques en localStorage
+    // pour éviter qu'un autre compte sur le même navigateur récupère les données.
+    [
+        'pulseunit_plan_states', 'pulseunit_plan_regime', 'pulseunit_plan_year',
+        'pulseunit_plan_locked_months', 'pulseunit_plan_soldes', 'pulseunit_plan_labels',
+        'pulseunit_plan_debit_credit', 'pulseunit_plan_profile',
+        'pulseunit_user_profile',
+        'pu_messages_cache', 'pu_notifs_cache', 'pu_bednotes_cache'
+    ].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    // Reset variables in-memory pour éviter qu'elles restent affichées
+    if (typeof planStates !== 'undefined') { planStates = {}; }
+    if (typeof planRegime !== 'undefined') { planRegime = 'jour'; }
+    if (typeof planLabels !== 'undefined') { window.planLabels = {}; }
+    if (typeof planSoldes !== 'undefined') { window.planSoldes = {}; }
+    if (window.userProfile) window.userProfile = {};
+    if (window.messagesData) window.messagesData = {};
+    if (window.notifsData) window.notifsData = {};
+    if (window.bedNotesData) window.bedNotesData = {};
     updateHeaderUser();
     showAuthModal();
 };
@@ -757,12 +748,25 @@ window.adminDeleteUser = async function adminDeleteUser(userId) {
         if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     }
 
-    // 2. roster + shiftHistory
+    // 2. roster + shiftHistory (P2.4 v2 : aussi techIdeId + assignments + checklists)
     roster = roster.filter(r => r.id !== userId);
     Object.keys(shiftHistory).forEach(k => {
         const sh = shiftHistory[k];
-        if (sh && Array.isArray(sh.activeStaffIds)) {
+        if (!sh || typeof sh !== 'object') return;
+        if (Array.isArray(sh.activeStaffIds)) {
             sh.activeStaffIds = sh.activeStaffIds.filter(id => id !== userId);
+        }
+        if (sh.techIdeId === userId) sh.techIdeId = null;
+        // Assignations lits → si valeur === userId, supprimer l'entrée
+        if (sh.assignments && typeof sh.assignments === 'object') {
+            for (const [bedId, asgn] of Object.entries(sh.assignments)) {
+                if (!asgn) continue;
+                if (Array.isArray(asgn) && asgn.includes(userId)) {
+                    sh.assignments[bedId] = asgn.filter(id => id !== userId);
+                } else if (asgn === userId) {
+                    delete sh.assignments[bedId];
+                }
+            }
         }
     });
     saveData();
@@ -927,42 +931,21 @@ window.changeMyPin = async function changeMyPin() {
     if (newPin !== confPin) return alert('Les nouveaux codes ne correspondent pas.');
     const user = authUsers[currentUser.id];
     if (!user) return alert('Compte introuvable.');
-    // P3.0 — tente d'abord Worker /change-pin (write SA, garantit cohérence)
-    let changedViaWorker = false;
-    if (window.customAuth) {
-        const cr = await window.customAuth.changePin(currentUser.id, oldPin, newPin);
-        if (cr.ok) {
-            changedViaWorker = true;
-            // Sync local — le SA a réécrit pinHash/pinHashV2/pinSalt côté Firestore.
-            // L'onSnapshot poussera la nouvelle valeur sous peu. Pour le UX immédiat
-            // on n'a pas besoin du hash en local.
-        } else if (!cr.fallback) {
-            // Erreur métier
-            if (cr.error === 'invalid_old_pin' || cr.error === 'invalid_new_pin') {
-                return alert('Ancien code incorrect ou nouveau code invalide.');
-            }
-            if (cr.error === 'account_blocked') {
-                return alert('Compte bloqué. Contactez l\'administrateur.');
-            }
-            return alert('Modification refusée : ' + cr.error);
-        }
+    // P3.0 — Worker /change-pin a le même bug dotted-path que /register.
+    // Rollback : flux legacy client (write direct via AUTH_DOC.set).
+    let oldOk = false;
+    if (user.pinHashV2 && user.pinSalt) {
+        oldOk = (await hashPinV2(oldPin, user.pinSalt)) === user.pinHashV2;
     }
-    if (!changedViaWorker) {
-        // Fallback legacy : write client direct dans pulseunit/auth
-        let oldOk = false;
-        if (user.pinHashV2 && user.pinSalt) {
-            oldOk = (await hashPinV2(oldPin, user.pinSalt)) === user.pinHashV2;
-        }
-        if (!oldOk && user.pinHash) {
-            oldOk = (await hashPin(oldPin)) === user.pinHash;
-        }
-        if (!oldOk) return alert('Ancien code incorrect.');
-        const hashes = await buildPinHashes(newPin);
-        authUsers[currentUser.id].pinHash = hashes.pinHash;
-        authUsers[currentUser.id].pinHashV2 = hashes.pinHashV2;
-        authUsers[currentUser.id].pinSalt = hashes.pinSalt;
-        if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    if (!oldOk && user.pinHash) {
+        oldOk = (await hashPin(oldPin)) === user.pinHash;
     }
+    if (!oldOk) return alert('Ancien code incorrect.');
+    const hashes = await buildPinHashes(newPin);
+    authUsers[currentUser.id].pinHash = hashes.pinHash;
+    authUsers[currentUser.id].pinHashV2 = hashes.pinHashV2;
+    authUsers[currentUser.id].pinSalt = hashes.pinSalt;
+    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     document.getElementById('chg-old').value = '';
     document.getElementById('chg-new').value = '';
     document.getElementById('chg-conf').value = '';
