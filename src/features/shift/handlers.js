@@ -403,7 +403,7 @@ window.clearShift = function clearShift(id, type) {
     saveData(); renderApp();
 };
 
-window.clearCurrentShift = function clearCurrentShift() {
+window.clearCurrentShift = async function clearCurrentShift() {
     initShiftData(currentShiftKey);
     shiftHistory[currentShiftKey].activeStaffIds = [];
     shiftHistory[currentShiftKey].assignments = {};
@@ -417,8 +417,60 @@ window.clearCurrentShift = function clearCurrentShift() {
     shiftHistory[dO + '-meds'] = [null, null, null];
     shiftHistory[dO + '-medsBeds'] = {};
     clearSelection();
+
+    // 2026-05-03 — Après vidage, ré-interroge tous les plannings persos pour
+    // re-peupler automatiquement les agents qui ont 'jour'/'nuit'/'HS'/'formation'
+    // pour today dans leur planning Firestore PLANS_DOC.
+    await _autoRepopulateFromPlannings();
+
     saveData(); renderApp();
 };
+
+async function _autoRepopulateFromPlannings() {
+    if (typeof PLANS_DOC === 'undefined' || !PLANS_DOC) return;
+    try {
+        const _t = new Date();
+        const todayStr = `${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+        const shiftType = currentShiftKey.includes('-nuit') ? 'nuit' : 'jour';
+        const doc = await PLANS_DOC.get();
+        if (!doc.exists) return;
+        const data = doc.data() || {};
+        const h = shiftHistory[currentShiftKey];
+        const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');
+        if (!shiftHistory[dateOnly + '-meds']) shiftHistory[dateOnly + '-meds'] = [null, null, null];
+        let added = 0;
+        for (const [userId, userPlan] of Object.entries(data)) {
+            if (!userPlan || typeof userPlan !== 'object') continue;
+            const states = userPlan.states || {};
+            const state = states[todayStr];
+            if (!state) continue;
+            // Filtre selon shift jour/nuit
+            const okJour = (state === 'jour' || state === 'hs_j' || state === 'formation' || state === 'hs');
+            const okNuit = (state === 'nuit' || state === 'hs_n' || state === 'formation' || state === 'hs');
+            const matches = (shiftType === 'jour' && okJour) || (shiftType === 'nuit' && okNuit);
+            if (!matches) continue;
+            // Cherche le rôle de l'agent dans le roster
+            const p = roster.find(r => r.id === userId);
+            if (!p) continue;
+            if (p.role === 'med') {
+                if (!shiftHistory[dateOnly + '-meds'].includes(userId)) {
+                    const empty = shiftHistory[dateOnly + '-meds'].indexOf(null);
+                    if (empty !== -1) { shiftHistory[dateOnly + '-meds'][empty] = userId; added++; }
+                }
+            } else {
+                if (!h.activeStaffIds.includes(userId)) {
+                    h.activeStaffIds.push(userId);
+                    added++;
+                }
+            }
+        }
+        if (added > 0 && typeof showToast === 'function') {
+            showToast(`✅ Garde repeuplée : ${added} agent${added > 1 ? 's' : ''} via planning`);
+        }
+    } catch (e) {
+        console.warn('[autoRepopulate]', e);
+    }
+}
 
 window.getStaffTargets = function getStaffTargets() {
     initShiftData(currentShiftKey);
