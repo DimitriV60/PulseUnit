@@ -82,7 +82,13 @@ window.clearSearchInput = function clearSearchInput(inputId, onChange) {
     const inp = document.getElementById(inputId);
     if (!inp) return;
     inp.value = '';
-    if (typeof onChange === 'function') onChange('');
+    // P2.2 — onChange peut être un nom de fonction string (depuis data-action) ou la fonction directement
+    if (typeof onChange === 'string') {
+        const fn = window[onChange];
+        if (typeof fn === 'function') fn('');
+    } else if (typeof onChange === 'function') {
+        onChange('');
+    }
     const btn = document.getElementById(inputId + '-clear');
     if (btn) btn.style.display = 'none';
     inp.focus();
