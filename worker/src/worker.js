@@ -824,8 +824,72 @@ async function handleAudit({ env, body, origin, request }) {
   return jsonResponse(res, res.ok ? 200 : 500, origin);
 }
 
+// ── Cron handlers (P2.3 — TTL serveur présence) ────────────────────────────
+// Cloudflare invoque scheduled() selon la cron du wrangler.toml. Pas d'impact
+// sur les 100k req/jour free (720 invocations/jour à */2 min).
+
+const PRESENCE_TTL_MS = 5 * 60 * 1000;  // 5 min — au-delà : utilisateur considéré offline
+
+// PATCH d'un doc Firestore avec updateMask = liste de champs à supprimer.
+// Pour supprimer (vs setter à null) : on liste le champ dans updateMask SANS
+// le mettre dans body.fields → Firestore traite ça comme un "field reset".
+async function _firestoreDeleteFields(env, projectId, path, fieldPaths) {
+  if (!fieldPaths || fieldPaths.length === 0) return { ok: true, removed: 0 };
+  const token = await _getFirestoreAccessToken(env);
+  if (!token) return { ok: false, err: 'no_token' };
+  const params = fieldPaths.map(f => 'updateMask.fieldPaths=' + encodeURIComponent(f)).join('&');
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${path}?${params}`;
+  const resp = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ fields: {} })
+  });
+  if (!resp.ok) {
+    const bodyText = await resp.text();
+    console.error('[firestore_delete_fields_error]', path, resp.status, bodyText.slice(0, 200));
+    return { ok: false, err: 'http_' + resp.status };
+  }
+  return { ok: true, removed: fieldPaths.length };
+}
+
+async function _purgeStalePresence(env) {
+  const projectId = 'pulseunit-c9c5c';
+  const presence = await _firestoreGet(env, projectId, 'pulseunit/presence');
+  if (!presence) return { skipped: 'no_doc' };
+  const now = Date.now();
+  const stale = [];
+  for (const [uid, info] of Object.entries(presence)) {
+    if (uid.startsWith('_')) continue;
+    if (!info || typeof info !== 'object') { stale.push(uid); continue; }
+    const ls = info.lastSeen;
+    // lastSeen peut être : timestamp ms (number), ISO string, ou absent.
+    let tsMs = null;
+    if (typeof ls === 'number') tsMs = ls;
+    else if (typeof ls === 'string') { const t = Date.parse(ls); if (!isNaN(t)) tsMs = t; }
+    if (tsMs === null || (now - tsMs) > PRESENCE_TTL_MS) stale.push(uid);
+  }
+  if (stale.length === 0) return { ok: true, removed: 0 };
+  const result = await _firestoreDeleteFields(env, projectId, 'pulseunit/presence', stale);
+  return { ...result, staleIds: stale.slice(0, 10) };
+}
+
 // ── Routeur principal ───────────────────────────────────────────────────────
 export default {
+  async scheduled(event, env, ctx) {
+    // event.cron = "*/2 * * * *"
+    ctx.waitUntil((async () => {
+      try {
+        const res = await _purgeStalePresence(env);
+        console.log('[cron_presence_purge]', JSON.stringify(res));
+      } catch (e) {
+        console.error('[cron_presence_purge_error]', e && e.message);
+      }
+    })());
+  },
+
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     if (request.method === 'OPTIONS') {

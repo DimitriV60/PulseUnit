@@ -10,3 +10,9 @@ workers_dev = true
 # Workers AI binding — donne accès à env.AI dans le code
 [ai]
 binding = "AI"
+
+# Cron Triggers (P2.3 audit 2026-04-30) — purge périodique présence Firestore.
+# Free tier : 5 cron triggers max par worker, granularité 1 min, comptés dans
+# les 100 000 req/jour gratuites (ici 720 invocations/jour = 0,72%).
+[triggers]
+crons = ["*/2 * * * *"]
