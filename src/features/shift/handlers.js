@@ -301,11 +301,12 @@ window.selfAssignTech = function selfAssignTech() {
 };
 
 /**
- * Bed-like tap handler pour la carte IDE TECH (2026-05-03) :
- *   - empty + utilisateur sélectionné dans l'effectif (selectedStaffForTap===currentUser.id)
- *     + role IDE → assigne. Sinon toast "Sélectionnez-vous d'abord".
- *   - occupé + currentUser est l'IDE Tech → simple tap : rien spécial,
- *     double tap (< 350ms) : ouvre les notes 7-gardes (bedId='tech_ide').
+ * Bed-like tap handler pour la carte IDE TECH (2026-05-02) :
+ *   - empty + utilisateur sélectionné (selectedStaffForTap===currentUser.id) + IDE
+ *     → assigne. Sinon toast d'orientation.
+ *   - occupé par moi + selectedStaffForTap===currentUser.id → toggle OFF (libère le slot,
+ *     l'agent reste dans l'effectif). Modèle exact d'un lit.
+ *   - occupé par moi sans sélection → double-tap (<350ms) ouvre les notes 7-gardes.
  */
 var _lastTechTapTime = 0;
 window.handleTechIdeTap = function handleTechIdeTap(ev) {
@@ -314,8 +315,17 @@ window.handleTechIdeTap = function handleTechIdeTap(ev) {
     initShiftData(currentShiftKey);
     if (isShiftLocked(currentShiftKey)) return;
     const h = shiftHistory[currentShiftKey];
-    // Slot occupé par moi → détection double-tap
+    // Slot occupé par moi
     if (h.techIdeId === currentUser.id) {
+        // Toggle OFF si je me suis sélectionné dans l'effectif (modèle lit)
+        if (selectedStaffForTap === currentUser.id) {
+            h.techIdeId = null;
+            saveData();
+            renderApp();
+            showToast('Slot IDE Tech libéré');
+            return;
+        }
+        // Sinon, détection double-tap → notes 7 gardes
         const now = Date.now();
         if (now - _lastTechTapTime < 350) {
             _lastTechTapTime = 0;

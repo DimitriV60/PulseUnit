@@ -226,43 +226,33 @@ window.renderApp = function renderApp() {
     const _total = _todayTasks.length;
     const _pct = _total > 0 ? Math.round((_done / _total) * 100) : 0;
 
-    // 2026-05-03 \u2014 UX bed-like : tap (avec selectedStaffForTap) pour assigner,
-    // double-tap (si techIde) pour ouvrir les notes 7-gardes.
+    // 2026-05-02 \u2014 Carte IDE TECH au design EXACT d'un lit (sans boutons d'actions),
+    // une seule barre = barre des t\u00E2ches (pattern cl-bar-row).
     const _isTechMine = currentUser && techP && currentUser.id === h.techIdeId;
     const _targetable = !techP && !locked && selectedStaffForTap === currentUser?.id && currentUser?.role === 'ide';
-    boardHTML += `<div class="bed-card special-card tech-card ${_targetable ? 'targetable' : ''}" onclick="handleTechIdeTap(event)" style="${_targetable ? 'cursor:pointer; box-shadow:0 0 0 2px var(--tech);' : ''}">
-      <div class="bed-header" style="color:var(--tech); margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;">
-        <span class="b-num" style="font-size:1.1rem; font-weight:900; line-height:1.2;">IDE<br>TECH</span>
-        <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
-            <span style="white-space:nowrap; font-size:0.75rem; background:var(--tech-glow); padding:4px 8px; border-radius:6px; font-weight:900; display:flex; align-items:center; gap:4px; border: 1px solid rgba(168,85,247,0.3); color:var(--tech);">
-                \uD83D\uDCDE 7125
-            </span>
-            <span style="white-space:nowrap; font-size:0.75rem; background:var(--tech-glow); padding:4px 8px; border-radius:6px; font-weight:900; display:flex; align-items:center; gap:4px; border: 1px solid rgba(168,85,247,0.3); color:var(--tech);">
-                \uD83D\uDCDE 6086
-            </span>
+    const _stTask = _pct === 100 ? 'done' : _done > 0 ? 'partial' : 'empty';
+    const _scoreTask = _pct === 100 ? '\u2713 OK' : `${_done}/${_total}`;
+    const _techName = techP ? `${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0]) || ''}.` : '---';
+    const _techBarClick = _isTechMine
+        ? `onclick="event.stopPropagation();openTasks()"`
+        : `onclick="event.stopPropagation()"`;
+
+    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;" onclick="handleTechIdeTap(event)">
+      <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
+      <div class="bed-header">
+        <span class="b-num" style="color:var(--tech);">IDE TECH</span>
+        <div class="b-actions" style="${locked ? 'opacity:0.5;pointer-events:none;' : ''}">
+          <a href="tel:0344617125" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 7125</a>
+          <a href="tel:0344616086" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 6086</a>
         </div>
       </div>
-      ${techP ? `
-        <div class="staff-pill tech-pill">${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0]) || ''}. ${locked ? '' : `<span class="remove-btn" onclick="event.stopPropagation(); clearShift(null,'tech')">\u00D7</span>`}</div>
-        <div style="margin-top:10px; font-size:0.72rem; color:var(--tech); font-weight:700; display:flex; justify-content:space-between;">
-          <span>\uD83D\uDCDD T\u00E2ches</span><span>${_done}/${_total}</span>
-        </div>
-        <div style="height:5px; background:var(--border); border-radius:3px; margin:4px 0 8px;">
-          <div style="height:100%; width:${_pct}%; background:var(--tech); border-radius:3px; transition:width 0.3s;"></div>
-        </div>
-        ${_isTechMine ? `
-          <button onclick="event.stopPropagation(); openTasks()" style="width:100%; padding:7px; background:var(--tech-glow); border:1px solid rgba(168,85,247,0.4); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.75rem; cursor:pointer; margin-bottom:5px;">
-            ${_pct === 100 ? '\u2705 Toutes valid\u00E9es' : 'Ouvrir mes t\u00E2ches \u2192'}
-          </button>
-          <div style="font-size:0.65rem; color:var(--text-muted); text-align:center; padding:3px 0;">double-tap \u2192 mes notes (7 gardes)</div>
-        ` : `
-          <div style="font-size:0.7rem; color:var(--text-muted); text-align:center; padding:8px 0;">T\u00E2ches : ${_done}/${_total}</div>
-        `}
-      ` : `<div class="search-box" style="margin-top:auto;">${locked ? '---' : `
-        <div style="font-size:0.72rem; color:var(--tech); font-weight:800; text-align:center; padding:14px 6px; border:2px dashed var(--tech); border-radius:8px; background:var(--tech-glow);">
-          ${_targetable ? '\uD83D\uDC4B Tap ici pour te placer' : currentUser?.role === 'ide' ? '\uD83D\uDC46 S\u00E9lectionne-toi puis tap ici' : 'R\u00E9serv\u00E9 aux IDE'}
-        </div>
-      `}</div>`}
+      <div class="cl-bar-row" ${_techBarClick}>
+        <div class="cl-minibar"><div class="cl-minibar-fill ${_stTask}" style="width:${_pct}%"></div></div>
+        <span class="cl-score ${_stTask}">${_scoreTask}</span>
+      </div>
+      <div class="pill-container">
+        <div class="staff-pill ${techP ? 'ide-pill' : 'empty-pill'}"><span class="pill-prefix">IDE</span><span>${_techName}</span></div>
+      </div>
     </div>`;
 
     const m2 = roster.find(r => r.id === ms[2]);
