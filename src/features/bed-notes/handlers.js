@@ -648,19 +648,78 @@ window.openBedNote = function openBedNote(bedId) {
         label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
     }
     document.getElementById('bed-note-bed-label').textContent = label;
-    // 2026-05-03 — pour tech_ide on cache la section surveillance horaire
-    // (vitals n'ont pas de sens sur la case IDE Tech). Pour les chambres on
-    // l'affiche normalement.
+
+    // 2026-05-03 — Visibilité conditionnelle :
+    //  • tech_ide : seules les Observations privées (7 gardes perso) — pas survey/tech.
+    //  • Chambre + currentUser est IDE/AS assigné(e) à ce lit : tout (survey + obs + tech si tech IDE).
+    //  • Chambre + currentUser est IDE Tech non-assigné au lit : seulement Tech Notes,
+    //    avec toggle 'Voir paramètres vitaux' pour révéler la surveillance.
+    //    Les Observations privées sont CACHÉES car elles appartiennent à l'IDE/AS du lit.
+    const _dInfo = (h.assignments || {})[bedId] || {};
+    const _isAssignedToBed = currentUser && (_dInfo.ide === currentUser.id || _dInfo.as === currentUser.id);
+    const _isTechIde = currentUser && h.techIdeId === currentUser.id;
+    const isTechIdeOnly = (bedId !== TECH_BED_ID) && _isTechIde && !_isAssignedToBed;
+
     const surveyHeader = document.getElementById('bed-note-survey-section');
-    const surveyGrid = document.getElementById('bed-note-survey');
-    const surveyMeta = document.getElementById('bed-note-survey-meta');
-    const showSurvey = bedId !== TECH_BED_ID;
+    const surveyGrid   = document.getElementById('bed-note-survey');
+    const surveyMeta   = document.getElementById('bed-note-survey-meta');
+    const surveyToggle = document.getElementById('bed-note-survey-toggle');
+    const obsSection   = document.getElementById('bed-note-obs-section');
+    const textarea     = document.getElementById('bed-note-text');
+
+    let showSurvey, showObs, showSurveyToggle = false;
+    if (bedId === TECH_BED_ID) {
+        // Notes perso de l'IDE Tech (sa case) : observations only
+        showSurvey = false;
+        showObs = true;
+    } else if (isTechIdeOnly) {
+        // IDE Tech qui regarde une chambre où elle n'est pas IDE/AS : tech-only,
+        // avec bouton optionnel pour voir vitals
+        showSurvey = false;
+        showObs = false;
+        showSurveyToggle = true;
+    } else {
+        // Cas normal : IDE/AS assigné(e) au lit, ou admin
+        showSurvey = true;
+        showObs = true;
+    }
     if (surveyHeader) surveyHeader.style.display = showSurvey ? '' : 'none';
     if (surveyGrid)   surveyGrid.style.display   = showSurvey ? '' : 'none';
     if (surveyMeta && !showSurvey) surveyMeta.style.display = 'none';
+    if (surveyToggle) {
+        surveyToggle.style.display = showSurveyToggle ? '' : 'none';
+        surveyToggle.textContent = '📋 Voir paramètres vitaux';
+    }
+    if (obsSection) obsSection.style.display = showObs ? '' : 'none';
+    if (textarea)   textarea.style.display   = showObs ? '' : 'none';
     _renderSurveyGridUI();
     _loadNoteSlot(_activeNoteSlot);
     document.getElementById('bed-note-modal').style.display = 'flex';
+};
+
+/**
+ * Toggle surveillance horaire pour l'IDE Tech (qui n'est pas assignée au lit).
+ * Permet d'accéder ponctuellement aux paramètres vitaux sans les avoir par défaut.
+ */
+window.toggleBedNoteSurvey = function toggleBedNoteSurvey() {
+    const surveyHeader = document.getElementById('bed-note-survey-section');
+    const surveyGrid = document.getElementById('bed-note-survey');
+    const toggle = document.getElementById('bed-note-survey-toggle');
+    if (!surveyHeader || !surveyGrid || !toggle) return;
+    const isHidden = surveyHeader.style.display === 'none';
+    if (isHidden) {
+        surveyHeader.style.display = '';
+        surveyGrid.style.display = '';
+        toggle.textContent = '🔼 Masquer paramètres vitaux';
+        // Repopule la grille avec les valeurs courantes
+        const sharedSlot = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
+        _populateSurveyValues(sharedSlot ? sharedSlot.survey : null);
+        _renderSurveyMetaUI(sharedSlot);
+    } else {
+        surveyHeader.style.display = 'none';
+        surveyGrid.style.display = 'none';
+        toggle.textContent = '📋 Voir paramètres vitaux';
+    }
 };
 
 window.closeBedNote = function closeBedNote() {
@@ -670,53 +729,65 @@ window.closeBedNote = function closeBedNote() {
 
 window.saveBedNote = function saveBedNote() {
     if (!_currentNotesBed) return;
-    const text = document.getElementById('bed-note-text').value.trim();
-    const survey = _readSurveyValuesFromUI();
-    const hasText = text !== '';
-    const hasSurvey = !_isSurveyEmpty(survey);
-    const surveyCount = Object.values(survey).reduce((n, arr) => n + arr.filter(v => (v || '').toString().trim() !== '').length, 0);
-    // 1. Texte privé
-    const notes = _getBedNotes();
-    const key = _slotKey(_activeNoteSlot, _currentNotesBed);
-    if (!hasText) {
-        delete notes[key];
-    } else {
-        const prev = notes[key];
-        const now = Date.now();
-        notes[key] = { text, createdAt: prev ? prev.createdAt : now, updatedAt: now };
+    // 2026-05-03 — Save scoped : ne sauvegarde que les sections visibles.
+    // Évite que l'IDE Tech (mode tech-only) écrase des données qu'elle ne devrait
+    // pas voir/modifier.
+    const obsSection = document.getElementById('bed-note-obs-section');
+    const surveyGrid = document.getElementById('bed-note-survey');
+    const techSection = document.getElementById('bed-note-tech-section');
+    const obsVisible = obsSection && obsSection.style.display !== 'none';
+    const surveyVisible = surveyGrid && surveyGrid.style.display !== 'none';
+    const techVisible = techSection && techSection.style.display !== 'none';
+
+    let savedObs = false, savedSurvey = false, savedTech = false, surveyCount = 0;
+
+    // 1. Observations privées (textarea)
+    if (obsVisible) {
+        const text = document.getElementById('bed-note-text').value.trim();
+        const notes = _getBedNotes();
+        const key = _slotKey(_activeNoteSlot, _currentNotesBed);
+        if (!text) {
+            delete notes[key];
+        } else {
+            const prev = notes[key];
+            const now = Date.now();
+            notes[key] = { text, createdAt: prev ? prev.createdAt : now, updatedAt: now };
+            savedObs = true;
+        }
+        _saveBedNotes(notes);
     }
-    _saveBedNotes(notes);
-    // 2. Survey partagé (uniquement pour les vraies chambres, pas tech_ide)
-    let savedTech = false;
-    if (_currentNotesBed !== TECH_BED_ID) {
+
+    // 2. Surveillance partagée (uniquement chambres, pas tech_ide)
+    if (surveyVisible && _currentNotesBed !== TECH_BED_ID) {
+        const survey = _readSurveyValuesFromUI();
+        surveyCount = Object.values(survey).reduce((n, arr) => n + arr.filter(v => (v || '').toString().trim() !== '').length, 0);
+        const hasSurvey = !_isSurveyEmpty(survey);
         const prevShared = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
         _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
-        // 3. Tech note — uniquement si IDE Tech courant + section visible
-        const techSection = document.getElementById('bed-note-tech-section');
-        if (techSection && techSection.style.display !== 'none') {
-            const techArea = document.getElementById('bed-note-tech-text');
-            if (techArea) {
-                const techText = (techArea.value || '').trim();
-                const prevTech = _getTechNote(_currentNotesBed, _activeNoteSlot);
-                const prevTechText = prevTech ? (prevTech.text || '') : '';
-                if (techText !== prevTechText) {
-                    _saveTechNote(_currentNotesBed, _activeNoteSlot, techText);
-                    savedTech = true;
-                }
+        if (hasSurvey) savedSurvey = true;
+    }
+
+    // 3. Tech notes (uniquement chambres, pour IDE Tech courant)
+    if (techVisible && _currentNotesBed !== TECH_BED_ID) {
+        const techArea = document.getElementById('bed-note-tech-text');
+        if (techArea) {
+            const techText = (techArea.value || '').trim();
+            const prevTech = _getTechNote(_currentNotesBed, _activeNoteSlot);
+            const prevTechText = prevTech ? (prevTech.text || '') : '';
+            if (techText !== prevTechText) {
+                _saveTechNote(_currentNotesBed, _activeNoteSlot, techText);
+                savedTech = true;
             }
         }
     }
-    // Refresh in-place sans fermer le modal — l'utilisateur reste dans la note
+
     _loadNoteSlot(_activeNoteSlot);
     if (typeof renderApp === 'function') renderApp();
-    let msg;
     const parts = [];
-    if (hasText) parts.push('📝 obs.');
-    if (hasSurvey) parts.push(`📋 ${surveyCount}v`);
-    if (savedTech) parts.push('🛠 tech');
-    if (parts.length > 0) msg = '✅ Enregistré — ' + parts.join(' · ');
-    else msg = '🧹 Note vidée';
-    showToast(msg);
+    if (savedObs)    parts.push('📝 obs.');
+    if (savedSurvey) parts.push(`📋 ${surveyCount}v`);
+    if (savedTech)   parts.push('🛠 tech');
+    showToast(parts.length > 0 ? '✅ Enregistré — ' + parts.join(' · ') : '🧹 Note vidée');
 };
 
 window.deleteBedNote = function deleteBedNote() {
