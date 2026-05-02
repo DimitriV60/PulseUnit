@@ -7,32 +7,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#122f4a">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-<script>
-  // Thème : auto (jour/nuit selon heure) | light | dark
-  var savedTheme = localStorage.getItem("pulseunit_theme") || "auto";
-  /**
-   * Détermine le thème automatiquement selon l'heure.
-   * Mode sombre entre 20h et 8h (horaire nuit), clair le reste du temps.
-   * @returns {string} "dark" ou "light"
-   */
-  function getAutoTheme() {
-    const h = new Date().getHours();
-    return (h >= 20 || h < 8) ? "dark" : "light";
-  }
-  /**
-   * Applique le thème sur l'élément racine <html> via l'attribut data-theme.
-   * Si t === "auto", calcule automatiquement le thème selon l'heure.
-   * @param {string} t - "auto", "light" ou "dark"
-   */
-  function applyTheme(t) {
-    document.documentElement.setAttribute("data-theme", t === "auto" ? getAutoTheme() : t);
-  }
-  applyTheme(savedTheme);
-
-  // Settings initialization
-  var appSettings = JSON.parse(localStorage.getItem('pulseunit_settings')) || { sound: true, haptic: true, dnd: false };
-  if (typeof appSettings.dnd === 'undefined') appSettings.dnd = false;
-</script>
+<!-- Theme + appSettings (anti-FOUC) — extrait pour CSP sans 'unsafe-inline' (P2.2 audit 2026-04-30) -->
+<script src="src/core/theme-init.js"></script>
 <link rel="stylesheet" href="src/styles/main.css">
 
 <!-- QR Code library -->
@@ -80,9 +56,9 @@
     <div id="locked-banner">🔒 GARDE TERMINÉE - LECTURE SEULE</div>
     <div id="app-mode-tag" style="display:none; font-size:0.7rem; font-weight:800; text-align:center; padding:3px 10px; border-radius:4px; margin:2px 8px 0;"></div>
     <div style="position:relative; padding:6px 12px 4px;">
-      <input type="text" id="global-search" placeholder="🔍 Recherche — service, terme médical, protocole..." oninput="renderGlobalSearch(); toggleClearBtn('global-search')" onfocus="renderGlobalSearch()" autocomplete="off"
+      <input type="text" id="global-search" placeholder="🔍 Recherche — service, terme médical, protocole..." data-input="renderGlobalSearch;toggleClearBtn:global-search" data-focus="renderGlobalSearch" autocomplete="off"
         style="width:100%; box-sizing:border-box; padding:9px 36px 9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; font-family:var(--font); outline:none;">
-      <button id="global-search-clear" type="button" onclick="clearSearchInput('global-search', renderGlobalSearch)" title="Effacer" style="display:none; position:absolute; right:20px; top:14px; background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+      <button id="global-search-clear" type="button" data-action="clearSearchInput:global-search,renderGlobalSearch" title="Effacer" style="display:none; position:absolute; right:20px; top:14px; background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       <div id="global-search-results" style="display:none; position:absolute; left:12px; right:12px; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:500; max-height:60vh; overflow-y:auto;"></div>
     </div>
     <div class="shift-nav" id="shift-nav"></div>
@@ -213,7 +189,7 @@
                 <span>Notifications sonores</span>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="setting-sound" onchange="toggleAppSetting('sound')">
+                <input type="checkbox" id="setting-sound" data-change="toggleAppSetting:sound">
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -223,7 +199,7 @@
                 <span>Vibration au toucher</span>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="setting-haptic" onchange="toggleAppSetting('haptic')">
+                <input type="checkbox" id="setting-haptic" data-change="toggleAppSetting:haptic">
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -233,7 +209,7 @@
                 <span>Silence des notifs sauf urgences (utile en garde / la nuit)</span>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="setting-dnd" onchange="toggleAppSetting('dnd')">
+                <input type="checkbox" id="setting-dnd" data-change="toggleAppSetting:dnd">
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -314,107 +290,8 @@
     </div>
   </div>
 
-  <!-- Logique modale Mon compte : open/close + mini-confirm déconnexion -->
-  <script>
-    (function () {
-      function _resetLogoutUI() {
-        var d = document.getElementById('account-logout-default');
-        var c = document.getElementById('account-logout-confirm');
-        if (d) d.style.display = '';
-        if (c) c.style.display = 'none';
-      }
-      window.switchAccountTab = function switchAccountTab(name) {
-        var tabs = ['profil', 'prefs', 'securite', 'plus'];
-        if (tabs.indexOf(name) === -1) name = 'profil';
-        tabs.forEach(function (t) {
-          var btn = document.getElementById('acc-tab-btn-' + t);
-          var pnl = document.getElementById('acc-panel-' + t);
-          var active = (t === name);
-          if (btn) {
-            btn.classList.toggle('is-active', active);
-            btn.setAttribute('aria-selected', active ? 'true' : 'false');
-          }
-          if (pnl) pnl.style.display = active ? '' : 'none';
-        });
-      };
-      window.openAccount = function openAccount() {
-        var m = document.getElementById('account-modal');
-        if (!m) return;
-        _resetLogoutUI();
-        window.switchAccountTab('profil');
-        m.style.display = 'flex';
-        if (typeof updateThemeBtns === 'function') updateThemeBtns();
-        // Refresh identité + type d'agent (réutilise la fct privée du module profile via openProfile-equivalent)
-        if (currentUser) {
-          var nameEl = document.getElementById('profile-name');
-          var roleEl = document.getElementById('profile-role');
-          if (nameEl) nameEl.textContent = (((currentUser.lastName || '').toUpperCase()) + ' ' + (currentUser.firstName || '')).trim() || '—';
-          if (roleEl) roleEl.textContent = (currentUser.role || '').toUpperCase() || '—';
-        }
-        var t = (typeof getProfileAgentType === 'function') ? getProfileAgentType() : 'jour-fixe';
-        ['jour-fixe', 'nuit-fixe', 'alterne'].forEach(function (opt) {
-          var radio = document.getElementById('profile-type-' + opt);
-          if (radio) radio.checked = (t === opt);
-          var card = document.getElementById('profile-type-card-' + opt);
-          if (card) {
-            card.classList.toggle('is-active', t === opt);
-            card.setAttribute('aria-checked', t === opt ? 'true' : 'false');
-          }
-        });
-        var help = document.getElementById('profile-type-help');
-        if (help) {
-          help.textContent = ({
-            'jour-fixe': "Personnel jour, repos fixes — 35h hebdo (≈1568-1596h annuelles).",
-            'nuit-fixe': "Personnel exclusivement nuit (≥90% du temps annuel) — 32h30 hebdo (≈1482h annuelles).",
-            'alterne'  : "Alternance jour/nuit — base 35h avec revalorisations sur les nuits travaillées."
-          })[t] || '';
-        }
-        var sSound  = document.getElementById('setting-sound');
-        var sHaptic = document.getElementById('setting-haptic');
-        var sDnd    = document.getElementById('setting-dnd');
-        if (sSound  && typeof appSettings !== 'undefined') sSound.checked  = !!appSettings.sound;
-        if (sHaptic && typeof appSettings !== 'undefined') sHaptic.checked = !!appSettings.haptic;
-        if (sDnd    && typeof appSettings !== 'undefined') sDnd.checked    = !!appSettings.dnd;
-      };
-      window.closeAccount = function closeAccount() {
-        var m = document.getElementById('account-modal');
-        if (m) m.style.display = 'none';
-        _resetLogoutUI();
-      };
-      // Aliases backwards-compat — anciens callers (openProfile depuis Suivi, openSettings éventuel)
-      window.openProfile  = window.openAccount;
-      window.closeProfile = window.closeAccount;
-      window.openSettings = window.openAccount;
-
-      // Mini-confirm déconnexion
-      window.requestLogoutConfirm = function requestLogoutConfirm() {
-        var d = document.getElementById('account-logout-default');
-        var c = document.getElementById('account-logout-confirm');
-        if (d) d.style.display = 'none';
-        if (c) c.style.display = '';
-      };
-      window.cancelLogoutConfirm = function cancelLogoutConfirm() {
-        _resetLogoutUI();
-      };
-      window.confirmLogoutNow = function confirmLogoutNow() {
-        window.closeAccount();
-        window.__logoutSkipConfirm = true;
-        if (typeof logoutUser === 'function') logoutUser();
-      };
-
-      // Guide PulseUnit — vue plein écran, retour au menu burger à la fermeture
-      window.openGuide = function openGuide() {
-        if (typeof closeSideMenu === 'function') closeSideMenu();
-        var v = document.getElementById('tuto-view');
-        if (v) v.style.display = 'flex';
-      };
-      window.closeGuide = function closeGuide() {
-        var v = document.getElementById('tuto-view');
-        if (v) v.style.display = 'none';
-        if (typeof openSideMenu === 'function') openSideMenu();
-      };
-    })();
-  </script>
+  <!-- Logique modale Mon compte — extraite pour CSP sans 'unsafe-inline' (P2.2 audit 2026-04-30) -->
+  <script src="src/features/account/handlers.js"></script>
 
   <!-- Sous-modale : Modifier mon code -->
   <div id="change-pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:550; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
@@ -627,8 +504,8 @@
         <button data-action="hide:admin-users-modal" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
       <div style="position:relative; margin-bottom:12px;">
-        <input type="text" id="admin-users-search" placeholder="🔍 Rechercher un nom…" oninput="renderAdminUsers(); toggleClearBtn('admin-users-search')" style="width:100%; padding:9px 32px 9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box;">
-        <button id="admin-users-search-clear" type="button" onclick="clearSearchInput('admin-users-search', renderAdminUsers)" title="Effacer" style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+        <input type="text" id="admin-users-search" placeholder="🔍 Rechercher un nom…" data-input="renderAdminUsers;toggleClearBtn:admin-users-search" style="width:100%; padding:9px 32px 9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; box-sizing:border-box;">
+        <button id="admin-users-search-clear" type="button" data-action="clearSearchInput:admin-users-search,renderAdminUsers" title="Effacer" style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
       <div id="admin-users-container"></div>
     </div>
@@ -774,8 +651,8 @@
       </div>
       <div class="fs-subtitle">Cliquer sur une carte pour afficher l'explication experte</div>
       <div class="lex-search-container" style="position:relative;">
-        <input type="text" id="lexique-search" class="search-input" placeholder="🔍 Rechercher un terme ou une abréviation..." oninput="renderLexique(); toggleClearBtn('lexique-search')" style="padding-right:34px;">
-        <button id="lexique-search-clear" type="button" onclick="clearSearchInput('lexique-search', renderLexique)" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+        <input type="text" id="lexique-search" class="search-input" placeholder="🔍 Rechercher un terme ou une abréviation..." data-input="renderLexique;toggleClearBtn:lexique-search" style="padding-right:34px;">
+        <button id="lexique-search-clear" type="button" data-action="clearSearchInput:lexique-search,renderLexique" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
     </div>
     <div class="lexique-filters" id="lexique-filters"></div>
@@ -1213,7 +1090,8 @@
 <script src="src/features/gestures/handlers.js"></script>
 <script src="src/core/app-init.js"></script>
 
-<script>appInit();</script>
+<!-- Bootstrap appInit — extrait pour CSP sans 'unsafe-inline' (P2.2 audit 2026-04-30) -->
+<script src="src/core/app-bootstrap.js"></script>
 
   <!-- ===== PROTOCOLES — Vue liste ===== -->
   <div class="fs-view" id="protocoles-view">
@@ -1340,7 +1218,7 @@
         <button class="plan-yr-btn" data-action="changePlanYear:1">›</button>
       </div>
       <button class="plan-reset-btn" data-action="resetPlanningCA" title="Effacer l'année">↺</button>
-      <input type="file" id="plan-scan-input" accept="image/*" style="display:none;" onchange="scanPlanningPhoto(event)">
+      <input type="file" id="plan-scan-input" accept="image/*" style="display:none;" data-change="scanPlanningPhoto:$ev">
     </div>
 
     <!-- Onglets : Calendrier | Suivi RH -->
@@ -1482,7 +1360,7 @@
       <!-- Tableau débit/crédit mensuel (style Digihops) -->
       <div class="suivi-section-title">Débit / Crédit Digihops</div>
       <div id="suivi-debit-source" class="suivi-debit-source">🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" data-action="clickById:plan-scan-dc-input" title="Importer le tableau Digihops par photo">📷 Importer</button></div>
-      <input type="file" id="plan-scan-dc-input" accept="image/*" style="display:none;" onchange="scanDebitCreditPhoto(event)">
+      <input type="file" id="plan-scan-dc-input" accept="image/*" style="display:none;" data-change="scanDebitCreditPhoto:$ev">
       <div class="suivi-debit-table">
         <div class="suivi-debit-summary">
           <div class="suivi-debit-summary-cell">
@@ -1786,9 +1664,9 @@
         </div>
       </div>
       <div style="padding:0 16px 8px; position:relative;">
-        <input type="text" id="services-search" placeholder="🔍 Rechercher un service ou numéro..." oninput="renderServices(); toggleClearBtn('services-search')" autocomplete="off"
+        <input type="text" id="services-search" placeholder="🔍 Rechercher un service ou numéro..." data-input="renderServices;toggleClearBtn:services-search" autocomplete="off"
           style="width:100%; box-sizing:border-box; padding:11px 38px 11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
-        <button id="services-search-clear" type="button" onclick="clearSearchInput('services-search', renderServices)" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:1rem; cursor:pointer; width:24px; height:24px; border-radius:50%; line-height:1; padding:0;">×</button>
+        <button id="services-search-clear" type="button" data-action="clearSearchInput:services-search,renderServices" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:1rem; cursor:pointer; width:24px; height:24px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
       <div style="padding:0 16px 10px; display:flex; gap:6px;">
         <button id="svc-tab-annuaire" data-action="setServicesTab:annuaire" style="flex:1; padding:9px 0; border-radius:10px; border:none; font-size:0.82rem; font-weight:800; font-family:var(--font); cursor:pointer; transition:all 0.15s;">📋 Annuaire</button>
@@ -1845,9 +1723,9 @@
         </div>
       </div>
       <div id="dil-search-wrap" style="padding:0 16px 10px; position:relative;">
-        <input type="text" id="dil-search" placeholder="🔍 Filtrer par médicament..." oninput="filterDilutions(); toggleClearBtn('dil-search')" autocomplete="off"
+        <input type="text" id="dil-search" placeholder="🔍 Filtrer par médicament..." data-input="filterDilutions;toggleClearBtn:dil-search" autocomplete="off"
           style="width:100%; box-sizing:border-box; padding:9px 36px 9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; font-weight:700; font-family:var(--font); outline:none;">
-        <button id="dil-search-clear" type="button" onclick="clearSearchInput('dil-search', filterDilutions)" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+        <button id="dil-search-clear" type="button" data-action="clearSearchInput:dil-search,filterDilutions" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
     </div>
     <div id="dilutions-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
@@ -1865,9 +1743,9 @@
         </div>
       </div>
       <div style="padding:0 16px 8px; position:relative;">
-        <input type="text" id="pathologies-search" placeholder="🔍 Rechercher une pathologie ou un système..." oninput="renderPathologies(); toggleClearBtn('pathologies-search')" autocomplete="off"
+        <input type="text" id="pathologies-search" placeholder="🔍 Rechercher une pathologie ou un système..." data-input="renderPathologies;toggleClearBtn:pathologies-search" autocomplete="off"
           style="width:100%; box-sizing:border-box; padding:10px 38px 10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.9rem; font-weight:700; font-family:var(--font); outline:none;">
-        <button id="pathologies-search-clear" type="button" onclick="clearSearchInput('pathologies-search', renderPathologies)" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:1rem; cursor:pointer; width:24px; height:24px; border-radius:50%; line-height:1; padding:0;">×</button>
+        <button id="pathologies-search-clear" type="button" data-action="clearSearchInput:pathologies-search,renderPathologies" title="Effacer" style="display:none; position:absolute; right:24px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:1rem; cursor:pointer; width:24px; height:24px; border-radius:50%; line-height:1; padding:0;">×</button>
       </div>
       <div style="padding:0 16px 12px; display:flex; gap:8px;">
         <button id="patho-tab-all" data-action="setPathoTab:all" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--brand-aqua); color:#fff; font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer;">Toutes</button>
@@ -2004,7 +1882,7 @@
           onpointerup="stopRvRepeat()" onpointerleave="stopRvRepeat()">−</button>
         <div class="rv-modal-slider-wrap">
           <input type="range" class="rv-modal-slider" id="rv-modal-slider"
-            oninput="rvModalSlide(this.value)">
+            data-input="rvModalSlide:$val">
         </div>
         <button class="rv-modal-btn-pm" onpointerdown="startRvRepeat(+1)"
           onpointerup="stopRvRepeat()" onpointerleave="stopRvRepeat()">+</button>
@@ -2026,13 +1904,13 @@
       </div>
       <div style="padding:10px 14px 6px; border-bottom:1px solid var(--border);">
         <div style="position:relative;">
-          <input type="text" id="msg-new-search" placeholder="🔍 Chercher un collègue ou un message..." oninput="renderConvList(); toggleClearBtn('msg-new-search','msg-new-search-clear')" style="width:100%; box-sizing:border-box; padding:9px 32px 9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; outline:none;">
-          <button id="msg-new-search-clear" type="button" onclick="clearSearchInput('msg-new-search', renderConvList)" title="Effacer" style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+          <input type="text" id="msg-new-search" placeholder="🔍 Chercher un collègue ou un message..." data-input="renderConvList;toggleClearBtn:msg-new-search,msg-new-search-clear" style="width:100%; box-sizing:border-box; padding:9px 32px 9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; outline:none;">
+          <button id="msg-new-search-clear" type="button" data-action="clearSearchInput:msg-new-search,renderConvList" title="Effacer" style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
         </div>
         <div style="display:flex; gap:4px; margin-top:8px;">
-          <button class="msg-filter-tab" data-filter="all" onclick="setMessagesListFilter('all')" style="flex:1; padding:6px 8px; background:var(--brand-aqua); color:#fff; border:1px solid var(--border); border-radius:6px; font-size:0.74rem; font-weight:900; cursor:pointer;">Tous</button>
-          <button class="msg-filter-tab" data-filter="unread" onclick="setMessagesListFilter('unread')" style="flex:1; padding:6px 8px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer;">Non-lus</button>
-          <button class="msg-filter-tab" data-filter="groups" onclick="setMessagesListFilter('groups')" style="flex:1; padding:6px 8px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer;">Groupes</button>
+          <button class="msg-filter-tab" data-filter="all" data-action="setMessagesListFilter:all" style="flex:1; padding:6px 8px; background:var(--brand-aqua); color:#fff; border:1px solid var(--border); border-radius:6px; font-size:0.74rem; font-weight:900; cursor:pointer;">Tous</button>
+          <button class="msg-filter-tab" data-filter="unread" data-action="setMessagesListFilter:unread" style="flex:1; padding:6px 8px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer;">Non-lus</button>
+          <button class="msg-filter-tab" data-filter="groups" data-action="setMessagesListFilter:groups" style="flex:1; padding:6px 8px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer;">Groupes</button>
         </div>
       </div>
       <div id="msg-conv-list" style="flex:1; overflow-y:auto; padding:10px 14px; min-height:0;"></div>
@@ -2042,16 +1920,16 @@
       <div id="msg-conv-header" style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--pill-bg);"></div>
       <div id="msg-conv-search-wrap" style="display:none; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--surface-sec); gap:6px; align-items:center;">
         <div style="position:relative; flex:1;">
-          <input type="text" id="msg-conv-search" placeholder="🔍 Rechercher dans la conversation..." oninput="setConvSearchQuery(this.value); toggleClearBtn('msg-conv-search','msg-conv-search-clear')" style="width:100%; box-sizing:border-box; padding:7px 30px 7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; outline:none;">
-          <button id="msg-conv-search-clear" type="button" onclick="clearSearchInput('msg-conv-search', v => setConvSearchQuery(v))" title="Effacer" style="display:none; position:absolute; right:5px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.9rem; cursor:pointer; width:20px; height:20px; border-radius:50%; line-height:1; padding:0;">×</button>
+          <input type="text" id="msg-conv-search" placeholder="🔍 Rechercher dans la conversation..." data-input="setConvSearchQuery:$val;toggleClearBtn:msg-conv-search,msg-conv-search-clear" style="width:100%; box-sizing:border-box; padding:7px 30px 7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.82rem; font-weight:700; outline:none;">
+          <button id="msg-conv-search-clear" type="button" data-action="clearSearchInput:msg-conv-search,setConvSearchQuery" title="Effacer" style="display:none; position:absolute; right:5px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.9rem; cursor:pointer; width:20px; height:20px; border-radius:50%; line-height:1; padding:0;">×</button>
         </div>
-        <button onclick="toggleConvSearch()" title="Fermer la recherche" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 4px;">⌫</button>
+        <button data-action="toggleConvSearch" title="Fermer la recherche" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 4px;">⌫</button>
       </div>
       <div id="msg-conv-body" style="flex:1; overflow-y:auto; padding:14px; background:var(--surface); min-height:0;"></div>
       <div id="msg-typing-indicator" style="display:none; padding:4px 14px; background:var(--surface); border-top:1px solid var(--border);"></div>
       <div id="msg-reply-banner" style="display:none; padding:6px 10px; background:var(--surface-sec); border-top:1px solid var(--border); gap:6px; align-items:stretch;"></div>
       <div style="display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--border); background:var(--pill-bg);">
-        <input type="text" id="msg-input" placeholder="Écrire un message..." onkeydown="handleMsgInputKey(event)" oninput="saveDraftFromInput()" style="flex:1; padding:10px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; outline:none;">
+        <input type="text" id="msg-input" placeholder="Écrire un message..." data-keydown="handleMsgInputKey:$ev" data-input="saveDraftFromInput" style="flex:1; padding:10px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.88rem; outline:none;">
         <button data-action="submitCurrentMessage" id="msg-send-btn" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:20px; padding:0 18px; font-weight:900; cursor:pointer; font-size:0.88rem;">➤</button>
       </div>
     </div>
@@ -2098,8 +1976,8 @@
       <div class="auth-logo">Pulse<span>Unit</span></div>
       <div class="auth-sub">Connectez-vous pour accéder à l'application</div>
       <div id="auth-search-user-wrap" style="position:relative;">
-        <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterAuthUsers(this.value); toggleClearBtn('auth-search-user')" autocomplete="off" style="padding-right:34px;">
-        <button id="auth-search-user-clear" type="button" onclick="clearSearchInput('auth-search-user', filterAuthUsers)" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0; z-index:2;">×</button>
+        <input class="auth-input" type="text" id="auth-search-user" placeholder="Chercher votre nom ou prénom..." data-input="filterAuthUsers:$val;toggleClearBtn:auth-search-user" autocomplete="off" style="padding-right:34px;">
+        <button id="auth-search-user-clear" type="button" data-action="clearSearchInput:auth-search-user,filterAuthUsers" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0; z-index:2;">×</button>
       </div>
       <input type="hidden" id="auth-select-user" value="">
       <div id="auth-user-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
@@ -2151,8 +2029,8 @@
       <div class="auth-logo" style="font-size:1.2rem;">Code oublié</div>
       <div class="auth-sub">Une demande sera envoyée à l'administrateur</div>
       <div style="position:relative;">
-        <input class="auth-input" type="text" id="forgot-search-user" placeholder="Chercher votre nom ou prénom..." oninput="filterForgotUsers(this.value); toggleClearBtn('forgot-search-user')" autocomplete="off" style="padding-right:34px;">
-        <button id="forgot-search-user-clear" type="button" onclick="clearSearchInput('forgot-search-user', filterForgotUsers)" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0; z-index:2;">×</button>
+        <input class="auth-input" type="text" id="forgot-search-user" placeholder="Chercher votre nom ou prénom..." data-input="filterForgotUsers:$val;toggleClearBtn:forgot-search-user" autocomplete="off" style="padding-right:34px;">
+        <button id="forgot-search-user-clear" type="button" data-action="clearSearchInput:forgot-search-user,filterForgotUsers" title="Effacer" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0; z-index:2;">×</button>
       </div>
       <input type="hidden" id="forgot-select-user" value="">
       <div id="forgot-user-list" style="max-height:130px; overflow-y:auto; margin-bottom:10px; border-radius:8px; border:1px solid var(--border); display:none;"></div>
@@ -2242,16 +2120,7 @@
   </div>
 </div>
 
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-  navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data?.type === 'notif-click' && typeof window.handleNotifAction === 'function') {
-      const action = e.data.data?.action;
-      if (action) window.handleNotifAction(action);
-    }
-  });
-}
-</script>
+<!-- Service Worker registration — extrait pour CSP sans 'unsafe-inline' (P2.2 audit 2026-04-30) -->
+<script src="src/core/sw-register.js"></script>
 </body>
 </html>

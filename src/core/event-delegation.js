@@ -22,7 +22,9 @@
   };
 
   function coerce(s) {
-    if (s === '$el') return '__EL__';
+    if (s === '$el')  return '__EL__';
+    if (s === '$val') return '__VAL__';   // P2.2 — passe el.value
+    if (s === '$ev')  return '__EV__';    // P2.2 — passe l'event entier
     if (s === 'true') return true;
     if (s === 'false') return false;
     if (s === 'null') return null;
@@ -39,7 +41,10 @@
       var rawArgs = idx === -1 ? [] : call.slice(idx + 1).split(',');
       var args = rawArgs.map(function (a) {
         var v = coerce(a.trim());
-        return v === '__EL__' ? el : v;
+        if (v === '__EL__')  return el;
+        if (v === '__VAL__') return (el && 'value' in el) ? el.value : '';
+        if (v === '__EV__')  return ev;
+        return v;
       });
       var fn = window[name];
       if (typeof fn === 'function') {
@@ -59,4 +64,20 @@
     }
     dispatch(el.dataset.action, el, e);
   }, false);
+
+  // P2.2 — délégation pour événements non-click (input, change, focus, blur, submit).
+  // CSP sans 'unsafe-inline' bloque oninput= / onchange= / onsubmit= → on les
+  // remplace par data-input= / data-change= / data-focus= / data-blur= / data-submit=
+  ['input', 'change', 'focus', 'blur', 'submit', 'keydown', 'keyup'].forEach(function (eventName) {
+    var attrName = 'data-' + eventName;
+    document.addEventListener(eventName, function (e) {
+      // Ces events ne bullent pas tous nativement (focus/blur) — on utilise capture pour
+      // les attraper malgré tout sans bricoler.
+      var el = e.target;
+      if (!el || !el.getAttribute) return;
+      var spec = el.getAttribute(attrName);
+      if (!spec) return;
+      dispatch(spec, el, e);
+    }, true /* capture pour focus/blur */);
+  });
 })();
