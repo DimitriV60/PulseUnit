@@ -1,0 +1,136 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PulseUnit — Firestore Security Rules cible (P1.3 audit 2026-04-30)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Cette version remplace `firestore.rules` UNE FOIS QUE :
+//   1. Worker Cloudflare /login + /admin-login déployés et fonctionnels
+//      (FIREBASE_SA_KEY configuré dans Cloudflare).
+//   2. Tous les clients en prod utilisent customAuth → signInWithCustomToken
+//      avec uid réel + claim admin/role (vérifier via auth.uid !== null && uid !== null).
+//   3. Données migrées (voir SECURITY_MIGRATION.md) :
+//      - pulseunit/auth split en pulseunit/users_public (firstName/lastName/role)
+//        + pulseunit/users_private/{uid} (pinHashV2/salt/failedAttempts/blocked)
+//      - pulseunit/messages devient sub-collection pulseunit/messages/{convId}
+//        avec convId = "uidA__uidB" (sort alphabétique)
+//      - pulseunit/bednotes lecture restreinte aux agents en garde courante
+//
+// MODÈLE DE SÉCURITÉ :
+//   - Auth anonyme désactivée → tout client doit passer par /login Worker
+//   - request.auth.uid = userId réel (issu du JWT signé par Worker)
+//   - request.auth.token.admin = true uniquement pour session admin
+//   - request.auth.token.role ∈ {ide, as, med, tech} pour ACL fine
+//
+// IMPORTANT : pour activer cette version, renommer ce fichier en
+// `firestore.rules` et déployer via `firebase deploy --only firestore:rules`.
+// AVANT déploiement, verifier que toutes les pages tournantes ont reçu la
+// version client avec custom-auth.js (sinon utilisateurs déconnectés).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthed()       { return request.auth != null && request.auth.uid != null; }
+    function isAdmin()        { return isAuthed() && request.auth.token.admin == true; }
+    function isSelf(uid)      { return isAuthed() && request.auth.uid == uid; }
+    function isAnonAuth()     { return isAuthed() && request.auth.token.firebase.sign_in_provider == 'anonymous'; }
+    // Bloque explicitement les sessions anonymes (= visiteurs non loggués via Worker)
+    function isRealUser()     { return isAuthed() && !isAnonAuth(); }
+
+    // ── Liste publique des utilisateurs (firstName/lastName/role uniquement)
+    // Lecture : tout user authentifié réel (pour la liste de connexion).
+    // Écriture : admin uniquement.
+    match /pulseunit/users_public {
+      allow read:  if isRealUser();
+      allow write: if isAdmin();
+    }
+
+    // ── Données privées par user (PIN, attempts, blocked) — JAMAIS lisibles
+    // par un autre user. Écriture restreinte : self ou admin (et le Worker via
+    // SA bypasse les rules de toute façon).
+    match /pulseunit/users_private/{uid} {
+      allow read:  if isSelf(uid) || isAdmin();
+      allow write: if isAdmin();
+      // Le client ne doit JAMAIS écrire son propre pinHash directement —
+      // tout passe par le Worker /change-pin (à implémenter en P2).
+    }
+
+    // ── Conversations DM 1-to-1 — clé "uidA__uidB" trié alphabétiquement.
+    // Lecture/écriture : seulement si l'uid courant est dans la clé.
+    match /pulseunit/messages/{convId} {
+      allow read, write: if isRealUser() &&
+        (convId.split('__').hasAny([request.auth.uid]));
+    }
+
+    // ── Notifications par user
+    match /pulseunit/notifications/{uid} {
+      allow read, write: if isSelf(uid) || isAdmin();
+    }
+
+    // ── Plans personnels (planning agent)
+    match /pulseunit/plans/{uid} {
+      allow read, write: if isSelf(uid) || isAdmin();
+    }
+
+    // ── Profils agent (jour-fixe/nuit-fixe/alterné, agentType)
+    match /pulseunit/profiles/{uid} {
+      allow read, write: if isSelf(uid) || isAdmin();
+    }
+
+    // ── Présence — lecture admin only (data minimization).
+    // Écriture : self uniquement, et seulement les champs liés à l'uid courant.
+    match /pulseunit/presence/{uid} {
+      allow read:  if isSelf(uid) || isAdmin();
+      allow write: if isSelf(uid);
+    }
+
+    // ── Bed notes :
+    //   - sharedSurvey : grille horaire partagée par lit. Lecture : tout user
+    //     en garde active. Écriture : agents assignés au lit (vérifié côté
+    //     Worker idéalement, mais ici on autorise tout user réel pour ne pas
+    //     casser la collab — durcir via Worker en P2).
+    //   - text (par user) : lecture/écriture self uniquement.
+    match /pulseunit/bednotes/sharedSurvey/{bedId} {
+      allow read, write: if isRealUser();
+    }
+    match /pulseunit/bednotes/text/{uid} {
+      allow read, write: if isSelf(uid) || isAdmin();
+    }
+
+    // ── Demandes reset PIN — append par user, lecture admin
+    match /pulseunit/resets {
+      allow read:  if isAdmin();
+      allow write: if isRealUser();  // append-only (à durcir : ne créer qu'une seule entrée pending par uid)
+    }
+
+    // ── Bourse d'échanges de gardes — partagé entre agents
+    match /pulseunit/swaps {
+      allow read:  if isRealUser();
+      allow write: if isRealUser();
+    }
+
+    // ── État partagé (roster, shiftHistory) — lecture tout user, écriture
+    // restreinte. shiftHistory devrait à terme être par-shift mais legacy.
+    match /pulseunit/shared {
+      allow read:  if isRealUser();
+      allow write: if isRealUser();
+    }
+
+    // ── Audit log (P2.1) — append-only, lecture admin
+    match /pulseunit/auditlog/{entryId} {
+      allow read:  if isAdmin();
+      allow write: if false;  // écrit uniquement par Cloud Function ou Worker via SA
+    }
+
+    // ── Config admin — lecture admin uniquement, écriture jamais depuis client
+    match /config/{doc} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Tout le reste : refus
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

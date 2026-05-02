@@ -118,6 +118,11 @@ window.checkAdmin = async function checkAdmin() {
     if (!u || !p) { alert('Veuillez remplir tous les champs.'); return; }
     try {
         if (await verifyAdminCredentials(u, p)) {
+            // P1.6 — tente Custom Token avec claim admin:true (Firestore Rules futures)
+            if (window.customAuth) {
+                const cr = await window.customAuth.loginAdmin(u, p);
+                if (!cr.ok && !cr.fallback) console.warn('[admin] custom token failed', cr);
+            }
             setAdminSession(true);
             document.getElementById('admin-login-modal').style.display = 'none';
             updateAdminPanelBtn();

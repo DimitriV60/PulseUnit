@@ -1,16 +1,30 @@
 /**
- * Cloudflare Worker — PulseUnit Scan (Planning + Débit/Crédit Digihops).
+ * Cloudflare Worker — PulseUnit (Scan Digihops + Auth Firebase Custom Token).
  *
- * POST /  body JSON :
- *   - { imageBase64, year, month, kind?:'planning' }   → extraction calendrier mensuel
- *   - { imageBase64, year, kind:'debit-credit' }       → extraction tableau débit/crédit annuel
+ * Endpoints :
+ *   - POST /                                       (legacy, alias de /scan)
+ *   - POST /scan       { imageBase64, year, month, kind?: 'planning' | 'debit-credit' }
+ *   - POST /login      { userId, pin }             → Custom Token Firebase (uid=userId)
+ *   - POST /admin-login { user, pass }             → Custom Token (uid='admin_view', claim admin:true)
  *
- * Réponses :
+ * Réponses scan :
  *   - planning      : { found, states, labels, count, dropped, promotedToRcn }
  *   - debit-credit  : { found, year, months: { 1:{dc, cumul, rtt}, ... }, dropped }
  *
- * Modèle : Mistral Pixtral Large via api.mistral.ai (free tier, EU friendly).
- * Secret Cloudflare : MISTRAL_API_KEY (npx wrangler secret put MISTRAL_API_KEY).
+ * Modèle Vision : Mistral Pixtral Large via api.mistral.ai (free tier, EU friendly).
+ * Auth Firebase : Service Account JSON signe un Custom Token RS256 via Web Crypto.
+ *
+ * Secrets Cloudflare (npx wrangler secret put XXX) :
+ *   - MISTRAL_API_KEY   : clé API Mistral (obligatoire pour /scan)
+ *   - FIREBASE_SA_KEY   : JSON complet du service account (obligatoire pour /login,
+ *                         /admin-login). Si absent, ces endpoints renvoient 503 et
+ *                         le client doit fallback sur signInAnonymously.
+ *
+ * Sécurité hardening (audit 2026-04-30) :
+ *   - P1.8 validation stricte year (2020-2050), month (1-12), kind whitelist
+ *   - P1.7 rate limit en mémoire (sliding window 60s, 30 req max par origin+ip)
+ *   - P1.4 endpoint /login signe Firebase Custom Token avec uid réel (pas anonyme)
+ *   - P1.6 endpoint /admin-login attache claim {admin:true} pour Firestore Rules
  */
 
 const ALLOWED_ORIGINS = [
@@ -159,6 +173,52 @@ function corsHeaders(origin) {
   };
 }
 
+// ── Rate limit (P1.7) ───────────────────────────────────────────────────────
+// Sliding window in-memory par isolate Worker. Pas KV (free tier économisé).
+// Reset chaque restart d'isolate (~quelques minutes d'inactivité). Effet : 30
+// requêtes max sur une fenêtre 60s par (origin + endpoint + ip approximée via
+// CF-Connecting-IP). Suffisant pour bloquer un script qui spam, sans pénaliser
+// l'usage normal (1 scan = ~quelques requêtes).
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 30;
+const _rateLimitBuckets = new Map(); // key → number[] (timestamps)
+
+function _rateLimitCheck(key) {
+  const now = Date.now();
+  const cutoff = now - RATE_LIMIT_WINDOW_MS;
+  let arr = _rateLimitBuckets.get(key);
+  if (!arr) { arr = []; _rateLimitBuckets.set(key, arr); }
+  // purge anciens
+  while (arr.length && arr[0] < cutoff) arr.shift();
+  if (arr.length >= RATE_LIMIT_MAX) return false;
+  arr.push(now);
+  // GC : empêche la Map de gonfler à l'infini
+  if (_rateLimitBuckets.size > 1000) {
+    for (const [k, v] of _rateLimitBuckets) {
+      while (v.length && v[0] < cutoff) v.shift();
+      if (v.length === 0) _rateLimitBuckets.delete(k);
+    }
+  }
+  return true;
+}
+
+// ── Validation entrées scan (P1.8) ──────────────────────────────────────────
+const VALID_KINDS = new Set(['planning', 'debit-credit']);
+
+function _validateScanParams(body) {
+  const { kind, year, month, imageBase64 } = body || {};
+  if (kind !== undefined && !VALID_KINDS.has(kind)) return 'invalid_kind';
+  if (!imageBase64 || typeof imageBase64 !== 'string') return 'missing_image';
+  if (imageBase64.length > 7_000_000) return 'image_too_large';
+  const y = parseInt(year, 10);
+  if (!(y >= 2020 && y <= 2050)) return 'invalid_year';
+  if (kind !== 'debit-credit') {
+    const m = parseInt(month, 10);
+    if (!(m >= 1 && m <= 12)) return 'invalid_month';
+  }
+  return null;
+}
+
 function jsonResponse(data, status, origin) {
   return new Response(JSON.stringify(data), {
     status,
@@ -215,7 +275,8 @@ async function callVisionAI({ env, systemPrompt, userPrompt, imageBase64 }) {
   }
 
   const text = json?.choices?.[0]?.message?.content || '';
-  console.log('[ai_ok]', `usage=${JSON.stringify(json.usage || {})}`, '|', text.slice(0, 2000));
+  // P1.7 — n'pas logguer le contenu (planning personnel) en clair, juste l'usage
+  console.log('[ai_ok]', `usage=${JSON.stringify(json.usage || {})}`, '| text_len=', text.length);
   if (!text) {
     return { error: 'empty_response', body: JSON.stringify(json).slice(0, 400) };
   }
@@ -402,6 +463,264 @@ async function handleDebitCredit({ env, body, origin }) {
   }, 200, origin);
 }
 
+// ── Firebase Custom Token Signer (P1.4) ─────────────────────────────────────
+// Signe un JWT RS256 avec la clé privée du Service Account Firebase.
+// Compat Web Crypto API — pas de dépendance Admin SDK (qui ne tourne pas dans
+// un Worker Cloudflare).
+//
+// Spec : https://firebase.google.com/docs/auth/admin/create-custom-tokens#using_a_third-party_jwt_library
+
+const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
+
+let _saKeyCache = null; // { clientEmail, cryptoKey }
+
+function _b64urlEncode(bytes) {
+  let str = '';
+  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+  return btoa(str).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function _b64urlEncodeStr(s) {
+  return _b64urlEncode(new TextEncoder().encode(s));
+}
+
+function _pemToDer(pem) {
+  const body = pem.replace(/-----BEGIN [^-]+-----/, '')
+                  .replace(/-----END [^-]+-----/, '')
+                  .replace(/\s+/g, '');
+  const bin = atob(body);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function _getSaCryptoKey(env) {
+  if (_saKeyCache) return _saKeyCache;
+  if (!env.FIREBASE_SA_KEY) return null;
+  let sa;
+  try { sa = JSON.parse(env.FIREBASE_SA_KEY); }
+  catch (e) { console.error('[sa_invalid_json]', e.message); return null; }
+  if (!sa.private_key || !sa.client_email) {
+    console.error('[sa_missing_fields]');
+    return null;
+  }
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    _pemToDer(sa.private_key),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  _saKeyCache = { clientEmail: sa.client_email, cryptoKey };
+  return _saKeyCache;
+}
+
+async function _signFirebaseCustomToken({ env, uid, claims }) {
+  const sa = await _getSaCryptoKey(env);
+  if (!sa) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
+    iss: sa.clientEmail,
+    sub: sa.clientEmail,
+    aud: FIREBASE_AUDIENCE,
+    iat: now,
+    exp: now + 3600,
+    uid: String(uid)
+  };
+  if (claims && typeof claims === 'object' && Object.keys(claims).length > 0) {
+    payload.claims = claims;
+  }
+  const headerEnc  = _b64urlEncodeStr(JSON.stringify(header));
+  const payloadEnc = _b64urlEncodeStr(JSON.stringify(payload));
+  const signingInput = headerEnc + '.' + payloadEnc;
+  const sig = await crypto.subtle.sign(
+    { name: 'RSASSA-PKCS1-v1_5' },
+    sa.cryptoKey,
+    new TextEncoder().encode(signingInput)
+  );
+  return signingInput + '.' + _b64urlEncode(new Uint8Array(sig));
+}
+
+// ── OAuth2 access token pour Firestore REST (lecture AUTH_DOC + config/admin)
+let _accessTokenCache = null; // { token, expiry }
+
+async function _getFirestoreAccessToken(env) {
+  if (_accessTokenCache && _accessTokenCache.expiry > Date.now() + 60_000) {
+    return _accessTokenCache.token;
+  }
+  const sa = await _getSaCryptoKey(env);
+  if (!sa) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
+    iss: sa.clientEmail,
+    scope: 'https://www.googleapis.com/auth/datastore',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600
+  };
+  const headerEnc  = _b64urlEncodeStr(JSON.stringify(header));
+  const payloadEnc = _b64urlEncodeStr(JSON.stringify(payload));
+  const signingInput = headerEnc + '.' + payloadEnc;
+  const sig = await crypto.subtle.sign(
+    { name: 'RSASSA-PKCS1-v1_5' },
+    sa.cryptoKey,
+    new TextEncoder().encode(signingInput)
+  );
+  const assertion = signingInput + '.' + _b64urlEncode(new Uint8Array(sig));
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${assertion}`
+  });
+  if (!resp.ok) {
+    console.error('[oauth_token_error]', resp.status);
+    return null;
+  }
+  const data = await resp.json();
+  _accessTokenCache = {
+    token: data.access_token,
+    expiry: Date.now() + (data.expires_in * 1000)
+  };
+  return data.access_token;
+}
+
+// Lecture d'un document Firestore via REST API (sans SDK).
+async function _firestoreGet(env, projectId, path) {
+  const token = await _getFirestoreAccessToken(env);
+  if (!token) return null;
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${path}`;
+  const resp = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!resp.ok) {
+    console.error('[firestore_get_error]', path, resp.status);
+    return null;
+  }
+  const data = await resp.json();
+  // Convertit le format Firestore (mapValue/stringValue/...) en JSON simple
+  return _firestoreUnwrap(data.fields || {});
+}
+
+function _firestoreUnwrap(fields) {
+  const out = {};
+  for (const [k, v] of Object.entries(fields || {})) out[k] = _firestoreUnwrapValue(v);
+  return out;
+}
+function _firestoreUnwrapValue(v) {
+  if (!v) return null;
+  if ('stringValue'  in v) return v.stringValue;
+  if ('integerValue' in v) return parseInt(v.integerValue, 10);
+  if ('doubleValue'  in v) return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('nullValue'    in v) return null;
+  if ('mapValue'     in v) return _firestoreUnwrap(v.mapValue.fields || {});
+  if ('arrayValue'   in v) return (v.arrayValue.values || []).map(_firestoreUnwrapValue);
+  if ('timestampValue' in v) return v.timestampValue;
+  return null;
+}
+
+// ── PIN hash compat (sha256 legacy + pbkdf2 v2) ────────────────────────────
+async function _sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function _pbkdf2Hex(pin, saltHex, iterations = 100_000) {
+  const salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
+  const baseKey = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(pin), { name: 'PBKDF2' }, false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    baseKey, 256
+  );
+  return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ── /login endpoint (P1.4) ─────────────────────────────────────────────────
+async function handleLogin({ env, body, origin }) {
+  const { userId, pin } = body || {};
+  if (!userId || typeof userId !== 'string' || userId.length > 100) {
+    return jsonResponse({ error: 'invalid_userId' }, 400, origin);
+  }
+  if (!pin || !/^\d{4,12}$/.test(String(pin))) {
+    return jsonResponse({ error: 'invalid_pin' }, 400, origin);
+  }
+  if (!env.FIREBASE_SA_KEY) {
+    return jsonResponse({ error: 'auth_not_configured', message: 'Service Account Firebase non configuré côté Worker' }, 503, origin);
+  }
+  const projectId = 'pulseunit-c9c5c';
+  const auth = await _firestoreGet(env, projectId, 'pulseunit/auth');
+  if (!auth || !auth.users || !auth.users[userId]) {
+    return jsonResponse({ error: 'user_not_found' }, 404, origin);
+  }
+  const user = auth.users[userId];
+  if (user.blocked) return jsonResponse({ error: 'account_blocked' }, 403, origin);
+  // Vérification PIN : V2 prioritaire (PBKDF2 + salt), legacy en fallback
+  let ok = false;
+  if (user.pinHashV2 && user.pinSalt) {
+    const computed = await _pbkdf2Hex(String(pin), user.pinSalt);
+    ok = (computed === user.pinHashV2);
+  }
+  if (!ok && user.pinHash) {
+    const legacy = await _sha256Hex(String(pin));
+    ok = (legacy === user.pinHash);
+  }
+  // Code temporaire (tempPin déjà hashé SHA-256 côté client)
+  if (!ok && user.tempPin) {
+    if (user.tempPinExpiry && Date.now() > user.tempPinExpiry) {
+      return jsonResponse({ error: 'temp_pin_expired' }, 403, origin);
+    }
+    const legacyTemp = await _sha256Hex(String(pin));
+    if (legacyTemp === user.tempPin) ok = 'temp';
+  }
+  if (!ok) return jsonResponse({ error: 'invalid_credentials' }, 401, origin);
+
+  const token = await _signFirebaseCustomToken({
+    env,
+    uid: userId,
+    claims: { role: user.role || 'ide', admin: false }
+  });
+  if (!token) return jsonResponse({ error: 'token_signing_failed' }, 500, origin);
+
+  return jsonResponse({
+    token,
+    uid: userId,
+    role: user.role || 'ide',
+    requirePinChange: ok === 'temp'
+  }, 200, origin);
+}
+
+// ── /admin-login endpoint (P1.6) ───────────────────────────────────────────
+async function handleAdminLogin({ env, body, origin }) {
+  const { user, pass } = body || {};
+  if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') {
+    return jsonResponse({ error: 'invalid_credentials' }, 400, origin);
+  }
+  if (!env.FIREBASE_SA_KEY) {
+    return jsonResponse({ error: 'auth_not_configured' }, 503, origin);
+  }
+  const projectId = 'pulseunit-c9c5c';
+  const cfg = await _firestoreGet(env, projectId, 'config/admin');
+  if (!cfg || !cfg.passHash) {
+    return jsonResponse({ error: 'admin_not_configured' }, 500, origin);
+  }
+  const computed = await _sha256Hex(pass);
+  if (user !== 'admin' || computed !== cfg.passHash) {
+    return jsonResponse({ error: 'invalid_credentials' }, 401, origin);
+  }
+  const token = await _signFirebaseCustomToken({
+    env,
+    uid: 'admin_view',
+    claims: { admin: true, role: 'ide' }
+  });
+  if (!token) return jsonResponse({ error: 'token_signing_failed' }, 500, origin);
+  return jsonResponse({ token, uid: 'admin_view', admin: true }, 200, origin);
+}
+
+// ── Routeur principal ───────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
@@ -414,18 +733,30 @@ export default {
     if (request.method !== 'POST') {
       return jsonResponse({ error: 'method_not_allowed' }, 405, origin);
     }
+
+    const url = new URL(request.url);
+    const path = url.pathname.replace(/\/+$/, '') || '/';
+
+    // P1.7 — rate limit (par origin + path + ip approximée)
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rlKey = origin + '|' + path + '|' + ip;
+    if (!_rateLimitCheck(rlKey)) {
+      return jsonResponse({ error: 'rate_limited', message: 'Trop de requêtes. Réessayez dans 1 min.' }, 429, origin);
+    }
+
     let body;
     try { body = await request.json(); }
     catch (e) { return jsonResponse({ error: 'invalid_json' }, 400, origin); }
 
-    const { imageBase64, kind } = body || {};
-    if (!imageBase64 || typeof imageBase64 !== 'string') {
-      return jsonResponse({ error: 'missing_image' }, 400, origin);
-    }
-    if (imageBase64.length > 7_000_000) {
-      return jsonResponse({ error: 'image_too_large' }, 413, origin);
-    }
+    // Routes
+    if (path === '/login')        return handleLogin({ env, body, origin });
+    if (path === '/admin-login')  return handleAdminLogin({ env, body, origin });
 
+    // /scan ou / (legacy) → scan Vision
+    const validationError = _validateScanParams(body);
+    if (validationError) return jsonResponse({ error: validationError }, 400, origin);
+
+    const { kind } = body || {};
     if (kind === 'debit-credit') return handleDebitCredit({ env, body, origin });
     return handlePlanning({ env, body, origin });
   }
