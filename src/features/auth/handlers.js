@@ -227,31 +227,60 @@ window.registerUser = async function registerUser() {
         u.firstName.toLowerCase() === fn.toLowerCase() && u.lastName.toLowerCase() === ln.toLowerCase()
     );
     if (already) return alert('Un compte avec ce nom existe déjà. Connectez-vous.');
+    // P3.0 — tente d'abord Worker /register (uid + write SA + Custom Token).
     let rosterId = null;
-    const rosterMatch = roster.find(r =>
-        r.firstName.toLowerCase() === fn.toLowerCase() && r.lastName.toLowerCase() === ln.toLowerCase()
-    );
-    if (rosterMatch) {
-        rosterId = rosterMatch.id;
-    } else {
-        rosterId = 'u_' + Date.now();
-        roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
-        saveData();
-    }
-    const hashes = await buildPinHashes(pin);
-    authUsers[rosterId] = {
-        firstName: fn, lastName: ln, role: selectedRole,
-        pinHash: hashes.pinHash,           // legacy (compat)
-        pinHashV2: hashes.pinHashV2,        // P1.5 PBKDF2
-        pinSalt: hashes.pinSalt,
-        tempPin: null, createdAt: Date.now(),
-        failedAttempts: 0, blocked: false, blockedAt: null
-    };
-    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
-    // Tente login Custom Token (uid réel + claim role) — fallback anonyme si Worker pas configuré
+    let registeredViaWorker = false;
     if (window.customAuth) {
-        const cr = await window.customAuth.loginWithPin(rosterId, pin);
-        if (!cr.ok && !cr.fallback) console.warn('[register] custom token failed', cr);
+        const cr = await window.customAuth.register(fn, ln, selectedRole, pin);
+        if (cr.ok && cr.uid) {
+            rosterId = cr.uid;
+            registeredViaWorker = true;
+            // Le Worker a écrit pulseunit/auth via SA. Sync local : la prochaine
+            // onSnapshot poussera le user dans authUsers, mais pour réactivité
+            // immédiate on l'ajoute déjà.
+            authUsers[rosterId] = {
+                firstName: fn, lastName: ln, role: selectedRole,
+                pinHash: '__worker__',  // valeur réelle via SA, pas exposée client
+                tempPin: null, createdAt: Date.now(),
+                failedAttempts: 0, blocked: false, blockedAt: null
+            };
+            if (!roster.find(r => r.id === rosterId)) {
+                roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
+                saveData();
+            }
+        } else if (!cr.fallback) {
+            // Erreur métier (user_exists, invalid_role, etc.) — afficher
+            return alert('Inscription refusée : ' + (cr.error || 'erreur'));
+        }
+        // sinon fallback (Worker indispo) → flux legacy ci-dessous
+    }
+    // Fallback legacy (write Firestore direct côté client)
+    if (!registeredViaWorker) {
+        const rosterMatch = roster.find(r =>
+            r.firstName.toLowerCase() === fn.toLowerCase() && r.lastName.toLowerCase() === ln.toLowerCase()
+        );
+        if (rosterMatch) {
+            rosterId = rosterMatch.id;
+        } else {
+            rosterId = 'u_' + Date.now();
+            roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
+            saveData();
+        }
+        const hashes = await buildPinHashes(pin);
+        authUsers[rosterId] = {
+            firstName: fn, lastName: ln, role: selectedRole,
+            pinHash: hashes.pinHash,           // legacy (compat)
+            pinHashV2: hashes.pinHashV2,        // P1.5 PBKDF2
+            pinSalt: hashes.pinSalt,
+            tempPin: null, createdAt: Date.now(),
+            failedAttempts: 0, blocked: false, blockedAt: null
+        };
+        if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+        // Tente login Custom Token séparément (Worker /login en fallback)
+        if (window.customAuth) {
+            const cr = await window.customAuth.loginWithPin(rosterId, pin);
+            if (!cr.ok && !cr.fallback) console.warn('[register] custom token failed', cr);
+        }
     }
     currentUser = { id: rosterId, firstName: fn, lastName: ln, role: selectedRole };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
@@ -898,20 +927,42 @@ window.changeMyPin = async function changeMyPin() {
     if (newPin !== confPin) return alert('Les nouveaux codes ne correspondent pas.');
     const user = authUsers[currentUser.id];
     if (!user) return alert('Compte introuvable.');
-    // Vérif old pin V2 prioritaire, fallback legacy
-    let oldOk = false;
-    if (user.pinHashV2 && user.pinSalt) {
-        oldOk = (await hashPinV2(oldPin, user.pinSalt)) === user.pinHashV2;
+    // P3.0 — tente d'abord Worker /change-pin (write SA, garantit cohérence)
+    let changedViaWorker = false;
+    if (window.customAuth) {
+        const cr = await window.customAuth.changePin(currentUser.id, oldPin, newPin);
+        if (cr.ok) {
+            changedViaWorker = true;
+            // Sync local — le SA a réécrit pinHash/pinHashV2/pinSalt côté Firestore.
+            // L'onSnapshot poussera la nouvelle valeur sous peu. Pour le UX immédiat
+            // on n'a pas besoin du hash en local.
+        } else if (!cr.fallback) {
+            // Erreur métier
+            if (cr.error === 'invalid_old_pin' || cr.error === 'invalid_new_pin') {
+                return alert('Ancien code incorrect ou nouveau code invalide.');
+            }
+            if (cr.error === 'account_blocked') {
+                return alert('Compte bloqué. Contactez l\'administrateur.');
+            }
+            return alert('Modification refusée : ' + cr.error);
+        }
     }
-    if (!oldOk && user.pinHash) {
-        oldOk = (await hashPin(oldPin)) === user.pinHash;
+    if (!changedViaWorker) {
+        // Fallback legacy : write client direct dans pulseunit/auth
+        let oldOk = false;
+        if (user.pinHashV2 && user.pinSalt) {
+            oldOk = (await hashPinV2(oldPin, user.pinSalt)) === user.pinHashV2;
+        }
+        if (!oldOk && user.pinHash) {
+            oldOk = (await hashPin(oldPin)) === user.pinHash;
+        }
+        if (!oldOk) return alert('Ancien code incorrect.');
+        const hashes = await buildPinHashes(newPin);
+        authUsers[currentUser.id].pinHash = hashes.pinHash;
+        authUsers[currentUser.id].pinHashV2 = hashes.pinHashV2;
+        authUsers[currentUser.id].pinSalt = hashes.pinSalt;
+        if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     }
-    if (!oldOk) return alert('Ancien code incorrect.');
-    const hashes = await buildPinHashes(newPin);
-    authUsers[currentUser.id].pinHash = hashes.pinHash;
-    authUsers[currentUser.id].pinHashV2 = hashes.pinHashV2;
-    authUsers[currentUser.id].pinSalt = hashes.pinSalt;
-    if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     document.getElementById('chg-old').value = '';
     document.getElementById('chg-new').value = '';
     document.getElementById('chg-conf').value = '';
