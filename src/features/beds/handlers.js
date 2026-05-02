@@ -105,28 +105,26 @@ window.renderApp = function renderApp() {
 
     let boardHTML = '';
     let miniListHTML = '';
-    // 2026-05-03 — l'IDE Tech est affichée sur sa propre carte 'IDE TECH',
-    // on la retire donc de l'effectif principal (sinon doublon visuel).
+    // 2026-05-02 — L'IDE Tech reste dans l'effectif comme une IDE normale.
+    // Son rôle ne change pas (badge IDE), elle est sélectionnable pour les lits.
     const allP = [...(shiftHistory[dateOnly + '-meds'] || []), ...h.activeStaffIds]
         .filter((v, i, a) => v && a.indexOf(v) === i)
-        .filter(id => id !== h.techIdeId)
         .map(id => roster.find(r => r.id === id))
         .filter(x => x);
 
     const getSortVal = p => {
         if (p.role === 'med') return 1;
-        if (p.id === h.techIdeId) return 2;
-        if (p.role === 'ide') return 3;
-        if (p.role === 'as') return 4;
-        return 5;
+        if (p.role === 'ide') return 2;
+        if (p.role === 'as') return 3;
+        return 4;
     };
 
     allP.sort((a, b) => getSortVal(a) - getSortVal(b)).forEach(p => {
-        const colors = { med: 'var(--med)', tech: 'var(--tech)', ide: 'var(--ide)', as: 'var(--as)' };
-        const roleLbl = p.id === h.techIdeId ? 'TECH' : p.role.toUpperCase();
-        const col = p.id === h.techIdeId ? colors['tech'] : colors[p.role];
+        const colors = { med: 'var(--med)', ide: 'var(--ide)', as: 'var(--as)' };
+        const roleLbl = p.role.toUpperCase();
+        const col = colors[p.role];
 
-        const isSelectable = (p.role === 'ide' && p.id !== h.techIdeId) || p.role === 'as';
+        const isSelectable = p.role === 'ide' || p.role === 'as';
         let clickAttr = ''; let bgStyle = 'transparent';
         if (isSelectable && !locked) {
             clickAttr = `onclick="toggleSelection('${p.id}')"`;

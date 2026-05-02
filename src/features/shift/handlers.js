@@ -484,12 +484,14 @@ window.getStaffTargets = function getStaffTargets() {
     const uIDE_T = Math.ceil(activeUsip / 3);
     const uAS_T  = isNight ? Math.ceil(activeUsip / 6) : Math.ceil(activeUsip / 3);
 
-    let rI = shift.techIdeId ? 1 : 0, uI = 0, rA = 0, uA = 0;
+    // 2026-05-02 — L'IDE Tech reste dans activeStaffIds et est comptée comme
+    // une IDE normale (réa ou USIP selon son éventuelle assignation lit).
+    let rI = 0, uI = 0, rA = 0, uA = 0;
     shift.activeStaffIds.forEach(id => {
         const p = roster.find(r => r.id === id); if (!p) return;
         let inU = false;
         CONFIG[1].beds.forEach(n => { if (shift.assignments[`usip-${n}`]?.[p.role] === id) inU = true; });
-        if (p.role === 'ide') { if (inU) uI++; else if (id !== shift.techIdeId) rI++; }
+        if (p.role === 'ide') { if (inU) uI++; else rI++; }
         else { if (inU) uA++; else rA++; }
     });
     return { rIDE_T, rAS_T, uIDE_T, uAS_T, rI, rA, uI, uA, uAllC: uC === 5, rC, uC };
