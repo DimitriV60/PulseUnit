@@ -733,7 +733,7 @@ async function handleAdminLogin({ env, body, origin }) {
   const token = await _signFirebaseCustomToken({
     env,
     uid: 'admin_view',
-    claims: { admin: true, role: 'ide' }
+    claims: { admin: true, role: 'admin' }
   });
   if (!token) return jsonResponse({ error: 'token_signing_failed' }, 500, origin);
   return jsonResponse({ token, uid: 'admin_view', admin: true }, 200, origin);

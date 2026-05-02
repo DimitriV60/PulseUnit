@@ -50,7 +50,7 @@ window.renderAdminCurrentShift = function renderAdminCurrentShift() {
     const meds = (shiftHistory[dateOnly + '-meds'] || []).filter(Boolean);
 
     // Liste agr\u00e9g\u00e9e : non-m\u00e9d, tech IDE, m\u00e9decins
-    const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
+    const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)', admin: 'var(--admin)' };
     const items = [];
     (h.activeStaffIds || []).forEach(id => {
         const p = roster.find(r => r.id === id);
@@ -112,7 +112,7 @@ window.renderAdminShiftCandidates = function renderAdminShiftCandidates() {
         cont.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:8px 0; text-align:center;">Aucun r\u00e9sultat.</div>';
         return;
     }
-    const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
+    const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)', admin: 'var(--admin)' };
     cont.innerHTML = candidates.slice(0, 30).map(p => {
         const col = ROLE_COLORS[p.role] || 'var(--brand-blue)';
         return `<div style="display:flex; align-items:center; gap:6px; padding:6px 9px; border-radius:7px; background:var(--surface); margin-bottom:4px; border:1px solid var(--border);">

@@ -21,7 +21,7 @@
  * Partage script scope : _qrGenerated, _adminNewRole, ROLE_COLORS, ALPHA_URL, WHATSAPP_NUM.
  */
 
-const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
+const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)', admin: 'var(--admin)' };
 const ALPHA_URL    = 'https://pulseunit-c9c5c.web.app';
 const WHATSAPP_NUM = '33666077493';
 let   _qrGenerated = false;
@@ -422,7 +422,7 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
         }
         setAdminSession(true);
         // L'admin obtient un currentUser complet pour accéder à toutes les features
-        currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'PulseUnit', role: 'ide' };
+        currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'PulseUnit', role: 'admin' };
         sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
         try { localStorage.setItem('pulseunit_cache_owner', currentUser.id); } catch (e) {}
         // Ajouter l'admin à la garde active pour bypasser les gardes-checks
