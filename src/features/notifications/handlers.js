@@ -147,7 +147,12 @@ window.applyNotifsSnapshot = function applyNotifsSnapshot(data) {
 function renderNotifsBell() {
     const btn = document.getElementById('notif-bell-btn');
     if (!btn) return;
-    const count = window.getUnreadCount();
+    // 2026-05-03 — la cloche affiche désormais notifs + messages non lus,
+    // pas seulement les notifs (demande Dimitri pour ne pas rater un DM).
+    const notifCount = window.getUnreadCount();
+    const msgCount = (typeof window.totalUnreadMessages === 'function')
+        ? window.totalUnreadMessages() : 0;
+    const count = notifCount + msgCount;
     const badge = document.getElementById('notif-bell-badge');
     if (badge) {
         if (count > 0) {

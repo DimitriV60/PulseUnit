@@ -236,14 +236,17 @@ window.totalUnreadMessages = function totalUnreadMessages() {
 
 window.renderMessagesBadge = function renderMessagesBadge() {
     const badge = document.getElementById('msg-side-badge');
-    if (!badge) return;
     const count = window.totalUnreadMessages();
-    if (count > 0) {
-        badge.textContent = count > 99 ? '99+' : String(count);
-        badge.style.display = 'inline-flex';
-    } else {
-        badge.style.display = 'none';
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
     }
+    // 2026-05-03 — la cloche affiche aussi les messages non lus
+    if (typeof window.renderNotifsBell === 'function') window.renderNotifsBell();
 };
 
 window.applyMessagesSnapshot = function applyMessagesSnapshot(data) {
