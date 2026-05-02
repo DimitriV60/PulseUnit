@@ -166,6 +166,16 @@ function renderNotifsBell() {
 window.renderNotifsBell = renderNotifsBell;
 
 window.openNotifsCenter = function openNotifsCenter() {
+    // 2026-05-03 — routing intelligent depuis la cloche : si plus de messages
+    // non lus que de notifs, on ouvre directement la liste des messages.
+    // Sinon (ou égalité), on ouvre le centre de notifications classique.
+    const notifCount = window.getUnreadCount();
+    const msgCount = (typeof window.totalUnreadMessages === 'function')
+        ? window.totalUnreadMessages() : 0;
+    if (msgCount > notifCount && typeof window.openMessages === 'function') {
+        window.openMessages();
+        return;
+    }
     const m = document.getElementById('notifs-center-modal');
     if (!m) return;
     m.style.display = 'flex';
