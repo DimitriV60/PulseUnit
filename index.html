@@ -301,9 +301,9 @@
         <button data-action="hide:change-pin-modal" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;">×</button>
       </div>
       <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:14px;">Saisis ton ancien code puis ton nouveau code (6 chiffres).</div>
-      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-old" placeholder="Ancien code" style="margin-bottom:8px;">
-      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-new" placeholder="Nouveau code" style="margin-bottom:8px;">
-      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-conf" placeholder="Confirmer le nouveau code" style="margin-bottom:14px;">
+      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-old" placeholder="Ancien code" autocomplete="new-password" style="margin-bottom:8px;">
+      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-new" placeholder="Nouveau code" autocomplete="new-password" style="margin-bottom:8px;">
+      <input class="auth-input" type="password" inputmode="numeric" maxlength="6" id="chg-conf" placeholder="Confirmer le nouveau code" autocomplete="new-password" style="margin-bottom:14px;">
       <button class="btn-primary" style="width:100%;" data-action="changeMyPin">Valider le nouveau code</button>
     </div>
   </div>
@@ -578,7 +578,7 @@
           <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); letter-spacing:0.5px;">📝 OBSERVATIONS</div>
           <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; margin-top:2px;">🔒 privées</div>
         </div>
-        <textarea id="bed-note-text" rows="6" placeholder="Transmissions, événements, traitements (visibles par vous seul)..." style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:120px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
+        <textarea id="bed-note-text" rows="6" placeholder="Transmissions, événements, traitements (visibles par vous seul)..." autocomplete="off" autocapitalize="sentences" spellcheck="true" data-form-type="other" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:120px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
       </div>
       <div style="display:flex; gap:10px; margin-top:12px; flex-shrink:0;">
         <button id="bed-note-delete-btn" data-action="deleteBedNote" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
@@ -2002,7 +2002,7 @@
         <button type="button" data-action="clearSelectedAuthUser" style="background:none; border:none; color:var(--brand-blue); font-size:1.2rem; cursor:pointer; line-height:1;">✕</button>
       </div>
       <label for="auth-pin" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Code à 6 chiffres</label>
-      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="off" aria-label="Code PIN à 6 chiffres">
+      <input class="auth-input auth-pin-input" type="password" inputmode="numeric" maxlength="6" id="auth-pin" placeholder="Code à 6 chiffres" autocomplete="current-password" aria-label="Code PIN à 6 chiffres">
       <label style="display:flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:12px; cursor:pointer;">
         <input type="checkbox" id="auth-remember" style="width:16px; height:16px; cursor:pointer;">
         Se souvenir de moi <span style="color:var(--text-muted); font-weight:600;">(connexion automatique 3 mois)</span>
