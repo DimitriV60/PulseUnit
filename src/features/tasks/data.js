@@ -30,3 +30,5 @@
     { id: 't22', title: 'Commande LABO', shifts: ['3-J', '3-N', '5-J', '5-N'] },
     { id: 't23', title: 'Commande Stérilisation (AS de Nuit)', shifts: ['0-N'] }
   ];
+
+  window.TECH_TASKS = TECH_TASKS;
