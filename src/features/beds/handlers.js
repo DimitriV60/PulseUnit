@@ -105,7 +105,13 @@ window.renderApp = function renderApp() {
 
     let boardHTML = '';
     let miniListHTML = '';
-    const allP = [...(shiftHistory[dateOnly + '-meds'] || []), h.techIdeId, ...h.activeStaffIds].filter((v, i, a) => v && a.indexOf(v) === i).map(id => roster.find(r => r.id === id)).filter(x => x);
+    // 2026-05-03 — l'IDE Tech est affichée sur sa propre carte 'IDE TECH',
+    // on la retire donc de l'effectif principal (sinon doublon visuel).
+    const allP = [...(shiftHistory[dateOnly + '-meds'] || []), ...h.activeStaffIds]
+        .filter((v, i, a) => v && a.indexOf(v) === i)
+        .filter(id => id !== h.techIdeId)
+        .map(id => roster.find(r => r.id === id))
+        .filter(x => x);
 
     const getSortVal = p => {
         if (p.role === 'med') return 1;
