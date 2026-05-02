@@ -27,11 +27,45 @@ const WHATSAPP_NUM = '33666077493';
 let   _qrGenerated = false;
 let   _adminNewRole = '';
 
+// Legacy SHA-256 — conservé pour compatibilité ascendante (lecture pinHash existant)
 async function hashPin(pin) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 window.hashPin = hashPin;
+
+// V2 — PBKDF2-SHA256 100k itérations + sel par user (P1.5 audit 2026-04-30).
+// Beaucoup plus coûteux à brute-forcer : ~100ms/tentative au lieu de <1ms pour SHA-256 nu.
+// Combiné au sel (16 octets random par user), bloque les rainbow tables.
+function _genSalt() {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPinV2(pin, saltHex) {
+    const salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const baseKey = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(pin),
+        { name: 'PBKDF2' }, false, ['deriveBits']
+    );
+    const bits = await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', salt, iterations: 100_000, hash: 'SHA-256' },
+        baseKey, 256
+    );
+    return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+window.hashPinV2 = hashPinV2;
+window._genPinSalt = _genSalt;
+
+/** Crée un nouvel ensemble {pinHash, pinHashV2, pinSalt} pour un PIN clair.
+ *  pinHash (legacy) reste écrit en parallèle pour permettre rollback rapide
+ *  jusqu'à ce que tous les clients utilisent V2. */
+async function buildPinHashes(pin) {
+    const salt = _genSalt();
+    const [legacy, v2] = await Promise.all([hashPin(pin), hashPinV2(pin, salt)]);
+    return { pinHash: legacy, pinHashV2: v2, pinSalt: salt };
+}
+window.buildPinHashes = buildPinHashes;
 
 window.showAuthView = function showAuthView(view) {
     ['login', 'register', 'forgot', 'admin'].forEach(v =>
@@ -199,13 +233,21 @@ window.registerUser = async function registerUser() {
         roster.push({ id: rosterId, firstName: fn, lastName: ln, role: selectedRole });
         saveData();
     }
-    const pinHash = await hashPin(pin);
+    const hashes = await buildPinHashes(pin);
     authUsers[rosterId] = {
         firstName: fn, lastName: ln, role: selectedRole,
-        pinHash, tempPin: null, createdAt: Date.now(),
+        pinHash: hashes.pinHash,           // legacy (compat)
+        pinHashV2: hashes.pinHashV2,        // P1.5 PBKDF2
+        pinSalt: hashes.pinSalt,
+        tempPin: null, createdAt: Date.now(),
         failedAttempts: 0, blocked: false, blockedAt: null
     };
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    // Tente login Custom Token (uid réel + claim role) — fallback anonyme si Worker pas configuré
+    if (window.customAuth) {
+        const cr = await window.customAuth.loginWithPin(rosterId, pin);
+        if (!cr.ok && !cr.fallback) console.warn('[register] custom token failed', cr);
+    }
     currentUser = { id: rosterId, firstName: fn, lastName: ln, role: selectedRole };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
     startPresenceHeartbeat();
@@ -260,8 +302,29 @@ window.loginUser = async function loginUser() {
             return;
         }
     }
-    const pinHash = await hashPin(pin);
-    if (pinHash !== user.pinHash) {
+    // P1.5 — vérifie V2 prioritairement, fallback legacy
+    let pinOk = false;
+    if (user.pinHashV2 && user.pinSalt) {
+        const v2 = await hashPinV2(pin, user.pinSalt);
+        pinOk = (v2 === user.pinHashV2);
+    }
+    if (!pinOk && user.pinHash) {
+        const legacy = await hashPin(pin);
+        pinOk = (legacy === user.pinHash);
+        // Migration transparente : si legacy match mais V2 absent, on rebake le V2
+        if (pinOk && (!user.pinHashV2 || !user.pinSalt)) {
+            try {
+                const hashes = await buildPinHashes(pin);
+                authUsers[userId].pinHashV2 = hashes.pinHashV2;
+                authUsers[userId].pinSalt = hashes.pinSalt;
+                if (AUTH_DOC) await AUTH_DOC.update({
+                    [`users.${userId}.pinHashV2`]: hashes.pinHashV2,
+                    [`users.${userId}.pinSalt`]: hashes.pinSalt
+                });
+            } catch (e) { console.warn('[auth] pin migration failed', e); }
+        }
+    }
+    if (!pinOk) {
         let tries;
         if (AUTH_DOC && window.db) {
             try {
@@ -296,6 +359,11 @@ window.loginUser = async function loginUser() {
     authUsers[userId].blocked = false;
     authUsers[userId].blockedAt = null;
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
+    // P1.4 — Custom Token Firebase (uid réel + claim role) avec fallback anonyme si Worker non configuré
+    if (window.customAuth) {
+        const cr = await window.customAuth.loginWithPin(userId, pin);
+        if (!cr.ok && !cr.fallback) console.warn('[login] custom token failed', cr);
+    }
     currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
     if (document.getElementById('auth-remember')?.checked) {
@@ -328,6 +396,11 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
     try {
         const ok = await verifyAdminCredentials(user, pass);
         if (!ok) return alert('Identifiants admin incorrects.');
+        // P1.6 — tente Custom Token avec claim admin:true (pour Firestore Rules futures)
+        if (window.customAuth) {
+            const cr = await window.customAuth.loginAdmin(user, pass);
+            if (!cr.ok && !cr.fallback) console.warn('[admin-login] custom token failed', cr);
+        }
         setAdminSession(true);
         // L'admin obtient un currentUser complet pour accéder à toutes les features
         currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'PulseUnit', role: 'ide' };
@@ -356,8 +429,10 @@ window.changeTempPin = async function changeTempPin() {
     const conf   = document.getElementById('change-pin-confirm').value;
     if (!/^\d{6}$/.test(newPin)) return alert('Le code doit contenir 6 chiffres.');
     if (newPin !== conf) return alert('Les codes ne correspondent pas.');
-    const pinHash = await hashPin(newPin);
-    authUsers[currentUser.id].pinHash = pinHash;
+    const hashes = await buildPinHashes(newPin);
+    authUsers[currentUser.id].pinHash = hashes.pinHash;
+    authUsers[currentUser.id].pinHashV2 = hashes.pinHashV2;
+    authUsers[currentUser.id].pinSalt = hashes.pinSalt;
     authUsers[currentUser.id].tempPin = null;
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     resetRequests = resetRequests.map(r =>
@@ -592,10 +667,13 @@ window.adminCreateUser = async function adminCreateUser() {
         roster.push({ id: rosterId, firstName: fn, lastName: ln, role: _adminNewRole });
         saveData();
     }
-    const pinHash = await hashPin(pin);
+    const hashes = await buildPinHashes(pin);
     authUsers[rosterId] = {
         firstName: fn, lastName: ln, role: _adminNewRole,
-        pinHash, tempPin: null, createdAt: Date.now(),
+        pinHash: hashes.pinHash,
+        pinHashV2: hashes.pinHashV2,
+        pinSalt: hashes.pinSalt,
+        tempPin: null, createdAt: Date.now(),
         failedAttempts: 0, blocked: false, blockedAt: null
     };
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
@@ -731,10 +809,19 @@ window.changeMyPin = async function changeMyPin() {
     if (newPin !== confPin) return alert('Les nouveaux codes ne correspondent pas.');
     const user = authUsers[currentUser.id];
     if (!user) return alert('Compte introuvable.');
-    const oldHash = await hashPin(oldPin);
-    if (oldHash !== user.pinHash) return alert('Ancien code incorrect.');
-    const newHash = await hashPin(newPin);
-    authUsers[currentUser.id].pinHash = newHash;
+    // Vérif old pin V2 prioritaire, fallback legacy
+    let oldOk = false;
+    if (user.pinHashV2 && user.pinSalt) {
+        oldOk = (await hashPinV2(oldPin, user.pinSalt)) === user.pinHashV2;
+    }
+    if (!oldOk && user.pinHash) {
+        oldOk = (await hashPin(oldPin)) === user.pinHash;
+    }
+    if (!oldOk) return alert('Ancien code incorrect.');
+    const hashes = await buildPinHashes(newPin);
+    authUsers[currentUser.id].pinHash = hashes.pinHash;
+    authUsers[currentUser.id].pinHashV2 = hashes.pinHashV2;
+    authUsers[currentUser.id].pinSalt = hashes.pinSalt;
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     document.getElementById('chg-old').value = '';
     document.getElementById('chg-new').value = '';
