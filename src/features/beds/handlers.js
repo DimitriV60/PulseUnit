@@ -222,7 +222,11 @@ window.renderApp = function renderApp() {
     const _total = _todayTasks.length;
     const _pct = _total > 0 ? Math.round((_done / _total) * 100) : 0;
 
-    boardHTML += `<div class="bed-card special-card tech-card">
+    // 2026-05-03 \u2014 UX bed-like : tap (avec selectedStaffForTap) pour assigner,
+    // double-tap (si techIde) pour ouvrir les notes 7-gardes.
+    const _isTechMine = currentUser && techP && currentUser.id === h.techIdeId;
+    const _targetable = !techP && !locked && selectedStaffForTap === currentUser?.id && currentUser?.role === 'ide';
+    boardHTML += `<div class="bed-card special-card tech-card ${_targetable ? 'targetable' : ''}" onclick="handleTechIdeTap(event)" style="${_targetable ? 'cursor:pointer; box-shadow:0 0 0 2px var(--tech);' : ''}">
       <div class="bed-header" style="color:var(--tech); margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start;">
         <span class="b-num" style="font-size:1.1rem; font-weight:900; line-height:1.2;">IDE<br>TECH</span>
         <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
@@ -235,28 +239,26 @@ window.renderApp = function renderApp() {
         </div>
       </div>
       ${techP ? `
-        <div class="staff-pill tech-pill">${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0]) || ''}. ${locked ? '' : `<span class="remove-btn" onclick="clearShift(null,'tech')">\u00D7</span>`}</div>
+        <div class="staff-pill tech-pill">${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0]) || ''}. ${locked ? '' : `<span class="remove-btn" onclick="event.stopPropagation(); clearShift(null,'tech')">\u00D7</span>`}</div>
         <div style="margin-top:10px; font-size:0.72rem; color:var(--tech); font-weight:700; display:flex; justify-content:space-between;">
           <span>\uD83D\uDCDD T\u00E2ches</span><span>${_done}/${_total}</span>
         </div>
         <div style="height:5px; background:var(--border); border-radius:3px; margin:4px 0 8px;">
           <div style="height:100%; width:${_pct}%; background:var(--tech); border-radius:3px; transition:width 0.3s;"></div>
         </div>
-        <button onclick="openTasks()" style="width:100%; padding:7px; background:var(--tech-glow); border:1px solid rgba(168,85,247,0.4); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.75rem; cursor:pointer; transition:opacity 0.2s; margin-bottom:5px;">
-          ${_pct === 100 ? '\u2705 Toutes valid\u00E9es' : 'Ouvrir mes t\u00E2ches \u2192'}
-        </button>
-        ${(currentUser && (currentUser.id === h.techIdeId || isAdmin())) ? `
-          <button onclick="openBedNote('tech_ide')" style="width:100%; padding:7px; background:transparent; border:1px solid var(--tech); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.72rem; cursor:pointer;">
-            \uD83D\uDCDD Mes notes garde (7 gardes)
+        ${_isTechMine ? `
+          <button onclick="event.stopPropagation(); openTasks()" style="width:100%; padding:7px; background:var(--tech-glow); border:1px solid rgba(168,85,247,0.4); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.75rem; cursor:pointer; margin-bottom:5px;">
+            ${_pct === 100 ? '\u2705 Toutes valid\u00E9es' : 'Ouvrir mes t\u00E2ches \u2192'}
           </button>
-        ` : ''}
+          <div style="font-size:0.65rem; color:var(--text-muted); text-align:center; padding:3px 0;">double-tap \u2192 mes notes (7 gardes)</div>
+        ` : `
+          <div style="font-size:0.7rem; color:var(--text-muted); text-align:center; padding:8px 0;">T\u00E2ches : ${_done}/${_total}</div>
+        `}
       ` : `<div class="search-box" style="margin-top:auto;">${locked ? '---' : `
-        ${currentUser && currentUser.role === 'ide' ? `
-          <button onclick="selfAssignTech()" style="width:100%; padding:10px; background:var(--tech); color:#fff; border:none; border-radius:8px; font-weight:900; font-size:0.82rem; cursor:pointer; margin-bottom:6px;">
-            \uD83D\uDC4B Me placer comme IDE Tech
-          </button>
-        ` : ''}
-        <input type="text" id="search-tech" class="special-input" placeholder="\uD83D\uDD0D Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off">
+        <div style="font-size:0.72rem; color:var(--tech); font-weight:800; text-align:center; padding:10px 4px; border:2px dashed var(--tech); border-radius:8px; margin-bottom:8px; background:var(--tech-glow);">
+          ${_targetable ? '\uD83D\uDC4B Tap ici pour te placer' : currentUser?.role === 'ide' ? '\uD83D\uDC46 S\u00E9lectionne-toi puis tap ici' : 'R\u00E9serv\u00E9 aux IDE'}
+        </div>
+        <input type="text" id="search-tech" class="special-input" placeholder="\uD83D\uDD0D Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off" onclick="event.stopPropagation()">
         <div class="suggestions" id="sugg-tech"></div>
       `}</div>`}
     </div>`;

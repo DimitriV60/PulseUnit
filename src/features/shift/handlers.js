@@ -297,8 +297,50 @@ window.selfAssignTech = function selfAssignTech() {
     if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
     saveData();
     renderApp();
-    showToast('✅ Vous êtes IDE Tech — checklist disponible');
-    if (typeof window.openTasks === 'function') setTimeout(() => window.openTasks(), 250);
+    showToast('✅ Vous êtes IDE Tech');
+};
+
+/**
+ * Bed-like tap handler pour la carte IDE TECH (2026-05-03) :
+ *   - empty + utilisateur sélectionné dans l'effectif (selectedStaffForTap===currentUser.id)
+ *     + role IDE → assigne. Sinon toast "Sélectionnez-vous d'abord".
+ *   - occupé + currentUser est l'IDE Tech → simple tap : rien spécial,
+ *     double tap (< 350ms) : ouvre les notes 7-gardes (bedId='tech_ide').
+ */
+var _lastTechTapTime = 0;
+window.handleTechIdeTap = function handleTechIdeTap(ev) {
+    if (ev) ev.stopPropagation();
+    if (!currentUser) return;
+    initShiftData(currentShiftKey);
+    if (isShiftLocked(currentShiftKey)) return;
+    const h = shiftHistory[currentShiftKey];
+    // Slot occupé par moi → détection double-tap
+    if (h.techIdeId === currentUser.id) {
+        const now = Date.now();
+        if (now - _lastTechTapTime < 350) {
+            _lastTechTapTime = 0;
+            if (typeof window.openBedNote === 'function') window.openBedNote('tech_ide');
+            return;
+        }
+        _lastTechTapTime = now;
+        return;
+    }
+    // Slot occupé par quelqu'un d'autre → ne rien faire
+    if (h.techIdeId) return;
+    // Slot vide → tente self-assign si IDE et sélectionné
+    if (currentUser.role !== 'ide' && !isAdmin()) {
+        showToast('⛔ Réservé aux IDE');
+        return;
+    }
+    if (selectedStaffForTap !== currentUser.id) {
+        showToast('👆 Sélectionne-toi d\'abord dans l\'effectif (ton pill)');
+        return;
+    }
+    h.techIdeId = currentUser.id;
+    if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
+    saveData();
+    renderApp();
+    showToast('✅ Vous êtes IDE Tech — double-tap pour vos notes');
 };
 
 function assignSpecDirect(type, id) {
