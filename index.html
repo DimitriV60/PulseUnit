@@ -440,6 +440,22 @@
 
       <hr style="border-color:var(--border); margin-bottom:15px;">
 
+      <!-- Garde courante : qui travaille + ajouter/retirer (admin) -->
+      <div style="margin-bottom:15px;">
+        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--brand-aqua);"></span>
+          Garde courante
+        </div>
+        <div id="admin-shift-container" style="font-size:0.82rem; color:var(--text-muted); padding:6px 0; margin-bottom:8px;">Chargement…</div>
+        <div style="position:relative; margin-bottom:6px;">
+          <input type="text" id="admin-shift-add-search" placeholder="🔍 Rechercher un agent à ajouter..." data-input="renderAdminShiftCandidates;toggleClearBtn:admin-shift-add-search" autocomplete="off" style="width:100%; padding:8px 32px 8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:0.78rem; font-weight:700; box-sizing:border-box;">
+          <button id="admin-shift-add-search-clear" type="button" data-action="clearSearchInput:admin-shift-add-search,renderAdminShiftCandidates" title="Effacer" style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:var(--surface-sec); border:none; color:var(--text-muted); font-size:0.95rem; cursor:pointer; width:22px; height:22px; border-radius:50%; line-height:1; padding:0;">×</button>
+        </div>
+        <div id="admin-shift-candidates" style="max-height:140px; overflow-y:auto;"></div>
+      </div>
+
+      <hr style="border-color:var(--border); margin-bottom:15px;">
+
       <!-- Demandes de réinitialisation -->
       <div style="margin-bottom:15px;">
         <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Demandes de code oublié</div>

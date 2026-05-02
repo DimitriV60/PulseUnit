@@ -495,6 +495,8 @@ window._resetUserScopedState = function _resetUserScopedState() {
     if (window.messagesData)  window.messagesData = {};
     if (window.notifsData)    window.notifsData = {};
     if (window.bedNotesData)  window.bedNotesData = {};
+    // 4. Reset session admin (évite que adminSession persiste après switch de compte)
+    if (typeof setAdminSession === 'function') setAdminSession(false);
     // 4. Re-render du planning-ca-view s'il est ouvert (sinon on voit l'ancien plan)
     try {
         const pv = document.getElementById('planning-ca-view');

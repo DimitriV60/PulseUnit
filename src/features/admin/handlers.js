@@ -29,12 +29,150 @@ window.openAdmin = function openAdmin() {
         updateAdminPanelBtn();
         renderAdminResets();
         renderAdminUsers();
+        if (typeof window.renderAdminCurrentShift === 'function') window.renderAdminCurrentShift();
         document.getElementById('admin-panel-modal').style.display = 'flex';
         return;
     }
     document.getElementById('admin-user').value = '';
     document.getElementById('admin-pass').value = '';
     document.getElementById('admin-login-modal').style.display = 'flex';
+};
+
+// \u2500\u2500 Section "Garde courante" du panneau admin (2026-05-03) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+/** Rend la liste des agents actuellement affect\u00e9s \u00e0 la garde courante. */
+window.renderAdminCurrentShift = function renderAdminCurrentShift() {
+    const container = document.getElementById('admin-shift-container');
+    if (!container) return;
+    if (typeof initShiftData === 'function') initShiftData(currentShiftKey);
+    const h = shiftHistory[currentShiftKey] || {};
+    const dateOnly = (currentShiftKey || '').split('-').slice(0, 3).join('-');
+    const meds = (shiftHistory[dateOnly + '-meds'] || []).filter(Boolean);
+
+    // Liste agr\u00e9g\u00e9e : non-m\u00e9d, tech IDE, m\u00e9decins
+    const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
+    const items = [];
+    (h.activeStaffIds || []).forEach(id => {
+        const p = roster.find(r => r.id === id);
+        if (p) items.push({ id, role: p.role, label: `${p.firstName} ${(p.lastName || '').toUpperCase()}`, kind: 'staff' });
+    });
+    if (h.techIdeId) {
+        const t = roster.find(r => r.id === h.techIdeId);
+        if (t) items.push({ id: h.techIdeId, role: 'tech', label: `${t.firstName} ${(t.lastName || '').toUpperCase()}`, kind: 'tech' });
+    }
+    meds.forEach(id => {
+        const m = roster.find(r => r.id === id);
+        if (m) items.push({ id, role: 'med', label: `${m.firstName} ${(m.lastName || '').toUpperCase()}`, kind: 'med' });
+    });
+
+    if (items.length === 0) {
+        container.innerHTML = '<span style="font-size:0.78rem; color:var(--text-muted);">Aucun agent en garde actuellement.</span>';
+        renderAdminShiftCandidates();
+        return;
+    }
+    container.innerHTML = items.map(it => {
+        const col = ROLE_COLORS[it.role] || 'var(--brand-blue)';
+        const roleTag = it.kind === 'tech' ? 'TECH' : (it.role || '').toUpperCase();
+        return `<div style="display:flex; align-items:center; gap:6px; padding:7px 9px; border-radius:8px; background:var(--surface-sec); margin-bottom:5px; border:1px solid var(--border);">
+            <span style="font-weight:800; font-size:0.82rem; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(it.label)}</span>
+            <span style="font-size:0.66rem; font-weight:800; color:${col}; background:${col}22; padding:2px 6px; border-radius:4px; flex-shrink:0;">${roleTag}</span>
+            <button data-action="adminRemoveFromShift:${escapeHTML(it.id)},${it.kind}" style="background:none; border:none; color:var(--crit); font-size:1rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Retirer de la garde">\u00d7</button>
+        </div>`;
+    }).join('');
+    renderAdminShiftCandidates();
+};
+
+/** Liste les candidats du roster non encore en garde, filtr\u00e9s par la search input. */
+window.renderAdminShiftCandidates = function renderAdminShiftCandidates() {
+    const cont = document.getElementById('admin-shift-candidates');
+    if (!cont) return;
+    if (typeof initShiftData === 'function') initShiftData(currentShiftKey);
+    const h = shiftHistory[currentShiftKey] || {};
+    const dateOnly = (currentShiftKey || '').split('-').slice(0, 3).join('-');
+    const meds = shiftHistory[dateOnly + '-meds'] || [];
+    const inGarde = new Set([
+        ...(h.activeStaffIds || []),
+        h.techIdeId,
+        ...meds.filter(Boolean)
+    ].filter(Boolean));
+
+    const q = (document.getElementById('admin-shift-add-search')?.value || '').toLowerCase().trim();
+    const candidates = roster
+        .filter(r => !inGarde.has(r.id))
+        .filter(r => !q || (r.firstName + ' ' + r.lastName).toLowerCase().includes(q))
+        .sort((a, b) => (a.lastName || '').localeCompare(b.lastName || ''));
+
+    if (candidates.length === 0) {
+        cont.innerHTML = q
+            ? '<div style="font-size:0.75rem; color:var(--text-muted); padding:8px 0; text-align:center;">Aucun r\u00e9sultat.</div>'
+            : '';
+        return;
+    }
+    const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
+    cont.innerHTML = candidates.slice(0, 30).map(p => {
+        const col = ROLE_COLORS[p.role] || 'var(--brand-blue)';
+        return `<div style="display:flex; align-items:center; gap:6px; padding:6px 9px; border-radius:7px; background:var(--surface); margin-bottom:4px; border:1px solid var(--border);">
+            <span style="font-weight:700; font-size:0.78rem; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(p.firstName)} ${escapeHTML((p.lastName || '').toUpperCase())}</span>
+            <span style="font-size:0.62rem; font-weight:800; color:${col}; background:${col}22; padding:1px 5px; border-radius:3px; flex-shrink:0;">${(p.role || '').toUpperCase()}</span>
+            <button data-action="adminAddToShift:${escapeHTML(p.id)}" style="background:var(--brand-aqua); border:none; color:#fff; font-size:0.7rem; font-weight:800; cursor:pointer; padding:3px 8px; border-radius:5px; flex-shrink:0;" title="Ajouter \u00e0 la garde">+ Ajouter</button>
+        </div>`;
+    }).join('');
+};
+
+/** Ajoute un agent \u00e0 la garde courante (r\u00f4le d\u00e9duit du roster). */
+window.adminAddToShift = function adminAddToShift(userId) {
+    if (typeof initShiftData === 'function') initShiftData(currentShiftKey);
+    const p = roster.find(r => r.id === userId);
+    if (!p) return showToast('\u26d4 Agent introuvable dans le roster');
+    const h = shiftHistory[currentShiftKey];
+    const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');
+    if (p.role === 'med') {
+        if (!shiftHistory[dateOnly + '-meds']) shiftHistory[dateOnly + '-meds'] = [null, null, null];
+        if (shiftHistory[dateOnly + '-meds'].includes(userId)) return showToast('D\u00e9j\u00e0 en garde');
+        const empty = shiftHistory[dateOnly + '-meds'].indexOf(null);
+        if (empty === -1) return showToast('\u26d4 3 m\u00e9decins d\u00e9j\u00e0 assign\u00e9s');
+        shiftHistory[dateOnly + '-meds'][empty] = userId;
+    } else {
+        if ((h.activeStaffIds || []).includes(userId)) return showToast('D\u00e9j\u00e0 en garde');
+        if (!h.activeStaffIds) h.activeStaffIds = [];
+        h.activeStaffIds.push(userId);
+    }
+    if (typeof saveData === 'function') saveData();
+    if (typeof window.customAuth !== 'undefined' && window.customAuth.audit) {
+        window.customAuth.audit('user_unlock', userId, { kind: 'shift_add' });
+    }
+    showToast(`\u2705 ${p.firstName} ${(p.lastName || '').toUpperCase()} ajout\u00e9 \u00e0 la garde`);
+    if (typeof renderApp === 'function') renderApp();
+    window.renderAdminCurrentShift();
+};
+
+/** Retire un agent de la garde courante. kind \u2208 'staff' | 'tech' | 'med' */
+window.adminRemoveFromShift = function adminRemoveFromShift(userId, kind) {
+    if (typeof initShiftData === 'function') initShiftData(currentShiftKey);
+    const h = shiftHistory[currentShiftKey];
+    const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');
+    if (kind === 'tech') {
+        if (h.techIdeId === userId) h.techIdeId = null;
+    } else if (kind === 'med') {
+        const arr = shiftHistory[dateOnly + '-meds'] || [];
+        const idx = arr.indexOf(userId);
+        if (idx !== -1) arr[idx] = null;
+        shiftHistory[dateOnly + '-meds'] = arr;
+    } else {
+        h.activeStaffIds = (h.activeStaffIds || []).filter(id => id !== userId);
+        // Aussi nettoyer les \u00e9ventuelles assignations lit
+        if (h.assignments) {
+            for (const [bedId, asgn] of Object.entries(h.assignments)) {
+                if (!asgn) continue;
+                if (asgn.ide === userId) asgn.ide = null;
+                if (asgn.as === userId)  asgn.as = null;
+            }
+        }
+    }
+    if (typeof saveData === 'function') saveData();
+    showToast('\ud83d\uddd1\ufe0f Agent retir\u00e9 de la garde');
+    if (typeof renderApp === 'function') renderApp();
+    window.renderAdminCurrentShift();
 };
 
 window.togglePass = function togglePass() {

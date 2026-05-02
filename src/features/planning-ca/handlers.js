@@ -502,6 +502,22 @@ window.cyclePlanDay = function cyclePlanDay(dateStr) {
     refreshPlanCell(_planNextDay(dateStr));
     refreshPlanCell(_planNextDay(_planNextDay(dateStr)));
 
+    // Auto-place dans la garde courante si on vient de marquer aujourd'hui en
+    // état de travail (jour/nuit/HS/formation). Reset wsKey + re-call
+    // checkWorkStatus pour qu'il auto-add via handleWorkChoice(true).
+    // Bug signalé 2026-05-03 : changement planning today→jour ne rajoutait pas.
+    try {
+        const _t = new Date();
+        const todayStr = `${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+        if (dateStr === todayStr && typeof currentUser !== 'undefined' && currentUser) {
+            const wsKey = `pu_ws_${currentShiftKey}_${currentUser.id}`;
+            localStorage.removeItem(wsKey);
+            if (typeof window.checkWorkStatus === 'function') {
+                setTimeout(() => window.checkWorkStatus(), 0);
+            }
+        }
+    } catch (e) { /* never block UI */ }
+
     const mKey = dateStr.slice(0, 7);
     const mEl  = document.getElementById('plan-mc-' + mKey);
     if (mEl) {

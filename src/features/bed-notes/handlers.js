@@ -508,7 +508,10 @@ window.openBedNote = function openBedNote(bedId) {
     if (!isActive && !isAdmin()) { showToast('⛔ Vous devez être de garde pour laisser une note'); return; }
     const d = h.assignments?.[bedId] || {};
     const isAssigned = d.ide === currentUser.id || d.as === currentUser.id;
-    if (!isAssigned && !isAdmin()) { showToast('⛔ Vous ne pouvez noter que les lits où vous êtes affecté'); return; }
+    // 2026-05-03 — l'admin doit aussi s'assigner explicitement au lit pour
+    // éviter les notes écrites par mégarde sur un lit non-pris en charge.
+    // (Bug signalé : 'je peux écrire dans des chambres où je ne suis pas positionné')
+    if (!isAssigned) { showToast('⛔ Vous ne pouvez noter que les lits où vous êtes affecté'); return; }
     _currentNotesBed = bedId;
     const parts = bedId.split('-');
     const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
