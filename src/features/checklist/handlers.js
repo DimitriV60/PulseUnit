@@ -28,8 +28,11 @@ window.openChecklist = function openChecklist(bedId) {
         const h = shiftHistory[currentShiftKey];
         const dateOnly = currentShiftKey.split('-').slice(0, 3).join('-');
         const meds = shiftHistory[dateOnly + '-meds'] || [];
+        // 2026-05-03 \u2014 IDE Tech bloqu\u00E9e : la v\u00E9rif chambres est r\u00E9serv\u00E9e
+        // aux IDE/AS assign\u00E9s aux lits (Dimitri).
+        const isTechIde = h.techIdeId === currentUser?.id;
+        if (isTechIde) { showToast('\u26D4 La v\u00E9rification chambres est r\u00E9serv\u00E9e aux IDE/AS au chevet'); return; }
         const isActive = (h.activeStaffIds || []).includes(currentUser?.id)
-                      || h.techIdeId === currentUser?.id
                       || meds.includes(currentUser?.id);
         if (!isActive) { showToast('\u26D4 Vous devez \u00EAtre de garde pour acc\u00E9der \u00E0 la v\u00E9rif chambre'); return; }
     }

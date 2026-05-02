@@ -568,13 +568,16 @@
       <div id="bed-note-timestamp" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;"></div>
       <div id="bed-note-readonly-notice" style="display:none; font-size:0.72rem; color:var(--text-muted); font-weight:700; padding:5px 10px; background:var(--surface-sec); border-radius:6px; margin-bottom:8px; flex-shrink:0;">🔒 Lecture seule — garde passée</div>
       <div style="overflow-y:auto; overflow-x:hidden; flex:1; padding-right:2px; min-width:0;">
+        <button id="bed-note-survey-toggle" type="button" data-action="toggleBedNoteSurvey" style="display:none; width:100%; padding:8px; background:transparent; border:1px dashed var(--brand-aqua); color:var(--brand-aqua); border-radius:8px; font-weight:800; font-size:0.78rem; cursor:pointer; margin-bottom:10px;">
+          📋 Voir paramètres vitaux
+        </button>
         <div id="bed-note-survey-section" style="margin:6px 0 4px;">
           <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); letter-spacing:0.5px;">📋 SURVEILLANCE HORAIRE</div>
           <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; margin-top:2px;">🤝 partagée IDE / AS</div>
         </div>
         <div id="bed-note-survey-meta" style="display:none; font-size:0.7rem; color:var(--text-muted); font-weight:700; padding:4px 8px; background:var(--surface-sec); border-radius:6px; margin-bottom:6px;"></div>
         <div id="bed-note-survey" style="margin-bottom:14px; min-width:0;"></div>
-        <div style="margin:6px 0 4px;">
+        <div id="bed-note-obs-section" style="margin:6px 0 4px;">
           <div style="font-size:0.78rem; font-weight:900; color:var(--brand-aqua); letter-spacing:0.5px;">📝 OBSERVATIONS</div>
           <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; margin-top:2px;">🔒 privées</div>
         </div>

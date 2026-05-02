@@ -255,11 +255,9 @@ window.renderApp = function renderApp() {
           <div style="font-size:0.7rem; color:var(--text-muted); text-align:center; padding:8px 0;">T\u00E2ches : ${_done}/${_total}</div>
         `}
       ` : `<div class="search-box" style="margin-top:auto;">${locked ? '---' : `
-        <div style="font-size:0.72rem; color:var(--tech); font-weight:800; text-align:center; padding:10px 4px; border:2px dashed var(--tech); border-radius:8px; margin-bottom:8px; background:var(--tech-glow);">
+        <div style="font-size:0.72rem; color:var(--tech); font-weight:800; text-align:center; padding:14px 6px; border:2px dashed var(--tech); border-radius:8px; background:var(--tech-glow);">
           ${_targetable ? '\uD83D\uDC4B Tap ici pour te placer' : currentUser?.role === 'ide' ? '\uD83D\uDC46 S\u00E9lectionne-toi puis tap ici' : 'R\u00E9serv\u00E9 aux IDE'}
         </div>
-        <input type="text" id="search-tech" class="special-input" placeholder="\uD83D\uDD0D Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off" onclick="event.stopPropagation()">
-        <div class="suggestions" id="sugg-tech"></div>
       `}</div>`}
     </div>`;
 
