@@ -504,15 +504,20 @@ async function _getSaCryptoKey(env) {
     console.error('[sa_missing_fields]');
     return null;
   }
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    _pemToDer(sa.private_key),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  _saKeyCache = { clientEmail: sa.client_email, cryptoKey };
-  return _saKeyCache;
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      _pemToDer(sa.private_key),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    _saKeyCache = { clientEmail: sa.client_email, cryptoKey };
+    return _saKeyCache;
+  } catch (e) {
+    console.error('[sa_import_fail]', e && e.message);
+    return null;
+  }
 }
 
 async function _signFirebaseCustomToken({ env, uid, claims }) {
@@ -546,7 +551,7 @@ async function _signFirebaseCustomToken({ env, uid, claims }) {
 let _accessTokenCache = null; // { token, expiry }
 
 async function _getFirestoreAccessToken(env) {
-  if (_accessTokenCache && _accessTokenCache.expiry > Date.now() + 60_000) {
+  if (_accessTokenCache && _accessTokenCache.expiry > Date.now() + 60_000 && _accessTokenCache.token) {
     return _accessTokenCache.token;
   }
   const sa = await _getSaCryptoKey(env);
@@ -563,22 +568,36 @@ async function _getFirestoreAccessToken(env) {
   const headerEnc  = _b64urlEncodeStr(JSON.stringify(header));
   const payloadEnc = _b64urlEncodeStr(JSON.stringify(payload));
   const signingInput = headerEnc + '.' + payloadEnc;
-  const sig = await crypto.subtle.sign(
-    { name: 'RSASSA-PKCS1-v1_5' },
-    sa.cryptoKey,
-    new TextEncoder().encode(signingInput)
-  );
+  let sig;
+  try {
+    sig = await crypto.subtle.sign(
+      { name: 'RSASSA-PKCS1-v1_5' },
+      sa.cryptoKey,
+      new TextEncoder().encode(signingInput)
+    );
+  } catch (e) {
+    console.error('[oauth_sign_fail]', e && e.message);
+    return null;
+  }
   const assertion = signingInput + '.' + _b64urlEncode(new Uint8Array(sig));
-  const resp = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${assertion}`
-  });
+  let resp;
+  try {
+    resp = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${assertion}`
+    });
+  } catch (e) {
+    console.error('[oauth_fetch_fail]', e && e.message);
+    return null;
+  }
   if (!resp.ok) {
-    console.error('[oauth_token_error]', resp.status);
+    const bodyText = await resp.text();
+    console.error('[oauth_token_error]', resp.status, bodyText.slice(0, 200));
     return null;
   }
   const data = await resp.json();
+  if (!data.access_token) return null;
   _accessTokenCache = {
     token: data.access_token,
     expiry: Date.now() + (data.expires_in * 1000)
