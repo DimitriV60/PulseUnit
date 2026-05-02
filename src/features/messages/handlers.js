@@ -446,9 +446,9 @@ function _hideReactionPicker() {
 window.openReactionPicker = function openReactionPicker(convId, msgId, anchorEl) {
     const picker = document.getElementById('msg-react-picker');
     if (!picker) return;
-    // 2026-05-03 — emojis plus grands + padding plus généreux pour la lisibilité
+    // 2026-05-03 — emojis lisibles mais pas oversize (overflow viewport mobile)
     picker.innerHTML = _REACTION_SET.map(e =>
-        `<button onclick="toggleReaction('${convId}','${msgId}','${e}')" style="background:none; border:none; font-size:1.85rem; cursor:pointer; padding:6px 10px; border-radius:10px; line-height:1; transition:transform 0.1s, background 0.1s;" onmouseover="this.style.background='var(--surface-sec)';this.style.transform='scale(1.2)'" onmouseout="this.style.background='none';this.style.transform='scale(1)'">${e}</button>`
+        `<button onclick="toggleReaction('${convId}','${msgId}','${e}')" style="background:none; border:none; font-size:1.4rem; cursor:pointer; padding:4px 7px; border-radius:8px; line-height:1; transition:transform 0.1s, background 0.1s; flex-shrink:0;" onmouseover="this.style.background='var(--surface-sec)';this.style.transform='scale(1.15)'" onmouseout="this.style.background='none';this.style.transform='scale(1)'">${e}</button>`
     ).join('');
     picker.style.display = 'flex';
     picker.style.position = 'fixed';
