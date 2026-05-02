@@ -54,31 +54,40 @@ cp firestore.rules.next firestore.rules
 firebase deploy --only firestore:rules --project pulseunit-c9c5c
 ```
 
-#### P1.3-bis — Script de migration data model
-À écrire avant de switcher sur `firestore.rules.next` :
-```js
-// Pseudo-code — à exécuter une fois via Console Firebase ou Cloud Shell
-const auth = await db.doc('pulseunit/auth').get();
-const users = auth.data().users || {};
-const publicUsers = {};
-for (const [uid, u] of Object.entries(users)) {
-  publicUsers[uid] = { firstName: u.firstName, lastName: u.lastName, role: u.role };
-  await db.doc(`pulseunit/users_private/${uid}`).set({
-    pinHashV2: u.pinHashV2 || null,
-    pinSalt: u.pinSalt || null,
-    pinHash: u.pinHash || null,
-    tempPin: u.tempPin || null,
-    tempPinExpiry: u.tempPinExpiry || null,
-    failedAttempts: u.failedAttempts || 0,
-    blocked: !!u.blocked,
-    blockedAt: u.blockedAt || null,
-    createdAt: u.createdAt || null
-  });
-}
-await db.doc('pulseunit/users_public').set({ users: publicUsers });
-// Conserver pulseunit/auth en lecture seule pendant 1 mois pour rollback,
-// puis supprimer.
+#### P1.3-bis — Script de migration data model (FAIT 2026-05-02)
+
+Implémenté comme endpoint Worker `POST /migrate-auth-split` (P3.0). Idempotent.
+Sécurisé par `X-Migrate-Token` header (vaut `env.MIGRATE_SECRET` côté CF Worker).
+
+**Schéma cible** :
+- `pulseunit/users_public` (doc unique avec map `users.{uid} = {firstName, lastName, role}`)
+  → lecture par tout user authentifié (login screen list).
+- `users_private/{uid}` (collection top-level, un doc par user) avec
+  `{pinHash, pinHashV2, pinSalt, tempPin, tempPinExpiry, failedAttempts, blocked, blockedAt, createdAt, migratedAt}`
+  → lecture restreinte à `auth.uid == uid` ou admin. Écriture interdite client (Worker via SA only).
+
+**Exécution (validé 2026-05-02)** :
+```bash
+curl -X POST https://pulseunit-scan.dimitri-valentin.workers.dev/migrate-auth-split \
+  -H "Origin: https://pulseunit-c9c5c.web.app" \
+  -H "X-Migrate-Token: <MIGRATE_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+# → {"ok":true,"totalUsers":8,"privateWritten":8,"publicWritten":true,"errors":[]}
 ```
+
+**Après migration**, faire tourner les deux schémas en parallèle :
+- Client legacy continue à lire/écrire `pulseunit/auth` (read+write OK rules actuelles)
+- Worker `/login` lit `pulseunit/auth.users.{uid}` (path inchangé pour compat)
+- Worker `/register`, `/change-pin` écrivent dans `pulseunit/auth.users.{uid}` (legacy path)
+- À chaque write Worker, idéalement aussi sync vers `users_private/{uid}` (à faire en P3.1)
+
+**Quand on est prêt à couper le cordon** :
+1. Re-run `/migrate-auth-split` une dernière fois (sync final)
+2. Switcher Worker `/login` pour lire `users_private/{uid}` direct (plus efficace que la map dans pulseunit/auth)
+3. Déployer `firestore.rules.next` qui interdit lectures `pulseunit/auth`
+4. Surveiller pendant 7 jours
+5. Supprimer `pulseunit/auth` (backup avant)
 
 ### ✅ P1.4 Worker /login (Custom Token Firebase)
 **Fait** dans `worker/src/worker.js`. Endpoint `POST /login` :

@@ -111,6 +111,43 @@
         _post('/audit', { actor, action, target: target || null, details: details || null })
           .catch(e => console.warn('[audit] failed', action, e));
       } catch (e) { /* never block UI */ }
+    },
+
+    /**
+     * /register via Worker (P3.0). Le Worker écrit pulseunit/auth via SA et
+     * retourne un Custom Token. Si Worker pas configuré (503) → fallback côté
+     * client (write Firestore direct comme avant).
+     * Body : { firstName, lastName, role, pin }
+     * Returns : { ok, uid?, role?, fallback?, error? }
+     */
+    async register(firstName, lastName, role, pin) {
+      try {
+        const { ok, status, json } = await _post('/register', { firstName, lastName, role, pin });
+        if (ok && json.token) {
+          const signed = await _signInWithFallback(json.token);
+          if (signed) return { ok: true, uid: json.uid, role: json.role };
+          return { ok: false, error: 'sign_in_failed', fallback: true };
+        }
+        if (status === 503) return { ok: false, error: 'auth_not_configured', fallback: true };
+        return { ok: false, error: json.error || 'register_failed', status };
+      } catch (e) {
+        return { ok: false, error: 'network', fallback: true };
+      }
+    },
+
+    /**
+     * /change-pin via Worker (P3.0). Worker valide oldPin, hashe newPin en
+     * PBKDF2+sel, écrit via SA. Si Worker pas configuré → fallback client.
+     */
+    async changePin(userId, oldPin, newPin) {
+      try {
+        const { ok, status, json } = await _post('/change-pin', { userId, oldPin, newPin });
+        if (ok) return { ok: true };
+        if (status === 503) return { ok: false, error: 'auth_not_configured', fallback: true };
+        return { ok: false, error: json.error || 'change_pin_failed', status };
+      } catch (e) {
+        return { ok: false, error: 'network', fallback: true };
+      }
     }
   };
 })();

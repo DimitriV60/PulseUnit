@@ -46,13 +46,12 @@ service cloud.firestore {
     }
 
     // ── Données privées par user (PIN, attempts, blocked) — JAMAIS lisibles
-    // par un autre user. Écriture restreinte : self ou admin (et le Worker via
-    // SA bypasse les rules de toute façon).
-    match /pulseunit/users_private/{uid} {
+    // par un autre user. Collection TOP-LEVEL (pas pulseunit/users_private/{uid}
+    // car pulseunit est une collection, pas un doc).
+    // Le Worker via SA bypasse les rules pour register/change-pin.
+    match /users_private/{uid} {
       allow read:  if isSelf(uid) || isAdmin();
-      allow write: if isAdmin();
-      // Le client ne doit JAMAIS écrire son propre pinHash directement —
-      // tout passe par le Worker /change-pin (à implémenter en P2).
+      allow write: if false;  // exclusivement Worker via SA
     }
 
     // ── Conversations DM 1-to-1 — clé "uidA__uidB" trié alphabétiquement.

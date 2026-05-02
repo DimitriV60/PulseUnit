@@ -824,6 +824,234 @@ async function handleAudit({ env, body, origin, request }) {
   return jsonResponse(res, res.ok ? 200 : 500, origin);
 }
 
+// ── PATCH d'un doc Firestore (set/merge) via SA ─────────────────────────────
+// Utilisé pour writes auth (register, change-pin) afin que les rules puissent
+// bloquer les writes client direct sur pulseunit/auth (P3.0 audit 2026-04-30).
+async function _firestoreUpdateDoc(env, projectId, path, fields, mergeFieldPaths) {
+  const token = await _getFirestoreAccessToken(env);
+  if (!token) return { ok: false, err: 'no_token' };
+  const wrappedFields = {};
+  for (const [k, v] of Object.entries(fields)) wrappedFields[k] = _firestoreWrap(v);
+  let url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${path}`;
+  if (mergeFieldPaths && mergeFieldPaths.length > 0) {
+    const params = mergeFieldPaths.map(f => 'updateMask.fieldPaths=' + encodeURIComponent(f)).join('&');
+    url += '?' + params;
+  }
+  const resp = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ fields: wrappedFields })
+  });
+  if (!resp.ok) {
+    const bodyText = await resp.text();
+    console.error('[firestore_update_doc_error]', path, resp.status, bodyText.slice(0, 200));
+    return { ok: false, err: 'http_' + resp.status, body: bodyText.slice(0, 200) };
+  }
+  return { ok: true };
+}
+
+// ── /register endpoint (P3.0 — write auth via SA) ──────────────────────────
+// Crée un compte côté serveur : valide les inputs, hash le PIN en PBKDF2, écrit
+// dans pulseunit/auth (legacy compat). Retourne un Custom Token Firebase.
+async function handleRegister({ env, body, origin }) {
+  if (!env.FIREBASE_SA_KEY) {
+    return jsonResponse({ error: 'auth_not_configured' }, 503, origin);
+  }
+  const { firstName, lastName, role, pin } = body || {};
+  // Validation
+  const NAME_RE = /^\p{L}[\p{L}\s'-]{0,49}$/u;
+  if (typeof firstName !== 'string' || !NAME_RE.test(firstName)) {
+    return jsonResponse({ error: 'invalid_firstname' }, 400, origin);
+  }
+  if (typeof lastName !== 'string' || !NAME_RE.test(lastName)) {
+    return jsonResponse({ error: 'invalid_lastname' }, 400, origin);
+  }
+  if (!['ide', 'as', 'med', 'tech'].includes(role)) {
+    return jsonResponse({ error: 'invalid_role' }, 400, origin);
+  }
+  if (typeof pin !== 'string' || !/^\d{6}$/.test(pin)) {
+    return jsonResponse({ error: 'invalid_pin' }, 400, origin);
+  }
+  const projectId = 'pulseunit-c9c5c';
+  // Vérifier doublon (case insensitive) en lisant pulseunit/auth
+  const auth = await _firestoreGet(env, projectId, 'pulseunit/auth');
+  const existingUsers = (auth && auth.users) || {};
+  const fnLower = firstName.toLowerCase();
+  const lnLower = lastName.toLowerCase();
+  const existingId = Object.keys(existingUsers).find(id => {
+    const u = existingUsers[id];
+    return u && u.firstName && u.lastName &&
+           u.firstName.toLowerCase() === fnLower &&
+           u.lastName.toLowerCase()  === lnLower;
+  });
+  if (existingId) {
+    return jsonResponse({ error: 'user_exists', existingId }, 409, origin);
+  }
+  // Génère uid + hashes
+  const uid = 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const [pinHashLegacy, pinHashV2] = await Promise.all([
+    _sha256Hex(pin),
+    _pbkdf2Hex(pin, saltHex)
+  ]);
+  // Update pulseunit/auth.users.{uid} via mergeFieldPaths
+  const userObj = {
+    firstName, lastName, role,
+    pinHash: pinHashLegacy,
+    pinHashV2, pinSalt: saltHex,
+    tempPin: null, tempPinExpiry: null,
+    failedAttempts: 0, blocked: false, blockedAt: null,
+    createdAt: Date.now()
+  };
+  // Pour update.users.{uid}, on doit lire tout users puis re-écrire (ou utiliser
+  // updateMask avec champ dotted). Firestore supporte les chemins dotted.
+  const fieldPath = 'users.' + uid;
+  const upd = await _firestoreUpdateDoc(env, projectId, 'pulseunit/auth',
+    { ['users.' + uid]: userObj },
+    [fieldPath]
+  );
+  if (!upd.ok) {
+    return jsonResponse({ error: 'firestore_write_failed', details: upd }, 500, origin);
+  }
+  // Custom Token
+  const token = await _signFirebaseCustomToken({
+    env, uid, claims: { role, admin: false }
+  });
+  if (!token) return jsonResponse({ error: 'token_signing_failed' }, 500, origin);
+  return jsonResponse({ ok: true, token, uid, role }, 200, origin);
+}
+
+// ── /change-pin endpoint (P3.0 — write auth via SA) ────────────────────────
+async function handleChangePin({ env, body, origin }) {
+  if (!env.FIREBASE_SA_KEY) {
+    return jsonResponse({ error: 'auth_not_configured' }, 503, origin);
+  }
+  const { userId, oldPin, newPin } = body || {};
+  if (!userId || typeof userId !== 'string' || userId.length > 100) {
+    return jsonResponse({ error: 'invalid_userId' }, 400, origin);
+  }
+  if (typeof oldPin !== 'string' || !/^\d{4,12}$/.test(oldPin)) {
+    return jsonResponse({ error: 'invalid_old_pin' }, 400, origin);
+  }
+  if (typeof newPin !== 'string' || !/^\d{6}$/.test(newPin)) {
+    return jsonResponse({ error: 'invalid_new_pin' }, 400, origin);
+  }
+  const projectId = 'pulseunit-c9c5c';
+  const auth = await _firestoreGet(env, projectId, 'pulseunit/auth');
+  if (!auth || !auth.users || !auth.users[userId]) {
+    return jsonResponse({ error: 'user_not_found' }, 404, origin);
+  }
+  const user = auth.users[userId];
+  if (user.blocked) return jsonResponse({ error: 'account_blocked' }, 403, origin);
+  // Vérifier old pin (V2 prioritaire, fallback legacy)
+  let ok = false;
+  if (user.pinHashV2 && user.pinSalt) {
+    ok = (await _pbkdf2Hex(oldPin, user.pinSalt)) === user.pinHashV2;
+  }
+  if (!ok && user.pinHash) {
+    ok = (await _sha256Hex(oldPin)) === user.pinHash;
+  }
+  // Permettre aussi la validation par tempPin
+  if (!ok && user.tempPin) {
+    if (user.tempPinExpiry && Date.now() > user.tempPinExpiry) {
+      return jsonResponse({ error: 'temp_pin_expired' }, 403, origin);
+    }
+    ok = (await _sha256Hex(oldPin)) === user.tempPin;
+  }
+  if (!ok) return jsonResponse({ error: 'invalid_old_pin' }, 401, origin);
+  // Génère new hashes
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const [newLegacy, newV2] = await Promise.all([
+    _sha256Hex(newPin),
+    _pbkdf2Hex(newPin, saltHex)
+  ]);
+  // Update les 5 champs via dotted-paths
+  const upd = await _firestoreUpdateDoc(env, projectId, 'pulseunit/auth',
+    {
+      ['users.' + userId + '.pinHash']:   newLegacy,
+      ['users.' + userId + '.pinHashV2']: newV2,
+      ['users.' + userId + '.pinSalt']:   saltHex,
+      ['users.' + userId + '.tempPin']:   null,
+      ['users.' + userId + '.tempPinExpiry']: null
+    },
+    [
+      'users.' + userId + '.pinHash',
+      'users.' + userId + '.pinHashV2',
+      'users.' + userId + '.pinSalt',
+      'users.' + userId + '.tempPin',
+      'users.' + userId + '.tempPinExpiry'
+    ]
+  );
+  if (!upd.ok) return jsonResponse({ error: 'firestore_write_failed' }, 500, origin);
+  return jsonResponse({ ok: true }, 200, origin);
+}
+
+// ── /migrate-auth-split endpoint (P3.0 — one-shot data migration) ──────────
+// Idempotent : peut être appelé plusieurs fois, ne dupplique pas. Lit
+// pulseunit/auth.users{} puis écrit pulseunit/users_public.users{firstName,
+// lastName, role} + pulseunit/users_private/{uid} avec champs sensibles.
+//
+// Sécurité : header X-Migrate-Token requis (vaut env.MIGRATE_SECRET).
+async function handleMigrateAuthSplit({ env, request, origin }) {
+  if (!env.FIREBASE_SA_KEY) {
+    return jsonResponse({ error: 'auth_not_configured' }, 503, origin);
+  }
+  const givenToken = request.headers.get('X-Migrate-Token') || '';
+  if (!env.MIGRATE_SECRET || givenToken !== env.MIGRATE_SECRET) {
+    return jsonResponse({ error: 'forbidden' }, 403, origin);
+  }
+  const projectId = 'pulseunit-c9c5c';
+  const auth = await _firestoreGet(env, projectId, 'pulseunit/auth');
+  if (!auth || !auth.users) {
+    return jsonResponse({ error: 'no_auth_doc' }, 404, origin);
+  }
+  const users = auth.users;
+  const publicUsers = {};
+  let written = 0;
+  const errors = [];
+  for (const [uid, u] of Object.entries(users)) {
+    if (!u || typeof u !== 'object') continue;
+    publicUsers[uid] = {
+      firstName: u.firstName || '',
+      lastName:  u.lastName  || '',
+      role:      u.role      || 'ide'
+    };
+    // Écriture du doc privé
+    const privateFields = {
+      pinHash:   u.pinHash   || null,
+      pinHashV2: u.pinHashV2 || null,
+      pinSalt:   u.pinSalt   || null,
+      tempPin:   u.tempPin   || null,
+      tempPinExpiry: u.tempPinExpiry || null,
+      failedAttempts: u.failedAttempts || 0,
+      blocked: !!u.blocked,
+      blockedAt: u.blockedAt || null,
+      createdAt: u.createdAt || null,
+      // Trace migration
+      migratedAt: new Date().toISOString()
+    };
+    // users_private = collection top-level (pulseunit est lui-même collection,
+    // pas doc → pas de sub-collection sous pulseunit/users_private/)
+    const r = await _firestoreUpdateDoc(env, projectId, 'users_private/' + uid, privateFields);
+    if (!r.ok) errors.push({ uid, err: r.err });
+    else written++;
+  }
+  // pulseunit/users_public reste un doc (collection pulseunit + doc users_public)
+  const pubResult = await _firestoreUpdateDoc(env, projectId, 'pulseunit/users_public', { users: publicUsers });
+  return jsonResponse({
+    ok: errors.length === 0 && pubResult.ok,
+    totalUsers: Object.keys(users).length,
+    privateWritten: written,
+    publicWritten: pubResult.ok,
+    errors: errors.slice(0, 10)
+  }, 200, origin);
+}
+
 // ── Cron handlers (P2.3 — TTL serveur présence) ────────────────────────────
 // Cloudflare invoque scheduled() selon la cron du wrangler.toml. Pas d'impact
 // sur les 100k req/jour free (720 invocations/jour à */2 min).
@@ -920,6 +1148,9 @@ export default {
     if (path === '/login')        return handleLogin({ env, body, origin });
     if (path === '/admin-login')  return handleAdminLogin({ env, body, origin });
     if (path === '/audit')        return handleAudit({ env, body, origin, request });
+    if (path === '/register')     return handleRegister({ env, body, origin });
+    if (path === '/change-pin')   return handleChangePin({ env, body, origin });
+    if (path === '/migrate-auth-split') return handleMigrateAuthSplit({ env, request, origin });
 
     // /scan ou / (legacy) → scan Vision
     const validationError = _validateScanParams(body);
