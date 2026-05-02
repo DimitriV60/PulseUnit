@@ -27,6 +27,24 @@ window.appInit = async function appInit() {
   // 0. Attendre l'auth anonyme Firebase (nécessaire pour les Firestore Security Rules)
   await window._authReady;
 
+  // 0a. Anti cross-account leak : si l'autologin pointe vers un user différent
+  // du dernier propriétaire des caches localStorage, on purge tout. Évite que
+  // les données du compte précédent ne soient affichées sur le nouveau au
+  // prochain cycle de rendu (avant que Firestore réponde).
+  try {
+    const autoLoginRaw = localStorage.getItem('pulseunit_autologin');
+    const cacheOwner = localStorage.getItem('pulseunit_cache_owner');
+    if (autoLoginRaw) {
+      const autoLogin = JSON.parse(autoLoginRaw);
+      if (autoLogin && autoLogin.userId && cacheOwner && cacheOwner !== autoLogin.userId) {
+        if (typeof window._resetUserScopedState === 'function') window._resetUserScopedState();
+      }
+    } else if (cacheOwner) {
+      // Pas d'autologin mais owner stocké → session précédente s'est mal terminée, purge
+      if (typeof window._resetUserScopedState === 'function') window._resetUserScopedState();
+    }
+  } catch (e) { console.warn('cache-owner check', e); }
+
   // 0b. Charger le hash admin depuis Firestore (config/admin) — retiré du source
   if (window.db) {
     try {

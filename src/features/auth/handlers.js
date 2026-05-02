@@ -197,6 +197,7 @@ function checkAutoLogin() {
         if (u) {
             currentUser = { id: userId, firstName: u.firstName, lastName: u.lastName, role: u.role };
             sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+            try { localStorage.setItem('pulseunit_cache_owner', currentUser.id); } catch (e) {}
             startPresenceHeartbeat();
             return true;
         }
@@ -259,6 +260,7 @@ window.registerUser = async function registerUser() {
     }
     currentUser = { id: rosterId, firstName: fn, lastName: ln, role: selectedRole };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    try { localStorage.setItem('pulseunit_cache_owner', currentUser.id); } catch (e) {}
     startPresenceHeartbeat();
     document.getElementById('auth-modal').style.display = 'none';
     updateHeaderUser();
@@ -308,6 +310,7 @@ window.loginUser = async function loginUser() {
             if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
             currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
             sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+            try { localStorage.setItem('pulseunit_cache_owner', currentUser.id); } catch (e) {}
             document.getElementById('auth-modal').style.display = 'none';
             document.getElementById('auth-change-pin-modal').style.display = 'flex';
             return;
@@ -379,6 +382,7 @@ window.loginUser = async function loginUser() {
     }
     currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+    try { localStorage.setItem('pulseunit_cache_owner', currentUser.id); } catch (e) {}
     if (document.getElementById('auth-remember')?.checked) {
         localStorage.setItem('pulseunit_autologin', JSON.stringify({
             userId,
@@ -420,6 +424,7 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
         // L'admin obtient un currentUser complet pour accéder à toutes les features
         currentUser = { id: 'admin_view', firstName: 'Admin', lastName: 'PulseUnit', role: 'ide' };
         sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
+        try { localStorage.setItem('pulseunit_cache_owner', currentUser.id); } catch (e) {}
         // Ajouter l'admin à la garde active pour bypasser les gardes-checks
         initShiftData(currentShiftKey);
         if (!shiftHistory[currentShiftKey].activeStaffIds.includes('admin_view')) {
@@ -467,7 +472,7 @@ window.changeTempPin = async function changeTempPin() {
  * sur un autre compte ouvert sur le même navigateur (cross-account leak).
  */
 window._resetUserScopedState = function _resetUserScopedState() {
-    // 1. Caches localStorage user-spécifiques
+    // 1. Caches localStorage user-spécifiques + tag d'ownership
     [
         'pulseunit_plan_states', 'pulseunit_plan_regime', 'pulseunit_plan_year',
         'pulseunit_plan_locked', 'pulseunit_plan_locked_months',
@@ -475,7 +480,8 @@ window._resetUserScopedState = function _resetUserScopedState() {
         'pulseunit_plan_debit_credit', 'pulseunit_plan_profile',
         'pulseunit_user_profile',
         'pu_messages_cache', 'pu_notifs_cache', 'pu_bednotes_cache',
-        'pu_msg_drafts'
+        'pu_msg_drafts',
+        'pulseunit_cache_owner'  // tag d'ownership des caches ci-dessus
     ].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     // 2. Variables in-memory (let module-level → accessible across classic scripts)
     try { if (typeof planStates       !== 'undefined') planStates = {}; }       catch (e) {}
