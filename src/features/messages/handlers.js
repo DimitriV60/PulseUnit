@@ -416,7 +416,13 @@ window.editMessage = function editMessage(convId, msgId) {
     renderConvList();
 };
 
-const _REACTION_SET = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+const _REACTION_SET = [
+    '👍', '👎', '❤️', '🔥', '🎉', '👏',
+    '😂', '🤣', '😅', '😊', '😍', '🥰',
+    '😮', '😯', '🤔', '😴', '😢', '😭',
+    '😡', '🤯', '🤮', '🥳', '🤝', '🙏',
+    '✅', '❌', '⚠️', '💯', '⭐', '💪'
+];
 window.MESSAGE_REACTIONS = _REACTION_SET;
 
 window.toggleReaction = function toggleReaction(convId, msgId, emoji) {

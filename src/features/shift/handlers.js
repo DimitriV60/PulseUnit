@@ -274,6 +274,33 @@ window.triggerCreateNew = function triggerCreateNew(val, type, e) {
     openModalSpec(val, type);
 };
 
+/**
+ * Self-assign IDE Tech : un IDE clique son bouton et se positionne lui-même
+ * dans le slot Tech (sans passer par la barre de recherche). Demandé 2026-05-03.
+ * Si déjà assigné, ouvre les tâches directement.
+ */
+window.selfAssignTech = function selfAssignTech() {
+    if (!currentUser) return showToast('Connectez-vous d\'abord');
+    if (currentUser.role !== 'ide' && !isAdmin()) return showToast('⛔ Réservé aux IDE');
+    initShiftData(currentShiftKey);
+    if (isShiftLocked(currentShiftKey)) return showToast('🔒 Garde verrouillée');
+    const h = shiftHistory[currentShiftKey];
+    if (h.techIdeId === currentUser.id) {
+        if (typeof window.openTasks === 'function') window.openTasks();
+        return;
+    }
+    if (h.techIdeId) {
+        const taken = roster.find(r => r.id === h.techIdeId);
+        return showToast(`⛔ Slot déjà pris par ${taken ? taken.firstName : 'quelqu\'un'}`);
+    }
+    h.techIdeId = currentUser.id;
+    if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
+    saveData();
+    renderApp();
+    showToast('✅ Vous êtes IDE Tech — checklist disponible');
+    if (typeof window.openTasks === 'function') setTimeout(() => window.openTasks(), 250);
+};
+
 function assignSpecDirect(type, id) {
     initShiftData(currentShiftKey);
     if (isShiftLocked(currentShiftKey)) return;

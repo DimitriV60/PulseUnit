@@ -19,9 +19,12 @@ var _lastBedTapTime = {};
 var _currentNotesBed = null;
 var _activeNoteSlot = 0;
 const BED_NOTE_TTL = 7 * 24 * 60 * 60 * 1000;
-const NOTE_SLOTS = 5;
+// 2026-05-03 — passé de 5 à 7 slots (demande Dimitri pour la case IDE Tech).
+const NOTE_SLOTS = 7;
 const SHARED_KEY = 'sharedSurvey';
+const TECH_KEY = 'techNotes'; // notes techniques chambres : visibles uniquement par l'IDE Tech courant
 const LEGACY_SHARED_KEYS = ['__shared_survey__']; // anciennes versions — Firestore rejette __.*__
+const TECH_BED_ID = 'tech_ide'; // bedId virtuel pour les notes personnelles de l'IDE Tech
 
 const SURVEY_ROWS = [
     { id: 'temp',    label: 'Température',       unit: '°C',       group: 'hemo'  },
@@ -506,16 +509,39 @@ window.openBedNote = function openBedNote(bedId) {
                   || h.techIdeId === currentUser.id
                   || meds.includes(currentUser.id);
     if (!isActive && !isAdmin()) { showToast('⛔ Vous devez être de garde pour laisser une note'); return; }
-    const d = h.assignments?.[bedId] || {};
-    const isAssigned = d.ide === currentUser.id || d.as === currentUser.id;
-    // 2026-05-03 — l'admin doit aussi s'assigner explicitement au lit pour
-    // éviter les notes écrites par mégarde sur un lit non-pris en charge.
-    // (Bug signalé : 'je peux écrire dans des chambres où je ne suis pas positionné')
-    if (!isAssigned) { showToast('⛔ Vous ne pouvez noter que les lits où vous êtes affecté'); return; }
+
+    // 2026-05-03 — bedId virtuel TECH_BED_ID = case IDE Tech : seul l'IDE Tech
+    // assigné à la garde (ou admin) peut ouvrir.
+    if (bedId === TECH_BED_ID) {
+        if (currentUser.id !== h.techIdeId && !isAdmin()) {
+            showToast('⛔ Réservé à l\'IDE Tech de cette garde');
+            return;
+        }
+    } else {
+        const d = h.assignments?.[bedId] || {};
+        const isAssigned = d.ide === currentUser.id || d.as === currentUser.id;
+        const isTechIde = h.techIdeId === currentUser.id;  // IDE Tech voit les chambres en mode tech
+        if (!isAssigned && !isTechIde) { showToast('⛔ Vous ne pouvez noter que les lits où vous êtes affecté'); return; }
+    }
     _currentNotesBed = bedId;
-    const parts = bedId.split('-');
-    const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
+    let label;
+    if (bedId === TECH_BED_ID) {
+        label = 'IDE TECH — Mes notes';
+    } else {
+        const parts = bedId.split('-');
+        label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
+    }
     document.getElementById('bed-note-bed-label').textContent = label;
+    // 2026-05-03 — pour tech_ide on cache la section surveillance horaire
+    // (vitals n'ont pas de sens sur la case IDE Tech). Pour les chambres on
+    // l'affiche normalement.
+    const surveyHeader = document.getElementById('bed-note-survey-section');
+    const surveyGrid = document.getElementById('bed-note-survey');
+    const surveyMeta = document.getElementById('bed-note-survey-meta');
+    const showSurvey = bedId !== TECH_BED_ID;
+    if (surveyHeader) surveyHeader.style.display = showSurvey ? '' : 'none';
+    if (surveyGrid)   surveyGrid.style.display   = showSurvey ? '' : 'none';
+    if (surveyMeta && !showSurvey) surveyMeta.style.display = 'none';
     _renderSurveyGridUI();
     _loadNoteSlot(_activeNoteSlot);
     document.getElementById('bed-note-modal').style.display = 'flex';

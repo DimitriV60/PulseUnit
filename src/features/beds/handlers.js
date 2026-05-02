@@ -242,10 +242,23 @@ window.renderApp = function renderApp() {
         <div style="height:5px; background:var(--border); border-radius:3px; margin:4px 0 8px;">
           <div style="height:100%; width:${_pct}%; background:var(--tech); border-radius:3px; transition:width 0.3s;"></div>
         </div>
-        <button onclick="openTasks()" style="width:100%; padding:7px; background:var(--tech-glow); border:1px solid rgba(168,85,247,0.4); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.75rem; cursor:pointer; transition:opacity 0.2s;">
+        <button onclick="openTasks()" style="width:100%; padding:7px; background:var(--tech-glow); border:1px solid rgba(168,85,247,0.4); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.75rem; cursor:pointer; transition:opacity 0.2s; margin-bottom:5px;">
           ${_pct === 100 ? '\u2705 Toutes valid\u00E9es' : 'Ouvrir mes t\u00E2ches \u2192'}
         </button>
-      ` : `<div class="search-box" style="margin-top:auto;">${locked ? '---' : `<input type="text" id="search-tech" class="special-input" placeholder="\uD83D\uDD0D Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off"><div class="suggestions" id="sugg-tech"></div>`}</div>`}
+        ${(currentUser && (currentUser.id === h.techIdeId || isAdmin())) ? `
+          <button onclick="openBedNote('tech_ide')" style="width:100%; padding:7px; background:transparent; border:1px solid var(--tech); color:var(--tech); border-radius:6px; font-weight:900; font-size:0.72rem; cursor:pointer;">
+            \uD83D\uDCDD Mes notes garde (7 gardes)
+          </button>
+        ` : ''}
+      ` : `<div class="search-box" style="margin-top:auto;">${locked ? '---' : `
+        ${currentUser && currentUser.role === 'ide' ? `
+          <button onclick="selfAssignTech()" style="width:100%; padding:10px; background:var(--tech); color:#fff; border:none; border-radius:8px; font-weight:900; font-size:0.82rem; cursor:pointer; margin-bottom:6px;">
+            \uD83D\uDC4B Me placer comme IDE Tech
+          </button>
+        ` : ''}
+        <input type="text" id="search-tech" class="special-input" placeholder="\uD83D\uDD0D Nom IDE..." oninput="doSearch('tech',this.value)" autocomplete="off">
+        <div class="suggestions" id="sugg-tech"></div>
+      `}</div>`}
     </div>`;
 
     const m2 = roster.find(r => r.id === ms[2]);
