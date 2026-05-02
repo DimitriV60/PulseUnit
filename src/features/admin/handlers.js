@@ -97,15 +97,19 @@ window.renderAdminShiftCandidates = function renderAdminShiftCandidates() {
     ].filter(Boolean));
 
     const q = (document.getElementById('admin-shift-add-search')?.value || '').toLowerCase().trim();
+    // 2026-05-03 \u2014 n'affiche les candidats QUE si l'utilisateur a tap\u00e9 une recherche.
+    // Sinon (initial ou apr\u00e8s ajout) \u2192 liste vid\u00e9e pour ne pas encombrer le panneau.
+    if (!q) {
+        cont.innerHTML = '';
+        return;
+    }
     const candidates = roster
         .filter(r => !inGarde.has(r.id))
-        .filter(r => !q || (r.firstName + ' ' + r.lastName).toLowerCase().includes(q))
+        .filter(r => (r.firstName + ' ' + r.lastName).toLowerCase().includes(q))
         .sort((a, b) => (a.lastName || '').localeCompare(b.lastName || ''));
 
     if (candidates.length === 0) {
-        cont.innerHTML = q
-            ? '<div style="font-size:0.75rem; color:var(--text-muted); padding:8px 0; text-align:center;">Aucun r\u00e9sultat.</div>'
-            : '';
+        cont.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:8px 0; text-align:center;">Aucun r\u00e9sultat.</div>';
         return;
     }
     const ROLE_COLORS = { ide: 'var(--ide)', as: 'var(--as)', med: 'var(--med)', tech: 'var(--tech)' };
@@ -143,6 +147,13 @@ window.adminAddToShift = function adminAddToShift(userId) {
     }
     showToast(`\u2705 ${p.firstName} ${(p.lastName || '').toUpperCase()} ajout\u00e9 \u00e0 la garde`);
     if (typeof renderApp === 'function') renderApp();
+    // Vide la barre de recherche + ferme la liste des candidats
+    const searchEl = document.getElementById('admin-shift-add-search');
+    if (searchEl) searchEl.value = '';
+    const clearBtn = document.getElementById('admin-shift-add-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    const candidatesEl = document.getElementById('admin-shift-candidates');
+    if (candidatesEl) candidatesEl.innerHTML = '';
     window.renderAdminCurrentShift();
 };
 

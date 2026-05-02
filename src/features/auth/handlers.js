@@ -437,6 +437,7 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
         updateAdminPanelBtn();
         renderAdminResets();
         renderAdminUsers();
+        if (typeof window.renderAdminCurrentShift === 'function') window.renderAdminCurrentShift();
         document.getElementById('admin-panel-modal').style.display = 'flex';
     } catch (err) {
         console.error('Erreur login admin:', err);
