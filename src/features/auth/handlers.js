@@ -214,6 +214,11 @@ window.registerUser = async function registerUser() {
     const wantsNotif = document.getElementById('reg-notif-permission')?.checked !== false;
     if (!fn || !ln) return alert('Veuillez entrer votre prénom et nom.');
     if (fn.length > 50 || ln.length > 50) return alert('Prénom et nom ne peuvent pas dépasser 50 caractères.');
+    // P2.5 — n'accepte que les lettres (toutes langues), espaces, tirets, apostrophes
+    const NAME_RE = /^[\p{L}][\p{L}\s'-]{0,49}$/u;
+    if (!NAME_RE.test(fn) || !NAME_RE.test(ln)) {
+        return alert('Le prénom et le nom ne doivent contenir que des lettres, espaces, tirets ou apostrophes.');
+    }
     if (!selectedRole) return alert('Veuillez choisir votre rôle.');
     if (!agentType) return alert('Veuillez choisir votre type d\'agent (jour fixe, nuit fixe ou alterné).');
     if (!/^\d{6}$/.test(pin)) return alert('Le code doit contenir exactement 6 chiffres.');
@@ -325,6 +330,7 @@ window.loginUser = async function loginUser() {
         }
     }
     if (!pinOk) {
+        if (window.customAuth) window.customAuth.audit('login_fail', userId);
         let tries;
         if (AUTH_DOC && window.db) {
             try {
@@ -363,6 +369,7 @@ window.loginUser = async function loginUser() {
     if (window.customAuth) {
         const cr = await window.customAuth.loginWithPin(userId, pin);
         if (!cr.ok && !cr.fallback) console.warn('[login] custom token failed', cr);
+        window.customAuth.audit('login_ok', userId);
     }
     currentUser = { id: userId, firstName: user.firstName, lastName: user.lastName, role: user.role };
     sessionStorage.setItem('pulseunit_current_user', JSON.stringify(currentUser));
@@ -400,6 +407,7 @@ window.loginAdminFromAuth = async function loginAdminFromAuth() {
         if (window.customAuth) {
             const cr = await window.customAuth.loginAdmin(user, pass);
             if (!cr.ok && !cr.fallback) console.warn('[admin-login] custom token failed', cr);
+            window.customAuth.audit('admin_login_ok');
         }
         setAdminSession(true);
         // L'admin obtient un currentUser complet pour accéder à toutes les features
@@ -608,6 +616,7 @@ window.adminSetTempPin = async function adminSetTempPin(userId) {
     );
     if (RESETS_DOC) await RESETS_DOC.set({ requests: resetRequests });
     renderAdminResets();
+    if (window.customAuth) window.customAuth.audit('pin_reset_set', userId);
     const u = authUsers[userId];
     alert(`Code provisoire "${tempPin}" défini pour ${u.firstName} ${u.lastName}.\nDemandez-lui de se connecter avec ce code.\nValide 1 heure.`);
 };
@@ -650,6 +659,11 @@ window.adminCreateUser = async function adminCreateUser() {
     const pin = document.getElementById('admin-new-pin').value.trim();
     if (!fn || !ln)      return alert('Veuillez saisir le prénom et le nom.');
     if (fn.length > 50 || ln.length > 50) return alert('Prénom et nom ne peuvent pas dépasser 50 caractères.');
+    // P2.5 — validation regex (cohérent avec inscription utilisateur)
+    const ADMIN_NAME_RE = /^[\p{L}][\p{L}\s'-]{0,49}$/u;
+    if (!ADMIN_NAME_RE.test(fn) || !ADMIN_NAME_RE.test(ln)) {
+        return alert('Le prénom et le nom ne doivent contenir que des lettres, espaces, tirets ou apostrophes.');
+    }
     if (!_adminNewRole)  return alert('Veuillez choisir un rôle.');
     if (!/^\d{6}$/.test(pin)) return alert('Le code PIN doit contenir exactement 6 chiffres.');
     const already = Object.values(authUsers).find(u =>
@@ -683,6 +697,7 @@ window.adminCreateUser = async function adminCreateUser() {
     adminSelectNewRole('');
     _adminNewRole = '';
     renderAdminUsers();
+    if (window.customAuth) window.customAuth.audit('user_create', rosterId, { firstName: fn, role: _adminNewRole });
     showToast(`✅ Compte créé pour ${fn} ${ln.toUpperCase()}`);
 };
 
@@ -694,6 +709,7 @@ window.adminUnlockUser = async function adminUnlockUser(userId) {
     authUsers[userId].blockedAt = null;
     if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     renderAdminUsers();
+    if (window.customAuth) window.customAuth.audit('user_unlock', userId);
     showToast(`🔓 Compte débloqué : ${u.firstName} ${u.lastName.toUpperCase()}`);
 };
 
@@ -703,18 +719,91 @@ window.adminDeleteUser = async function adminDeleteUser(userId) {
     const src = authU || rosterU;
     if (!src) return;
     const name = `${src.firstName} ${(src.lastName || '').toUpperCase()}`;
-    if (!confirm(`Supprimer ${name} ?\n\nCette action est irréversible.`)) return;
+    // P2.4 — double confirmation pour suppression RGPD (cascade delete sur 7 collections)
+    if (!confirm(`Supprimer ${name} ?\n\nCette action est IRRÉVERSIBLE et purge :\n• le compte\n• le planning\n• les notes de lit\n• les notifications\n• les messages\n• la présence\n• le profil agent`)) return;
+
+    // 1. authUsers (Firestore + local)
     if (authU) {
         delete authUsers[userId];
         if (AUTH_DOC) await AUTH_DOC.set({ users: authUsers });
     }
+
+    // 2. roster + shiftHistory
     roster = roster.filter(r => r.id !== userId);
+    Object.keys(shiftHistory).forEach(k => {
+        const sh = shiftHistory[k];
+        if (sh && Array.isArray(sh.activeStaffIds)) {
+            sh.activeStaffIds = sh.activeStaffIds.filter(id => id !== userId);
+        }
+    });
     saveData();
+
+    // 3. présence
     if (PRESENCE_DOC) {
         try { await PRESENCE_DOC.set({ [userId]: firebase.firestore.FieldValue.delete() }, { merge: true }); } catch (e) {}
     }
+
+    // 4. plans personnels
+    if (window.PLANS_DOC) {
+        try { await window.PLANS_DOC.set({ [userId]: firebase.firestore.FieldValue.delete() }, { merge: true }); } catch (e) { console.warn('plans purge', e); }
+    }
+
+    // 5. profil agent (jour-fixe/nuit-fixe/alterné)
+    if (window.PROFILES_DOC) {
+        try { await window.PROFILES_DOC.set({ [userId]: firebase.firestore.FieldValue.delete() }, { merge: true }); } catch (e) {}
+    } else if (window.PLANS_DOC) {
+        // Si profil sous PLANS_DOC.{userId}.profile (ancien schéma)
+        try { await window.PLANS_DOC.update({ [`${userId}.profile`]: firebase.firestore.FieldValue.delete() }); } catch (e) {}
+    }
+
+    // 6. bed-notes (text par user — sharedSurvey reste collectif)
+    if (window.BEDNOTES_DOC && window.bedNotesData) {
+        try {
+            await window.BEDNOTES_DOC.set({ [userId]: firebase.firestore.FieldValue.delete() }, { merge: true });
+        } catch (e) { console.warn('bednotes purge', e); }
+    }
+
+    // 7. notifications
+    if (window.NOTIFS_DOC) {
+        try { await window.NOTIFS_DOC.set({ [userId]: firebase.firestore.FieldValue.delete() }, { merge: true }); } catch (e) {}
+    }
+
+    // 8. messages — toutes les conversations dont userId fait partie
+    if (window.MESSAGES_DOC && window.messagesData) {
+        try {
+            const updates = {};
+            Object.keys(window.messagesData || {}).forEach(convId => {
+                if (convId.split('__').includes(userId)) {
+                    updates[convId] = firebase.firestore.FieldValue.delete();
+                }
+            });
+            if (Object.keys(updates).length > 0) {
+                await window.MESSAGES_DOC.set(updates, { merge: true });
+            }
+        } catch (e) { console.warn('messages purge', e); }
+    }
+
+    // 9. demandes reset
+    if (typeof resetRequests !== 'undefined' && Array.isArray(resetRequests)) {
+        resetRequests = resetRequests.filter(r => r.userId !== userId);
+        if (RESETS_DOC) {
+            try { await RESETS_DOC.set({ requests: resetRequests }); } catch (e) {}
+        }
+    }
+
+    // 10. swap requests
+    if (window.SWAP_DOC && Array.isArray(window.swapRequests)) {
+        try {
+            window.swapRequests = window.swapRequests.filter(s =>
+                s.fromUserId !== userId && s.toUserId !== userId && s.userId !== userId
+            );
+            await window.SWAP_DOC.set({ requests: window.swapRequests });
+        } catch (e) { console.warn('swaps purge', e); }
+    }
+
     renderAdminUsers();
-    showToast(`🗑️ Compte de ${name} supprimé.`);
+    if (window.customAuth) window.customAuth.audit('user_delete', userId, { name });
+    showToast(`🗑️ Compte de ${name} supprimé (purge RGPD complète).`);
 };
 
 window.openAdminUsersList = function openAdminUsersList() {

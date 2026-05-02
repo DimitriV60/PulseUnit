@@ -9,7 +9,17 @@
       ".firebaserc",
       "CLAUDE.md",
       "README.md",
-      ".git/**"
+      "SECURITY_MIGRATION.md",
+      "changelog.md",
+      "ANNUAIRE.md",
+      "CR-session-*.md",
+      "firestore.rules",
+      "firestore.rules.next",
+      "index.backup.*.html",
+      "worker/**",
+      ".git/**",
+      ".github/**",
+      ".gitignore"
     ],
     "headers": [
       {
