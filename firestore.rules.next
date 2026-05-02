@@ -116,10 +116,12 @@ service cloud.firestore {
       allow write: if isRealUser();
     }
 
-    // ── Audit log (P2.1) — append-only, lecture admin
-    match /pulseunit/auditlog/{entryId} {
+    // ── Audit log (P2.1) — collection top-level append-only, lecture admin.
+    // Écrit uniquement par le Worker via Service Account (les rules ne s'appliquent
+    // pas au SA). Le client ne doit JAMAIS écrire ici.
+    match /auditlog/{entryId} {
       allow read:  if isAdmin();
-      allow write: if false;  // écrit uniquement par Cloud Function ou Worker via SA
+      allow write: if false;
     }
 
     // ── Config admin — lecture admin uniquement, écriture jamais depuis client

@@ -739,6 +739,91 @@ async function handleAdminLogin({ env, body, origin }) {
   return jsonResponse({ token, uid: 'admin_view', admin: true }, 200, origin);
 }
 
+// ── /audit endpoint (P2.1 — RGPD Art. 32 traçabilité) ──────────────────────
+// Append-only audit log dans pulseunit/auditlog/{autoId}. Écrit via SA (les
+// rules empêchent toute écriture client). Le client envoie {actor, action,
+// target?, details?}. Le Worker ajoute timestamp serveur, IP, UA.
+//
+// Note threat model : on fait confiance au client pour 'actor' — sinon il
+// faudrait vérifier un Firebase ID Token via JWKS (overkill pour le périmètre
+// alpha 50 agents). Si XSS sur le domaine, l'intégrité du log est compromise
+// de toute façon ; ce log est destiné aux opérations normales.
+async function _firestoreCreateAutoId(env, projectId, collectionPath, fields) {
+  const token = await _getFirestoreAccessToken(env);
+  if (!token) return { ok: false, err: 'no_token' };
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionPath}`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ fields })
+  });
+  if (!resp.ok) {
+    const bodyText = await resp.text();
+    console.error('[firestore_create_error]', collectionPath, resp.status, bodyText.slice(0, 300));
+    return { ok: false, err: 'http_' + resp.status, body: bodyText.slice(0, 300) };
+  }
+  return { ok: true };
+}
+
+function _firestoreWrap(value) {
+  if (value === null || value === undefined) return { nullValue: null };
+  if (typeof value === 'string')  return { stringValue: value };
+  if (typeof value === 'boolean') return { booleanValue: value };
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  if (Array.isArray(value)) return { arrayValue: { values: value.map(_firestoreWrap) } };
+  if (typeof value === 'object') {
+    const fields = {};
+    for (const [k, v] of Object.entries(value)) fields[k] = _firestoreWrap(v);
+    return { mapValue: { fields } };
+  }
+  return { stringValue: String(value) };
+}
+
+const VALID_AUDIT_ACTIONS = new Set([
+  'login_ok', 'login_fail', 'login_blocked',
+  'admin_login_ok', 'admin_login_fail',
+  'register', 'pin_change', 'pin_reset_request', 'pin_reset_set',
+  'user_unlock', 'user_delete', 'user_create',
+  'usip_lock_toggle', 'admin_pass_change',
+  'rgpd_export', 'rgpd_purge'
+]);
+
+async function handleAudit({ env, body, origin, request }) {
+  if (!env.FIREBASE_SA_KEY) {
+    return jsonResponse({ error: 'auth_not_configured' }, 503, origin);
+  }
+  const { actor, action, target, details } = body || {};
+  if (!action || !VALID_AUDIT_ACTIONS.has(action)) {
+    return jsonResponse({ error: 'invalid_action' }, 400, origin);
+  }
+  // Validation taille / types pour éviter pollution
+  const safeActor = typeof actor === 'string' ? actor.slice(0, 100) : null;
+  const safeTarget = typeof target === 'string' ? target.slice(0, 100) : null;
+  const safeDetails = (details && typeof details === 'object')
+    ? JSON.stringify(details).slice(0, 500)
+    : (typeof details === 'string' ? details.slice(0, 500) : null);
+
+  const fields = {
+    actor:     _firestoreWrap(safeActor),
+    action:    _firestoreWrap(action),
+    target:    _firestoreWrap(safeTarget),
+    details:   _firestoreWrap(safeDetails),
+    ip:        _firestoreWrap(request.headers.get('CF-Connecting-IP') || 'unknown'),
+    userAgent: _firestoreWrap((request.headers.get('User-Agent') || '').slice(0, 200)),
+    at:        _firestoreWrap(new Date().toISOString())
+  };
+
+  // Collection top-level 'auditlog' — la doc-path 'pulseunit' est une collection,
+  // pas un document, donc on ne peut pas créer un sub-collection auditlog dessous.
+  const res = await _firestoreCreateAutoId(env, 'pulseunit-c9c5c', 'auditlog', fields);
+  return jsonResponse(res, res.ok ? 200 : 500, origin);
+}
+
 // ── Routeur principal ───────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
@@ -770,6 +855,7 @@ export default {
     // Routes
     if (path === '/login')        return handleLogin({ env, body, origin });
     if (path === '/admin-login')  return handleAdminLogin({ env, body, origin });
+    if (path === '/audit')        return handleAudit({ env, body, origin, request });
 
     // /scan ou / (legacy) → scan Vision
     const validationError = _validateScanParams(body);

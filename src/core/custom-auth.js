@@ -97,6 +97,20 @@
     /** Déconnexion : revient sur auth anonyme (pour préserver les reads Firestore actifs). */
     async logout() {
       await _ensureAnonFallback();
+    },
+
+    /**
+     * Audit log — append-only via Worker /audit (P2.1).
+     * Fire-and-forget : les erreurs ne doivent pas bloquer le user flow.
+     * action ∈ VALID_AUDIT_ACTIONS côté worker.
+     */
+    audit(action, target, details) {
+      try {
+        const actor = (window.currentUser && window.currentUser.id) || null;
+        // Pas d'await : le journal est best-effort
+        _post('/audit', { actor, action, target: target || null, details: details || null })
+          .catch(e => console.warn('[audit] failed', action, e));
+      } catch (e) { /* never block UI */ }
     }
   };
 })();
