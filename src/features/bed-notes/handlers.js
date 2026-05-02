@@ -209,6 +209,85 @@ function _saveSharedSurvey(bedId, slot, survey, prevCreatedAt) {
     _persistSharedAll(all);
 }
 
+// --- Tech notes par chambre (visibles uniquement par l'IDE Tech courant) ---
+// Schéma : bedNotesData[TECH_KEY][bedId]['slot_X'] = {
+//   text, createdAt, updatedAt, lastEditorId, lastEditorName,
+//   editLog: [ { at, byId, byName, preview }, ... ]  (capé à 20 entrées)
+// }
+// Demande Dimitri 2026-05-03 — heurodatage log + accès restreint au tech IDE.
+
+function _getTechAll() {
+    if (!window.bedNotesData) window.bedNotesData = {};
+    if (!window.bedNotesData[TECH_KEY]) window.bedNotesData[TECH_KEY] = {};
+    // Purge entries > TTL
+    const cutoff = Date.now() - BED_NOTE_TTL;
+    const all = window.bedNotesData[TECH_KEY];
+    Object.keys(all).forEach(bedId => {
+        const slots = all[bedId];
+        Object.keys(slots).forEach(slotKey => {
+            if ((slots[slotKey].createdAt || 0) < cutoff) delete slots[slotKey];
+        });
+        if (Object.keys(slots).length === 0) delete all[bedId];
+    });
+    return all;
+}
+
+function _getTechNote(bedId, slot) {
+    const all = _getTechAll();
+    const bed = all[bedId];
+    if (!bed) return null;
+    return bed['slot_' + slot] || null;
+}
+
+function _persistTechAll(all) {
+    if (!window.bedNotesData) window.bedNotesData = {};
+    window.bedNotesData[TECH_KEY] = all;
+    try { localStorage.setItem('pu_bn_tech', JSON.stringify(all)); } catch (e) {}
+    if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
+        window._bedNotesSavePending = true;
+        BEDNOTES_DOC.set({ [TECH_KEY]: all }, { merge: true })
+            .then(() => { window._bedNotesSavePending = false; })
+            .catch(e => { window._bedNotesSavePending = false; console.warn('Bed tech notes sync error', e); });
+    }
+}
+
+function _saveTechNote(bedId, slot, text) {
+    if (!currentUser) return;
+    const all = _getTechAll();
+    if (!all[bedId]) all[bedId] = {};
+    const slotKey = 'slot_' + slot;
+    const trimmed = (text || '').trim();
+    if (!trimmed) {
+        // Supprime la note si vide
+        delete all[bedId][slotKey];
+        if (Object.keys(all[bedId]).length === 0) delete all[bedId];
+    } else {
+        const now = Date.now();
+        const prev = all[bedId][slotKey];
+        const editLog = (prev && Array.isArray(prev.editLog)) ? prev.editLog.slice() : [];
+        // Append nouvelle entrée si le texte a changé
+        if (!prev || prev.text !== trimmed) {
+            editLog.push({
+                at: now,
+                byId: currentUser.id,
+                byName: `${currentUser.firstName || ''} ${(currentUser.lastName || '').toUpperCase()}`.trim(),
+                preview: trimmed.slice(0, 80)
+            });
+            // Cap à 20 dernières entrées pour éviter croissance sans limite
+            if (editLog.length > 20) editLog.splice(0, editLog.length - 20);
+        }
+        all[bedId][slotKey] = {
+            text: trimmed,
+            createdAt: prev ? prev.createdAt : now,
+            updatedAt: now,
+            lastEditorId: currentUser.id,
+            lastEditorName: `${currentUser.firstName || ''} ${(currentUser.lastName || '').toUpperCase()}`.trim(),
+            editLog
+        };
+    }
+    _persistTechAll(all);
+}
+
 // --- Migration des survey privés vers le partagé ----------------------------
 
 function _migratePrivateSurveysToShared(userNotes) {
@@ -300,6 +379,9 @@ window.loadBedNotes = async function loadBedNotes() {
             if (window.bedNotesData[SHARED_KEY]) {
                 try { localStorage.setItem('pu_bn_shared', JSON.stringify(window.bedNotesData[SHARED_KEY])); } catch (e) {}
             }
+            if (window.bedNotesData[TECH_KEY]) {
+                try { localStorage.setItem('pu_bn_tech', JSON.stringify(window.bedNotesData[TECH_KEY])); } catch (e) {}
+            }
         }
     } catch (e) { console.warn('loadBedNotes error', e); }
 };
@@ -312,6 +394,9 @@ window.applyBedNotesSnapshot = function applyBedNotesSnapshot(data) {
     }
     if (data[SHARED_KEY]) {
         try { localStorage.setItem('pu_bn_shared', JSON.stringify(data[SHARED_KEY])); } catch (e) {}
+    }
+    if (data[TECH_KEY]) {
+        try { localStorage.setItem('pu_bn_tech', JSON.stringify(data[TECH_KEY])); } catch (e) {}
     }
     if (_currentNotesBed) {
         _renderNoteTabsUI();
@@ -461,6 +546,37 @@ function _loadNoteSlot(slot) {
             tsEl.style.display = 'none';
         }
     }
+    // 2026-05-03 — Tech notes : visible uniquement si user est l'IDE Tech courant
+    // (ou admin) ET on est sur une chambre (pas TECH_BED_ID).
+    const techSection = document.getElementById('bed-note-tech-section');
+    if (techSection) {
+        const isTechIde = currentUser && shiftHistory[currentShiftKey] &&
+                          shiftHistory[currentShiftKey].techIdeId === currentUser.id;
+        const showTech = (_currentNotesBed !== TECH_BED_ID) && (isTechIde || (typeof isAdmin === 'function' && isAdmin()));
+        techSection.style.display = showTech ? '' : 'none';
+        if (showTech) {
+            const tArea = document.getElementById('bed-note-tech-text');
+            const tLog = document.getElementById('bed-note-tech-editlog');
+            const tn = _getTechNote(_currentNotesBed, slot);
+            if (tArea) tArea.value = tn ? (tn.text || '') : '';
+            if (tLog) {
+                const log = (tn && Array.isArray(tn.editLog)) ? tn.editLog : [];
+                if (log.length === 0) {
+                    tLog.style.display = 'none';
+                } else {
+                    tLog.style.display = '';
+                    const reversed = log.slice().reverse(); // plus récent en haut
+                    tLog.innerHTML = '<div style="font-weight:900; color:var(--tech); margin-bottom:4px;">📜 Historique modifications</div>' +
+                        reversed.slice(0, 10).map(e => {
+                            const dt = new Date(e.at || 0);
+                            const stamp = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}`;
+                            const by = (e.byName || e.byId || '?').toString().slice(0, 30);
+                            return `<div style="padding:3px 0; border-top:1px dashed var(--border);">⏱ ${stamp} · <strong>${by}</strong></div>`;
+                        }).join('');
+                }
+            }
+        }
+    }
     _renderNoteTabsUI();
 }
 
@@ -570,16 +686,35 @@ window.saveBedNote = function saveBedNote() {
         notes[key] = { text, createdAt: prev ? prev.createdAt : now, updatedAt: now };
     }
     _saveBedNotes(notes);
-    // 2. Survey partagé
-    const prevShared = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
-    _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
+    // 2. Survey partagé (uniquement pour les vraies chambres, pas tech_ide)
+    let savedTech = false;
+    if (_currentNotesBed !== TECH_BED_ID) {
+        const prevShared = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
+        _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, survey, prevShared ? prevShared.createdAt : null);
+        // 3. Tech note — uniquement si IDE Tech courant + section visible
+        const techSection = document.getElementById('bed-note-tech-section');
+        if (techSection && techSection.style.display !== 'none') {
+            const techArea = document.getElementById('bed-note-tech-text');
+            if (techArea) {
+                const techText = (techArea.value || '').trim();
+                const prevTech = _getTechNote(_currentNotesBed, _activeNoteSlot);
+                const prevTechText = prevTech ? (prevTech.text || '') : '';
+                if (techText !== prevTechText) {
+                    _saveTechNote(_currentNotesBed, _activeNoteSlot, techText);
+                    savedTech = true;
+                }
+            }
+        }
+    }
     // Refresh in-place sans fermer le modal — l'utilisateur reste dans la note
     _loadNoteSlot(_activeNoteSlot);
     if (typeof renderApp === 'function') renderApp();
     let msg;
-    if (hasText && hasSurvey) msg = `✅ Enregistré — 📝 obs. + 📋 ${surveyCount} valeur${surveyCount > 1 ? 's' : ''}`;
-    else if (hasSurvey) msg = `✅ 📋 Surveillance enregistrée (${surveyCount} valeur${surveyCount > 1 ? 's' : ''})`;
-    else if (hasText) msg = '✅ 📝 Observations enregistrées';
+    const parts = [];
+    if (hasText) parts.push('📝 obs.');
+    if (hasSurvey) parts.push(`📋 ${surveyCount}v`);
+    if (savedTech) parts.push('🛠 tech');
+    if (parts.length > 0) msg = '✅ Enregistré — ' + parts.join(' · ');
     else msg = '🧹 Note vidée';
     showToast(msg);
 };

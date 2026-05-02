@@ -579,6 +579,16 @@
           <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; margin-top:2px;">🔒 privées</div>
         </div>
         <textarea id="bed-note-text" rows="6" placeholder="Transmissions, événements, traitements (visibles par vous seul)..." autocomplete="off" autocapitalize="sentences" spellcheck="true" data-form-type="other" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-size:0.95rem; font-weight:600; resize:vertical; min-height:120px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.6;"></textarea>
+
+        <!-- 2026-05-03 — Section Tech Notes par chambre (visible IDE Tech only) -->
+        <div id="bed-note-tech-section" style="display:none; margin-top:14px;">
+          <div style="margin:6px 0 4px;">
+            <div style="font-size:0.78rem; font-weight:900; color:var(--tech); letter-spacing:0.5px;">🛠 NOTES TECH</div>
+            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; margin-top:2px;">🔐 visibles uniquement par l'IDE Tech courant — log des modifs</div>
+          </div>
+          <textarea id="bed-note-tech-text" rows="4" placeholder="Stock matériel, intervention biomed, particularités techniques..." autocomplete="off" autocapitalize="sentences" spellcheck="true" data-form-type="other" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--tech); background:rgba(168,85,247,0.06); color:var(--text); font-size:0.92rem; font-weight:600; resize:vertical; min-height:80px; font-family:inherit; box-sizing:border-box; outline:none; line-height:1.5;"></textarea>
+          <div id="bed-note-tech-editlog" style="margin-top:6px; font-size:0.7rem; color:var(--text-muted); font-weight:700; padding:6px 10px; background:var(--surface-sec); border-radius:6px; max-height:120px; overflow-y:auto; display:none;"></div>
+        </div>
       </div>
       <div style="display:flex; gap:10px; margin-top:12px; flex-shrink:0;">
         <button id="bed-note-delete-btn" data-action="deleteBedNote" style="display:none; background:none; border:1px solid var(--crit); color:var(--crit); border-radius:8px; padding:10px 14px; font-size:0.82rem; font-weight:800; cursor:pointer; flex-shrink:0;">Supprimer</button>
