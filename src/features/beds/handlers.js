@@ -240,18 +240,15 @@ window.renderApp = function renderApp() {
         ? `onclick="event.stopPropagation();openTasks()"`
         : `onclick="event.stopPropagation()"`;
 
-    // 2026-05-03 — Pastille violette sur la carte IDE TECH si au moins une
-    // chambre a une tech note non vide (visible IDE Tech / admin uniquement).
-    // Format aligné sur le rond des cartes lit : 8px, top-right.
+    // 2026-05-03 — Bordure droite violette sur la carte IDE TECH si au moins
+    // une chambre a une tech note non vide (visible IDE Tech / admin).
+    // Format aligné sur les cartes lit : border-right qui suit le border-radius.
     const _techCardHasNotes = (_isTechMine || (typeof isAdmin === 'function' && isAdmin()))
                               && typeof window.getRoomsWithTechNotes === 'function'
                               && window.getRoomsWithTechNotes().length > 0;
-    const _techCardDot = _techCardHasNotes
-        ? `<div style="position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--tech);box-shadow:0 0 4px var(--tech);" title="Notes tech en attente"></div>`
-        : '';
+    const _techCardBorder = _techCardHasNotes ? 'border-right:4px solid var(--tech);' : '';
 
-    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;" onclick="handleTechIdeTap(event)">
-      ${_techCardDot}
+    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" onclick="handleTechIdeTap(event)" title="${_techCardHasNotes ? 'Notes tech en attente dans des chambres' : ''}">
       <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
       <div class="bed-header">
         <span class="b-num" style="color:var(--tech);">IDE TECH</span>
