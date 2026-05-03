@@ -122,7 +122,10 @@ window.renderApp = function renderApp() {
     allP.sort((a, b) => getSortVal(a) - getSortVal(b)).forEach(p => {
         const colors = { med: 'var(--med)', ide: 'var(--ide)', as: 'var(--as)' };
         const roleLbl = p.role.toUpperCase();
-        const col = colors[p.role];
+        // 2026-05-03 — L'IDE qui prend le slot tech change de couleur en violet
+        // (même rôle IDE, sélectionnable comme avant) — Dimitri.
+        const _isThisIdeTech = p.role === 'ide' && p.id === h.techIdeId;
+        const col = _isThisIdeTech ? 'var(--tech)' : colors[p.role];
 
         const isSelectable = p.role === 'ide' || p.role === 'as';
         let clickAttr = ''; let bgStyle = 'transparent';
@@ -237,7 +240,17 @@ window.renderApp = function renderApp() {
         ? `onclick="event.stopPropagation();openTasks()"`
         : `onclick="event.stopPropagation()"`;
 
+    // 2026-05-03 — Pastille 🛠 sur la carte IDE TECH si au moins une chambre
+    // a une tech note non vide (visible IDE Tech / admin uniquement).
+    const _techCardHasNotes = (_isTechMine || (typeof isAdmin === 'function' && isAdmin()))
+                              && typeof window.getRoomsWithTechNotes === 'function'
+                              && window.getRoomsWithTechNotes().length > 0;
+    const _techCardDot = _techCardHasNotes
+        ? `<div style="position:absolute;top:5px;left:5px;width:10px;height:10px;border-radius:50%;background:var(--tech);box-shadow:0 0 6px var(--tech);display:flex;align-items:center;justify-content:center;font-size:7px;line-height:1;color:#fff;font-weight:900;" title="Notes tech en attente">🛠</div>`
+        : '';
+
     boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;" onclick="handleTechIdeTap(event)">
+      ${_techCardDot}
       <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
       <div class="bed-header">
         <span class="b-num" style="color:var(--tech);">IDE TECH</span>
@@ -311,7 +324,7 @@ window.renderApp = function renderApp() {
                     const _showTechDot = (_isTechIdeForShift || (typeof isAdmin === 'function' && isAdmin()))
                                         && typeof window.hasTechNotesForBed === 'function'
                                         && window.hasTechNotesForBed(id);
-                    const _techDot = _showTechDot ? `<div style="position:absolute;top:5px;${_myNote ? 'right:18px' : 'right:5px'};width:10px;height:10px;border-radius:50%;background:var(--tech);box-shadow:0 0 6px var(--tech);display:flex;align-items:center;justify-content:center;font-size:7px;line-height:1;color:#fff;font-weight:900;" title="Note tech">🛠</div>` : '';
+                    const _techDot = _showTechDot ? `<div style="position:absolute;top:5px;left:5px;width:10px;height:10px;border-radius:50%;background:var(--tech);box-shadow:0 0 6px var(--tech);display:flex;align-items:center;justify-content:center;font-size:7px;line-height:1;color:#fff;font-weight:900;" title="Note tech">🛠</div>` : '';
                     return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;" onclick="handleBedTap('${id}')">
               ${_noteDot}
               ${_techDot}
