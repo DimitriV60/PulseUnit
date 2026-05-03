@@ -318,17 +318,16 @@ window.renderApp = function renderApp() {
                     const _scoreTxt = _stCl === 'done' ? '\u2713 OK' : `${_done}/${_total}`;
                     const _canSeeShared = !!(currentUser && (d.ide === currentUser.id || d.as === currentUser.id || (typeof isAdmin === 'function' && isAdmin())));
                     const _myNote = typeof getBedNoteForCurrentUser === 'function' ? getBedNoteForCurrentUser(id, dateOnly, _canSeeShared) : null;
-                    const _noteDot = _myNote ? `<div style="position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--brand-aqua);box-shadow:0 0 4px var(--brand-aqua);" title="Ma note"></div>` : '';
-                    // 2026-05-03 — Pastille tech : visible uniquement par l'IDE Tech courant
-                    // (ou admin) si la chambre possède au moins une tech note non vide.
+                    // 2026-05-03 — Marqueurs latéraux (suivent le border-radius
+                    // de la carte). Gauche violet = tech notes (IDE Tech / admin).
+                    // Droite aqua = note IDE/AS perso (ma note).
                     const _isTechIdeForShift = !!(currentUser && h.techIdeId === currentUser.id);
-                    const _showTechDot = (_isTechIdeForShift || (typeof isAdmin === 'function' && isAdmin()))
-                                        && typeof window.hasTechNotesForBed === 'function'
-                                        && window.hasTechNotesForBed(id);
-                    const _techDot = _showTechDot ? `<div style="position:absolute;top:5px;left:5px;width:10px;height:10px;border-radius:50%;background:var(--tech);box-shadow:0 0 6px var(--tech);display:flex;align-items:center;justify-content:center;font-size:7px;line-height:1;color:#fff;font-weight:900;" title="Note tech">🛠</div>` : '';
-                    return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;" onclick="handleBedTap('${id}')">
-              ${_noteDot}
-              ${_techDot}
+                    const _showTechBorder = (_isTechIdeForShift || (typeof isAdmin === 'function' && isAdmin()))
+                                            && typeof window.hasTechNotesForBed === 'function'
+                                            && window.hasTechNotesForBed(id);
+                    const _borderLeftStyle = _showTechBorder ? 'border-left:4px solid var(--tech);' : '';
+                    const _borderRightStyle = _myNote ? 'border-right:4px solid var(--brand-aqua);' : '';
+                    return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;${_borderLeftStyle}${_borderRightStyle}" onclick="handleBedTap('${id}')" title="${_showTechBorder ? 'Note tech présente · ' : ''}${_myNote ? 'Ma note présente' : ''}">
               <div class="bed-bg-num">${n}</div>
               <div class="bed-header">
                   <span class="b-num">${n}</span>
