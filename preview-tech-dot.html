@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Preview — Pastille Tech sur cartes lit</title>
+<style>
+  :root {
+    --brand-aqua: #40ceef;
+    --ide: #60ceea; --ide-glow: rgba(96, 206, 234, 0.15);
+    --as: #40ce5c;  --as-glow: rgba(64, 206, 92, 0.15);
+    --med: #f59e0b;
+    --tech: #a855f7; --tech-glow: rgba(168, 85, 247, 0.15);
+    --crit: #ef4444;
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface-sec: #f1f5f9;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --pill-bg: #f8fafc;
+  }
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 24px;
+  }
+  h1 { font-size: 1.4rem; margin: 0 0 6px; }
+  .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px; }
+  .opt-block {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  }
+  .opt-title { font-size: 1.1rem; font-weight: 900; margin: 0 0 4px; color: var(--tech); }
+  .opt-desc { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+  .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+
+  /* --- BED CARD (copie fidèle du style PulseUnit) --- */
+  .bed-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    position: relative;
+    min-height: 110px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  }
+  .bed-card.critical { box-shadow: 0 0 0 2px rgba(239,68,68,0.4); border-color: var(--crit); }
+  .bed-bg-num {
+    position: absolute; bottom: -10px; right: -5px;
+    font-size: 4.5rem; font-weight: 900; color: var(--text);
+    opacity: 0.03; line-height: 1; z-index: 0;
+  }
+  .bed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .b-num { font-weight: 900; font-size: 1.1rem; color: var(--text); }
+  .b-actions { display: flex; gap: 3px; }
+  .a-btn {
+    width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--surface-sec); color: var(--text-muted);
+    font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+  }
+
+  .cl-bar-row {
+    display: flex; align-items: center; gap: 6px; margin: -2px 0 6px 0;
+    padding: 3px 2px; border-radius: 4px;
+  }
+  .cl-minibar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .cl-minibar-fill { height: 100%; border-radius: 2px; }
+  .cl-minibar-fill.done { background: linear-gradient(90deg, var(--as), var(--ide)); box-shadow: 0 0 4px rgba(64,206,92,0.5); }
+  .cl-minibar-fill.partial { background: linear-gradient(90deg, var(--med), #f97316); }
+  .cl-score { font-size: 0.75rem; font-weight: 900; }
+  .cl-score.done { color: var(--as); }
+  .cl-score.partial { color: var(--med); }
+
+  .pill-container { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+  .staff-pill {
+    padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 800;
+    min-height: 28px; display: flex; align-items: center;
+    background: var(--pill-bg); border: 1px solid var(--border); color: var(--text);
+  }
+  .ide-pill { color: var(--ide); border-color: rgba(96,206,234,0.4); background: var(--ide-glow); }
+  .as-pill { color: var(--as); border-color: rgba(64,206,92,0.4); background: var(--as-glow); }
+  .pill-prefix { font-size: 0.65rem; font-weight: 900; opacity: 0.7; margin-right: 6px; }
+
+  /* Rond bleu de la note perso (existant) */
+  .note-dot {
+    position: absolute; top: 5px; right: 5px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--brand-aqua); box-shadow: 0 0 4px var(--brand-aqua);
+  }
+
+  /* === ACTUEL === */
+  .tech-current {
+    position: absolute; top: 5px; left: 5px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--tech); box-shadow: 0 0 6px var(--tech);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7px; line-height: 1; color: #fff; font-weight: 900;
+  }
+
+  /* === OPTION A : coin replié === */
+  .tech-A {
+    position: absolute; top: 0; left: 0;
+    width: 18px; height: 18px;
+    background: var(--tech);
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    box-shadow: 0 0 4px rgba(168,85,247,0.5);
+  }
+
+  /* === OPTION B : bordure latérale === */
+  .opt-B-card { border-left: 4px solid var(--tech) !important; }
+
+  /* === OPTION C : badge texte === */
+  .tech-C {
+    position: absolute; top: 4px; left: 4px;
+    background: var(--tech-glow); color: var(--tech);
+    border: 1px solid var(--tech);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.55rem;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🛠 Marqueur Tech sur cartes lit — Comparatif visuel</h1>
+<div class="subtitle">Visible uniquement pour l'IDE Tech / admin. Le rond bleu (note perso) reste en haut à droite.</div>
+
+<!-- CARTE IDE TECH (rond violet à droite, format identique aux lits) -->
+<div class="opt-block" style="background:linear-gradient(180deg, var(--tech-glow) 0%, var(--surface) 40px); border:1px solid var(--tech);">
+  <div class="opt-title">✅ Carte IDE TECH — rond violet à droite (déployé)</div>
+  <div class="opt-desc">Format identique au rond bleu des lits (8×8px), mais en violet (var(--tech)). Apparaît dès qu'une chambre a une tech note.</div>
+  <div class="row" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+    <div>
+      <div class="bed-card" style="border-top:4px solid var(--tech); background:linear-gradient(180deg, var(--tech-glow) 0%, var(--surface) 40px);">
+        <div style="position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--tech);box-shadow:0 0 4px var(--tech);"></div>
+        <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
+        <div class="bed-header">
+          <span class="b-num" style="color:var(--tech);">IDE TECH</span>
+          <div class="b-actions" style="gap:4px;">
+            <span style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech);">📞 7125</span>
+            <span style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech);">📞 6086</span>
+          </div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill done" style="width:100%"></div></div>
+          <span class="cl-score done">✓ OK</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Marie L.</div>
+        </div>
+      </div>
+      <div class="label">Avec notes tech en attente</div>
+    </div>
+    <div>
+      <div class="bed-card" style="border-top:4px solid var(--tech); background:linear-gradient(180deg, var(--tech-glow) 0%, var(--surface) 40px);">
+        <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
+        <div class="bed-header">
+          <span class="b-num" style="color:var(--tech);">IDE TECH</span>
+          <div class="b-actions" style="gap:4px;">
+            <span style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech);">📞 7125</span>
+            <span style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech);">📞 6086</span>
+          </div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill partial" style="width:40%"></div></div>
+          <span class="cl-score partial">2/5</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Marie L.</div>
+        </div>
+      </div>
+      <div class="label">Sans notes tech</div>
+    </div>
+  </div>
+</div>
+
+<h2 style="margin:32px 0 4px; font-size:1.2rem;">3 propositions pour le marqueur sur les cartes lit (chambres)</h2>
+<div class="subtitle">Ouvre ce fichier dans ton navigateur pour voir les rendus côte à côte.</div>
+
+<!-- ACTUEL -->
+<div class="opt-block">
+  <div class="opt-title">📍 Actuel — Rond violet avec emoji 🛠 (coin gauche)</div>
+  <div class="opt-desc">Cercle violet 10px contenant un mini emoji 🛠. Lisible mais l'emoji est minuscule.</div>
+  <div class="row">
+    <div>
+      <div class="bed-card">
+        <div class="tech-current">🛠</div>
+        <div class="note-dot"></div>
+        <div class="bed-bg-num">3</div>
+        <div class="bed-header">
+          <span class="b-num">3</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill done" style="width:100%"></div></div>
+          <span class="cl-score done">✓ OK</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Marie L.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>Sophie B.</div>
+        </div>
+      </div>
+      <div class="label">Avec note + tech</div>
+    </div>
+    <div>
+      <div class="bed-card">
+        <div class="tech-current">🛠</div>
+        <div class="bed-bg-num">5</div>
+        <div class="bed-header">
+          <span class="b-num">5</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill partial" style="width:60%"></div></div>
+          <span class="cl-score partial">6/10</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Léa P.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>---</div>
+        </div>
+      </div>
+      <div class="label">Tech seul</div>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION A -->
+<div class="opt-block">
+  <div class="opt-title">🅰 Option A — Coin replié violet (« page cornée »)</div>
+  <div class="opt-desc">Triangle plein 18×18 dans le coin haut-gauche. Très subtil, élégant, n'empiète sur rien.</div>
+  <div class="row">
+    <div>
+      <div class="bed-card">
+        <div class="tech-A"></div>
+        <div class="note-dot"></div>
+        <div class="bed-bg-num">3</div>
+        <div class="bed-header">
+          <span class="b-num">3</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill done" style="width:100%"></div></div>
+          <span class="cl-score done">✓ OK</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Marie L.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>Sophie B.</div>
+        </div>
+      </div>
+      <div class="label">Avec note + tech</div>
+    </div>
+    <div>
+      <div class="bed-card">
+        <div class="tech-A"></div>
+        <div class="bed-bg-num">5</div>
+        <div class="bed-header">
+          <span class="b-num">5</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill partial" style="width:60%"></div></div>
+          <span class="cl-score partial">6/10</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Léa P.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>---</div>
+        </div>
+      </div>
+      <div class="label">Tech seul</div>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION B -->
+<div class="opt-block">
+  <div class="opt-title">🅱 Option B — Bordure gauche violette</div>
+  <div class="opt-desc">Bande verticale 4px violet sur tout le bord gauche. Repère périphérique très efficace en scan rapide.</div>
+  <div class="row">
+    <div>
+      <div class="bed-card opt-B-card">
+        <div class="note-dot"></div>
+        <div class="bed-bg-num">3</div>
+        <div class="bed-header">
+          <span class="b-num">3</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill done" style="width:100%"></div></div>
+          <span class="cl-score done">✓ OK</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Marie L.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>Sophie B.</div>
+        </div>
+      </div>
+      <div class="label">Avec note + tech</div>
+    </div>
+    <div>
+      <div class="bed-card opt-B-card">
+        <div class="bed-bg-num">5</div>
+        <div class="bed-header">
+          <span class="b-num">5</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill partial" style="width:60%"></div></div>
+          <span class="cl-score partial">6/10</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Léa P.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>---</div>
+        </div>
+      </div>
+      <div class="label">Tech seul</div>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION C -->
+<div class="opt-block">
+  <div class="opt-title">🅲 Option C — Mini badge texte « TECH »</div>
+  <div class="opt-desc">Petit pill violet avec le texte « TECH » en haut à gauche. Le plus explicite, aucune convention à apprendre.</div>
+  <div class="row">
+    <div>
+      <div class="bed-card">
+        <div class="tech-C">TECH</div>
+        <div class="note-dot"></div>
+        <div class="bed-bg-num">3</div>
+        <div class="bed-header" style="margin-left:36px;">
+          <span class="b-num">3</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill done" style="width:100%"></div></div>
+          <span class="cl-score done">✓ OK</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Marie L.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>Sophie B.</div>
+        </div>
+      </div>
+      <div class="label">Avec note + tech</div>
+    </div>
+    <div>
+      <div class="bed-card">
+        <div class="tech-C">TECH</div>
+        <div class="bed-bg-num">5</div>
+        <div class="bed-header" style="margin-left:36px;">
+          <span class="b-num">5</span>
+          <div class="b-actions"><div class="a-btn">⚠</div><div class="a-btn">💧</div><div class="a-btn">⚡</div></div>
+        </div>
+        <div class="cl-bar-row">
+          <div class="cl-minibar"><div class="cl-minibar-fill partial" style="width:60%"></div></div>
+          <span class="cl-score partial">6/10</span>
+        </div>
+        <div class="pill-container">
+          <div class="staff-pill ide-pill"><span class="pill-prefix">IDE</span>Léa P.</div>
+          <div class="staff-pill as-pill"><span class="pill-prefix">AS</span>---</div>
+        </div>
+      </div>
+      <div class="label">Tech seul</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:32px; padding:16px; background:var(--tech-glow); border-radius:12px; border:1px solid var(--tech); color:var(--text);">
+  <strong style="color:var(--tech);">💡 Choisis ta préférée et dis-moi A, B ou C — j'implémente.</strong>
+</div>
+
+</body>
+</html>
