@@ -288,6 +288,72 @@ function _saveTechNote(bedId, slot, text) {
     _persistTechAll(all);
 }
 
+/**
+ * Indique si un lit (bedId réel, pas TECH_BED_ID) possède au moins une tech
+ * note non vide (dans ses 7 slots, dans le TTL). Utilisé pour la pastille
+ * "🛠" sur les cartes lit côté IDE Tech.
+ */
+window.hasTechNotesForBed = function hasTechNotesForBed(bedId) {
+    if (!bedId || bedId === TECH_BED_ID) return false;
+    const all = _getTechAll();
+    const bed = all[bedId];
+    if (!bed) return false;
+    return Object.values(bed).some(n => n && (n.text || '').trim() !== '');
+};
+
+/**
+ * Liste les chambres possédant au moins une tech note (label lisible).
+ * Format : [{ bedId, label }, ...].  Utilisé pour la notification de bienvenue
+ * de l'IDE Tech au login / à la prise de slot.
+ */
+window.getRoomsWithTechNotes = function getRoomsWithTechNotes() {
+    const all = _getTechAll();
+    const out = [];
+    Object.keys(all).forEach(bedId => {
+        if (bedId === TECH_BED_ID) return;
+        const slots = all[bedId];
+        const hasContent = Object.values(slots).some(n => n && (n.text || '').trim() !== '');
+        if (!hasContent) return;
+        const parts = bedId.split('-');
+        const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : (parts[0] === 'usip' ? `USIP ${parts[1]}` : bedId);
+        out.push({ bedId, label });
+    });
+    out.sort((a, b) => a.label.localeCompare(b.label));
+    return out;
+};
+
+/**
+ * Notifie l'IDE Tech qu'il y a des tech notes dans certaines chambres.
+ * Appelée au moment où un IDE prend le slot tech, ou après login si déjà tech.
+ * Utilise un toast (immédiat, visible) + un push notif local (fond / OS).
+ * Idempotent par garde : ne re-notifie pas pour la même garde tant que rien
+ * n'a changé (clé pu_techn_notif:<shiftKey>).
+ */
+window.notifyTechIdeOfPendingNotes = function notifyTechIdeOfPendingNotes() {
+    if (!currentUser) return;
+    if (typeof shiftHistory === 'undefined' || typeof currentShiftKey === 'undefined') return;
+    const h = shiftHistory[currentShiftKey];
+    if (!h || h.techIdeId !== currentUser.id) return;
+    const rooms = window.getRoomsWithTechNotes();
+    if (!rooms || rooms.length === 0) return;
+    const stamp = rooms.map(r => r.bedId).sort().join('|');
+    const cacheKey = 'pu_techn_notif:' + currentShiftKey + ':' + currentUser.id;
+    try {
+        if (localStorage.getItem(cacheKey) === stamp) return;
+        localStorage.setItem(cacheKey, stamp);
+    } catch (e) {}
+    const labels = rooms.map(r => r.label).join(', ');
+    const title = '🛠 Notes tech en attente';
+    const body = rooms.length === 1
+        ? `Note tech présente : ${labels}`
+        : `Notes tech présentes : ${labels}`;
+    if (typeof window.showLocalPushNotif === 'function') {
+        window.showLocalPushNotif(title, body, { type: 'tech_notes' });
+    } else if (typeof showToast === 'function') {
+        showToast('🛠 ' + body);
+    }
+};
+
 // --- Migration des survey privés vers le partagé ----------------------------
 
 function _migratePrivateSurveysToShared(userNotes) {

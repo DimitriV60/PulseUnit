@@ -41,6 +41,9 @@ window.toggleTask = function toggleTask(id) {
     shiftHistory[currentShiftKey].techTasks = tasks;
     saveData();
     window.renderTasks();
+    // 2026-05-03 — Rafraîchit la carte IDE TECH (barre / "✓ OK") immédiatement
+    // sans attendre un autre événement (Dimitri).
+    if (typeof renderApp === 'function') renderApp();
 };
 
 window.renderTasks = function renderTasks() {

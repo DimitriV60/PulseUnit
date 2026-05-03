@@ -298,6 +298,9 @@ window.selfAssignTech = function selfAssignTech() {
     saveData();
     renderApp();
     showToast('✅ Vous êtes IDE Tech');
+    if (typeof window.notifyTechIdeOfPendingNotes === 'function') {
+        setTimeout(() => window.notifyTechIdeOfPendingNotes(), 600);
+    }
 };
 
 /**
@@ -351,6 +354,9 @@ window.handleTechIdeTap = function handleTechIdeTap(ev) {
     saveData();
     renderApp();
     showToast('✅ Vous êtes IDE Tech — double-tap pour vos notes');
+    if (typeof window.notifyTechIdeOfPendingNotes === 'function') {
+        setTimeout(() => window.notifyTechIdeOfPendingNotes(), 600);
+    }
 };
 
 function assignSpecDirect(type, id) {

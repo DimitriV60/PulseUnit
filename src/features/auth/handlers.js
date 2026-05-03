@@ -404,6 +404,11 @@ window.loginUser = async function loginUser() {
     if (typeof window.maybePromptNotifPermission === 'function') window.maybePromptNotifPermission();
     renderApp();
     checkWorkStatus();
+    // 2026-05-03 — Si l'utilisateur connecté est l'IDE Tech de la garde courante,
+    // lui rappeler les chambres avec des tech notes en attente.
+    if (typeof window.notifyTechIdeOfPendingNotes === 'function') {
+        setTimeout(() => window.notifyTechIdeOfPendingNotes(), 1200);
+    }
 };
 
 window.loginAdminFromAuth = async function loginAdminFromAuth() {
