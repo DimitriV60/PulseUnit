@@ -240,13 +240,14 @@ window.renderApp = function renderApp() {
         ? `onclick="event.stopPropagation();openTasks()"`
         : `onclick="event.stopPropagation()"`;
 
-    // 2026-05-03 — Pastille 🛠 sur la carte IDE TECH si au moins une chambre
-    // a une tech note non vide (visible IDE Tech / admin uniquement).
+    // 2026-05-03 — Pastille violette sur la carte IDE TECH si au moins une
+    // chambre a une tech note non vide (visible IDE Tech / admin uniquement).
+    // Format aligné sur le rond des cartes lit : 8px, top-right.
     const _techCardHasNotes = (_isTechMine || (typeof isAdmin === 'function' && isAdmin()))
                               && typeof window.getRoomsWithTechNotes === 'function'
                               && window.getRoomsWithTechNotes().length > 0;
     const _techCardDot = _techCardHasNotes
-        ? `<div style="position:absolute;top:5px;left:5px;width:10px;height:10px;border-radius:50%;background:var(--tech);box-shadow:0 0 6px var(--tech);display:flex;align-items:center;justify-content:center;font-size:7px;line-height:1;color:#fff;font-weight:900;" title="Notes tech en attente">🛠</div>`
+        ? `<div style="position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--tech);box-shadow:0 0 4px var(--tech);" title="Notes tech en attente"></div>`
         : '';
 
     boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;" onclick="handleTechIdeTap(event)">
