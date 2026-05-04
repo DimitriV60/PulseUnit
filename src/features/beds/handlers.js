@@ -257,18 +257,13 @@ window.renderApp = function renderApp() {
                                 && !!window.getBedNoteForCurrentUser('tech_ide', dateOnly, false);
     const _techCardBorder = _techCardHasOwnNote ? 'border-left:4px solid var(--tech);' : '';
 
-    const _techLeaveBtn = (_isTechMine && !locked)
-        ? `<button data-stop data-action="leaveTechIdeSlot" title="Quitter le slot IDE TECH" style="background:none; border:none; color:var(--crit); font-size:1.1rem; font-weight:900; cursor:pointer; padding:0 6px; line-height:1; opacity:0.7;">✕</button>`
-        : '';
-
     boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" data-action="handleTechIdeTap:$ev" title="${_techCardHasOwnNote ? 'Mes notes perso présentes' : ''}">
       <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
       <div class="bed-header">
         <span class="b-num" style="color:var(--tech);">IDE TECH</span>
-        <div class="b-actions" style="${locked ? 'opacity:0.5;pointer-events:none;' : ''}">
+        <div class="b-actions" style="margin-left:auto; ${locked ? 'opacity:0.5;pointer-events:none;' : ''}">
           <a href="tel:0344617125" data-stop style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 7125</a>
           <a href="tel:0344616086" data-stop style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 6086</a>
-          ${_techLeaveBtn}
         </div>
       </div>
       <div class="cl-bar-row" ${_techBarClick}>

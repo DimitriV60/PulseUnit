@@ -326,18 +326,6 @@ function _unassignUserFromAllBeds(h, userId) {
  *     l'agent reste dans l'effectif). Modèle exact d'un lit.
  *   - occupé par moi sans sélection → double-tap (<350ms) ouvre les notes 7-gardes.
  */
-window.leaveTechIdeSlot = function leaveTechIdeSlot() {
-    if (!currentUser) return;
-    initShiftData(currentShiftKey);
-    if (isShiftLocked(currentShiftKey)) return;
-    const h = shiftHistory[currentShiftKey];
-    if (h.techIdeId !== currentUser.id) return;
-    h.techIdeId = null;
-    saveData();
-    renderApp();
-    showToast('Slot IDE Tech libéré');
-};
-
 var _lastTechTapTime = 0;
 window.handleTechIdeTap = function handleTechIdeTap(ev) {
     if (ev) ev.stopPropagation();
