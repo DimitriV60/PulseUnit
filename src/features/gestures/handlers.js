@@ -91,7 +91,7 @@ document.addEventListener('touchend', function(e) {
     const dy = e.changedTouches[0].clientY - startY;
     if (planDrag.moved) return; // glissement planning : ignorer
     // Ignorer si le swipe part d'une zone avec scroll horizontal
-    if (startTarget && startTarget.closest('[style*="overflow-x"], .lexique-filters, .normes-cat-filters, .horaires-scroll, .planning-scroll')) return;
+    if (startTarget && startTarget.closest('[style*="overflow-x"], .lexique-filters, .normes-cat-filters, .horaires-scroll, .planning-scroll, .cl-bed-selector')) return;
 
     const isVis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none' && el.style.display !== ''; };
     const isHoriz = Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy);
