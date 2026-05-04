@@ -205,22 +205,22 @@ function renderCalMonth(year, month) {
         const djfW= calWorkedDJF.has(str);
         const djfDay = (we||fer_);
 
-        let cls='cal-day ', onclick='';
+        let cls='cal-day ', actionAttr='';
 
         if (!we && !fer_) {
             cls += 'workday';
             if (sel) cls += (hs?' ca-hs':' ca-ete');
-            onclick = 'onclick="toggleCADay(\'' + str + '\')"';
+            actionAttr = 'data-action="toggleCADay:' + str + '"';
         } else if (djfDay && calRegime==='variable') {
             cls += djfW ? 'djf-worked' : 'djf-dispo';
-            onclick = 'onclick="toggleDJFDay(\'' + str + '\')"';
+            actionAttr = 'data-action="toggleDJFDay:' + str + '"';
         } else if (we) {
             cls += 'weekend';
         } else {
             cls += 'ferie';
         }
 
-        html += '<div class="' + cls + '" id="cal-d-' + str + '" ' + onclick + '>' + d + '</div>';
+        html += '<div class="' + cls + '" id="cal-d-' + str + '" ' + actionAttr + '>' + d + '</div>';
     }
     html += '</div></div>';
     return html;

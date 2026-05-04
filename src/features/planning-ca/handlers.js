@@ -756,14 +756,14 @@ function renderPlanMonth(year, month) {
     if (caC  > 0) badge += caC + ' CA';
     if (rcnC > 0) badge += (badge ? ' · ' : '') + rcnC + ' RCN';
     const locked = planLockedMonths.has(mKey);
-    const lockBtn = `<button class="plan-month-lock${locked ? ' is-locked' : ''}" onclick="togglePlanMonthLock('${mKey}')" title="${locked ? 'Déverrouiller' : 'Verrouiller'}">${locked ? '🔒' : '🔓'}</button>`;
-    let html = `<div class="cal-month${locked ? ' locked' : ''}"><div class="cal-month-header"><span>${MOIS[month]} ${year}</span><span style="display:flex;align-items:center;gap:6px;"><span class="cal-month-count" id="plan-mc-${mKey}">${badge}</span>${lockBtn}<button class="plan-month-clear" onclick="resetPlanMonth('${mKey}')">↺</button></span></div><div class="cal-grid">`;
+    const lockBtn = `<button class="plan-month-lock${locked ? ' is-locked' : ''}" data-action="togglePlanMonthLock:${mKey}" title="${locked ? 'Déverrouiller' : 'Verrouiller'}">${locked ? '🔒' : '🔓'}</button>`;
+    let html = `<div class="cal-month${locked ? ' locked' : ''}"><div class="cal-month-header"><span>${MOIS[month]} ${year}</span><span style="display:flex;align-items:center;gap:6px;"><span class="cal-month-count" id="plan-mc-${mKey}">${badge}</span>${lockBtn}<button class="plan-month-clear" data-action="resetPlanMonth:${mKey}">↺</button></span></div><div class="cal-grid">`;
     JOURS.forEach((j, i) => { html += `<div class="cal-day-label${i >= 5 ? ' we' : ''}">${j}</div>`; });
     for (let e = 0; e < firstDow; e++) html += '<div class="plan-day empty"></div>';
     for (let d = 1; d <= nbJ; d++) {
         const str = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const st  = getPlanDayState(str);
-        html += `<div class="plan-day p-${st}" id="plan-d-${str}"${locked ? '' : ` onclick="cyclePlanDay('${str}')" ontouchstart="planCellTouchStart('${str}',event)"`}>${planDayHTML(d, st, str)}</div>`;
+        html += `<div class="plan-day p-${st}" id="plan-d-${str}"${locked ? '' : ` data-action="cyclePlanDay:${str}" data-pcell="${str}"`}>${planDayHTML(d, st, str)}</div>`;
     }
     html += '</div></div>';
     return html;
@@ -1260,10 +1260,10 @@ window.renderSuiviRH = function renderSuiviRH() {
         if (isImported) {
             const dt = importedDc.importedAt ? new Date(importedDc.importedAt) : null;
             const dtStr = dt ? `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} à ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}` : '';
-            sourceEl.innerHTML = `📷 <strong>Source : Digihops</strong> · importé le ${dtStr} <button class="suivi-source-clear" onclick="clearImportedDebitCredit()" title="Repasser en calcul auto">↺ Recalcul auto</button>`;
+            sourceEl.innerHTML = `📷 <strong>Source : Digihops</strong> · importé le ${dtStr} <button class="suivi-source-clear" data-action="clearImportedDebitCredit" title="Repasser en calcul auto">↺ Recalcul auto</button>`;
             sourceEl.classList.add('is-imported');
         } else {
-            sourceEl.innerHTML = `🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" onclick="document.getElementById('plan-scan-dc-input').click()" title="Importer le tableau Digihops par photo">📷 Importer</button>`;
+            sourceEl.innerHTML = `🤖 <strong>Calcul auto</strong> · indicatif uniquement <button class="suivi-source-import" data-action="clickById:plan-scan-dc-input" title="Importer le tableau Digihops par photo">📷 Importer</button>`;
             sourceEl.classList.remove('is-imported');
         }
     }

@@ -99,7 +99,7 @@ function _renderUserList(containerId, hiddenId, selectedId, entries, onSelect) {
     if (entries.length === 0) { box.style.display = 'none'; return; }
     box.style.display = 'block';
     box.innerHTML = entries.map(([id, u]) => `
-      <div onclick="${onSelect}('${escapeHTML(id)}')" style="padding:10px 14px; cursor:pointer; font-size:0.85rem; font-weight:700;
+      <div data-action="${onSelect}:${escapeHTML(id)}" style="padding:10px 14px; cursor:pointer; font-size:0.85rem; font-weight:700;
         border-bottom:1px solid var(--border); background:${id === selectedId ? 'rgba(59,130,246,0.12)' : 'var(--surface-sec)'};
         color:${id === selectedId ? 'var(--brand-blue)' : 'var(--text)'};">
         ${escapeHTML(u.firstName)} ${escapeHTML((u.lastName || '').toUpperCase())}
@@ -548,7 +548,7 @@ function updateHeaderUser() {
     if (currentUser) {
         el.innerHTML = '';
     } else {
-        el.innerHTML = `<button class="header-btn outline" onclick="showAuthModal()" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
+        el.innerHTML = `<button class="header-btn outline" data-action="showAuthModal" style="font-size:0.65rem; padding:0 8px; height:26px;">Connexion</button>`;
     }
     if (typeof window.renderNotifsBell === 'function') window.renderNotifsBell();
 }
@@ -700,7 +700,7 @@ function renderAdminResets() {
           <div style="font-weight:800; font-size:0.85rem;">${escapeHTML(r.firstName)} ${escapeHTML(r.lastName)}</div>
           <div style="font-size:0.72rem; color:var(--text-muted);">${escapeHTML((r.role || '').toUpperCase())} · ${new Date(r.requestedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
         </div>
-        <button onclick="adminSetTempPin('${escapeHTML(r.userId)}')" style="background:var(--crit); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+        <button data-action="adminSetTempPin:${escapeHTML(r.userId)}" style="background:var(--crit); color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
           Code provisoire
         </button>
       </div>
@@ -957,8 +957,8 @@ function renderAdminUsers() {
           <div style="font-size:0.68rem; color:var(--text-muted);">${subline}</div>
         </div>
         <span style="font-size:0.7rem; font-weight:700; color:${col}; background:${col}22; padding:2px 7px; border-radius:4px; flex-shrink:0;">${u.role.toUpperCase()}</span>
-        ${hasAuth && isBlocked ? `<button onclick="adminUnlockUser('${id}')" style="background:var(--as); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;" title="Débloquer">🔓</button>` : ''}
-        <button onclick="adminDeleteUser('${id}')" style="background:none; border:none; color:var(--crit); font-size:1.15rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Supprimer">🗑️</button>
+        ${hasAuth && isBlocked ? `<button data-action="adminUnlockUser:${escapeHTML(id)}" style="background:var(--as); color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;" title="Débloquer">🔓</button>` : ''}
+        <button data-action="adminDeleteUser:${escapeHTML(id)}" style="background:none; border:none; color:var(--crit); font-size:1.15rem; cursor:pointer; padding:2px 4px; flex-shrink:0;" title="Supprimer">🗑️</button>
       </div>`;
     }).join('');
 }

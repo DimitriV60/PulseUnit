@@ -137,10 +137,10 @@ window.renderApp = function renderApp() {
         const isSelectable = p.role === 'ide' || p.role === 'as';
         let clickAttr = ''; let bgStyle = 'transparent';
         if (isSelectable && !locked) {
-            clickAttr = `onclick="toggleSelection('${p.id}')"`;
+            clickAttr = `data-action="toggleSelection:${p.id}"`;
             if (selectedStaffForTap === p.id) bgStyle = 'var(--ide-glow)';
         }
-        const removeX = (isSelectable && !locked) ? `<span onclick="event.stopPropagation();showRemoveAgentConfirm('${p.id}')" style="margin-left:6px;font-size:1rem;line-height:1;cursor:pointer;color:var(--crit);opacity:0.55;flex-shrink:0;">×</span>` : '';
+        const removeX = (isSelectable && !locked) ? `<span data-stop data-action="showRemoveAgentConfirm:${p.id}" style="margin-left:6px;font-size:1rem;line-height:1;cursor:pointer;color:var(--crit);opacity:0.55;flex-shrink:0;">×</span>` : '';
         miniListHTML += `<div class="mini-item" style="border-color:${col}; cursor:${isSelectable && !locked ? 'pointer' : 'default'}; background:${bgStyle};" ${clickAttr}><span>${escapeHTML(p.firstName)} ${escapeHTML(p.lastName[0])}.</span>${removeX}<span class="role-badge" style="color:${col}">${roleLbl}</span></div>`;
     });
 
@@ -205,11 +205,11 @@ window.renderApp = function renderApp() {
         let grid = `<div class="med-beds-selector" style="${!medEditable ? 'opacity:0.6; pointer-events:none;' : ''}">`;
         reaBedsList.forEach(n => {
             const isActive = mBeds[n] === i ? 'active' : '';
-            grid += `<div class="med-bed-btn ${isActive}" onclick="toggleMedBed('${n}', ${i})">${n}</div>`;
+            grid += `<div class="med-bed-btn ${isActive}" data-action="toggleMedBed:${n},${i}">${n}</div>`;
         });
         grid += `</div>`;
         const _lockBtn = isAdmin()
-            ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>`
+            ? `<button data-stop data-action="toggleMedLock" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>`
             : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`;
         boardHTML += `<div class="bed-card special-card med-card">
         <div class="bed-header" style="color:var(--med)">
@@ -220,7 +220,7 @@ window.renderApp = function renderApp() {
             <a href="tel:${i === 0 ? '0344611862' : '0344611822'}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${i === 0 ? '1862' : '1822'}</a>
         </div>
         ${grid}
-        ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.firstName)} ${escapeHTML(m.lastName.charAt(0)).toUpperCase()}. ${medEditable ? `<span class="remove-btn" onclick="clearShift(${i},'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${medEditable ? `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" oninput="doSearch('med-${i}',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
+        ${m ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m.firstName)} ${escapeHTML(m.lastName.charAt(0)).toUpperCase()}. ${medEditable ? `<span class="remove-btn" data-action="clearShift:${i},med">\u00D7</span>` : ''}</div>` : `<div class="search-box">${medEditable ? `<input type="text" id="search-med-${i}" placeholder="\uD83D\uDD0D Nom Doc..." class="special-input" data-input="doSearch:med-${i},$val" autocomplete="off"><div class="suggestions" id="sugg-med-${i}"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
       </div>`;
     });
 
@@ -244,8 +244,8 @@ window.renderApp = function renderApp() {
     const _scoreTask = _pct === 100 ? '\u2713 OK' : `${_done}/${_total}`;
     const _techName = techP ? `${escapeHTML(techP.firstName)} ${escapeHTML(techP.lastName[0]) || ''}.` : '---';
     const _techBarClick = _isTechMine
-        ? `onclick="event.stopPropagation();openTasks()"`
-        : `onclick="event.stopPropagation()"`;
+        ? `data-stop data-action="openTasks"`
+        : `data-stop`;
 
     // 2026-05-03 — Bordure GAUCHE violette sur la carte IDE TECH UNIQUEMENT
     // si l'IDE Tech courant a une note perso (bedId virtuel tech_ide).
@@ -257,13 +257,13 @@ window.renderApp = function renderApp() {
                                 && !!window.getBedNoteForCurrentUser('tech_ide', dateOnly, false);
     const _techCardBorder = _techCardHasOwnNote ? 'border-left:4px solid var(--tech);' : '';
 
-    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" onclick="handleTechIdeTap(event)" title="${_techCardHasOwnNote ? 'Mes notes perso présentes' : ''}">
+    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" data-action="handleTechIdeTap:$ev" title="${_techCardHasOwnNote ? 'Mes notes perso présentes' : ''}">
       <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
       <div class="bed-header">
         <span class="b-num" style="color:var(--tech);">IDE TECH</span>
         <div class="b-actions" style="${locked ? 'opacity:0.5;pointer-events:none;' : ''}">
-          <a href="tel:0344617125" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 7125</a>
-          <a href="tel:0344616086" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 6086</a>
+          <a href="tel:0344617125" data-stop style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 7125</a>
+          <a href="tel:0344616086" data-stop style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 6086</a>
         </div>
       </div>
       <div class="cl-bar-row" ${_techBarClick}>
@@ -280,7 +280,7 @@ window.renderApp = function renderApp() {
     let uGrid = `<div class="med-beds-selector" style="${!usipMedEditable ? 'opacity:0.6; pointer-events:none;' : ''}">`;
     [1, 2, 3, 4, 5].forEach(n => {
         const isActive = mBeds['usip-' + n] === 2 ? 'active' : '';
-        uGrid += `<div class="med-bed-btn ${isActive}" onclick="toggleMedBed('usip-${n}', 2)">${n}</div>`;
+        uGrid += `<div class="med-bed-btn ${isActive}" data-action="toggleMedBed:usip-${n},2">${n}</div>`;
     });
     uGrid += `</div>`;
     let uPhone = (ms[2] && ms[2] === ms[0]) ? '1862' : (ms[2] && ms[2] === ms[1] ? '1822' : '');
@@ -291,12 +291,12 @@ window.renderApp = function renderApp() {
       <div class="bed-header" style="color:var(--med)">
         <div style="display:flex;align-items:center;gap:5px;">
           <span class="b-num">R\u00C9A USIP</span>
-          ${isAdmin() ? `<button onclick="event.stopPropagation();toggleMedLock()" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`}
+          ${isAdmin() ? `<button data-stop data-action="toggleMedLock" style="background:none;border:none;font-size:0.78rem;cursor:pointer;padding:0 3px;line-height:1;opacity:${h.medLocked ? '1' : '0.35'};" title="${h.medLocked ? 'D\u00E9verrouiller' : 'Verrouiller'}">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</button>` : `<span style="font-size:0.78rem;opacity:${h.medLocked ? '1' : '0.3'};">${h.medLocked ? '\uD83D\uDD12' : '\uD83D\uDD13'}</span>`}
         </div>
         ${uPhone ? `<a href="tel:${uPhoneNum}" style="font-size:0.75rem; font-weight:900; background:var(--med-glow); padding:4px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.3); color:var(--med); text-decoration:none;">\uD83D\uDCDE ${uPhone}</a>` : ''}
       </div>
       ${uGrid}
-      ${m2 ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m2.firstName)} ${escapeHTML(m2.lastName.charAt(0)).toUpperCase()}. ${usipMedEditable ? `<span class="remove-btn" onclick="clearShift(2,'med')">\u00D7</span>` : ''}</div>` : `<div class="search-box">${usipMedEditable ? `<input type="text" id="search-med-2" class="special-input" placeholder="\uD83D\uDD0D Nom Doc..." oninput="doSearch('med-2',this.value)" autocomplete="off"><div class="suggestions" id="sugg-med-2"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
+      ${m2 ? `<div class="staff-pill med-pill">Dr. ${escapeHTML(m2.firstName)} ${escapeHTML(m2.lastName.charAt(0)).toUpperCase()}. ${usipMedEditable ? `<span class="remove-btn" data-action="clearShift:2,med">\u00D7</span>` : ''}</div>` : `<div class="search-box">${usipMedEditable ? `<input type="text" id="search-med-2" class="special-input" placeholder="\uD83D\uDD0D Nom Doc..." data-input="doSearch:med-2,$val" autocomplete="off"><div class="suggestions" id="sugg-med-2"></div>` : '<span style="color:var(--text-muted);font-size:0.8rem;font-weight:700;">---</span>'}</div>`}
       `}
     </div>`;
 
@@ -313,7 +313,7 @@ window.renderApp = function renderApp() {
             if (isAdminLocked) {
                 boardHTML += `<div class="bed-card admin-closed"><div class="closed-overlay">${ICONS.closed}<span>LIT ${n}</span></div></div>`;
             } else if (d.closed) {
-                boardHTML += `<div class="bed-card closed" onclick="toggleLit('${id}','closed',event)"><div class="closed-overlay">${ICONS.closed}<span>LIT ${n}</span></div></div>`;
+                boardHTML += `<div class="bed-card closed" data-action="toggleLit:${id},closed,$ev"><div class="closed-overlay">${ICONS.closed}<span>LIT ${n}</span></div></div>`;
             } else {
                 boardHTML += (() => {
                     const _cl = ((shiftHistory[currentShiftKey] || {}).checklistChambre || {})[id] || {};
@@ -333,18 +333,18 @@ window.renderApp = function renderApp() {
                                             && window.hasTechNotesForBed(id);
                     const _borderLeftStyle = _showTechBorder ? 'border-left:4px solid var(--tech);' : '';
                     const _borderRightStyle = _myNote ? 'border-right:4px solid var(--brand-aqua);' : '';
-                    return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;${_borderLeftStyle}${_borderRightStyle}" onclick="handleBedTap('${id}')" title="${_showTechBorder ? 'Note tech présente · ' : ''}${_myNote ? 'Ma note présente' : ''}">
+                    return `<div class="bed-card ${d.crit ? 'critical' : ''} ${selectedStaffForTap && !locked ? 'targetable' : ''}" style="position:relative;${_borderLeftStyle}${_borderRightStyle}" data-action="handleBedTap:${id}" title="${_showTechBorder ? 'Note tech présente · ' : ''}${_myNote ? 'Ma note présente' : ''}">
               <div class="bed-bg-num">${n}</div>
               <div class="bed-header">
                   <span class="b-num">${n}</span>
                   <div class="b-actions" style="${locked ? 'opacity:0.5;pointer-events:none;' : ''}">
-                      <button class="a-btn ${d.bmr ? 'active bmr' : ''}" onclick="toggleLit('${id}','bmr',event)">${ICONS.bmr}</button>
-                      <button class="a-btn ${d.dialyse ? 'active dialyse' : ''}" onclick="toggleLit('${id}','dialyse',event)">${ICONS.dialyse}</button>
-                      <button class="a-btn ${d.crit ? 'active crit' : ''}" onclick="toggleLit('${id}','crit',event)">${ICONS.crit}</button>
-                      <button class="a-btn" onclick="toggleLit('${id}','closed',event)">${ICONS.closed}</button>
+                      <button class="a-btn ${d.bmr ? 'active bmr' : ''}" data-action="toggleLit:${id},bmr,$ev">${ICONS.bmr}</button>
+                      <button class="a-btn ${d.dialyse ? 'active dialyse' : ''}" data-action="toggleLit:${id},dialyse,$ev">${ICONS.dialyse}</button>
+                      <button class="a-btn ${d.crit ? 'active crit' : ''}" data-action="toggleLit:${id},crit,$ev">${ICONS.crit}</button>
+                      <button class="a-btn" data-action="toggleLit:${id},closed,$ev">${ICONS.closed}</button>
                   </div>
               </div>
-              <div class="cl-bar-row" onclick="event.stopPropagation();openChecklist('${id}')">
+              <div class="cl-bar-row" data-stop data-action="openChecklist:${id}">
                   <div class="cl-minibar"><div class="cl-minibar-fill ${_stCl}" style="width:${_pct}%"></div></div>
                   <span class="cl-score ${_stCl}">${_scoreTxt}</span>
               </div>

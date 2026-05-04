@@ -57,6 +57,11 @@
   }
 
   document.addEventListener('click', function (e) {
+    // data-stop sur n'importe quel ancêtre du target → stopPropagation immédiat.
+    // Permet de migrer les `onclick="event.stopPropagation();..."` inline sans
+    // avoir à gérer l'arrêt côté handler.
+    var stopEl = e.target.closest('[data-stop]');
+    if (stopEl) e.stopPropagation();
     var el = e.target.closest('[data-action]');
     if (!el) return;
     if (el.tagName === 'A' && (el.getAttribute('href') || '').startsWith('#')) {

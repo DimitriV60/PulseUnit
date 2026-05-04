@@ -67,7 +67,7 @@ window.renderNormes = function renderNormes() {
     const filtersEl = document.getElementById('normes-cat-filters');
     if (filtersEl) {
         filtersEl.innerHTML = NORMES_REF.map(c =>
-            `<button class="normes-cat-btn${normesCurrentCat===c.id?' active':''}" onclick="setNormesCat('${c.id}')">${c.icon} ${c.label}</button>`
+            `<button class="normes-cat-btn${normesCurrentCat===c.id?' active':''}" data-action="setNormesCat:${c.id}">${c.icon} ${c.label}</button>`
         ).join('');
     }
     const cat = NORMES_REF.find(c => c.id === normesCurrentCat);

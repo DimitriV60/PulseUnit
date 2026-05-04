@@ -57,7 +57,7 @@ window.renderPathologies = function renderPathologies() {
           <div style="display:flex; flex-direction:column; gap:6px;">`;
         pathos.forEach(p => {
             html += `
-            <div onclick="togglePathoDef('${escapeHTML(p.id)}')" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer;">
+            <div data-action="togglePathoDef:${escapeHTML(p.id)}" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer;">
               <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                 <span style="font-size:0.88rem; font-weight:800; color:var(--text);">${escapeHTML(p.name)}</span>
                 <span id="patho-chevron-${escapeHTML(p.id)}" style="font-size:0.8rem; color:var(--text-muted); flex-shrink:0; transition:transform 0.2s;">▼</span>

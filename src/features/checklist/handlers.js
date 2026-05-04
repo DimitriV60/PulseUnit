@@ -93,7 +93,7 @@ window.renderChecklistView = function renderChecklistView() {
         const isActive = bid === currentChecklistBed ? 'active' : '';
         const parts = bid.split('-');
         const label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
-        selectorHTML += `<div class="cl-bed-btn ${isActive} ${stateClass}" onclick="selectChecklistBed('${bid}')">${label} <span style="opacity:0.8;">${done}/${total}</span></div>`;
+        selectorHTML += `<div class="cl-bed-btn ${isActive} ${stateClass}" data-action="selectChecklistBed:${bid}">${label} <span style="opacity:0.8;">${done}/${total}</span></div>`;
     });
     document.getElementById('cl-bed-selector').innerHTML = selectorHTML;
 
@@ -113,7 +113,7 @@ window.renderChecklistView = function renderChecklistView() {
     CHECKLIST_ITEMS.forEach(item => {
         const checked = !!cl[item.id];
         itemsHTML += `
-        <div class="cl-item ${checked ? 'checked' : ''}" onclick="toggleChecklistItem('${item.id}')">
+        <div class="cl-item ${checked ? 'checked' : ''}" data-action="toggleChecklistItem:${item.id}">
           <div class="cl-item-box">${checked ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}</div>
           <span class="cl-item-icon">${item.icon}</span>
           <span class="cl-item-label">${item.label}</span>

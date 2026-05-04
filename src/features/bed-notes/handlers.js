@@ -537,7 +537,7 @@ function _renderNoteTabsUI() {
         } else {
             label = '+ Vide';
         }
-        html += `<button onclick="switchBedNoteTab(${i})" style="flex:1; min-width:62px; padding:6px 3px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : (hasNote ? 'var(--text)' : 'var(--text-muted)')}; font-weight:${isActive ? '900' : '700'}; font-size:0.7rem; cursor:pointer; transition:all 0.15s; line-height:1.15; white-space:pre;">${label}</button>`;
+        html += `<button data-action="switchBedNoteTab:${i}" style="flex:1; min-width:62px; padding:6px 3px; border-radius:8px; border:1px solid ${isActive ? 'var(--brand-aqua)' : 'var(--border)'}; background:${isActive ? 'rgba(64,206,234,0.12)' : 'transparent'}; color:${isActive ? 'var(--brand-aqua)' : (hasNote ? 'var(--text)' : 'var(--text-muted)')}; font-weight:${isActive ? '900' : '700'}; font-size:0.7rem; cursor:pointer; transition:all 0.15s; line-height:1.15; white-space:pre;">${label}</button>`;
     }
     container.innerHTML = html;
 }
@@ -937,11 +937,11 @@ function _renderDeleteChooserUI() {
     const canDeleteSurvey = _isAdmin || _isAssignedToBed;
 
     // Style commun pour cohérence visuelle (cartes uniformes, accent gauche par couleur)
-    const _row = (accent, icon, title, sub, onclick, disabled) => {
+    const _row = (accent, icon, title, sub, scope, disabled) => {
         const bg = disabled ? 'var(--surface-sec)' : 'var(--surface)';
         const opacity = disabled ? '0.55' : '1';
         const cursor = disabled ? 'default' : 'pointer';
-        const click = disabled ? '' : `onclick="${onclick}"`;
+        const click = disabled ? '' : `data-action="confirmDeleteBedNote:${scope}"`;
         const lock = disabled ? '<span style="margin-left:auto; font-size:0.95rem;">🔒</span>' : '';
         return `<div ${click} style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--border); border-left:4px solid ${accent}; border-radius:10px; background:${bg}; cursor:${cursor}; opacity:${opacity}; text-align:left;">
             <span style="font-size:1.2rem; line-height:1;">${icon}</span>
@@ -956,20 +956,20 @@ function _renderDeleteChooserUI() {
     let html = `<div style="font-weight:900; color:#fff; font-size:1.05rem; margin-bottom:14px; text-align:center; letter-spacing:0.3px;">Que supprimer ?</div>`;
 
     if (hasText) {
-        html += _row('var(--brand-aqua)', '📝', 'Observations privées', 'Visibles par vous seul', `confirmDeleteBedNote('text')`, false);
+        html += _row('var(--brand-aqua)', '📝', 'Observations privées', 'Visibles par vous seul', 'text', false);
     }
     if (hasSurvey) {
         html += _row('var(--ide)', '📋', 'Surveillance partagée',
             canDeleteSurvey ? 'Paramètres vitaux — IDE + AS du lit' : 'Suppression réservée à l\'IDE/AS du lit',
-            `confirmDeleteBedNote('survey')`, !canDeleteSurvey);
+            'survey', !canDeleteSurvey);
     }
     if (hasTech) {
-        html += _row('var(--tech)', '🛠', 'Note IDE TECH', 'Visible par l\'IDE Tech', `confirmDeleteBedNote('tech')`, false);
+        html += _row('var(--tech)', '🛠', 'Note IDE TECH', 'Visible par l\'IDE Tech', 'tech', false);
     }
 
     const _multi = [hasText, hasSurvey && canDeleteSurvey, hasTech].filter(Boolean).length >= 2;
     if (_multi) {
-        html += `<div onclick="confirmDeleteBedNote('all')" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 14px; border-radius:10px; background:var(--crit); color:#fff; font-weight:900; font-size:0.92rem; cursor:pointer; margin-top:4px; border:1px solid var(--crit);">
+        html += `<div data-action="confirmDeleteBedNote:all" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 14px; border-radius:10px; background:var(--crit); color:#fff; font-weight:900; font-size:0.92rem; cursor:pointer; margin-top:4px; border:1px solid var(--crit);">
             <span style="font-size:1.1rem;">🗑️</span>
             <span>Tout supprimer</span>
         </div>`;
@@ -979,7 +979,7 @@ function _renderDeleteChooserUI() {
         html += `<div style="color:rgba(255,255,255,0.7); font-size:0.85rem; text-align:center; padding:14px; background:rgba(255,255,255,0.05); border-radius:10px;">Rien à supprimer dans cette garde.</div>`;
     }
 
-    html += `<button onclick="cancelDeleteBedNote()" style="padding:10px; border-radius:10px; border:none; background:transparent; color:rgba(255,255,255,0.7); font-weight:700; font-size:0.85rem; cursor:pointer; margin-top:6px;">Annuler</button>`;
+    html += `<button data-action="cancelDeleteBedNote" style="padding:10px; border-radius:10px; border:none; background:transparent; color:rgba(255,255,255,0.7); font-weight:700; font-size:0.85rem; cursor:pointer; margin-top:6px;">Annuler</button>`;
     el.innerHTML = html;
 }
 

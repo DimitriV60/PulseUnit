@@ -256,7 +256,7 @@ function rvRenderScenarios() {
         const active = respiScenario === sc.id;
         return `<button class="rv-scene-btn${active?' active':''}"
         style="${active?`background:${sc.color}25;border-color:${sc.color};color:${sc.color};`:''}"
-        onclick="applyRvScenario('${sc.id}')">${sc.label}</button>`;
+        data-action="applyRvScenario:${sc.id}">${sc.label}</button>`;
     }).join('');
 }
 

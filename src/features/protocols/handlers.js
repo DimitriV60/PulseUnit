@@ -20,7 +20,7 @@ window.renderProtoList = function renderProtoList() {
     let html = '';
     PROTOCOLS_DATA.forEach(p => {
         html += `
-        <div class="proto-card" onclick="openProtocoleDetail('${p.id}')" style="border-left:4px solid ${p.color};">
+        <div class="proto-card" data-action="openProtocoleDetail:${p.id}" style="border-left:4px solid ${p.color};">
           <div class="proto-card-icon">${p.icon}</div>
           <div class="proto-card-body">
             <div class="proto-card-title">${escapeHTML(p.title)}</div>
@@ -54,7 +54,7 @@ window.renderProtoDetail = function renderProtoDetail(p) {
         const isFirst = si === 0;
         html += `
         <div class="proto-section">
-          <div class="proto-section-header" onclick="toggleProtoSection('${sec.id}')">
+          <div class="proto-section-header" data-action="toggleProtoSection:${sec.id}">
             <div class="proto-section-title">
               <span>${sec.icon}</span>
               <span>${escapeHTML(sec.title)}</span>
