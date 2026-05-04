@@ -488,6 +488,10 @@ function _slotHasContent(slotIdx, bedId, userNotes) {
     if (own && !_isTextOnlyNoteEmpty(own)) return true;
     const shared = _getSharedSurvey(bedId, slotIdx);
     if (shared && !_isSurveyEmpty(shared.survey)) return true;
+    // 2026-05-03 — inclut les tech notes pour activer le bouton Supprimer
+    // côté IDE Tech (sans tech note préexistante).
+    const tech = (typeof _getTechNote === 'function') ? _getTechNote(bedId, slotIdx) : null;
+    if (tech && (tech.text || '').trim() !== '') return true;
     return false;
 }
 
@@ -909,17 +913,36 @@ function _renderDeleteChooserUI() {
     const hasText = own && !_isTextOnlyNoteEmpty(own);
     const sharedSlot = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
     const hasSurvey = sharedSlot && !_isSurveyEmpty(sharedSlot.survey);
+    // 2026-05-03 — Tech notes : visible IDE Tech / admin ; jamais sur tech_ide.
+    const h = (typeof shiftHistory !== 'undefined' && currentShiftKey) ? shiftHistory[currentShiftKey] : null;
+    const _isTechIde = !!(currentUser && h && h.techIdeId === currentUser.id);
+    const _isAdmin = (typeof isAdmin === 'function') && isAdmin();
+    const techNote = (_currentNotesBed !== TECH_BED_ID && (_isTechIde || _isAdmin))
+        ? _getTechNote(_currentNotesBed, _activeNoteSlot) : null;
+    const hasTech = techNote && (techNote.text || '').trim() !== '';
+    // 2026-05-03 — l'IDE Tech ne peut PAS supprimer la surveillance partagée
+    // (paramètres vitaux). Seul l'IDE/AS assigné au lit ou l'admin le peut.
+    const _assigned = (h && h.assignments && h.assignments[_currentNotesBed]) || {};
+    const _isAssignedToBed = !!(currentUser && (_assigned.ide === currentUser.id || _assigned.as === currentUser.id));
+    const canDeleteSurvey = _isAdmin || _isAssignedToBed;
     let html = `<div style="font-weight:900; color:var(--text); font-size:1rem; margin-bottom:14px; text-align:center;">Que supprimer ?</div>`;
     if (hasText) {
         html += `<button onclick="confirmDeleteBedNote('text')" style="padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; text-align:left;">📝 Observations privées <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(visible par vous seul)</span></button>`;
     }
-    if (hasSurvey) {
+    if (hasSurvey && canDeleteSurvey) {
         html += `<button onclick="confirmDeleteBedNote('survey')" style="padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; text-align:left;">📋 Surveillance partagée <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(IDE + AS)</span></button>`;
+    } else if (hasSurvey && !canDeleteSurvey) {
+        html += `<div style="padding:10px 12px; border-radius:10px; border:1px dashed var(--border); background:var(--surface-sec); color:var(--text-muted); font-weight:700; font-size:0.78rem; text-align:left;">🔒 Surveillance partagée <span style="font-weight:600;">— suppression réservée à l'IDE/AS du lit</span></div>`;
     }
-    if (hasText && hasSurvey) {
-        html += `<button onclick="confirmDeleteBedNote('both')" style="padding:12px; border-radius:10px; border:1px solid var(--crit); background:var(--crit); color:white; font-weight:900; cursor:pointer;">🗑️ Tout supprimer</button>`;
+    if (hasTech) {
+        html += `<button onclick="confirmDeleteBedNote('tech')" style="padding:12px; border-radius:10px; border:1px solid var(--tech); background:rgba(168,85,247,0.10); color:var(--tech); font-weight:800; cursor:pointer; text-align:left;">🛠 Note IDE TECH <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(visible IDE Tech)</span></button>`;
     }
-    if (!hasText && !hasSurvey) {
+    // Tout supprimer = somme de ce que le user a le droit de supprimer
+    const _multi = [hasText, hasSurvey && canDeleteSurvey, hasTech].filter(Boolean).length >= 2;
+    if (_multi) {
+        html += `<button onclick="confirmDeleteBedNote('all')" style="padding:12px; border-radius:10px; border:1px solid var(--crit); background:var(--crit); color:white; font-weight:900; cursor:pointer;">🗑️ Tout supprimer</button>`;
+    }
+    if (!hasText && !hasSurvey && !hasTech) {
         html += `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:8px;">Rien à supprimer dans cette garde.</div>`;
     }
     html += `<button onclick="cancelDeleteBedNote()" style="padding:10px; border-radius:10px; border:none; background:transparent; color:var(--text-muted); font-weight:700; cursor:pointer; margin-top:6px;">Annuler</button>`;
@@ -928,19 +951,29 @@ function _renderDeleteChooserUI() {
 
 window.confirmDeleteBedNote = function confirmDeleteBedNote(scope) {
     if (!_currentNotesBed) return;
-    if (scope === 'text' || scope === 'both') {
+    const h = (typeof shiftHistory !== 'undefined' && currentShiftKey) ? shiftHistory[currentShiftKey] : null;
+    const _isAdmin = (typeof isAdmin === 'function') && isAdmin();
+    const _assigned = (h && h.assignments && h.assignments[_currentNotesBed]) || {};
+    const _isAssignedToBed = !!(currentUser && (_assigned.ide === currentUser.id || _assigned.as === currentUser.id));
+    const canDeleteSurvey = _isAdmin || _isAssignedToBed;
+    if (scope === 'text' || scope === 'all') {
         const notes = _getBedNotes();
         delete notes[_slotKey(_activeNoteSlot, _currentNotesBed)];
         _saveBedNotes(notes);
     }
-    if (scope === 'survey' || scope === 'both') {
+    if ((scope === 'survey' || scope === 'all') && canDeleteSurvey) {
         _saveSharedSurvey(_currentNotesBed, _activeNoteSlot, {}, null);
+    }
+    if (scope === 'tech' || scope === 'all') {
+        // _saveTechNote('') supprime la note (texte vide)
+        if (typeof _saveTechNote === 'function') _saveTechNote(_currentNotesBed, _activeNoteSlot, '');
     }
     cancelDeleteBedNote();
     _loadNoteSlot(_activeNoteSlot);
     renderApp();
     const msg = scope === 'text'   ? '🗑️ Observations supprimées'
               : scope === 'survey' ? '🗑️ Surveillance supprimée'
-              : '🗑️ Note supprimée (texte + surveillance)';
+              : scope === 'tech'   ? '🗑️ Note IDE TECH supprimée'
+              :                      '🗑️ Tout supprimé';
     showToast(msg);
 };
