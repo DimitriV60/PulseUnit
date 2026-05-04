@@ -758,10 +758,10 @@ window.openBedNote = function openBedNote(bedId) {
     _currentNotesBed = bedId;
     let label;
     if (bedId === TECH_BED_ID) {
-        label = 'IDE TECH — Mes notes';
+        label = 'IDE TECH';
     } else {
         const parts = bedId.split('-');
-        label = parts[0] === 'rea' ? `RÉA ${parts[1]}` : `USIP ${parts[1]}`;
+        label = parts[0] === 'rea' ? `Lit RÉA ${parts[1]}` : `Lit USIP ${parts[1]}`;
     }
     document.getElementById('bed-note-bed-label').textContent = label;
 
