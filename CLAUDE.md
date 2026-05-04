@@ -30,6 +30,17 @@ Ne jamais laisser un changement sur une seule branche. Après chaque commit sur 
 2. **Ensuite** seulement, mentionner les options payantes en précisant le tarif et le bénéfice par rapport au gratuit.
 3. Si le gratuit suffit pour le besoin, le dire explicitement et ne pas pousser le payant.
 
+## Modifications visuelles — accord obligatoire
+
+**INTERDIT** : Aucune modification visuelle (layout, taille, position, couleur, espacement, structure HTML d'un composant existant) sans accord explicite de Dimitri au préalable.
+
+Si une demande implique une modification visuelle non explicitement demandée :
+1. **Décrire** ce qui va changer visuellement avant d'agir.
+2. **Attendre l'accord** explicite (« ok », « vas-y », « valide »).
+3. Ne **jamais** réorganiser, redimensionner ou re-styler un élément existant pour « optimiser » sans demande.
+
+S'applique en particulier à : cartes lit, carte IDE TECH, cartes médecins, barres de progression, pills d'effectif, header, sidemenu, modales.
+
 ## Maintenance du Guide et du Lexique in-app
 
 À chaque **nouvelle fonctionnalité ou changement important** dans PulseUnit, mettre à jour :

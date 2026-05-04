@@ -248,13 +248,14 @@ window.renderApp = function renderApp() {
                               && window.getRoomsWithTechNotes().length > 0;
     const _techCardBorder = _techCardHasNotes ? 'border-right:4px solid var(--tech);' : '';
 
-    // 2026-05-03 \u2014 Num\u00E9ros t\u00E9l\u00E9phone IDE TECH plac\u00E9s en colonne verticale
-    // ABSOLUE \u00E0 droite de la carte (Dimitri). Padding-right de la carte
-    // augment\u00E9 pour ne pas recouvrir la barre des t\u00E2ches / la pill IDE.
-    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}padding-right:62px;" onclick="handleTechIdeTap(event)" title="${_techCardHasNotes ? 'Notes tech en attente dans des chambres' : ''}">
+    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" onclick="handleTechIdeTap(event)" title="${_techCardHasNotes ? 'Notes tech en attente dans des chambres' : ''}">
       <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
       <div class="bed-header">
         <span class="b-num" style="color:var(--tech);">IDE TECH</span>
+        <div class="b-actions" style="${locked ? 'opacity:0.5;pointer-events:none;' : ''}">
+          <a href="tel:0344617125" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 7125</a>
+          <a href="tel:0344616086" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap;">\uD83D\uDCDE 6086</a>
+        </div>
       </div>
       <div class="cl-bar-row" ${_techBarClick}>
         <div class="cl-minibar"><div class="cl-minibar-fill ${_stTask}" style="width:${_pct}%"></div></div>
@@ -262,10 +263,6 @@ window.renderApp = function renderApp() {
       </div>
       <div class="pill-container">
         <div class="staff-pill ${techP ? 'ide-pill' : 'empty-pill'}"><span class="pill-prefix">IDE</span><span>${_techName}</span></div>
-      </div>
-      <div style="position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:4px; ${locked ? 'opacity:0.5;pointer-events:none;' : ''} z-index:2;">
-        <a href="tel:0344617125" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap; text-align:center;">\uD83D\uDCDE 7125</a>
-        <a href="tel:0344616086" onclick="event.stopPropagation()" style="font-size:0.65rem; font-weight:900; background:var(--tech-glow); padding:3px 6px; border-radius:5px; border:1px solid rgba(168,85,247,0.3); color:var(--tech); text-decoration:none; white-space:nowrap; text-align:center;">\uD83D\uDCDE 6086</a>
       </div>
     </div>`;
 
