@@ -295,6 +295,9 @@ window.selfAssignTech = function selfAssignTech() {
     }
     h.techIdeId = currentUser.id;
     if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
+    // 2026-05-03 — L'IDE Tech ne peut pas être assigné à un lit en même temps
+    // (Dimitri). On retire automatiquement de toutes les chambres existantes.
+    _unassignUserFromAllBeds(h, currentUser.id);
     saveData();
     renderApp();
     showToast('✅ Vous êtes IDE Tech');
@@ -302,6 +305,18 @@ window.selfAssignTech = function selfAssignTech() {
         setTimeout(() => window.notifyTechIdeOfPendingNotes(), 600);
     }
 };
+
+// 2026-05-03 — Retire userId de tous les slots IDE/AS de tous les lits
+// d'une garde. Utilisé quand on prend le slot IDE Tech.
+function _unassignUserFromAllBeds(h, userId) {
+    if (!h || !h.assignments) return;
+    Object.keys(h.assignments).forEach(bedId => {
+        const d = h.assignments[bedId];
+        if (!d) return;
+        if (d.ide === userId) d.ide = null;
+        if (d.as === userId) d.as = null;
+    });
+}
 
 /**
  * Bed-like tap handler pour la carte IDE TECH (2026-05-02) :
@@ -351,6 +366,8 @@ window.handleTechIdeTap = function handleTechIdeTap(ev) {
     }
     h.techIdeId = currentUser.id;
     if (!h.activeStaffIds.includes(currentUser.id)) h.activeStaffIds.push(currentUser.id);
+    // 2026-05-03 — Retire de toutes les chambres : pas de cumul tech + lit.
+    _unassignUserFromAllBeds(h, currentUser.id);
     saveData();
     renderApp();
     showToast('✅ Vous êtes IDE Tech — double-tap pour vos notes');

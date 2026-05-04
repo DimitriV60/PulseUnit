@@ -50,7 +50,14 @@ window.assignLit = function assignLit(id) {
     const p = roster.find(r => r.id === selectedStaffForTap);
     if (!p) return;
     initShiftData(currentShiftKey);
-    const d = shiftHistory[currentShiftKey].assignments[id];
+    // 2026-05-03 \u2014 L'IDE Tech ne peut pas \u00EAtre affect\u00E9 \u00E0 un lit (Dimitri).
+    // Bloque la tentative et oriente vers la lib\u00E9ration du slot tech.
+    const _h = shiftHistory[currentShiftKey];
+    if (_h && _h.techIdeId === p.id) {
+        showToast('\u26D4 L\'IDE Tech n\'est pas affect\u00E9 \u00E0 un lit. Lib\u00E8re le slot tech d\'abord.');
+        return;
+    }
+    const d = _h.assignments[id];
     if (!d) return;
     d[p.role] = (d[p.role] === p.id) ? null : p.id;
     renderApp();
