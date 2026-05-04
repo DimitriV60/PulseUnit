@@ -913,39 +913,60 @@ function _renderDeleteChooserUI() {
     const hasText = own && !_isTextOnlyNoteEmpty(own);
     const sharedSlot = _getSharedSurvey(_currentNotesBed, _activeNoteSlot);
     const hasSurvey = sharedSlot && !_isSurveyEmpty(sharedSlot.survey);
-    // 2026-05-03 — Tech notes : visible IDE Tech / admin ; jamais sur tech_ide.
     const h = (typeof shiftHistory !== 'undefined' && currentShiftKey) ? shiftHistory[currentShiftKey] : null;
     const _isTechIde = !!(currentUser && h && h.techIdeId === currentUser.id);
     const _isAdmin = (typeof isAdmin === 'function') && isAdmin();
     const techNote = (_currentNotesBed !== TECH_BED_ID && (_isTechIde || _isAdmin))
         ? _getTechNote(_currentNotesBed, _activeNoteSlot) : null;
     const hasTech = techNote && (techNote.text || '').trim() !== '';
-    // 2026-05-03 — l'IDE Tech ne peut PAS supprimer la surveillance partagée
-    // (paramètres vitaux). Seul l'IDE/AS assigné au lit ou l'admin le peut.
     const _assigned = (h && h.assignments && h.assignments[_currentNotesBed]) || {};
     const _isAssignedToBed = !!(currentUser && (_assigned.ide === currentUser.id || _assigned.as === currentUser.id));
     const canDeleteSurvey = _isAdmin || _isAssignedToBed;
-    let html = `<div style="font-weight:900; color:var(--text); font-size:1rem; margin-bottom:14px; text-align:center;">Que supprimer ?</div>`;
+
+    // Style commun pour cohérence visuelle (cartes uniformes, accent gauche par couleur)
+    const _row = (accent, icon, title, sub, onclick, disabled) => {
+        const bg = disabled ? 'var(--surface-sec)' : 'var(--surface)';
+        const opacity = disabled ? '0.55' : '1';
+        const cursor = disabled ? 'default' : 'pointer';
+        const click = disabled ? '' : `onclick="${onclick}"`;
+        const lock = disabled ? '<span style="margin-left:auto; font-size:0.95rem;">🔒</span>' : '';
+        return `<div ${click} style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--border); border-left:4px solid ${accent}; border-radius:10px; background:${bg}; cursor:${cursor}; opacity:${opacity}; text-align:left;">
+            <span style="font-size:1.2rem; line-height:1;">${icon}</span>
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:900; color:var(--text); font-size:0.9rem; line-height:1.25;">${title}</div>
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.72rem; line-height:1.3; margin-top:2px;">${sub}</div>
+            </div>
+            ${lock}
+        </div>`;
+    };
+
+    let html = `<div style="font-weight:900; color:#fff; font-size:1.05rem; margin-bottom:14px; text-align:center; letter-spacing:0.3px;">Que supprimer ?</div>`;
+
     if (hasText) {
-        html += `<button onclick="confirmDeleteBedNote('text')" style="padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; text-align:left;">📝 Observations privées <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(visible par vous seul)</span></button>`;
+        html += _row('var(--brand-aqua)', '📝', 'Observations privées', 'Visibles par vous seul', `confirmDeleteBedNote('text')`, false);
     }
-    if (hasSurvey && canDeleteSurvey) {
-        html += `<button onclick="confirmDeleteBedNote('survey')" style="padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; text-align:left;">📋 Surveillance partagée <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(IDE + AS)</span></button>`;
-    } else if (hasSurvey && !canDeleteSurvey) {
-        html += `<div style="padding:10px 12px; border-radius:10px; border:1px dashed var(--border); background:var(--surface-sec); color:var(--text-muted); font-weight:700; font-size:0.78rem; text-align:left;">🔒 Surveillance partagée <span style="font-weight:600;">— suppression réservée à l'IDE/AS du lit</span></div>`;
+    if (hasSurvey) {
+        html += _row('var(--ide)', '📋', 'Surveillance partagée',
+            canDeleteSurvey ? 'Paramètres vitaux — IDE + AS du lit' : 'Suppression réservée à l\'IDE/AS du lit',
+            `confirmDeleteBedNote('survey')`, !canDeleteSurvey);
     }
     if (hasTech) {
-        html += `<button onclick="confirmDeleteBedNote('tech')" style="padding:12px; border-radius:10px; border:1px solid var(--tech); background:rgba(168,85,247,0.10); color:var(--tech); font-weight:800; cursor:pointer; text-align:left;">🛠 Note IDE TECH <span style="color:var(--text-muted); font-weight:700; font-size:0.8rem;">(visible IDE Tech)</span></button>`;
+        html += _row('var(--tech)', '🛠', 'Note IDE TECH', 'Visible par l\'IDE Tech', `confirmDeleteBedNote('tech')`, false);
     }
-    // Tout supprimer = somme de ce que le user a le droit de supprimer
+
     const _multi = [hasText, hasSurvey && canDeleteSurvey, hasTech].filter(Boolean).length >= 2;
     if (_multi) {
-        html += `<button onclick="confirmDeleteBedNote('all')" style="padding:12px; border-radius:10px; border:1px solid var(--crit); background:var(--crit); color:white; font-weight:900; cursor:pointer;">🗑️ Tout supprimer</button>`;
+        html += `<div onclick="confirmDeleteBedNote('all')" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 14px; border-radius:10px; background:var(--crit); color:#fff; font-weight:900; font-size:0.92rem; cursor:pointer; margin-top:4px; border:1px solid var(--crit);">
+            <span style="font-size:1.1rem;">🗑️</span>
+            <span>Tout supprimer</span>
+        </div>`;
     }
+
     if (!hasText && !hasSurvey && !hasTech) {
-        html += `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:8px;">Rien à supprimer dans cette garde.</div>`;
+        html += `<div style="color:rgba(255,255,255,0.7); font-size:0.85rem; text-align:center; padding:14px; background:rgba(255,255,255,0.05); border-radius:10px;">Rien à supprimer dans cette garde.</div>`;
     }
-    html += `<button onclick="cancelDeleteBedNote()" style="padding:10px; border-radius:10px; border:none; background:transparent; color:var(--text-muted); font-weight:700; cursor:pointer; margin-top:6px;">Annuler</button>`;
+
+    html += `<button onclick="cancelDeleteBedNote()" style="padding:10px; border-radius:10px; border:none; background:transparent; color:rgba(255,255,255,0.7); font-weight:700; font-size:0.85rem; cursor:pointer; margin-top:6px;">Annuler</button>`;
     el.innerHTML = html;
 }
 
