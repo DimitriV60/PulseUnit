@@ -824,6 +824,24 @@ async function handleAudit({ env, body, origin, request }) {
   return jsonResponse(res, res.ok ? 200 : 500, origin);
 }
 
+// ── Read-modify-write de pulseunit/auth.users via SA ────────────────────────
+// Fix bug dotted-paths Firestore REST (2026-05-03) : passer
+// `{"users.uid": userObj}` en body fields ne crée PAS un nested update — la
+// clé est traitée comme un champ littéral plat. Workaround : lire la map
+// users complète, muter en JS, PATCH avec field `users` entier + updateMask
+// `['users']`. Pas de race significatif sur ce volume (register/change-pin
+// = quelques req/jour max).
+async function _firestoreUpdateUsersMap(env, projectId, mutator) {
+  const auth = await _firestoreGet(env, projectId, 'pulseunit/auth');
+  const users = (auth && auth.users) || {};
+  const newUsers = mutator(users);
+  if (!newUsers || typeof newUsers !== 'object') {
+    return { ok: false, err: 'mutator_invalid' };
+  }
+  return _firestoreUpdateDoc(env, projectId, 'pulseunit/auth',
+    { users: newUsers }, ['users']);
+}
+
 // ── PATCH d'un doc Firestore (set/merge) via SA ─────────────────────────────
 // Utilisé pour writes auth (register, change-pin) afin que les rules puissent
 // bloquer les writes client direct sur pulseunit/auth (P3.0 audit 2026-04-30).
@@ -898,7 +916,7 @@ async function handleRegister({ env, body, origin }) {
     _sha256Hex(pin),
     _pbkdf2Hex(pin, saltHex)
   ]);
-  // Update pulseunit/auth.users.{uid} via mergeFieldPaths
+  // Update pulseunit/auth.users.{uid} via read-modify-write (fix dotted-paths)
   const userObj = {
     firstName, lastName, role,
     pinHash: pinHashLegacy,
@@ -907,13 +925,10 @@ async function handleRegister({ env, body, origin }) {
     failedAttempts: 0, blocked: false, blockedAt: null,
     createdAt: Date.now()
   };
-  // Pour update.users.{uid}, on doit lire tout users puis re-écrire (ou utiliser
-  // updateMask avec champ dotted). Firestore supporte les chemins dotted.
-  const fieldPath = 'users.' + uid;
-  const upd = await _firestoreUpdateDoc(env, projectId, 'pulseunit/auth',
-    { ['users.' + uid]: userObj },
-    [fieldPath]
-  );
+  const upd = await _firestoreUpdateUsersMap(env, projectId, (users) => {
+    users[uid] = userObj;
+    return users;
+  });
   if (!upd.ok) {
     return jsonResponse({ error: 'firestore_write_failed', details: upd }, 500, origin);
   }
@@ -970,23 +985,20 @@ async function handleChangePin({ env, body, origin }) {
     _sha256Hex(newPin),
     _pbkdf2Hex(newPin, saltHex)
   ]);
-  // Update les 5 champs via dotted-paths
-  const upd = await _firestoreUpdateDoc(env, projectId, 'pulseunit/auth',
-    {
-      ['users.' + userId + '.pinHash']:   newLegacy,
-      ['users.' + userId + '.pinHashV2']: newV2,
-      ['users.' + userId + '.pinSalt']:   saltHex,
-      ['users.' + userId + '.tempPin']:   null,
-      ['users.' + userId + '.tempPinExpiry']: null
-    },
-    [
-      'users.' + userId + '.pinHash',
-      'users.' + userId + '.pinHashV2',
-      'users.' + userId + '.pinSalt',
-      'users.' + userId + '.tempPin',
-      'users.' + userId + '.tempPinExpiry'
-    ]
-  );
+  // Update les 5 champs via read-modify-write (fix dotted-paths)
+  const upd = await _firestoreUpdateUsersMap(env, projectId, (users) => {
+    if (!users[userId]) return null;
+    users[userId] = {
+      ...users[userId],
+      pinHash:        newLegacy,
+      pinHashV2:      newV2,
+      pinSalt:        saltHex,
+      tempPin:        null,
+      tempPinExpiry:  null,
+      failedAttempts: 0
+    };
+    return users;
+  });
   if (!upd.ok) return jsonResponse({ error: 'firestore_write_failed' }, 500, origin);
   return jsonResponse({ ok: true }, 200, origin);
 }
