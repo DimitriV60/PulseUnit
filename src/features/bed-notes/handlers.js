@@ -177,16 +177,31 @@ function _getSharedSurvey(bedId, slot) {
     return bed['slot_' + slot] || null;
 }
 
+// 2026-05-03 — Helper Firestore : REMPLACE la valeur d'un champ top-level
+// (pas de deep-merge). Indispensable pour que les suppressions locales de
+// slots soient répliquées côté serveur — sinon le snapshot rapatrie les
+// clés supprimées (bug "la note revient après suppression" — Dimitri).
+// Fallback set si le document n'existe pas encore.
+function _bedNotesFirestoreReplace(fieldKey, value) {
+    if (typeof BEDNOTES_DOC === 'undefined' || !BEDNOTES_DOC) return Promise.resolve();
+    window._bedNotesSavePending = true;
+    return BEDNOTES_DOC.update({ [fieldKey]: value })
+        .then(() => { window._bedNotesSavePending = false; })
+        .catch(e => {
+            if (e && (e.code === 'not-found' || /No document/i.test(e.message || ''))) {
+                return BEDNOTES_DOC.set({ [fieldKey]: value })
+                    .then(() => { window._bedNotesSavePending = false; });
+            }
+            window._bedNotesSavePending = false;
+            console.warn('Bed notes Firestore replace error', e);
+        });
+}
+
 function _persistSharedAll(shared) {
     if (!window.bedNotesData) window.bedNotesData = {};
     window.bedNotesData[SHARED_KEY] = shared;
     try { localStorage.setItem('pu_bn_shared', JSON.stringify(shared)); } catch (e) {}
-    if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
-        window._bedNotesSavePending = true;
-        BEDNOTES_DOC.set({ [SHARED_KEY]: shared }, { merge: true })
-            .then(() => { window._bedNotesSavePending = false; })
-            .catch(e => { window._bedNotesSavePending = false; console.warn('Bed shared survey sync error', e); });
-    }
+    _bedNotesFirestoreReplace(SHARED_KEY, shared);
 }
 
 function _saveSharedSurvey(bedId, slot, survey, prevCreatedAt) {
@@ -243,12 +258,7 @@ function _persistTechAll(all) {
     if (!window.bedNotesData) window.bedNotesData = {};
     window.bedNotesData[TECH_KEY] = all;
     try { localStorage.setItem('pu_bn_tech', JSON.stringify(all)); } catch (e) {}
-    if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
-        window._bedNotesSavePending = true;
-        BEDNOTES_DOC.set({ [TECH_KEY]: all }, { merge: true })
-            .then(() => { window._bedNotesSavePending = false; })
-            .catch(e => { window._bedNotesSavePending = false; console.warn('Bed tech notes sync error', e); });
-    }
+    _bedNotesFirestoreReplace(TECH_KEY, all);
 }
 
 function _saveTechNote(bedId, slot, text) {
@@ -411,12 +421,7 @@ function _getBedNotes() {
     if (dirty) {
         window.bedNotesData[currentUser.id] = mig.notes;
         try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(mig.notes)); } catch (e) {}
-        if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
-            window._bedNotesSavePending = true;
-            BEDNOTES_DOC.set({ [currentUser.id]: mig.notes }, { merge: true })
-                .then(() => { window._bedNotesSavePending = false; })
-                .catch(e => { window._bedNotesSavePending = false; console.warn('Bed notes migration sync error', e); });
-        }
+        _bedNotesFirestoreReplace(currentUser.id, mig.notes);
     }
     return _pruneExpired(mig.notes);
 }
@@ -425,12 +430,7 @@ function _saveBedNotes(notes) {
     if (!currentUser) return;
     window.bedNotesData[currentUser.id] = notes;
     try { localStorage.setItem('pu_bn_' + currentUser.id, JSON.stringify(notes)); } catch (e) {}
-    if (typeof BEDNOTES_DOC !== 'undefined' && BEDNOTES_DOC) {
-        window._bedNotesSavePending = true;
-        BEDNOTES_DOC.set({ [currentUser.id]: notes }, { merge: true })
-            .then(() => { window._bedNotesSavePending = false; })
-            .catch(e => { window._bedNotesSavePending = false; console.warn('Bed notes sync error', e); });
-    }
+    _bedNotesFirestoreReplace(currentUser.id, notes);
 }
 
 window.loadBedNotes = async function loadBedNotes() {
@@ -706,16 +706,29 @@ window.getBedNoteForCurrentUser = function getBedNoteForCurrentUser(bedId, dateO
     return null;
 };
 
+var _pendingAssignTimeout = {};
 window.handleBedTap = function handleBedTap(bedId) {
     const now = Date.now();
     const last = _lastBedTapTime[bedId] || 0;
-    _lastBedTapTime[bedId] = now;
     if (now - last < 400) {
+        // 2026-05-03 — double-tap détecté : on annule l'assign différé pour
+        // éviter le toast "Sélectionnez-vous d'abord" parasite (Dimitri).
         _lastBedTapTime[bedId] = 0;
+        if (_pendingAssignTimeout[bedId]) {
+            clearTimeout(_pendingAssignTimeout[bedId]);
+            _pendingAssignTimeout[bedId] = null;
+        }
         openBedNote(bedId);
         return;
     }
-    assignLit(bedId);
+    _lastBedTapTime[bedId] = now;
+    // Différer l'assign de 400ms : si un second tap arrive entretemps, on
+    // cancel et on ouvre la note à la place (sans toast intermédiaire).
+    if (_pendingAssignTimeout[bedId]) clearTimeout(_pendingAssignTimeout[bedId]);
+    _pendingAssignTimeout[bedId] = setTimeout(() => {
+        _pendingAssignTimeout[bedId] = null;
+        assignLit(bedId);
+    }, 400);
 };
 
 window.openBedNote = function openBedNote(bedId) {
