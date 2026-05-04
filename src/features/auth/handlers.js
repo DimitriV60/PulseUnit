@@ -280,7 +280,10 @@ window.registerUser = async function registerUser() {
     renderApp();
     showToast(`✅ Compte créé ! Bienvenue ${fn} 👋`);
     checkWorkStatus();
-    // Lance le tutoriel d'accueil après inscription
+    // Lance le tutoriel d'accueil après inscription — reset du flag pour
+    // garantir qu'il s'affiche pour ce NOUVEAU compte (peut rester de
+    // session précédente sur même appareil).
+    try { localStorage.removeItem('pu_tutorial_done'); } catch (e) {}
     if (typeof window.maybeStartTutorial === 'function') window.maybeStartTutorial();
 };
 

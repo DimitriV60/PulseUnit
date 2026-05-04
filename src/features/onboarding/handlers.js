@@ -21,8 +21,20 @@
         {
             icon: '👋',
             title: 'Bienvenue dans PulseUnit !',
-            body: 'En 6 étapes rapides, tu vas découvrir l\'essentiel. Tu peux passer à tout moment et revenir plus tard via Mon profil.',
+            body: 'En 8 étapes rapides, tu vas découvrir l\'essentiel. Tu peux passer à tout moment et revenir plus tard via Mon profil.',
             note: ''
+        },
+        {
+            icon: '🛏',
+            title: 'Les cartes lit (dashboard)',
+            body: '<strong>Tap unique sur ton pill</strong> dans l\'effectif → tu te sélectionnes (fond bleuté). <strong>Tap sur un lit</strong> → tu t\'attribues IDE ou AS (selon ton rôle). Re-tap sur le même lit pour te retirer. Boutons en haut à droite : <strong>⚠ BMR</strong> (isolement) · <strong>💧 Dialyse</strong> · <strong>⚡ Critique</strong> · <strong>×</strong> (fermer le lit). En bas : barre de progression de la <strong>checklist chambre</strong> (BAVU, alarmes scope, aspiration…) — tap dessus pour la dérouler.',
+            note: '<strong>Double-tap</strong> sur une carte lit → ouvre la note (Observations privées + Surveillance horaire partagée + Tech notes). 7 emplacements par lit, conservés 7 jours.'
+        },
+        {
+            icon: '🛠',
+            title: 'La carte IDE TECH',
+            body: 'Carte centrale au design d\'un lit. <strong>Sélectionne-toi puis tap la carte</strong> → tu prends le slot IDE TECH (rôle inchangé, tu restes IDE pour les lits). Re-tap (toi sélectionné) → libère le slot. Tap la <strong>barre des tâches</strong> → liste filtrée selon jour/nuit, % de progression sauvegardé par garde. <strong>Double-tap (sans sélection)</strong> → tes notes perso 7 gardes.',
+            note: 'Bordure latérale <strong style="color:var(--tech);">violette à gauche</strong> sur une carte chambre = tech note présente (visible IDE Tech / admin). Sur la carte IDE TECH = mes notes perso. Bordure <strong style="color:var(--brand-aqua);">aqua à droite</strong> sur une chambre = ma note perso.'
         },
         {
             icon: '☰',
