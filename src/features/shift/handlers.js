@@ -239,13 +239,13 @@ window.doSearch = function doSearch(type, val) {
     list.forEach(p => {
         let roleColor = `var(--${p.role})`;
         if (p.role === 'ide') roleColor = 'var(--ide)';
-        html += `<div class="sugg-item" onclick="selectSuggestion('${type}', '${p.id}', event)">
+        html += `<div class="sugg-item" data-action="selectSuggestion:${type},${p.id},$ev">
             <span>${escapeHTML(p.firstName)} <strong>${escapeHTML(p.lastName)}</strong></span>
             <span style="color:${roleColor}; font-weight:800;">${p.role.toUpperCase()}</span>
         </div>`;
     });
 
-    html += `<div class="sugg-item" style="color:var(--brand-aqua)" onclick="triggerCreateNew('${escapeHTML(val)}', '${type}', event)">
+    html += `<div class="sugg-item" style="color:var(--brand-aqua)" data-action="triggerCreateNew:${escapeHTML(val)},${type},$ev">
         + Cr\u00E9er : "${escapeHTML(val)}"...
     </div>`;
 

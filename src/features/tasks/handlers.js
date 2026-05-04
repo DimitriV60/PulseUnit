@@ -94,7 +94,7 @@ window.renderTasks = function renderTasks() {
     todayTasks.forEach(t => {
         const isDone = completed.includes(t.id);
         html += `
-        <div class="task-item ${isDone ? 'done' : ''}" onclick="toggleTask('${t.id}')">
+        <div class="task-item ${isDone ? 'done' : ''}" data-action="toggleTask:${t.id}">
             <div class="task-checkbox">${isDone ? ICONS.check : ''}</div>
             <div class="task-title">${escapeHTML(t.title)}</div>
             ${t.time ? `<div class="task-time">${t.time}</div>` : ''}

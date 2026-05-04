@@ -14,7 +14,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Y — Ouverture des yeux</span>
-        <select id="calc_gcs_y" class="calc-select" onchange="execCalcLive('glasgow')">
+        <select id="calc_gcs_y" class="calc-select" data-change="execCalcLive:glasgow">
           <option value="">-- Choisir --</option>
           <option value="4">4 — Spontanée</option>
           <option value="3">3 — À la demande verbale</option>
@@ -24,7 +24,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">V — Réponse verbale</span>
-        <select id="calc_gcs_v" class="calc-select" onchange="execCalcLive('glasgow')">
+        <select id="calc_gcs_v" class="calc-select" data-change="execCalcLive:glasgow">
           <option value="">-- Choisir --</option>
           <option value="5">5 — Orientée, normale</option>
           <option value="4">4 — Confuse</option>
@@ -35,7 +35,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">M — Réponse motrice</span>
-        <select id="calc_gcs_m" class="calc-select" onchange="execCalcLive('glasgow')">
+        <select id="calc_gcs_m" class="calc-select" data-change="execCalcLive:glasgow">
           <option value="">-- Choisir --</option>
           <option value="6">6 — Obéit aux ordres</option>
           <option value="5">5 — Localise la douleur</option>
@@ -61,7 +61,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Score RASS observé</span>
-        <select id="calc_rass_score" class="calc-select" onchange="execCalcLive('rass')">
+        <select id="calc_rass_score" class="calc-select" data-change="execCalcLive:rass">
           <option value="">-- Choisir --</option>
           <option value="4">+4 — Combatif, danger immédiat</option>
           <option value="3">+3 — Très agité, arrache cathéters</option>
@@ -90,7 +90,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Corpulence / IMC</span>
-        <select id="wl_corp" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_corp" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="0">Normale (IMC 20-24) — 0</option>
           <option value="1">Supérieure à la normale — 1</option>
@@ -100,7 +100,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Aspect de la peau</span>
-        <select id="wl_peau" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_peau" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="0">Saine — 0</option>
           <option value="1">Papier de soie / Fiévreuse — 1</option>
@@ -112,7 +112,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Sexe et âge</span>
-        <select id="wl_sexage" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_sexage" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="1">Homme — 1</option>
           <option value="2">Femme — 2</option>
@@ -120,7 +120,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Tranche d'âge</span>
-        <select id="wl_age" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_age" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="1">14–49 ans — 1</option>
           <option value="2">50–64 ans — 2</option>
@@ -131,7 +131,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Continence</span>
-        <select id="wl_cont" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_cont" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="0">Normale — 0</option>
           <option value="1">Sonde urinaire / Incontinent urinaire occasionnel — 1</option>
@@ -141,7 +141,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Mobilité</span>
-        <select id="wl_mob" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_mob" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="0">Normale — 0</option>
           <option value="1">Agité / Nerveux — 1</option>
@@ -153,7 +153,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Nutrition</span>
-        <select id="wl_nutri" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_nutri" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="0">Normale — 0</option>
           <option value="1">Sonde nasogastrique / Liquides seuls — 1</option>
@@ -163,7 +163,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Facteur de risque spécial</span>
-        <select id="wl_special" class="calc-select" onchange="execCalcLive('waterlow')">
+        <select id="wl_special" class="calc-select" data-change="execCalcLive:waterlow">
           <option value="">--</option>
           <option value="0">Aucun — 0</option>
           <option value="1">Tabagisme — 1</option>
@@ -189,7 +189,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Tremblements</span>
-        <select id="sv_trem" class="calc-select" onchange="execCalcLive('sevrage')">
+        <select id="sv_trem" class="calc-select" data-change="execCalcLive:sevrage">
           <option value="">--</option>
           <option value="0">Absents — 0</option>
           <option value="1">Légers (mains) — 1</option>
@@ -200,7 +200,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Transpiration</span>
-        <select id="sv_sueur" class="calc-select" onchange="execCalcLive('sevrage')">
+        <select id="sv_sueur" class="calc-select" data-change="execCalcLive:sevrage">
           <option value="">--</option>
           <option value="0">Aucune — 0</option>
           <option value="1">Légère (paumes moites) — 1</option>
@@ -211,7 +211,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Agitation</span>
-        <select id="sv_agit" class="calc-select" onchange="execCalcLive('sevrage')">
+        <select id="sv_agit" class="calc-select" data-change="execCalcLive:sevrage">
           <option value="">--</option>
           <option value="0">Aucune — 0</option>
           <option value="1">Légèrement anxieux — 1</option>
@@ -222,7 +222,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Hallucinations</span>
-        <select id="sv_hall" class="calc-select" onchange="execCalcLive('sevrage')">
+        <select id="sv_hall" class="calc-select" data-change="execCalcLive:sevrage">
           <option value="">--</option>
           <option value="0">Aucune — 0</option>
           <option value="1">Légères (sons distants) — 1</option>
@@ -233,7 +233,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Convulsions (antécédent ou risque)</span>
-        <select id="sv_conv" class="calc-select" onchange="execCalcLive('sevrage')">
+        <select id="sv_conv" class="calc-select" data-change="execCalcLive:sevrage">
           <option value="">--</option>
           <option value="0">Non — 0</option>
           <option value="2">Risque modéré (ATCD) — 2</option>
@@ -271,7 +271,7 @@
           <option value="8">8 mL/kg</option>
         </select>
       </div>
-      <button class="btn-calc" onclick="execCalc('ibw')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:ibw">Calculer</button>
       <div class="calc-result-box" id="res_ibw_box" style="display:none;">
         <div class="calc-result-title">POIDS IDÉAL PRÉDIT</div>
         <div class="calc-result-val" id="res_ibw_poids">-- kg</div>
@@ -292,7 +292,7 @@
         <span class="calc-label">FiO2 (%)</span>
         <input type="number" id="calc_pf_fio2" class="calc-input" placeholder="ex: 60">
       </div>
-      <button class="btn-calc" onclick="execCalc('pf')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:pf">Calculer</button>
       <div class="calc-result-box" id="res_pf_box" style="display:none;">
         <div class="calc-result-title">RAPPORT P/F</div>
         <div class="calc-result-val" id="res_pf_val">-- mmHg</div>
@@ -311,7 +311,7 @@
         <span class="calc-label">PEEP totale (cmH₂O)</span>
         <input type="number" id="calc_dp_peep" class="calc-input" placeholder="ex: 10">
       </div>
-      <button class="btn-calc" onclick="execCalc('dp')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:dp">Calculer</button>
       <div class="calc-result-box" id="res_dp_box" style="display:none;">
         <div class="calc-result-title">DRIVING PRESSURE</div>
         <div class="calc-result-val" id="res_dp_val">-- cmH₂O</div>
@@ -332,7 +332,7 @@
         <span class="calc-label">PAD (mmHg)</span>
         <input type="number" id="calc_pam_pad" class="calc-input" placeholder="ex: 75">
       </div>
-      <button class="btn-calc" onclick="execCalc('pam')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:pam">Calculer</button>
       <div class="calc-result-box" id="res_pam_box" style="display:none;">
         <div class="calc-result-title">PAM</div>
         <div class="calc-result-val" id="res_pam_val">-- mmHg</div>
@@ -345,7 +345,7 @@
     html: `
       <div class="calc-form-group">
         <span class="calc-label">Médicament <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">(préset facultatif)</span></span>
-        <select id="calc_pse_drug" class="calc-select" onchange="applyPSEDrugPreset()">
+        <select id="calc_pse_drug" class="calc-select" data-change="applyPSEDrugPreset">
           <option value="">— Sans préset (mode libre) —</option>
           <option value="noradrenaline">Noradrénaline</option>
           <option value="adrenaline">Adrénaline</option>
@@ -382,7 +382,7 @@
         <span class="calc-label">Concentration (mg/mL)</span>
         <input type="number" id="calc_pse_conc" class="calc-input" placeholder="ex: 1">
       </div>
-      <button class="btn-calc" onclick="execCalc('pse')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:pse">Calculer</button>
       <div class="calc-result-box" id="res_pse_box" style="display:none;">
         <div class="calc-result-title">DÉBIT PSE</div>
         <div class="calc-result-val" id="res_pse_val">-- mL/h</div>
@@ -415,7 +415,7 @@
           <option value="mL">mL</option>
         </select>
       </div>
-      <button class="btn-calc" onclick="execCalc('dosekg')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:dosekg">Calculer</button>
       <div class="calc-result-box" id="res_dose_box" style="display:none;">
         <div class="calc-result-title">DOSE TOTALE</div>
         <div class="calc-result-val" id="res_dose_total">--</div>
@@ -440,7 +440,7 @@
         <span class="calc-label">Concentration (mg/mL)</span>
         <input type="number" id="calc_conv_conc" class="calc-input" placeholder="ex: 2">
       </div>
-      <button class="btn-calc" onclick="execCalc('convmgml')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:convmgml">Calculer</button>
       <div class="calc-result-box" id="res_conv_box" style="display:none;">
         <div class="calc-result-title">RÉSULTAT</div>
         <div class="calc-result-val" id="res_conv_res">--</div>
@@ -456,7 +456,7 @@
         <span class="calc-label">Poids (kg)</span>
         <input type="number" id="calc_diu_poids" class="calc-input" placeholder="ex: 70">
       </div>
-      <button class="btn-calc" onclick="execCalc('diurese')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:diurese">Calculer</button>
       <div class="calc-result-box" id="res_diu_box" style="display:none;">
         <div class="calc-result-title">DIURÈSE HORAIRE CIBLE</div>
         <div class="calc-result-val" id="res_diu_val">-- mL/h</div>
@@ -475,7 +475,7 @@
         <span class="calc-label">Taille (cm)</span>
         <input type="number" id="calc_imc_taille" class="calc-input" placeholder="ex: 170">
       </div>
-      <button class="btn-calc" onclick="execCalc('imc')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:imc">Calculer</button>
       <div class="calc-result-box" id="res_imc_box" style="display:none;">
         <div class="calc-result-title">IMC</div>
         <div class="calc-result-val" id="res_imc_val">-- kg/m²</div>
@@ -496,7 +496,7 @@
         <span class="calc-label">Valeur totale</span>
         <input type="number" id="calc_pct_v" class="calc-input" placeholder="ex: 500">
       </div>
-      <button class="btn-calc" onclick="execCalc('pct')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:pct">Calculer</button>
       <div class="calc-result-box" id="res_pct_box" style="display:none;">
         <div class="calc-result-title">RÉSULTAT</div>
         <div class="calc-result-val" id="res_pct_val">--</div>
@@ -514,7 +514,7 @@
         <span class="calc-label">Jours travaillés</span>
         <input type="number" id="calc_tr_jours" class="calc-input" placeholder="ex: 10" min="1">
       </div>
-      <button class="btn-calc" onclick="execCalc('transmission')">Calculer</button>
+      <button class="btn-calc" data-action="execCalc:transmission">Calculer</button>
       <div class="calc-result-box" id="res_tr_box" style="display:none;">
         <div class="calc-result-title">CRÉDIT DE TRANSMISSION</div>
         <div class="calc-result-val" style="color:var(--ide);" id="res_tr_total">-- h</div>
@@ -530,7 +530,7 @@
         25 jours CA → jusqu'à <strong>+2 j Hors Saison</strong> (nov–avr) et <strong>+1 j Fractionnement</strong> (≥3 périodes de ≥5j)<br>
         <strong>28 jours maximum</strong> — prenables jusqu'au 31 mars N+1.
       </div>
-      <button class="btn-primary" style="width:100%; padding:14px; font-size:1rem;" onclick="openCalendrierConges()">
+      <button class="btn-primary" style="width:100%; padding:14px; font-size:1rem;" data-action="openCalendrierConges">
         📅 Ouvrir le simulateur calendrier
       </button>
     `
@@ -546,7 +546,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Quotité de travail</span>
-        <select id="ete_quotite" class="calc-select" onchange="execCalcLive('conges_ete')">
+        <select id="ete_quotite" class="calc-select" data-change="execCalcLive:conges_ete">
           <option value="100">100 % — Temps plein (25 j)</option>
           <option value="90">90 % (22,5 → 23 j)</option>
           <option value="80">80 % (20 j)</option>
@@ -557,7 +557,7 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Mois travaillés sur la période de référence</span>
-        <select id="ete_mois" class="calc-select" onchange="execCalcLive('conges_ete')">
+        <select id="ete_mois" class="calc-select" data-change="execCalcLive:conges_ete">
           <option value="12">12 mois — Année complète</option>
           <option value="11">11 mois</option>
           <option value="10">10 mois</option>
@@ -574,15 +574,15 @@
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Jours CA déjà posés / pris (hors été)</span>
-        <input type="number" id="ete_deja" class="calc-input" placeholder="0" min="0" oninput="execCalcLive('conges_ete')">
+        <input type="number" id="ete_deja" class="calc-input" placeholder="0" min="0" data-input="execCalcLive:conges_ete">
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Jours souhaités en été (1 mai – 31 oct)</span>
-        <input type="number" id="ete_ete" class="calc-input" placeholder="ex : 15" min="0" oninput="execCalcLive('conges_ete')">
+        <input type="number" id="ete_ete" class="calc-input" placeholder="ex : 15" min="0" data-input="execCalcLive:conges_ete">
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Dont consécutifs (fraction principale)</span>
-        <input type="number" id="ete_consec" class="calc-input" placeholder="ex : 15" min="0" oninput="execCalcLive('conges_ete')">
+        <input type="number" id="ete_consec" class="calc-input" placeholder="ex : 15" min="0" data-input="execCalcLive:conges_ete">
       </div>
       <div class="calc-result-box" id="res_ete_box" style="display:none; flex-direction:column; gap:8px;">
         <div class="calc-result-title">DROITS &amp; SOLDE</div>
@@ -599,33 +599,33 @@
     html: `
       <div class="calc-form-group">
         <span class="calc-label">Contexte</span>
-        <select id="cal_contexte" class="calc-select" onchange="calUpdateContexte()">
+        <select id="cal_contexte" class="calc-select" data-change="calUpdateContexte">
           <option value="lambda">Personne lambda</option>
           <option value="rea">Réanimation / Hospitalier</option>
         </select>
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Sexe</span>
-        <select id="cal_sexe" class="calc-select" onchange="execCalcLive('calorique')">
+        <select id="cal_sexe" class="calc-select" data-change="execCalcLive:calorique">
           <option value="H">Homme</option>
           <option value="F">Femme</option>
         </select>
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Âge (ans)</span>
-        <input type="number" id="cal_age" class="calc-input" placeholder="ex : 35" min="15" max="110" oninput="execCalcLive('calorique')">
+        <input type="number" id="cal_age" class="calc-input" placeholder="ex : 35" min="15" max="110" data-input="execCalcLive:calorique">
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Poids (kg)</span>
-        <input type="number" id="cal_poids" class="calc-input" placeholder="ex : 70" min="30" max="250" step="0.5" oninput="execCalcLive('calorique')">
+        <input type="number" id="cal_poids" class="calc-input" placeholder="ex : 70" min="30" max="250" step="0.5" data-input="execCalcLive:calorique">
       </div>
       <div class="calc-form-group">
         <span class="calc-label">Taille (cm)</span>
-        <input type="number" id="cal_taille" class="calc-input" placeholder="ex : 175" min="100" max="220" oninput="execCalcLive('calorique')">
+        <input type="number" id="cal_taille" class="calc-input" placeholder="ex : 175" min="100" max="220" data-input="execCalcLive:calorique">
       </div>
       <div class="calc-form-group" id="cal_activite_row">
         <span class="calc-label">Niveau d'activité physique</span>
-        <select id="cal_activite" class="calc-select" onchange="execCalcLive('calorique')">
+        <select id="cal_activite" class="calc-select" data-change="execCalcLive:calorique">
           <option value="1.2">Sédentaire (bureau, peu de sport)</option>
           <option value="1.375">Légèrement actif (1–3 séances/sem)</option>
           <option value="1.55" selected>Modérément actif (3–5 séances/sem)</option>
@@ -635,7 +635,7 @@
       </div>
       <div class="calc-form-group" id="cal_activite_rea_row" style="display:none;">
         <span class="calc-label">Facteur d'activité (réa)</span>
-        <select id="cal_activite_rea" class="calc-select" onchange="execCalcLive('calorique')">
+        <select id="cal_activite_rea" class="calc-select" data-change="execCalcLive:calorique">
           <option value="1.0">1.0 — Alité, sédaté / ventilé immobile</option>
           <option value="1.1" selected>1.1 — Alité, éveillé</option>
           <option value="1.2">1.2 — Levé au fauteuil</option>
@@ -644,7 +644,7 @@
       </div>
       <div class="calc-form-group" id="cal_stress_row" style="display:none;">
         <span class="calc-label">Facteur de stress / agression</span>
-        <select id="cal_stress" class="calc-select" onchange="execCalcLive('calorique')">
+        <select id="cal_stress" class="calc-select" data-change="execCalcLive:calorique">
           <option value="1.0">1.0 — Post-op simple, stable</option>
           <option value="1.1" selected>1.1 — Infection légère / trauma modéré</option>
           <option value="1.2">1.2 — Sepsis, trauma majeur</option>
@@ -679,7 +679,7 @@
           <div style="display:flex; gap:10px; align-items:center;">
             <input type="number" id="eer-poids-input" min="40" max="200" placeholder="Poids (kg)"
               style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:1rem; font-weight:900; font-family:var(--font); outline:none;"
-              oninput="calcEER()">
+              data-input="calcEER">
             <span style="font-size:0.85rem; color:var(--text-muted); font-weight:700; white-space:nowrap;">kg</span>
           </div>
           <div id="eer-result"></div>
@@ -694,13 +694,13 @@
           </div>
           <div style="font-size:0.78rem; font-weight:900; color:var(--text); margin-bottom:6px;">CA ionisé patient — cible 1,0 – 1,2 mmol/L</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-            <button onclick="eerCaChange('patient','low')" style="padding:10px; border-radius:8px; border:1px solid var(--crit); background:rgba(239,68,68,0.08); color:var(--crit); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&lt; 1,0<br>⬆️ +10% Ca²⁺</button>
-            <button onclick="eerCaChange('patient','high')" style="padding:10px; border-radius:8px; border:1px solid var(--med); background:rgba(245,158,11,0.08); color:var(--med); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&gt; 1,2<br>⬇️ -10% Ca²⁺</button>
+            <button data-action="eerCaChange:patient,low" style="padding:10px; border-radius:8px; border:1px solid var(--crit); background:rgba(239,68,68,0.08); color:var(--crit); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&lt; 1,0<br>⬆️ +10% Ca²⁺</button>
+            <button data-action="eerCaChange:patient,high" style="padding:10px; border-radius:8px; border:1px solid var(--med); background:rgba(245,158,11,0.08); color:var(--med); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&gt; 1,2<br>⬇️ -10% Ca²⁺</button>
           </div>
           <div style="font-size:0.78rem; font-weight:900; color:var(--text); margin-bottom:6px;">CA post-filtre — cible 0,25 – 0,35 mmol/L</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-            <button onclick="eerCaChange('filtre','low')" style="padding:10px; border-radius:8px; border:1px solid var(--med); background:rgba(245,158,11,0.08); color:var(--med); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&lt; 0,25<br>⬇️ Citrate −0,5</button>
-            <button onclick="eerCaChange('filtre','high')" style="padding:10px; border-radius:8px; border:1px solid var(--crit); background:rgba(239,68,68,0.08); color:var(--crit); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&gt; 0,35<br>⬆️ Citrate +0,5</button>
+            <button data-action="eerCaChange:filtre,low" style="padding:10px; border-radius:8px; border:1px solid var(--med); background:rgba(245,158,11,0.08); color:var(--med); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&lt; 0,25<br>⬇️ Citrate −0,5</button>
+            <button data-action="eerCaChange:filtre,high" style="padding:10px; border-radius:8px; border:1px solid var(--crit); background:rgba(239,68,68,0.08); color:var(--crit); font-size:0.78rem; font-weight:900; font-family:var(--font); cursor:pointer; line-height:1.3;">&gt; 0,35<br>⬆️ Citrate +0,5</button>
           </div>
           <div id="eer-alerts"></div>
         </div>

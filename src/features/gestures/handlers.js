@@ -14,6 +14,18 @@
  * Aucune fonction n'est exposée : listeners installés à l'import.
  */
 
+// ── Drag-to-paint : touchstart non-passif sur les cellules planning ────
+// Remplace l'ancien ontouchstart inline (bloqué par CSP strict).
+document.addEventListener('touchstart', function(e) {
+  const cell = e.target && e.target.closest ? e.target.closest('[data-pcell]') : null;
+  if (!cell) return;
+  const dateStr = cell.getAttribute('data-pcell');
+  if (!dateStr) return;
+  if (typeof window.planCellTouchStart === 'function') {
+    window.planCellTouchStart(dateStr, e);
+  }
+}, { passive: false });
+
 // ── Drag-to-paint : touchmove + touchend globaux ───────────────────────
 document.addEventListener('touchmove', function(e) {
   if (!planDrag.active) return;

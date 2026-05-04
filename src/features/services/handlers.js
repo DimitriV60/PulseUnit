@@ -13,6 +13,12 @@ let _servicesSite = 'Creil';            // 'Creil' | 'Senlis'
 const FAV_KEY     = 'pulseunit_svc_favs';
 let _servicesFavs = _loadFavs();
 
+window.scrollToServiceLetter = function scrollToServiceLetter(letter) {
+    const el = document.getElementById('svc-letter-' + letter);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof window.triggerHaptic === 'function') window.triggerHaptic('light');
+};
+
 /* ═════════ Persistance favoris ═════════ */
 function _loadFavs() {
     try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); }
@@ -133,7 +139,7 @@ function _favStarHTML(site, cat, name) {
     const star  = isFav ? '★' : '☆';
     const color = isFav ? '#F59E0B' : 'var(--text-muted)';
     const safe  = (s) => String(s).replace(/'/g, "\\'");
-    return `<button onclick="event.stopPropagation();toggleServiceFav('${safe(site)}','${safe(cat)}','${safe(name)}')"
+    return `<button data-stop data-action="toggleServiceFav:${safe(site)},${safe(cat)},${safe(name)}"
         aria-label="${isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}"
         style="background:transparent; border:none; cursor:pointer; padding:4px 6px; font-size:1.15rem; color:${color}; line-height:1;">${star}</button>`;
 }
@@ -161,7 +167,7 @@ function _entryRow(entry, section, escapeHTML, opts = {}) {
     const numEl = !hasNum
         ? `<span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); background:var(--surface-sec); border-radius:6px; padding:3px 10px;">—</span>`
         : entry.reveal
-            ? `<span onclick="revealServiceNum(this,'${escapeHTML(entry.num)}','${escapeHTML(entry.reveal)}')" style="font-size:0.95rem; font-weight:900; color:var(--brand-aqua); white-space:nowrap; cursor:pointer;">${escapeHTML(label)}</span>`
+            ? `<span data-action="revealServiceNum:$el,${escapeHTML(entry.num)},${escapeHTML(entry.reveal)}" style="font-size:0.95rem; font-weight:900; color:var(--brand-aqua); white-space:nowrap; cursor:pointer;">${escapeHTML(label)}</span>`
             : `<a href="tel:${escapeHTML(entry.num)}" style="font-size:0.95rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; white-space:nowrap;">${escapeHTML(label)}</a>`;
 
     return `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:10px;">
@@ -222,7 +228,7 @@ function _renderAnnuaire(data, q, escapeHTML) {
     // Index latéral A→Z (sticky droite)
     const letterIndex = `<nav id="svc-alpha-index" aria-label="Index alphabétique"
         style="position:fixed; right:6px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:1px; z-index:5; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:6px 4px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
-      ${letters.map(L => `<a href="#svc-letter-${L}" onclick="event.preventDefault();document.getElementById('svc-letter-${L}')?.scrollIntoView({behavior:'smooth',block:'start'});if(window.triggerHaptic)triggerHaptic('light');"
+      ${letters.map(L => `<a href="#svc-letter-${L}" data-action="scrollToServiceLetter:${L}"
         style="display:flex; align-items:center; justify-content:center; width:18px; height:16px; font-size:0.65rem; font-weight:900; color:var(--brand-aqua); text-decoration:none; cursor:pointer;">${escapeHTML(L)}</a>`).join('')}
     </nav>`;
 

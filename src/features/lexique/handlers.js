@@ -36,7 +36,7 @@ window.renderLexique = function renderLexique() {
     categories.forEach(cat => {
         const isActive = cat === currentLexiqueFilter ? 'active' : '';
         const label = catLabels[cat] || cat;
-        filtersHTML += `<button class="lex-filter-btn ${isActive}" onclick="setLexiqueFilter('${cat}')">${label}</button>`;
+        filtersHTML += `<button class="lex-filter-btn ${isActive}" data-action="setLexiqueFilter:${cat}">${label}</button>`;
     });
     document.getElementById('lexique-filters').innerHTML = filtersHTML;
 
@@ -54,7 +54,7 @@ window.renderLexique = function renderLexique() {
     } else {
         filteredData.forEach(item => {
             contentHTML += `
-            <div class="lex-card" onclick="toggleLexCard(this)">
+            <div class="lex-card" data-action="toggleLexCard:$el">
                 <div class="lex-term">${escapeHTML(item.term)}</div>
                 <div class="lex-fullname">${escapeHTML(item.fullName)}</div>
                 <div class="lex-def">${escapeHTML(item.def)}</div>

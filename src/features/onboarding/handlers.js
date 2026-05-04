@@ -231,7 +231,7 @@
 
         ov.innerHTML = `
           <div style="background:var(--surface); border-radius:18px; max-width:480px; width:100%; padding:24px 22px 18px; box-shadow:0 25px 70px rgba(0,0,0,0.5); border:1px solid var(--border); position:relative; margin-top:max(20px, env(safe-area-inset-top)); margin-bottom:20px;">
-            <button onclick="tutorialSkip()" title="Passer" aria-label="Fermer le tutoriel" style="position:absolute; top:10px; right:12px; background:var(--surface-sec); border:1px solid var(--border); border-radius:50%; width:32px; height:32px; color:var(--text-muted); font-size:1.1rem; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
+            <button data-action="tutorialSkip" title="Passer" aria-label="Fermer le tutoriel" style="position:absolute; top:10px; right:12px; background:var(--surface-sec); border:1px solid var(--border); border-radius:50%; width:32px; height:32px; color:var(--text-muted); font-size:1.1rem; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
 
             <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px; padding-right:36px;">
               <div style="font-size:2.4rem; flex-shrink:0; line-height:1; width:56px; height:56px; display:flex; align-items:center; justify-content:center; background:rgba(64,206,234,0.10); border-radius:14px;">${s.icon}</div>
@@ -250,10 +250,10 @@
             </div>
 
             <div style="display:flex; gap:8px; margin-top:14px; align-items:center;">
-              <button onclick="tutorialSkip()" style="background:none; border:none; color:var(--text-muted); font-size:0.8rem; font-weight:700; cursor:pointer; padding:9px 4px;">Passer</button>
+              <button data-action="tutorialSkip" style="background:none; border:none; color:var(--text-muted); font-size:0.8rem; font-weight:700; cursor:pointer; padding:9px 4px;">Passer</button>
               <div style="flex:1;"></div>
-              ${!isFirst ? '<button onclick="tutorialPrev()" style="padding:10px 18px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; font-size:0.88rem;">← Précédent</button>' : ''}
-              <button onclick="tutorialNext()" style="padding:10px 22px; border-radius:10px; border:none; background:var(--brand-aqua); color:#fff; font-weight:900; cursor:pointer; font-size:0.88rem; box-shadow:0 4px 12px rgba(64,206,234,0.35);">${isLast ? 'Terminer ✓' : 'Suivant →'}</button>
+              ${!isFirst ? '<button data-action="tutorialPrev" style="padding:10px 18px; border-radius:10px; border:1px solid var(--border); background:var(--surface-sec); color:var(--text); font-weight:800; cursor:pointer; font-size:0.88rem;">← Précédent</button>' : ''}
+              <button data-action="tutorialNext" style="padding:10px 22px; border-radius:10px; border:none; background:var(--brand-aqua); color:#fff; font-weight:900; cursor:pointer; font-size:0.88rem; box-shadow:0 4px 12px rgba(64,206,234,0.35);">${isLast ? 'Terminer ✓' : 'Suivant →'}</button>
             </div>
           </div>
         `;

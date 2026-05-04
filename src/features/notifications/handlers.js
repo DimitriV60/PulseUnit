@@ -13,6 +13,7 @@
 
 window.notifsData = {};
 window._notifsSavePending = false;
+window._notifActions = window._notifActions || {};
 
 const NOTIF_TTL = 30 * 24 * 60 * 60 * 1000; // 30 jours
 
@@ -215,11 +216,12 @@ function renderNotifsCenter() {
             : `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}h${String(dt.getMinutes()).padStart(2,'0')}`;
         const bg = n.read ? 'var(--surface-sec)' : 'rgba(64,206,234,0.10)';
         const border = n.read ? 'var(--border)' : 'var(--brand-aqua)';
+        if (n.action) window._notifActions[n.id] = n.action;
         const actionBtn = n.action
-            ? `<button onclick="event.stopPropagation();handleNotifAction(${JSON.stringify(n.action).replace(/"/g, '&quot;')}, '${n.id}')" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:0.7rem; font-weight:800; cursor:pointer; margin-top:6px;">Ouvrir</button>`
+            ? `<button data-stop data-action="runNotifAction:${n.id}" style="background:var(--brand-aqua); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:0.7rem; font-weight:800; cursor:pointer; margin-top:6px;">Ouvrir</button>`
             : '';
         return `
-        <div onclick="markNotifRead('${n.id}')" style="background:${bg}; border:1px solid ${border}; border-radius:10px; padding:11px 13px; margin-bottom:8px; cursor:pointer; position:relative;">
+        <div data-action="markNotifRead:${n.id}" style="background:${bg}; border:1px solid ${border}; border-radius:10px; padding:11px 13px; margin-bottom:8px; cursor:pointer; position:relative;">
           <div style="display:flex; align-items:flex-start; gap:10px;">
             <span style="font-size:1.3rem; flex-shrink:0; line-height:1;">${icon}</span>
             <div style="flex:1; min-width:0;">
@@ -228,12 +230,17 @@ function renderNotifsCenter() {
               <div style="font-size:0.68rem; color:var(--text-muted); margin-top:4px; opacity:0.7;">${dateStr}</div>
               ${actionBtn}
             </div>
-            <button onclick="event.stopPropagation();deleteNotif('${n.id}')" style="background:none; border:none; color:var(--crit); font-size:1rem; cursor:pointer; padding:0 4px; line-height:1; opacity:0.6;" title="Supprimer">×</button>
+            <button data-stop data-action="deleteNotif:${n.id}" style="background:none; border:none; color:var(--crit); font-size:1rem; cursor:pointer; padding:0 4px; line-height:1; opacity:0.6;" title="Supprimer">×</button>
           </div>
         </div>`;
     }).join('');
 }
 window.renderNotifsCenter = renderNotifsCenter;
+
+window.runNotifAction = function runNotifAction(notifId) {
+    const action = window._notifActions[notifId];
+    window.handleNotifAction(action, notifId);
+};
 
 window.handleNotifAction = function handleNotifAction(action, notifId) {
     if (!action || !action.kind) return;

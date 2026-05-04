@@ -228,7 +228,7 @@ function renderChecklist() {
     cl.items.forEach((item, idx) => {
         const isChecked = !!checked[idx];
         html += `
-        <div onclick="toggleCheckItem('${_clTab}', ${idx})"
+        <div data-action="toggleCheckItem:${_clTab},${idx}"
              style="display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;">
           <div style="flex-shrink:0; width:22px; height:22px; border-radius:6px; border:2px solid ${isChecked ? 'var(--ide)' : 'var(--border)'}; background:${isChecked ? 'var(--ide)' : 'transparent'}; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
             ${isChecked ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}

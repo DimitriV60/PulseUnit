@@ -15,6 +15,15 @@
 window.messagesData = {};
 window._messagesSavePending = false;
 
+window.scrollToReplyMessage = function scrollToReplyMessage(replyId) {
+    const el = document.getElementById('msg-' + replyId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.transition = 'background 0.5s';
+    el.style.background = 'rgba(64,206,234,0.25)';
+    setTimeout(() => { el.style.background = ''; }, 1200);
+};
+
 let _activeConvId = null;
 let _activeConvUserId = null;
 let _convSearchQuery = '';
@@ -80,7 +89,7 @@ function _renderReplyBanner() {
         <div style="font-size:0.7rem; color:var(--brand-aqua); font-weight:900;">↩ ${escapeHTML(_replyDraft.fromName)}</div>
         <div style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(_replyDraft.textPreview)}</div>
       </div>
-      <button onclick="cancelReply()" title="Annuler" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 6px;">×</button>
+      <button data-action="cancelReply" title="Annuler" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted); padding:0 6px;">×</button>
     `;
 }
 
@@ -454,7 +463,7 @@ window.openReactionPicker = function openReactionPicker(convId, msgId, anchorEl)
     if (!picker) return;
     // 2026-05-03 — emojis lisibles mais pas oversize (overflow viewport mobile)
     picker.innerHTML = _REACTION_SET.map(e =>
-        `<button onclick="toggleReaction('${convId}','${msgId}','${e}')" style="background:none; border:none; font-size:1.4rem; cursor:pointer; padding:4px 7px; border-radius:8px; line-height:1; transition:transform 0.1s, background 0.1s; flex-shrink:0;" onmouseover="this.style.background='var(--surface-sec)';this.style.transform='scale(1.15)'" onmouseout="this.style.background='none';this.style.transform='scale(1)'">${e}</button>`
+        `<button class="msg-react-emoji" data-action="toggleReaction:${convId},${msgId},${e}" style="background:none; border:none; font-size:1.4rem; cursor:pointer; padding:4px 7px; border-radius:8px; line-height:1; transition:transform 0.1s, background 0.1s; flex-shrink:0;">${e}</button>`
     ).join('');
     picker.style.display = 'flex';
     picker.style.position = 'fixed';
@@ -639,7 +648,7 @@ function renderConvList() {
         if (userMatches.length > 0) {
             html += '<div style="font-size:0.7rem; font-weight:900; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:2px 0 6px;">Collègues</div>';
             html += userMatches.map(r => `
-              <div onclick="openMessagesWith('${r.id}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
+              <div data-action="openMessagesWith:${r.id}" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
                 <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${r.role || 'ide'}); flex-shrink:0;"></span>
                 <div style="flex:1;">
                   <div style="font-weight:800; font-size:0.85rem;">${escapeHTML(r.firstName)} ${escapeHTML(r.lastName.toUpperCase())}</div>
@@ -655,13 +664,13 @@ function renderConvList() {
                 if (isGroup) {
                     const meta = _groupMeta(cid);
                     label = meta ? meta.label : 'Groupe';
-                    openCall = `openGroupMessages('${cid}')`;
+                    openCall = `openGroupMessages:${cid}`;
                     role = meta?.roleColor || 'brand-aqua';
                 } else {
                     const otherId = _otherUserId(cid, currentUser.id);
                     const other = (window.roster || []).find(r => r.id === otherId);
                     label = other ? `${other.firstName} ${other.lastName.toUpperCase()}` : 'Utilisateur';
-                    openCall = `openMessagesWith('${otherId}')`;
+                    openCall = `openMessagesWith:${otherId}`;
                     role = other?.role || 'ide';
                 }
                 const dt = new Date(msg.createdAt);
@@ -675,7 +684,7 @@ function renderConvList() {
                 const matched = '<mark style="background:rgba(64,206,234,0.35); color:var(--text); padding:0 2px; border-radius:2px;">' + escapeHTML(text.slice(idx, idx + q.length)) + '</mark>';
                 const after = escapeHTML(text.slice(idx + q.length, end)) + (end < text.length ? '…' : '');
                 return `
-                  <div onclick="${openCall}" style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
+                  <div data-action="${openCall}" style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:var(--surface-sec);">
                     <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0; margin-top:6px;"></span>
                     <div style="flex:1; min-width:0;">
                       <div style="display:flex; justify-content:space-between; gap:6px; margin-bottom:3px;">
@@ -728,7 +737,7 @@ function renderConvList() {
                 : '';
             const previewPrefix = draftText ? '<span style="color:var(--crit); font-weight:800;">Brouillon : </span>' : '';
             return `
-              <div onclick="openGroupMessages('${g.key}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:${unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
+              <div data-action="openGroupMessages:${g.key}" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid var(--border); border-radius:10px; margin-bottom:7px; cursor:pointer; background:${unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
                 <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:var(--${g.roleColor}); color:#fff; flex-shrink:0; font-size:0.95rem;">${g.icon}</span>
                 <div style="flex:1; min-width:0;">
                   <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
@@ -795,7 +804,7 @@ function renderConvList() {
             : (lastFromMe ? '<span style="color:var(--brand-aqua);">Vous : </span>' : '');
         const pinIcon = c.pinned ? '<span style="font-size:0.85rem; flex-shrink:0;" title="Épinglée">📌</span>' : '';
         return `
-          <div onclick="openMessagesWith('${c.otherId}')" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid ${c.pinned ? 'var(--brand-aqua)' : 'var(--border)'}; border-radius:10px; margin-bottom:7px; cursor:pointer; background:${c.unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
+          <div data-action="openMessagesWith:${c.otherId}" style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid ${c.pinned ? 'var(--brand-aqua)' : 'var(--border)'}; border-radius:10px; margin-bottom:7px; cursor:pointer; background:${c.unread > 0 ? 'rgba(64,206,234,0.10)' : 'var(--surface-sec)'};">
             <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
             <div style="flex:1; min-width:0;">
               <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
@@ -823,21 +832,21 @@ function renderConvView() {
 
     const isGroup = _isGroupConv(_activeConvId);
     const pinned = _isPinned(_activeConvId);
-    const pinBtn = `<button onclick="toggleConvPin('${_activeConvId}')" title="${pinned ? 'Désépingler' : 'Épingler'}" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:${pinned ? 'var(--brand-aqua)' : 'var(--text-muted)'}; padding:0 8px;">📌</button>`;
+    const pinBtn = `<button data-action="toggleConvPin:${_activeConvId}" title="${pinned ? 'Désépingler' : 'Épingler'}" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:${pinned ? 'var(--brand-aqua)' : 'var(--text-muted)'}; padding:0 8px;">📌</button>`;
     if (isGroup) {
         const meta = _groupMeta(_activeConvId);
         const label = meta ? meta.label : 'Groupe';
         const icon = meta ? meta.icon : '💬';
         const roleColor = meta ? meta.roleColor : 'brand-aqua';
         headerEl.innerHTML = `
-          <button onclick="backToConvList()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
+          <button data-action="backToConvList" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
           <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--${roleColor}); color:#fff; flex-shrink:0; font-size:0.85rem;">${icon}</span>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(label)}</div>
             <div style="font-size:0.68rem; color:var(--text-muted);">Groupe</div>
           </div>
           ${pinBtn}
-          <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
+          <button data-action="toggleConvSearch" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
         `;
     } else {
         const other = (window.roster || []).find(r => r.id === _activeConvUserId);
@@ -851,15 +860,15 @@ function renderConvView() {
             ? '<span style="color:var(--ok); font-weight:800;">● En ligne</span>'
             : `<span>${role.toUpperCase()}</span>`;
         headerEl.innerHTML = `
-          <button onclick="backToConvList()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
+          <button data-action="backToConvList" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); padding:0 8px;">‹</button>
           <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--${role}); flex-shrink:0;"></span>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:900; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px;">${escapeHTML(name)}${statusDot}</div>
             <div style="font-size:0.68rem; color:var(--text-muted);">${subLabel}</div>
           </div>
           ${pinBtn}
-          <button onclick="toggleConvSearch()" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
-          <button onclick="deleteConversation('${_activeConvId}')" title="Supprimer la conversation" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--crit); padding:0 8px;">🗑️</button>
+          <button data-action="toggleConvSearch" title="Rechercher dans la conversation" style="background:none; border:none; font-size:1.05rem; cursor:pointer; color:var(--text); padding:0 8px;">🔍</button>
+          <button data-action="deleteConversation:${_activeConvId}" title="Supprimer la conversation" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--crit); padding:0 8px;">🗑️</button>
         `;
     }
 
@@ -896,18 +905,18 @@ function renderConvView() {
             const reactionsHTML = reactionEntries.length > 0
                 ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; justify-content:${align};">${reactionEntries.map(([e, users]) => {
                     const reacted = users.includes(currentUser.id);
-                    return `<button onclick="toggleReaction('${_activeConvId}','${m.id}','${e}')" style="background:${reacted ? 'rgba(64,206,234,0.20)' : 'var(--surface-sec)'}; border:1px solid ${reacted ? 'var(--brand-aqua)' : 'var(--border)'}; border-radius:12px; padding:1px 8px; font-size:0.75rem; cursor:pointer; line-height:1.4;" title="${users.length} réaction${users.length>1?'s':''}">${e} <span style="font-weight:700; color:var(--text);">${users.length}</span></button>`;
+                    return `<button data-action="toggleReaction:${_activeConvId},${m.id},${e}" style="background:${reacted ? 'rgba(64,206,234,0.20)' : 'var(--surface-sec)'}; border:1px solid ${reacted ? 'var(--brand-aqua)' : 'var(--border)'}; border-radius:12px; padding:1px 8px; font-size:0.75rem; cursor:pointer; line-height:1.4;" title="${users.length} réaction${users.length>1?'s':''}">${e} <span style="font-weight:700; color:var(--text);">${users.length}</span></button>`;
                 }).join('')}</div>`
                 : '';
             const ownActions = mine ? `
-                  <button onclick="editMessage('${_activeConvId}', '${m.id}')" title="Modifier" style="position:absolute; top:-8px; right:38px; background:var(--brand-aqua); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.65rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">✏️</button>
-                  <button onclick="deleteMessage('${_activeConvId}', '${m.id}')" title="Supprimer" style="position:absolute; top:-8px; right:14px; background:var(--crit); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">×</button>` : '';
-            const reactBtn = `<button onclick="openReactionPicker('${_activeConvId}','${m.id}', this)" title="Réagir" class="msg-react-trigger msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:-8px' : 'right:-8px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">😊</button>`;
-            const replyBtn = `<button onclick="startReplyTo('${_activeConvId}','${m.id}')" title="Répondre" class="msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:18px' : 'right:18px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">↩</button>`;
+                  <button data-action="editMessage:${_activeConvId},${m.id}" title="Modifier" style="position:absolute; top:-8px; right:38px; background:var(--brand-aqua); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.65rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">✏️</button>
+                  <button data-action="deleteMessage:${_activeConvId},${m.id}" title="Supprimer" style="position:absolute; top:-8px; right:14px; background:var(--crit); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;" class="msg-act-btn">×</button>` : '';
+            const reactBtn = `<button data-action="openReactionPicker:${_activeConvId},${m.id},$el" title="Réagir" class="msg-react-trigger msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:-8px' : 'right:-8px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">😊</button>`;
+            const replyBtn = `<button data-action="startReplyTo:${_activeConvId},${m.id}" title="Répondre" class="msg-act-btn" style="position:absolute; top:-8px; ${mine ? 'left:18px' : 'right:18px'}; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:50%; width:20px; height:20px; font-size:0.7rem; cursor:pointer; display:none; line-height:1;">↩</button>`;
             // Citation (replyTo) au-dessus de la bulle
             let replyQuote = '';
             if (m.replyTo && m.replyTo.fromName) {
-                replyQuote = `<div onclick="(function(){const el=document.getElementById('msg-${escapeHTML(m.replyTo.id)}'); if(el){el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.transition='background 0.5s'; el.style.background='rgba(64,206,234,0.25)'; setTimeout(()=>{el.style.background='';},1200);}})()" style="max-width:78%; margin-bottom:2px; border-left:3px solid var(--brand-aqua); padding:4px 8px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0; cursor:pointer;">
+                replyQuote = `<div data-action="scrollToReplyMessage:${escapeHTML(m.replyTo.id)}" style="max-width:78%; margin-bottom:2px; border-left:3px solid var(--brand-aqua); padding:4px 8px; background:rgba(64,206,234,0.08); border-radius:0 8px 8px 0; cursor:pointer;">
                   <div style="font-size:0.68rem; color:var(--brand-aqua); font-weight:900;">↩ ${escapeHTML(m.replyTo.fromName)}</div>
                   <div style="font-size:0.74rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(m.replyTo.textPreview || '')}</div>
                 </div>`;

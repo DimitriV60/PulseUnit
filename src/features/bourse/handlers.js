@@ -58,9 +58,9 @@ function _buildBourneCal(wrapId, y, m, selDate, today, clickFn, clearFn, prevFn,
     const firstDow = (new Date(y, m-1, 1).getDay() + 6) % 7;
     const days = new Date(y, m, 0).getDate();
     let h = `<div class="bourse-cal-nav">
-      <button class="bourse-cal-nav-btn" onclick="${prevFn}()">‹</button>
+      <button class="bourse-cal-nav-btn" data-action="${prevFn}">‹</button>
       <span class="bourse-cal-nav-month">${_MONTHS_FR[m-1]} ${y}</span>
-      <button class="bourse-cal-nav-btn" onclick="${nextFn}()">›</button>
+      <button class="bourse-cal-nav-btn" data-action="${nextFn}">›</button>
     </div>
     <div class="bourse-cal-dow">
       <div class="bourse-cal-dow-lbl">Lu</div><div class="bourse-cal-dow-lbl">Ma</div>
@@ -74,7 +74,8 @@ function _buildBourneCal(wrapId, y, m, selDate, today, clickFn, clearFn, prevFn,
         const st = getPlanDayState(ds);
         const inactive = ds < today || (filterFn && !filterFn(st));
         const sel = ds === selDate;
-        h += `<div class="bourse-cal-cell p-${st}${inactive ? ' past' : ''}${sel ? ' bc-selected' : ''}" onclick="${inactive ? '' : `${clickFn}('${ds}')`}">${d}</div>`;
+        const cellAction = inactive ? '' : ` data-action="${clickFn}:${ds}"`;
+        h += `<div class="bourse-cal-cell p-${st}${inactive ? ' past' : ''}${sel ? ' bc-selected' : ''}"${cellAction}>${d}</div>`;
     }
     h += '</div>';
     if (selDate) {
@@ -82,7 +83,7 @@ function _buildBourneCal(wrapId, y, m, selDate, today, clickFn, clearFn, prevFn,
         const bwd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(selDate+'T12:00:00').getDay()];
         const st = getPlanDayState(selDate);
         const lbl = (st === 'nuit' || st === 'hs_n') ? '🌙 Nuit' : '☀️ Jour';
-        h += `<div class="bourse-cal-footer" onclick="${clearFn}()">✕ ${lbl} — ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
+        h += `<div class="bourse-cal-footer" data-action="${clearFn}">✕ ${lbl} — ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
     } else {
         h += `<div class="bourse-cal-footer empty-sel">${emptyMsg}</div>`;
     }
@@ -124,9 +125,9 @@ window.renderWantedCal = function renderWantedCal() {
     const firstDow = (new Date(y, m-1, 1).getDay() + 6) % 7;
     const days = new Date(y, m, 0).getDate();
     let h = `<div class="bourse-cal-nav">
-      <button class="bourse-cal-nav-btn" onclick="prevWantCal()">‹</button>
+      <button class="bourse-cal-nav-btn" data-action="prevWantCal">‹</button>
       <span class="bourse-cal-nav-month">${_MONTHS_FR[m-1]} ${y}</span>
-      <button class="bourse-cal-nav-btn" onclick="nextWantCal()">›</button>
+      <button class="bourse-cal-nav-btn" data-action="nextWantCal">›</button>
     </div>
     <div class="bourse-cal-dow">
       <div class="bourse-cal-dow-lbl">Lu</div><div class="bourse-cal-dow-lbl">Ma</div>
@@ -139,13 +140,14 @@ window.renderWantedCal = function renderWantedCal() {
         const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const past = ds < today;
         const sel = ds === _wantDate;
-        h += `<div class="bourse-cal-cell${past?' past':''}${sel?' bc-selected':''}" style="border:1px solid var(--border);" onclick="${past?'':` pickWantDate('${ds}')`}">${d}</div>`;
+        const cellAction = past ? '' : ` data-action="pickWantDate:${ds}"`;
+        h += `<div class="bourse-cal-cell${past?' past':''}${sel?' bc-selected':''}" style="border:1px solid var(--border);"${cellAction}>${d}</div>`;
     }
     h += '</div>';
     if (_wantDate) {
         const [,bm,bd] = _wantDate.split('-');
         const bwd = ['dim','lun','mar','mer','jeu','ven','sam'][new Date(_wantDate+'T12:00:00').getDay()];
-        h += `<div class="bourse-cal-footer" onclick="clearWantDate()">✕ ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
+        h += `<div class="bourse-cal-footer" data-action="clearWantDate">✕ ${bwd} ${parseInt(bd)}/${parseInt(bm)}</div>`;
     } else {
         h += `<div class="bourse-cal-footer empty-sel">Touchez une date</div>`;
     }
@@ -380,7 +382,7 @@ window.renderBourseList = function renderBourseList() {
                     <span class="bourse-card-val">${wantedLbl(r)}</span>
                   </div>
                   ${r.note ? `<div class="bourse-card-note">"${r.note}"</div>` : ''}
-                  ${canPropose ? `<button class="bourse-btn-accept" onclick="openBoursePropose('${r.id}')">Proposer ma garde</button>` : ''}
+                  ${canPropose ? `<button class="bourse-btn-accept" data-action="openBoursePropose:${r.id}">Proposer ma garde</button>` : ''}
                   ${isProp && !isMyProp ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:center;padding:6px 0;">Une proposition est déjà en attente</div>` : ''}
                 </div>`;
             });
@@ -411,12 +413,12 @@ window.renderBourseList = function renderBourseList() {
                     <div class="bourse-prop-who">${r.proposedByName} ${roleBadge(r.proposedByRole)} propose :</div>
                     <div class="bourse-prop-date">${shiftLbl(r.proposedShift)} du ${fmtDate(r.proposedDate)}</div>
                     <div style="display:flex;gap:8px;margin-top:10px;">
-                      <button class="bourse-btn-accept" onclick="acceptSwap('${r.id}')">✅ Accepter</button>
-                      <button class="bourse-btn-cancel" onclick="declineProposal('${r.id}')">Refuser</button>
+                      <button class="bourse-btn-accept" data-action="acceptSwap:${r.id}">✅ Accepter</button>
+                      <button class="bourse-btn-cancel" data-action="declineProposal:${r.id}">Refuser</button>
                     </div>
                   </div>` : ''}
                   ${isAcc ? `<div class="bourse-card-ok">✅ Échange avec <b>${r.acceptedByName}</b> — à valider avec le cadre</div>` : ''}
-                  ${!isAcc ? `<button class="bourse-btn-cancel" style="margin-top:8px;" onclick="cancelSwap('${r.id}')">Supprimer</button>` : ''}
+                  ${!isAcc ? `<button class="bourse-btn-cancel" style="margin-top:8px;" data-action="cancelSwap:${r.id}">Supprimer</button>` : ''}
                 </div>`;
             });
         }

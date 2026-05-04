@@ -983,3 +983,8 @@
   50% { opacity: 1; }
 }
 
+.msg-react-emoji:hover {
+  background: var(--surface-sec) !important;
+  transform: scale(1.15);
+}
+
