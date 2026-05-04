@@ -240,23 +240,17 @@ window.renderApp = function renderApp() {
         ? `onclick="event.stopPropagation();openTasks()"`
         : `onclick="event.stopPropagation()"`;
 
-    // 2026-05-03 — Bordure droite violette sur la carte IDE TECH si au moins
-    // une chambre a une tech note non vide (visible IDE Tech / admin).
-    // Format aligné sur les cartes lit : border-right qui suit le border-radius.
-    const _techCardHasNotes = (_isTechMine || (typeof isAdmin === 'function' && isAdmin()))
-                              && typeof window.getRoomsWithTechNotes === 'function'
-                              && window.getRoomsWithTechNotes().length > 0;
-    // 2026-05-03 — Bordure GAUCHE aqua sur la carte IDE TECH si l'IDE Tech
-    // courant a une note perso (bedId virtuel tech_ide). Symétrique du
-    // marqueur "ma note" des cartes lit (couleur aqua = perso).
+    // 2026-05-03 — Bordure GAUCHE violette sur la carte IDE TECH UNIQUEMENT
+    // si l'IDE Tech courant a une note perso (bedId virtuel tech_ide).
+    // Pas de marqueur "notes tech en attente dans des chambres" sur la carte
+    // IDE TECH (Dimitri) — ces marqueurs vivent uniquement sur les cartes
+    // chambre concernées.
     const _techCardHasOwnNote = _isTechMine
                                 && typeof window.getBedNoteForCurrentUser === 'function'
                                 && !!window.getBedNoteForCurrentUser('tech_ide', dateOnly, false);
-    const _techCardBorderRight = _techCardHasNotes ? 'border-right:4px solid var(--tech);' : '';
-    const _techCardBorderLeft = _techCardHasOwnNote ? 'border-left:4px solid var(--brand-aqua);' : '';
-    const _techCardBorder = _techCardBorderLeft + _techCardBorderRight;
+    const _techCardBorder = _techCardHasOwnNote ? 'border-left:4px solid var(--tech);' : '';
 
-    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" onclick="handleTechIdeTap(event)" title="${_techCardHasNotes ? 'Notes tech en attente dans des chambres · ' : ''}${_techCardHasOwnNote ? 'Mes notes perso présentes' : ''}">
+    boardHTML += `<div class="bed-card ${_targetable ? 'targetable' : ''}" style="position:relative;${_techCardBorder}" onclick="handleTechIdeTap(event)" title="${_techCardHasOwnNote ? 'Mes notes perso présentes' : ''}">
       <div class="bed-bg-num" style="color:var(--tech); opacity:0.08;">TECH</div>
       <div class="bed-header">
         <span class="b-num" style="color:var(--tech);">IDE TECH</span>
