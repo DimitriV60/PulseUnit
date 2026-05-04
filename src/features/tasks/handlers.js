@@ -5,7 +5,68 @@
  *   - shiftHistory, currentShiftKey, currentUser, roster (scope script partagé)
  *   - initShiftData, saveData, playSound, showAuthModal, escapeHTML, ICONS
  * Expose les fonctions sur window pour onclick inline.
+ *
+ * 2026-05-04 — Sélecteur 8 dernières gardes (pattern vérif chambres).
+ *   _activeTaskShiftKey = garde affichée. toggleTask refuse si l'utilisateur
+ *   n'est pas l'IDE Tech de cette garde.
  */
+
+window._activeTaskShiftKey = null;
+
+function _toDS(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function _listLastShiftKeys(n) {
+    // Génère les n dernières gardes en remontant 12h par 12h depuis la garde
+    // courante. Mêmes règles que initDates : nuit → jour du même jour → nuit
+    // précédente → … La garde courante (currentShiftKey) est toujours la 1re.
+    const out = [];
+    if (!currentShiftKey) return out;
+    const parts = currentShiftKey.split('-');
+    if (parts.length < 4) return out;
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    let period = parts[3];
+    for (let i = 0; i < n; i++) {
+        out.push(`${_toDS(d)}-${period}`);
+        if (period === 'nuit') period = 'jour';
+        else { d.setDate(d.getDate() - 1); period = 'nuit'; }
+    }
+    return out;
+}
+
+function _todayTasksFor(shiftKey) {
+    const TECH_TASKS = window.TECH_TASKS || [];
+    const parts = shiftKey.split('-');
+    if (parts.length < 4) return [];
+    const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const dayOfWeek = dateObj.getDay();
+    const shiftType = parts[3] === 'jour' ? 'J' : 'N';
+    return TECH_TASKS.filter(t => t.shifts.some(s =>
+        s === 'ALL' || s === 'ALL-' + shiftType || s === dayOfWeek + '-' + shiftType
+    ));
+}
+
+function _shiftLabel(shiftKey) {
+    const parts = shiftKey.split('-');
+    if (parts.length < 4) return shiftKey;
+    const sd = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const period = parts[3];
+    const today = new Date();
+    const todayDS = _toDS(today);
+    const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+    const yestDS = _toDS(yest);
+    const ds = _toDS(sd);
+    let lbl;
+    if (shiftKey === currentShiftKey) lbl = 'AUJ.';
+    else if (ds === todayDS)          lbl = 'AUJ.';
+    else if (ds === yestDS)           lbl = 'HIER';
+    else {
+        const days = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+        lbl = `${days[sd.getDay()]} ${sd.getDate()}/${sd.getMonth() + 1}`;
+    }
+    return `${lbl} ${period[0].toUpperCase()}`;
+}
 
 window.openTasks = function openTasks() {
     const h = shiftHistory[currentShiftKey];
@@ -22,6 +83,7 @@ window.openTasks = function openTasks() {
             return;
         }
     }
+    window._activeTaskShiftKey = currentShiftKey;
     document.getElementById('tasks-view').style.display = 'flex';
     window.renderTasks();
 };
@@ -30,59 +92,79 @@ window.closeTasks = function closeTasks() {
     document.getElementById('tasks-view').style.display = 'none';
 };
 
+window.selectTaskShift = function selectTaskShift(shiftKey) {
+    window._activeTaskShiftKey = shiftKey;
+    window.renderTasks();
+};
+
 window.toggleTask = function toggleTask(id) {
-    initShiftData(currentShiftKey);
-    let tasks = shiftHistory[currentShiftKey].techTasks || [];
+    const key = window._activeTaskShiftKey || currentShiftKey;
+    initShiftData(key);
+    const h = shiftHistory[key];
+    if (h && h.techIdeId && h.techIdeId !== currentUser?.id) {
+        const techP = roster.find(r => r.id === h.techIdeId);
+        const nom = techP ? `${techP.firstName} ${techP.lastName}` : 'l\'IDE Technique';
+        showToast(`⛔ Tâches réservées à ${nom} pour cette garde`);
+        return;
+    }
+    let tasks = h.techTasks || [];
     if (tasks.includes(id)) {
         tasks = tasks.filter(t => t !== id);
     } else {
         tasks.push(id);
     }
-    shiftHistory[currentShiftKey].techTasks = tasks;
+    h.techTasks = tasks;
     saveData();
     window.renderTasks();
-    // 2026-05-03 — Rafraîchit la carte IDE TECH (barre / "✓ OK") immédiatement
-    // sans attendre un autre événement (Dimitri).
     if (typeof renderApp === 'function') renderApp();
 };
 
 window.renderTasks = function renderTasks() {
     const TECH_TASKS = window.TECH_TASKS;
-    initShiftData(currentShiftKey);
-    const shiftParts = currentShiftKey.split('-');
-    if (shiftParts.length < 4) return;
-    const dateObj = new Date(shiftParts[0], shiftParts[1] - 1, shiftParts[2]);
-    const dayOfWeek = dateObj.getDay();
-    const shiftType = shiftParts[3] === 'jour' ? 'J' : 'N';
+    if (!window._activeTaskShiftKey) window._activeTaskShiftKey = currentShiftKey;
+    const activeKey = window._activeTaskShiftKey;
+    initShiftData(activeKey);
 
-    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-    const shiftLabel = shiftType === 'J' ? 'Jour' : 'Nuit';
-
-    document.getElementById('tasks-subtitle').textContent = `Shift actuel : ${dayNames[dayOfWeek]} ${shiftLabel}`;
-
-    const todayTasks = TECH_TASKS.filter(t => {
-        let show = false;
-        t.shifts.forEach(s => {
-            if (s === 'ALL') show = true;
-            if (s === 'ALL-' + shiftType) show = true;
-            if (s === dayOfWeek + '-' + shiftType) show = true;
-        });
-        return show;
+    // Sélecteur 8 dernières gardes (pattern vérif chambres .cl-bed-selector)
+    const keys = _listLastShiftKeys(8);
+    let selectorHTML = '';
+    keys.forEach(k => {
+        const todayT = _todayTasksFor(k);
+        const total = todayT.length;
+        const completed = (shiftHistory[k]?.techTasks || []).filter(id => todayT.some(t => t.id === id));
+        const done = completed.length;
+        const stateClass = total > 0 && done === total ? 'done' : done > 0 ? 'partial' : '';
+        const isActive = k === activeKey ? 'active' : '';
+        selectorHTML += `<div class="cl-bed-btn ${isActive} ${stateClass}" data-action="selectTaskShift:${k}">${_shiftLabel(k)} <span style="opacity:0.8;">${done}/${total}</span></div>`;
     });
+    const selEl = document.getElementById('task-shift-selector');
+    if (selEl) selEl.innerHTML = selectorHTML;
 
-    const completed = shiftHistory[currentShiftKey].techTasks || [];
+    // Sous-titre header avec icône shift
+    const isNight = activeKey.includes('-nuit');
+    const subtitleEl = document.getElementById('tasks-subtitle');
+    if (subtitleEl) {
+        subtitleEl.textContent = `${isNight ? '🌙' : '☀️'} ${_shiftLabel(activeKey)}`;
+    }
+
+    const todayTasks = _todayTasksFor(activeKey);
+    const completed = (shiftHistory[activeKey].techTasks || []).filter(id => todayTasks.some(t => t.id === id));
     const listEl = document.getElementById('task-list');
 
     if (todayTasks.length === 0) {
-        listEl.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Aucune tâche spécifique pour ce shift.</div>`;
+        if (listEl) listEl.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Aucune tâche spécifique pour ce shift.</div>`;
         document.getElementById('task-progress').style.width = '0%';
         document.getElementById('task-progress-text').textContent = '0%';
+        const labelEl = document.getElementById('task-progress-label');
+        if (labelEl) labelEl.textContent = '0 / 0 tâches';
         return;
     }
 
     const progress = Math.round((completed.length / todayTasks.length) * 100);
     document.getElementById('task-progress').style.width = progress + '%';
     document.getElementById('task-progress-text').textContent = progress + '%';
+    const labelEl = document.getElementById('task-progress-label');
+    if (labelEl) labelEl.textContent = `${completed.length} / ${todayTasks.length} tâches validées`;
 
     todayTasks.sort((a, b) => {
         if (a.time && !b.time) return -1;
@@ -101,8 +183,10 @@ window.renderTasks = function renderTasks() {
         </div>`;
     });
 
-    if (progress === 100) {
-        if (!shiftHistory[currentShiftKey].congratsShown) {
+    // Modale congrats — uniquement sur la garde courante (sinon on spammerait
+    // au switch de garde passée).
+    if (progress === 100 && activeKey === currentShiftKey) {
+        if (!shiftHistory[activeKey].congratsShown) {
             const msgs = [
                 "🎉 Félicitations, tu as tout validé !",
                 "☕ Tu as bien travaillé, tu mérites une petite pause café !",
@@ -113,14 +197,12 @@ window.renderTasks = function renderTasks() {
             const msg = msgs[Math.floor(Math.random() * msgs.length)];
             document.getElementById('congrats-msg').textContent = msg;
             document.getElementById('congrats-modal').style.display = 'flex';
-
             playSound('success');
-
-            shiftHistory[currentShiftKey].congratsShown = true;
+            shiftHistory[activeKey].congratsShown = true;
             saveData();
         }
-    } else {
-        shiftHistory[currentShiftKey].congratsShown = false;
+    } else if (activeKey === currentShiftKey) {
+        shiftHistory[activeKey].congratsShown = false;
         saveData();
     }
 
