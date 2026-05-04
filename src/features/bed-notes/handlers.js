@@ -972,6 +972,17 @@ function _renderDeleteChooserUI() {
 
 window.confirmDeleteBedNote = function confirmDeleteBedNote(scope) {
     if (!_currentNotesBed) return;
+    // 2026-05-03 — Étape de confirmation avant suppression effective.
+    const labels = {
+        text:   'les Observations privées',
+        survey: 'la Surveillance partagée (paramètres vitaux)',
+        tech:   'la Note IDE TECH',
+        all:    'TOUT le contenu de cette note (obs, surveillance, tech)'
+    };
+    const lbl = labels[scope] || 'cette note';
+    if (!confirm(`⚠️ Supprimer ${lbl} ?\n\nCette action est définitive.`)) {
+        return;
+    }
     const h = (typeof shiftHistory !== 'undefined' && currentShiftKey) ? shiftHistory[currentShiftKey] : null;
     const _isAdmin = (typeof isAdmin === 'function') && isAdmin();
     const _assigned = (h && h.assignments && h.assignments[_currentNotesBed]) || {};
