@@ -158,12 +158,44 @@ git push origin main
 
 | ID audit | Description | Effort |
 |---|---|---|
-| P2.1 | Audit logging via sub-collection `auditlog/` | 2 j |
-| P2.2 | Retirer `'unsafe-inline'` de la CSP (extraire `<script>` inline) | 1 j |
-| P2.3 | TTL serveur sur présence (Cloud Scheduler — sera Blaze, à voir) | 0,5 j |
-| P2.4 | Cascade delete RGPD (`adminDeleteUser` purge tous les docs) | 1 j |
-| P2.5 | Validation regex inscription `firstName/lastName` | 0,5 j |
-| P2.6 | Retirer `index.backup.*.html` des assets servis | 5 min |
-| P2.7 | SRI sur tous les CDN (jsPDF, Firebase, etc.) | 1 h |
+| ID audit | Description | Statut |
+|---|---|---|
+| P2.1 | Audit logging via sub-collection `auditlog/` | ✅ livré (129732d) |
+| P2.2 | Retirer `'unsafe-inline'` du `script-src` CSP | ✅ livré v2 (b6a10c3, 2026-05-04) |
+| P2.3 | TTL serveur sur présence | ✅ livré (4f13bb0) |
+| P2.4 | Cascade delete RGPD | ✅ livré (129732d) |
+| P2.5 | Validation regex inscription | ✅ livré (129732d) |
+| P2.6 | Retirer assets backup des servis | ✅ livré (129732d) |
+| P2.7 | SRI sur CDN | ✅ livré (129732d) |
+
+### P2.2 v2 (2026-05-04) — détail
+
+Migration ~150 attributs `on*=` inline → système data-action (24 fichiers JS).
+0 `onclick`/`onchange`/`oninput`/`onmouseover` inline restants dans .js + index.html.
+
+Extensions du module `event-delegation.js` :
+- `data-stop` : équivalent `event.stopPropagation()` avant dispatch.
+- `$el` / `$val` / `$ev` déjà supportés.
+
+Wrappers ajoutés (encapsulent les ex-IIFE/onclick complexes) :
+- `window.scrollToReplyMessage(id)` — replyQuote messages.
+- `window.scrollToServiceLetter(L)` — index alphabétique services.
+- `window.runNotifAction(notifId)` + map `_notifActions` — remplace
+  `JSON.stringify` inline du payload notif.
+- `window.searchJumpToService/Lexique/Protocoles/MessagesWith/GroupMessages` —
+  remplacent les onclick IIFE du global search.
+- `window._notifActions[notifId] = action` — store JS au render au lieu d'inline JSON.
+
+Drag-to-paint planning préservé via listener `touchstart` non-passif sur
+`[data-pcell]` dans `gestures/handlers.js` (remplace `ontouchstart` inline).
+
+Hover du picker emoji : `onmouseover/onmouseout` inline → `:hover` CSS sur
+`.msg-react-emoji` dans `main.css`.
+
+Le `style-src 'unsafe-inline'` est conservé (différé en P3 — nécessite
+migration des ~100+ attributs `style="..."` inline en classes CSS).
+
+Rollback en 1 commit : `git revert b6a10c3` restaure `'unsafe-inline'` dans
+`script-src` (leçon du rollback CSP du 2026-05-02).
 
 Voir [[Audit Complet PulseUnit 2026-04-30]] pour le plan complet P3 + P4.
